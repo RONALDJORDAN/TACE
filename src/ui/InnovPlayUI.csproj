@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <AssemblyName>InnoRPAui</AssemblyName>
+    <TargetFramework>net8.0-windows10.0.22000.0</TargetFramework>
+    <SupportedOSPlatformVersion>10.0.22000.0</SupportedOSPlatformVersion>
+    <TargetPlatformVersion>10.0.22000.0</TargetPlatformVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <ApplicationIcon>Assets\Icons\InnoRPAui.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\Icons\InnoRPAui.ico" />
+    <EmbeddedResource Include="Resources\gnirehtet.zip" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.0" />
+    <PackageReference Include="PdfSharpCore" Version="1.3.67" />
+    <PackageReference Include="QRCoder" Version="1.8.0" />
+  </ItemGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="copy /Y &quot;$(ProjectDir)..\..\data\output\InnoEngine.dll&quot; &quot;$(TargetDir)InnoEngine.dll&quot;" ContinueOnError="true" />
+  </Target>
+
+</Project>

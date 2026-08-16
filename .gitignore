@@ -1,0 +1,43 @@
+# Ignore arquivos ZIP
+*.zip
+
+# Ignore variáveis de ambiente
+.env
+.env.*
+
+# Ignore ambientes virtuais Python
+venv/
+env/
+.venv/
+
+# Ignore arquivos/pastas relacionados ao Firebase
+firebase.json
+.firebaserc
+firebase/
+
+# ==========================================
+# Outros ignorados úteis para o seu projeto:
+# ==========================================
+
+# Builds do C# WPF
+src/ui/bin/
+src/ui/obj/
+
+# Arquivos de log e auditoria locais
+logs/
+registros/
+
+# XMLs de debug do UIAutomator
+*.xml
+!login_live.xml
+!login_app.xml
+
+# Binários e bibliotecas compiladas (Pasta oficial de teste/dev)
+data/output/
+*.wpftmp.csproj
+
+# Pastas específicas de release e saída
+InnoRPA_Release/
+output/
+output_teste/
+
