@@ -4,6 +4,19 @@ echo [*] Iniciando compilacao do Inno RPA (Interface Completa Win32)...
 :: Muda para a pasta raiz do projeto
 cd /d "%~dp0\.."
 
+:: Gera o número de versão único de compilação baseado na data + hora (DD.MM.YYYY.HHMM)
+for /f "tokens=2 delims==" %%I in ('wmic os get localdatetime /value') do set datetime=%%I
+set YYYY=%datetime:~0,4%
+set MM=%datetime:~4,2%
+set DD=%datetime:~6,2%
+set HH=%datetime:~8,2%
+set MIN=%datetime:~10,2%
+
+set BUILD_VER=%DD%.%MM%.%YYYY%.%HH%%MIN%
+mkdir config 2>nul
+echo %BUILD_VER%> config\version.txt
+echo [*] Versao de Compilacao Gerada: %BUILD_VER%
+
 :: Encerra qualquer instancia aberta da UI para liberar o executavel para a compilacao
 taskkill /F /IM InnoRPAui.exe /T 2>nul
 

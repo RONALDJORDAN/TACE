@@ -15,6 +15,10 @@ namespace InnovPlayUI
         {
             InitializeComponent();
             
+            string versionStr = InnovPlayUI.Core.OtaUpdateManager.CurrentVersion;
+            Title = $"Inno RPA (Plataforma InnovTech) - v{versionStr}";
+            TxtHeaderVersion.Text = $"v{versionStr}";
+
             // Instanciar views uma única vez
             _monitorView = new MonitorView();
             _relatoriosView = new RelatoriosView();
@@ -24,6 +28,34 @@ namespace InnovPlayUI
             
             // Abre o Monitor USB como página inicial padrão
             NavigateToMonitor();
+
+            Loaded += MainWindow_Loaded;
+        }
+
+        private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            await CheckForOtaUpdatesOnStartupAsync();
+        }
+
+        private async System.Threading.Tasks.Task CheckForOtaUpdatesOnStartupAsync()
+        {
+            try
+            {
+                var otaManager = new InnovPlayUI.Core.OtaUpdateManager();
+                var manifest = await otaManager.CheckForUpdatesAsync();
+
+                if (manifest != null && otaManager.IsUpdateAvailable(manifest))
+                {
+                    // OBRIGATÓRIO: Nova versão encontrada na nuvem! Abre a janela modal de atualização obrigatória.
+                    var mandatoryWindow = new OtaMandatoryUpdateWindow(manifest);
+                    mandatoryWindow.Owner = this;
+                    mandatoryWindow.ShowDialog();
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[Startup OTA Check Error] {ex.Message}");
+            }
         }
 
         public void NavigateToMonitor()

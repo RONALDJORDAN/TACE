@@ -163,7 +163,7 @@ int V7_Etapa1_6(const char *serial, const char *apk_path,
 
   // 1. Limpeza preservando 'Android' e 'Pictures' (necessaria para wallpaper)
   snprintf(args, sizeof(args),
-           "-s %s shell \"cd /sdcard && ls | grep -vwE 'Android|Pictures' | "
+           "-s %s shell \"cd /sdcard && ls | grep -vwE 'Android|Pictures|innovava|InnovAva|avaliacoes' | "
            "xargs rm -rf\"",
            serial);
   char *out_limpeza = adb_exec(args);
@@ -177,8 +177,8 @@ int V7_Etapa1_6(const char *serial, const char *apk_path,
   if (out_mkpic)
     free(out_mkpic);
 
-  // 2. Criar a pasta avaliacoes
-  snprintf(args, sizeof(args), "-s %s shell mkdir -p /sdcard/avaliacoes",
+  // 2. Criar as pastas innovava, InnovAva e avaliacoes
+  snprintf(args, sizeof(args), "-s %s shell \"mkdir -p /sdcard/innovava /sdcard/InnovAva /sdcard/avaliacoes && rm -rf /sdcard/innovava/* /sdcard/InnovAva/* /sdcard/avaliacoes/*\"",
            serial);
   char *out_mkdir = adb_exec(args);
   if (out_mkdir)
@@ -190,28 +190,40 @@ int V7_Etapa1_6(const char *serial, const char *apk_path,
   if (apk_path && strlen(apk_path) > 0) {
     adb_get_safe_path(apk_path, safe_apk, MAX_PATH);
     if (cb)
-      cb("  -> Enviando APK para /sdcard/avaliacoes/ ...");
-    snprintf(args, sizeof(args), "-s %s push \"%s\" /sdcard/avaliacoes/",
-             serial, safe_apk);
+      cb("  -> Transmitindo APK para /sdcard/innovava/ ...");
+    snprintf(args, sizeof(args), "-s %s push \"%s\" /sdcard/innovava/", serial, safe_apk);
     char *out_push1 = adb_exec(args);
-    if (out_push1)
-      free(out_push1);
+    if (out_push1) free(out_push1);
+
+    snprintf(args, sizeof(args), "-s %s push \"%s\" /sdcard/InnovAva/", serial, safe_apk);
+    out_push1 = adb_exec(args);
+    if (out_push1) free(out_push1);
+
+    snprintf(args, sizeof(args), "-s %s push \"%s\" /sdcard/avaliacoes/", serial, safe_apk);
+    out_push1 = adb_exec(args);
+    if (out_push1) free(out_push1);
   }
 
   // 4. Fazer o PUSH do Pacote ZIP
   if (pacote_path && strlen(pacote_path) > 0) {
     adb_get_safe_path(pacote_path, safe_pacote, MAX_PATH);
     if (cb)
-      cb("  -> Enviando PACOTE DE DADOS para /sdcard/avaliacoes/ ...");
-    snprintf(args, sizeof(args), "-s %s push \"%s\" /sdcard/avaliacoes/",
-             serial, safe_pacote);
+      cb("  -> Transmitindo PACOTE ZIP para /sdcard/innovava/ ...");
+    snprintf(args, sizeof(args), "-s %s push \"%s\" /sdcard/innovava/", serial, safe_pacote);
     char *out_push2 = adb_exec(args);
-    if (out_push2)
-      free(out_push2);
+    if (out_push2) free(out_push2);
+
+    snprintf(args, sizeof(args), "-s %s push \"%s\" /sdcard/InnovAva/", serial, safe_pacote);
+    out_push2 = adb_exec(args);
+    if (out_push2) free(out_push2);
+
+    snprintf(args, sizeof(args), "-s %s push \"%s\" /sdcard/avaliacoes/", serial, safe_pacote);
+    out_push2 = adb_exec(args);
+    if (out_push2) free(out_push2);
   }
 
   if (cb)
-    cb("[+] Armazenamento preparado e arquivos copiados com sucesso!");
+    cb("[+] Armazenamento do Positivo Vision 7 (pasta /sdcard/innovava) preparado com sucesso!");
 
   return PIPELINE_SUCCESS;
 }

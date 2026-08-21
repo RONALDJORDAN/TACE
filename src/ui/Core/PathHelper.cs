@@ -110,5 +110,38 @@ namespace InnovPlayUI.Core
             }
             return "";
         }
+
+        public static void DeleteMunicipioFolders(string municipio)
+        {
+            if (string.IsNullOrWhiteSpace(municipio)) return;
+            string root = GetRootDirectory();
+            string clean = SanitizeFolderName(municipio);
+            string cleanAscii = SanitizeFolderNameAscii(municipio);
+
+            string[] candidateDirs = new string[] {
+                Path.Combine(root, "data", "output", "arquivos", "apks", clean),
+                Path.Combine(root, "data", "output", "arquivos", "apks", cleanAscii),
+                Path.Combine(root, "data", "output", "arquivos", "pacotes", clean),
+                Path.Combine(root, "data", "output", "arquivos", "pacotes", cleanAscii),
+                Path.Combine(root, "Arquivos", municipio),
+                Path.Combine(root, "Arquivos", clean),
+                Path.Combine(root, "Arquivos", cleanAscii),
+                Path.Combine(root, "data", "input", "municipios", municipio),
+                Path.Combine(root, "data", "input", "municipios", clean),
+                Path.Combine(root, "data", "input", "municipios", cleanAscii)
+            };
+
+            foreach (var dir in candidateDirs)
+            {
+                try
+                {
+                    if (Directory.Exists(dir))
+                    {
+                        Directory.Delete(dir, true);
+                    }
+                }
+                catch { }
+            }
+        }
     }
 }

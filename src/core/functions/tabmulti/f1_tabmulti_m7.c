@@ -978,7 +978,7 @@ int F7_Etapa4_Login(const char *serial, const char *login, const char *senha,
 
 int M7_ExecutarPipeline(const char *serial, const char *apk_path, const char *pacote_path, const char *wp_path, const char *login, const char *senha, const char *municipio, LogCallback cb) {
   if (cb)
-    cb("[F7] Ã°Å¸Å¡â‚¬ INICIANDO ROTINA TAB-MULTI...");
+    cb("[F1 - TabMulti M7] 🚀 INICIANDO ESTEIRA F1 COMPLETA (MULTILASER M7)...");
 
   // Converte os caminhos para Short Path 8.3 e evita bugs de UTF-8 do ADB com caracteres especiais (ex: acentos)
   char safe_apk[MAX_PATH] = {0};
@@ -994,145 +994,92 @@ int M7_ExecutarPipeline(const char *serial, const char *apk_path, const char *pa
   char args[1024];
   char *out;
 
-  // 0. PRIMEIRA COISA: Instalar Gnirehtet e ativar tunel de internet
+  // 0. PREPARAÇÃO INICIAL BATCHED: Travar Orientação Vertical (Portrait), Fonte (1.5), Brilho (70%) e Desativar Antenas
   if (cb)
-    cb("[-] Instalando e ativando tunel de internet (Gnirehtet)...");
-  M7_StartGnirehtet(serial, cb);
-
-  // 0. Agrupamento de Comandos ADB (Shell Batching): Conexões, Telas e Bateria em pacote único
-  if (cb)
-    cb("[-] [Otimização Shell Batching] Aplicando rede Starlink06, orientacao, brilho (70%) e travamento de bateria...");
+    cb("[-] [F1 - Etapa 0] Preparacao Inicial Batched: Antenas, orientacao, brilho (70%) e timeout de tela...");
   snprintf(args, sizeof(args),
-           "-s %s shell \"svc wifi enable && cmd wifi connect-network Starlink06 open && "
-           "dumpsys deviceidle whitelist +br.com.yantec.innovava && appops set br.com.yantec.innovava RUN_IN_BACKGROUND allow && "
-           "am set-standby-bucket br.com.yantec.innovava active && settings put system accelerometer_rotation 0 && "
-           "settings put system user_rotation 0 && wm user-rotation lock 0 && settings put system font_scale 1.5 && "
-           "settings put system screen_off_timeout 300000 && settings put system screen_brightness_mode 0 && "
-           "settings put system screen_brightness 178\"",
+           "-s %s shell \"svc wifi disable && svc bluetooth disable && settings put secure location_mode 0 && "
+           "settings put global wifi_scan_always_enabled 0 && settings put global ble_scan_always_enabled 0 && "
+           "settings put system screen_brightness_mode 0 && settings put system screen_brightness 178 && "
+           "settings put system font_scale 1.5 && settings put system accelerometer_rotation 0 && "
+           "settings put system user_rotation 0 && wm user-rotation lock 0 && "
+           "settings put system screen_off_timeout 300000\"",
            serial);
   out = adb_exec(args);
   if (out) free(out);
 
   // 1. Acordar e Desbloquear a tela
   if (cb)
-    cb("[-] Acordando o dispositivo e desbloqueando a tela...");
+    cb("[-] [F1 - Etapa 1.0] Acordando o dispositivo e desbloqueando a tela...");
   M7_UnlockScreen(serial, cb);
 
-  // 1.5 Aplicar Modo Escuro
+  // 1.2 Aplicar Modo Escuro
   if (cb)
-    cb("[-] Ativando Modo Escuro...");
+    cb("[-] [F1 - Etapa 1.2] Ativando Modo Escuro...");
   M7_SetDarkMode(serial, cb);
 
-
-
-
-  // 2. Limpar o armazenamento interno (preservando 'Android', 'classjava',
-  // 'cstore' e 'dump')
+  // 1.6 Limpar o armazenamento interno (preservando 'Android', 'Pictures', 'classjava', 'cstore') e criar a pasta innovava
   if (cb)
-    cb("[-] Mapeando arquivos para formatacao (excecao: Android, classjava, "
-       "cstore, dumps)...");
+    cb("[-] [F1 - Etapa 1.6] Limpando /sdcard e criando a pasta oficial '/sdcard/innovava'...");
   snprintf(args, sizeof(args),
-           "-s %s shell \"cd /sdcard && ls | grep -vwE "
-           "'Android|classjava|cstore' | grep -vi 'dump'\"",
+           "-s %s shell \"cd /sdcard && ls | grep -vwE 'Android|Pictures|classjava|cstore|innovava|InnovAva' | grep -vi 'dump' | xargs rm -rf && "
+           "mkdir -p /sdcard/innovava /sdcard/InnovAva && rm -rf /sdcard/innovava/* /sdcard/InnovAva/*\"",
            serial);
   out = adb_exec(args);
-  if (out) {
-    char *line = strtok(out, "\r\n");
-    char *files[256];
-    int total = 0;
+  if (out) free(out);
 
-    while (line && total < 256) {
-      if (strlen(line) > 0) {
-        files[total] = _strdup(line); // Usando _strdup no Windows
-        total++;
-      }
-      line = strtok(NULL, "\r\n");
-    }
-
-    if (total > 0) {
-      for (int i = 0; i < total; i++) {
-        int pct = (i * 100) / total;
-        char bar[21];
-        int fill = pct / 5;
-        for (int b = 0; b < 20; b++) {
-          bar[b] = (b < fill) ? '=' : '-';
-        }
-        bar[20] = '\0';
-
-        char msg[256];
-        snprintf(msg, sizeof(msg), "[-] Formatando [%s] %d%% (Apagando: %s)",
-                 bar, pct, files[i]);
-        if (cb)
-          cb(msg);
-
-        snprintf(args, sizeof(args),
-                 "-s %s shell \"rm -rf \\\"/sdcard/%s\\\"\"", serial, files[i]);
-        char *rm_out = adb_exec(args);
-        if (rm_out)
-          free(rm_out);
-
-        free(files[i]);
-      }
-      if (cb)
-        cb("[-] Formatando [====================] 100% (Concluido)");
-    } else {
-      if (cb)
-        cb("[-] Formatacao: Nenhum arquivo extra encontrado para limpar.");
-    }
-    free(out);
-  }
-
-  // 2.5 Pre-Sanitização de Memória RAM (2GB RAM M7)
+  // 1.7 Pre-Sanitização de Memória RAM (2GB RAM M7)
   if (cb)
-    cb("[-] [Otimização 2GB RAM] Sanitizando cache e liberando RAM antes da transferência dos pacotes...");
+    cb("[-] [F1 - Etapa 1.7] [Otimizacao 2GB RAM] Sanitizando cache e liberando RAM antes dos pacotes...");
   snprintf(args, sizeof(args), "-s %s shell \"am trim-memory br.com.yantec.innovava COMPLETE\"", serial);
   out = adb_exec(args);
   if (out) free(out);
 
-  // 3. Criar a pasta InnovAva
+  // 1.9 Limpeza do Launcher e Atalhos
   if (cb)
-    cb("[-] Criando pasta 'InnovAva' no armazenamento...");
-
-  snprintf(args, sizeof(args), "-s %s shell mkdir -p /sdcard/InnovAva", serial);
+    cb("[-] [F1 - Etapa 1.9] Limpando a Tela Inicial (Removendo atalhos e widgets)...");
+  snprintf(args, sizeof(args), "-s %s shell \"pm clear com.android.launcher3; pm clear com.sec.android.app.launcher\"", serial);
   out = adb_exec(args);
-  if (out)
-    free(out);
+  if (out) free(out);
 
-  // 4. Copiar o APK
+  // 3. Copiar o APK para /sdcard/innovava/ e /sdcard/InnovAva/
   if (safe_apk[0] != '\0') {
     if (cb)
-      cb("  -> Enviando APK para /sdcard/InnovAva/ ...");
-    snprintf(args, sizeof(args), "-s %s push \"%s\" /sdcard/InnovAva/", serial,
-             safe_apk);
+      cb("  -> Transmitindo APK para /sdcard/innovava/ ...");
+    snprintf(args, sizeof(args), "-s %s push \"%s\" /sdcard/innovava/", serial, safe_apk);
     out = adb_exec(args);
-    if (out)
-      free(out);
+    if (out) free(out);
+
+    snprintf(args, sizeof(args), "-s %s push \"%s\" /sdcard/InnovAva/", serial, safe_apk);
+    out = adb_exec(args);
+    if (out) free(out);
   } else {
     if (cb)
       cb("[AVISO] Caminho do APK nao fornecido.");
   }
 
-  // 5. Copiar o pacote de avaliacao
+  // 4. Copiar o pacote de avaliacao (ZIP) para /sdcard/innovava/ e /sdcard/InnovAva/
   if (safe_pacote[0] != '\0') {
     if (cb)
-      cb("  -> Enviando PACOTE DE AVALIACAO para /sdcard/InnovAva/ ...");
-    
+      cb("  -> Transmitindo PACOTE ZIP para /sdcard/innovava/ ...");
+    snprintf(args, sizeof(args), "-s %s push \"%s\" /sdcard/innovava/", serial, safe_pacote);
+    out = adb_exec(args);
+    if (out) free(out);
+
     snprintf(args, sizeof(args), "-s %s push \"%s\" /sdcard/InnovAva/", serial, safe_pacote);
     out = adb_exec(args);
-    if (out)
-      free(out);
+    if (out) free(out);
   } else {
     if (cb)
       cb("[AVISO] Caminho do PACOTE DE AVALIACAO nao fornecido.");
   }
 
-  // 6. Instalar o APK (via ADB do PC para o Tablet)
+  // 2.0 Instalar o APK (via ADB do PC para o Tablet)
   if (apk_path && strlen(apk_path) > 0) {
     if (cb)
-      cb("[-] [F7] Iniciando desinstalacao e instalacao limpa via ADB (PC -> "
-         "Tablet)...");
+      cb("[-] [F1 - Etapa 2.0] Iniciando desinstalacao e instalacao limpa via ADB...");
 
-    // A) Verifica se o pacote jÃƒÂ¡ estÃƒÂ¡ instalado e desinstala
+    // A) Verifica se o pacote já está instalado e desinstala
     snprintf(args, sizeof(args),
              "-s %s shell \"pm list packages | grep br.com.yantec.innovava\"",
              serial);
@@ -1140,18 +1087,15 @@ int M7_ExecutarPipeline(const char *serial, const char *apk_path, const char *pa
     if (check_out) {
       if (strstr(check_out, "br.com.yantec.innovava") != NULL) {
         if (cb)
-          cb("[-] O aplicativo antigo foi encontrado. Desinstalando para "
-             "garantir versao limpa...");
-        snprintf(args, sizeof(args), "-s %s uninstall br.com.yantec.innovava",
-                 serial);
+          cb("[-] O aplicativo antigo foi encontrado. Desinstalando para garantir versao limpa...");
+        snprintf(args, sizeof(args), "-s %s uninstall br.com.yantec.innovava", serial);
         char *out_un = adb_exec(args);
-        if (out_un)
-          free(out_un);
+        if (out_un) free(out_un);
       }
       free(check_out);
     }
 
-    // B) Instala o APK com flag de replace e -g para auto-conceder permissÃƒÂµes
+    // B) Instala o APK com flag de replace e -g para auto-conceder permissões
     if (cb) cb("[-] Transmitindo e instalando APK via ADB (Aguarde...).");
     snprintf(args, sizeof(args), "-s %s install -r -g \"%s\"", serial, safe_apk);
     
@@ -1159,12 +1103,10 @@ int M7_ExecutarPipeline(const char *serial, const char *apk_path, const char *pa
     F7_ProgressData pdata = { cb, &is_installing };
     HANDLE hThread = CreateThread(NULL, 0, F7_ProgressBarThread, &pdata, 0, NULL);
     
-    // Aqui nÃƒÂ£o usamos a macro de retry rÃƒÂ¡pido, pois a instalaÃƒÂ§ÃƒÂ£o pode demorar. 
     #undef adb_exec
     char *install_out = adb_exec(args);
     #define adb_exec(args) adb_exec_retry(args, 3, 2000, (AdbLogCallback)cb)
     
-    // Para a thread da barra de progresso
     is_installing = 0;
     if (hThread) {
         WaitForSingleObject(hThread, 2000);
@@ -1188,12 +1130,9 @@ int M7_ExecutarPipeline(const char *serial, const char *apk_path, const char *pa
         char *out_bp = adb_exec(args_bypass);
         if (out_bp) free(out_bp);
 
-        
       } else {
         if (cb) {
           char err_msg[1024];
-          // Remove quebras de linha para o log do C# nao truncar a mensagem de
-          // erro!
           for (int i = 0; install_out[i] != '\0'; i++) {
             if (install_out[i] == '\r' || install_out[i] == '\n') {
               install_out[i] = ' ';
@@ -1204,7 +1143,7 @@ int M7_ExecutarPipeline(const char *serial, const char *apk_path, const char *pa
           cb(err_msg);
         }
         free(install_out);
-        return PIPELINE_ERROR; // Aborta se falhar!
+        return PIPELINE_ERROR;
       }
       free(install_out);
     } else {
@@ -1259,7 +1198,7 @@ int M7_ExecutarPipeline(const char *serial, const char *apk_path, const char *pa
                   if (out) free(out);
                   Sleep(1500); // Aguarda o pop-up fechar
 
-                  // Agora, tenta localizar o botão "Entrar" novamente para re-tentar o login
+                  // Re-tentar o login
                   char *xml_retry = dump_and_read_xml(serial, NULL);
                   int enter_x = 0, enter_y = 0;
                   if (xml_retry) {
@@ -1278,7 +1217,7 @@ int M7_ExecutarPipeline(const char *serial, const char *apk_path, const char *pa
               continue;
           }
 
-          // Caso B: Verificação se o login foi bem-sucedido (botão Entrar sumiu da tela)
+          // Caso B: Verificação se o login foi bem-sucedido
           if (!f7_get_centroid_nocase(xml_check, "Entrar", &tx, &ty, 0) &&
               !f7_get_centroid_nocase(xml_check, "entrar", &tx, &ty, 0) &&
               !f7_get_centroid_nocase(xml_check, "Acessar", &tx, &ty, 0)) {
@@ -1286,7 +1225,6 @@ int M7_ExecutarPipeline(const char *serial, const char *apk_path, const char *pa
               free(xml_check);
               break;
           } else {
-              // Se após a 3ª checagem o botão Entrar ainda continua na tela do M7 lento, re-executa o toque nele!
               if (i > 0 && i % 3 == 0) {
                   if (cb) {
                       char msg_retry[256];
@@ -1302,24 +1240,21 @@ int M7_ExecutarPipeline(const char *serial, const char *apk_path, const char *pa
 
           free(xml_check);
       }
-      Sleep(1000); // Polling de 1s para o M7
+      Sleep(1000);
   }
-
 
   if (login_sucesso) {
       if (cb) cb("[+] Login confirmado! A tela inicial foi carregada.");
       
-      // --- ETAPA PÃƒâ€œS-LOGIN: AutomaÃƒÂ§ÃƒÂ£o do Menu e ImportaÃƒÂ§ÃƒÂ£o de ZIP ---
+      // --- ETAPA PÓS-LOGIN: Automação do Menu e Importação de ZIP ---
       
-      // 10. Abrindo o menu lateral (Swipe da esquerda para a direita)
-      if (cb) cb("[-] Abrindo o menu lateral (Swipe da esquerda para a direita)...");
+      // [F1 - Etapa 5.0] Abrindo o menu lateral e acionando Importar ZIP
+      if (cb) cb("[-] [F1 - Etapa 5.0] Abrindo menu lateral e acionando 'Importar ZIP'...");
       snprintf(args, sizeof(args), "-s %s shell input swipe 10 500 650 500 300", serial);
       out = adb_exec(args);
       if (out) free(out);
-      Sleep(1500); // Aguarda animaÃƒÂ§ÃƒÂ£o do menu
+      Sleep(1500);
       
-      // 11. Clicar em "Importar ZIP"
-      if (cb) cb("[-] Procurando a opcao 'Importar ZIP' no menu...");
       char *xml_menu = dump_and_read_xml(serial, cb);
       int click_ok = 0;
       if (xml_menu) {
@@ -1335,7 +1270,6 @@ int M7_ExecutarPipeline(const char *serial, const char *apk_path, const char *pa
       }
       
       if (!click_ok) {
-          // Tenta um segundo swipe preventivo caso o primeiro tenha falhado
           if (cb) cb("[WARNING] Opcao 'Importar ZIP' nao encontrada. Tentando swipe novamente...");
           snprintf(args, sizeof(args), "-s %s shell input swipe 10 500 650 500 300", serial);
           out = adb_exec(args);
@@ -1359,17 +1293,17 @@ int M7_ExecutarPipeline(const char *serial, const char *apk_path, const char *pa
       if (!click_ok) {
           if (cb) cb("[WARNING] Falha ao clicar na opcao 'Importar ZIP'.");
       }
-      Sleep(2000); // Aguarda carregar a tela de importaÃƒÂ§ÃƒÂ£o
+      Sleep(2000);
 
-      // Chegou em Importar ZIP: Desliga o tunel Gnirehtet e Wi-Fi imediatamente
-      if (cb) cb("[-] Tela de importacao carregada. Desligando tunelamento de rede (Gnirehtet) e Wi-Fi imediatamente...");
+      // Desliga o tunel Gnirehtet e Wi-Fi imediatamente
+      if (cb) cb("[-] [F1 - Etapa 4.5] Tela de importacao carregada. Desligando Gnirehtet e Wi-Fi...");
       M7_StopGnirehtet(serial, cb);
       snprintf(args, sizeof(args), "-s %s shell svc wifi disable", serial);
       out = adb_exec(args);
       if (out) free(out);
 
-      
-      // Executa a importação completa do ZIP e fecha todos os aplicativos
+      // [F1 - Etapa 6.0 & 7a] Executa a importação completa do ZIP e fecha todos os aplicativos
+      if (cb) cb("[-] [F1 - Etapa 6.0 & 7a] Executando selecao do ZIP, importacao e fechamento visual de cartoes...");
       M7_ExecutarImportacaoEFecharApps(serial, safe_pacote, cb);
       
   } else {
@@ -1378,7 +1312,6 @@ int M7_ExecutarPipeline(const char *serial, const char *apk_path, const char *pa
   }
 
 final_step:
-  // Configurações finais de energia e conectividade
   if (cb) cb("[-] Desligando tunelamento Gnirehtet...");
   M7_StopGnirehtet(serial, cb);
 
@@ -1393,9 +1326,8 @@ final_step:
   out = adb_exec(args);
   if (out) free(out);
 
-
   if (cb)
-    cb("[F1] PROCESSO TAB-MULTI CONCLUIDO COM SUCESSO (APARELHO DESLIGADO)!");
+    cb("[F1 - TabMulti M7] PIPELINE F1 CONCLUIDO COM SUCESSO (APARELHO DESLIGADO)!");
   return PIPELINE_SUCCESS;
 
 final_step_error:

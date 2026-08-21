@@ -333,11 +333,19 @@ namespace InnovPlayUI.Views
         {
             if (_isCopying) return;
             int idx = ListMunicipios.SelectedIndex;
-            if (idx >= 0)
+            if (idx >= 0 && idx < _lista.Count)
             {
-                _lista.RemoveAt(idx);
-                SalvarBanco();
-                MessageBox.Show("Município removido com sucesso!", "InnovTech", MessageBoxButton.OK, MessageBoxImage.Information);
+                var target = _lista[idx];
+                string municipioNome = target.Nome;
+
+                var result = MessageBox.Show($"Tem certeza que deseja excluir o município '{municipioNome}' e TODOS os seus arquivos e pastas locais?", "Confirmar Exclusão", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+                if (result == MessageBoxResult.Yes)
+                {
+                    InnovPlayUI.Core.PathHelper.DeleteMunicipioFolders(municipioNome);
+                    _lista.RemoveAt(idx);
+                    SalvarBanco();
+                    MessageBox.Show($"Município '{municipioNome}' e suas pastas de arquivos foram excluídos com sucesso!", "InnovTech", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
             }
         }
 

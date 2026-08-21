@@ -248,6 +248,12 @@
                                 <TextBlock x:Name="TxtTotalParameters" Text="0" Foreground="#FFB703" FontWeight="Black" FontSize="11"/>
                             </StackPanel>
                         </Border>
+                        <Border Background="#0B0B13" CornerRadius="8" Padding="10,5" Margin="0,0,6,0" BorderBrush="#2A2A40" BorderThickness="1">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="CONECTADOS: " Foreground="#A1A1AA" FontSize="10" FontWeight="Bold"/>
+                                <TextBlock x:Name="TxtActiveDevices" Text="0" Foreground="#4EDEA3" FontWeight="Black" FontSize="11"/>
+                            </StackPanel>
+                        </Border>
                         <Border Background="#0B0B13" CornerRadius="8" Padding="10,5" BorderBrush="#2A2A40" BorderThickness="1">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="PRECISÃO: " Foreground="#A1A1AA" FontSize="10" FontWeight="Bold"/>

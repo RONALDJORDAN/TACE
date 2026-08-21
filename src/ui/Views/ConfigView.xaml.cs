@@ -116,9 +116,19 @@ namespace InnovPlayUI.Views
             SwitchSubmodule(BtnSubAparelhos, PanelAparelhos);
         }
 
+        private InnovPlayUI.Core.OtaUpdateManager _otaManager = new InnovPlayUI.Core.OtaUpdateManager();
+        private InnovPlayUI.Core.OtaManifest? _availableManifest = null;
+
         private void BtnSubLogs_Click(object sender, RoutedEventArgs e)
         {
             SwitchSubmodule(BtnSubLogs, PanelLogs);
+        }
+
+        private void BtnSubOta_Click(object sender, RoutedEventArgs e)
+        {
+            SwitchSubmodule(BtnSubOta, PanelOta);
+            TxtCurrentVersion.Text = "v" + InnovPlayUI.Core.OtaUpdateManager.CurrentVersion;
+            _ = _otaManager.SendTelemetryPingAsync();
         }
 
         private void BtnSubDados_Click(object sender, RoutedEventArgs e)
@@ -147,6 +157,8 @@ namespace InnovPlayUI.Views
             BtnSubAparelhos.Background = bgNormal;
             BtnSubLogs.Foreground = brushNormal;
             BtnSubLogs.Background = bgNormal;
+            BtnSubOta.Foreground = brushNormal;
+            BtnSubOta.Background = bgNormal;
             BtnSubDados.Foreground = brushNormal;
             BtnSubDados.Background = bgNormal;
             BtnSubBibliotecas.Foreground = brushNormal;
@@ -161,6 +173,7 @@ namespace InnovPlayUI.Views
             PanelRede.Visibility = Visibility.Collapsed;
             PanelAparelhos.Visibility = Visibility.Collapsed;
             PanelLogs.Visibility = Visibility.Collapsed;
+            PanelOta.Visibility = Visibility.Collapsed;
             PanelDados.Visibility = Visibility.Collapsed;
             PanelBibliotecas.Visibility = Visibility.Collapsed;
 
@@ -475,6 +488,75 @@ namespace InnovPlayUI.Views
             TxtResultadoTeste.Text = status;
             TxtResultadoTeste.Foreground = brush;
             BtnTesteVelocidade.IsEnabled = true;
+        }
+
+        private async void BtnCheckOta_Click(object sender, RoutedEventArgs e)
+        {
+            BtnCheckOta.IsEnabled = false;
+            TxtStatusOta.Text = " (Consultando nuvem...)";
+            TxtStatusOta.Foreground = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#00E5FF"));
+
+            var manifest = await _otaManager.CheckForUpdatesAsync();
+            BtnCheckOta.IsEnabled = true;
+
+            if (manifest != null && _otaManager.IsUpdateAvailable(manifest))
+            {
+                _availableManifest = manifest;
+                TxtStatusOta.Text = " (Nova atualização encontrada!)";
+                TxtStatusOta.Foreground = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#4EDEA3"));
+
+                TxtNewVersion.Text = "v" + manifest.Version;
+                TxtChangelog.Text = string.IsNullOrWhiteSpace(manifest.Changelog) ? "Melhorias de desempenho e estabilidade do sistema." : manifest.Changelog;
+                BorderUpdateAvailable.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                _availableManifest = null;
+                BorderUpdateAvailable.Visibility = Visibility.Collapsed;
+                TxtStatusOta.Text = " (Você está utilizando a versão mais recente)";
+                TxtStatusOta.Foreground = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#8A8A9E"));
+            }
+        }
+
+        private async void BtnInstallOta_Click(object sender, RoutedEventArgs e)
+        {
+            if (_availableManifest == null) return;
+
+            BtnInstallOta.IsEnabled = false;
+            PanelOtaProgress.Visibility = Visibility.Visible;
+            TxtOtaProgressStatus.Text = "Iniciando download da atualização...";
+            OtaProgressBar.Value = 0;
+
+            var progress = new Progress<double>(val =>
+            {
+                OtaProgressBar.Value = val;
+                TxtOtaProgressStatus.Text = $"Baixando pacote: {Math.Round(val)}%";
+            });
+
+            var (success, zipPath, error) = await _otaManager.DownloadAndVerifyUpdateAsync(_availableManifest, progress);
+
+            if (success && !string.IsNullOrEmpty(zipPath))
+            {
+                TxtOtaProgressStatus.Text = "Download concluído! Aplicando atualização e reiniciando...";
+                await Task.Delay(1000);
+                _otaManager.ApplyUpdate(zipPath);
+            }
+            else
+            {
+                PanelOtaProgress.Visibility = Visibility.Collapsed;
+                BtnInstallOta.IsEnabled = true;
+                MessageBox.Show($"Falha ao baixar atualização OTA:\n{error}", "Erro de Atualização", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private async void ToggleTelemetry_Checked(object sender, RoutedEventArgs e)
+        {
+            await _otaManager.SendTelemetryPingAsync(null, "ONLINE");
+        }
+
+        private async void ToggleTelemetry_Unchecked(object sender, RoutedEventArgs e)
+        {
+            await _otaManager.SendTelemetryPingAsync(null, "TELEMETRY_DISABLED");
         }
     }
 

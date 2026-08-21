@@ -134,6 +134,7 @@
                     <Button x:Name="BtnSubLogs" Content="📜  Logs e Auditoria" Style="{StaticResource SideMenuButton}" Click="BtnSubLogs_Click"/>
                     
                     <TextBlock Text="DADOS E SISTEMA" Foreground="#513BA6" FontSize="12" FontWeight="Bold" Margin="10,25,0,15"/>
+                    <Button x:Name="BtnSubOta" Content="🔄  Atualização OTA" Style="{StaticResource SideMenuButton}" Click="BtnSubOta_Click"/>
                     <Button x:Name="BtnSubDados" Content="💾  Gestão e Backup" Style="{StaticResource SideMenuButton}" Click="BtnSubDados_Click"/>
                     <Button x:Name="BtnSubBibliotecas" Content="📚  Tecnologias &amp; Bibliotecas" Style="{StaticResource SideMenuButton}" Click="BtnSubBibliotecas_Click"/>
                 </StackPanel>
@@ -300,6 +301,85 @@
                                 </StackPanel>
                             </Border>
                         </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- Painel OTA: Atualização Remota e Telemetria -->
+                <StackPanel x:Name="PanelOta" Visibility="Collapsed">
+                    <TextBlock Text="Atualização do Sistema (OTA Remote)" Style="{StaticResource CategoryTitle}"/>
+                    <TextBlock Text="Verifique e aplique atualizações remotas via nuvem (Firebase)." Style="{StaticResource CategoryDesc}"/>
+
+                    <Border Style="{StaticResource CardStyle}">
+                        <StackPanel>
+                            <Grid Margin="0,0,0,15">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel VerticalAlignment="Center" Margin="0,0,20,0">
+                                    <TextBlock Text="Versão Instalada do Software" Foreground="#E3E0F2" FontSize="16" FontWeight="Bold"/>
+                                    <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
+                                        <TextBlock x:Name="TxtCurrentVersion" Text="v1.0.0" Foreground="#4EDEA3" FontSize="15" FontWeight="Bold" FontFamily="Consolas"/>
+                                        <TextBlock x:Name="TxtStatusOta" Text=" (Conectado à nuvem)" Foreground="#8A8A9E" FontSize="13" Margin="10,0,0,0" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </StackPanel>
+                                <Button Grid.Column="1" x:Name="BtnCheckOta" Content="🔍 Verificar Atualizações" Background="#2A2A40" Foreground="#5EB1FF" BorderThickness="1" BorderBrush="#5EB1FF" Padding="15,8" Cursor="Hand" FontWeight="Bold" FontSize="13" Click="BtnCheckOta_Click" VerticalAlignment="Center">
+                                    <Button.Resources>
+                                        <Style TargetType="Border">
+                                            <Setter Property="CornerRadius" Value="8"/>
+                                        </Style>
+                                    </Button.Resources>
+                                </Button>
+                            </Grid>
+
+                            <!-- Card de Atualização Disponível -->
+                            <Border x:Name="BorderUpdateAvailable" Visibility="Collapsed" Background="#1A1A2E" BorderBrush="#513BA6" BorderThickness="1" CornerRadius="10" Padding="15" Margin="0,10,0,15">
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                        <TextBlock Text="🚀 Nova Versão Disponível: " Foreground="#00E5FF" FontSize="15" FontWeight="Bold"/>
+                                        <TextBlock x:Name="TxtNewVersion" Text="v1.1.0" Foreground="#00E5FF" FontSize="15" FontWeight="Bold" FontFamily="Consolas"/>
+                                    </StackPanel>
+                                    <TextBlock x:Name="TxtChangelog" Text="Melhorias de desempenho e estabilidade..." Foreground="#E3E0F2" FontSize="13" TextWrapping="Wrap" Margin="0,0,0,15"/>
+                                    
+                                    <Button x:Name="BtnInstallOta" Content="⚡ Instalar Atualização Agora" Background="#513BA6" Foreground="#FFFFFF" BorderThickness="0" Padding="20,10" Cursor="Hand" FontWeight="Bold" FontSize="14" Click="BtnInstallOta_Click">
+                                        <Button.Resources>
+                                            <Style TargetType="Border">
+                                                <Setter Property="CornerRadius" Value="8"/>
+                                            </Style>
+                                        </Button.Resources>
+                                    </Button>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Progresso do Download OTA -->
+                            <Border x:Name="PanelOtaProgress" Visibility="Collapsed" Background="#0A0A0F" CornerRadius="8" Padding="15" Margin="0,10,0,0">
+                                <StackPanel>
+                                    <TextBlock x:Name="TxtOtaProgressStatus" Text="Baixando atualização..." Foreground="#00E5FF" FontSize="13" FontWeight="SemiBold" Margin="0,0,0,8" HorizontalAlignment="Center"/>
+                                    <ProgressBar x:Name="OtaProgressBar" Height="10" Background="#151525" Foreground="#00E5FF" BorderThickness="0" Value="0" Maximum="100">
+                                        <ProgressBar.Resources>
+                                            <Style TargetType="Border">
+                                                <Setter Property="CornerRadius" Value="5"/>
+                                            </Style>
+                                        </ProgressBar.Resources>
+                                    </ProgressBar>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Telemetria Automática Toggle -->
+                    <Border Style="{StaticResource CardStyle}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel VerticalAlignment="Center" Margin="0,0,20,0">
+                                <TextBlock Text="Telemetria Remota de Versão" Foreground="#E3E0F2" FontSize="16" FontWeight="Bold"/>
+                                <TextBlock Text="Reporta periodicamente ao Firebase a versão e status desta máquina para inventário no Painel Web." Foreground="#A1A1AA" FontSize="13" Margin="0,5,0,0" TextWrapping="Wrap"/>
+                            </StackPanel>
+                            <CheckBox Grid.Column="1" x:Name="ToggleTelemetry" Content="Ativo" Style="{StaticResource ToggleSwitchStyle}" IsChecked="True" Checked="ToggleTelemetry_Checked" Unchecked="ToggleTelemetry_Unchecked" VerticalAlignment="Center"/>
+                        </Grid>
                     </Border>
                 </StackPanel>
 

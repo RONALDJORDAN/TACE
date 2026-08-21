@@ -1198,7 +1198,7 @@ namespace InnovPlayUI.Views
             var targets = new System.Collections.Generic.List<DeviceModel>();
             foreach (var dev in _devicesList)
             {
-                if (dev.Status == "Autorizado")
+                if (dev.Status != "Pendente" && !string.IsNullOrEmpty(dev.Serial))
                 {
                     targets.Add(dev);
                 }

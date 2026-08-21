@@ -3,5 +3,6 @@
   "font_title_size": 20,
   "font_mono_size": 13,
   "motor_c_enabled": true,
-  "reverse_tethering_enabled": true
+  "reverse_tethering_enabled": true,
+  "firebase_database_url": "https://matematica-em-foco-default-rtdb.firebaseio.com"
 }

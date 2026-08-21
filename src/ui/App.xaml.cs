@@ -18,6 +18,8 @@ public partial class App : Application
         // Inicializa o Sistema Anti-Crash Guard (Triplo Handler + Watchdog)
         InnovPlayUI.Core.AntiCrashGuard.Initialize();
 
+        // Envia o ping de telemetria OTA para inventário no Firebase
+        _ = new InnovPlayUI.Core.OtaUpdateManager().SendTelemetryPingAsync();
 
         // Roda a varredura offline antes de abrir a interface
         InnovPlayUI.Core.PreflightChecker.CheckAndRepair();

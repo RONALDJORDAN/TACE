@@ -58,15 +58,27 @@
 
         <!-- Barra Superior de Módulos (Menu Fixo) -->
         <Border Grid.Row="0" Background="#151525" CornerRadius="8" Padding="12,8,12,8" Margin="0,0,0,15" BorderBrush="#23233A" BorderThickness="1">
-            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                <TextBlock Text="MÓDULOS DE ACESSO:" Foreground="#A1A1AA" VerticalAlignment="Center" Margin="5,0,20,0" FontWeight="Bold" FontSize="12"/>
-                
-                <Button x:Name="BtnMenuMonitor" Content="Monitor ADB (USB)" Style="{StaticResource NavTabButtonStyle}" Click="MenuMonitor_Click"/>
-                <Button x:Name="BtnMenuLearn" Content="⚡ InnoLearn IA" Style="{StaticResource NavTabButtonStyle}" Click="MenuLearn_Click"/>
-                <Button x:Name="BtnMenuRelatorios" Content="Relatórios e Registros" Style="{StaticResource NavTabButtonStyle}" Click="MenuRelatorios_Click"/>
-                <Button x:Name="BtnMenuConfig" Content="Configurações" Style="{StaticResource NavTabButtonStyle}" Click="MenuConfig_Click"/>
-                <Button x:Name="BtnMenuSobre" Content="Sobre" Style="{StaticResource NavTabButtonStyle}" Click="MenuSobre_Click"/>
-            </StackPanel>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="MÓDULOS DE ACESSO:" Foreground="#A1A1AA" VerticalAlignment="Center" Margin="5,0,20,0" FontWeight="Bold" FontSize="12"/>
+                    
+                    <Button x:Name="BtnMenuMonitor" Content="Monitor ADB (USB)" Style="{StaticResource NavTabButtonStyle}" Click="MenuMonitor_Click"/>
+                    <Button x:Name="BtnMenuLearn" Content="⚡ InnoLearn IA" Style="{StaticResource NavTabButtonStyle}" Click="MenuLearn_Click"/>
+                    <Button x:Name="BtnMenuRelatorios" Content="Relatórios e Registros" Style="{StaticResource NavTabButtonStyle}" Click="MenuRelatorios_Click"/>
+                    <Button x:Name="BtnMenuConfig" Content="Configurações" Style="{StaticResource NavTabButtonStyle}" Click="MenuConfig_Click"/>
+                    <Button x:Name="BtnMenuSobre" Content="Sobre" Style="{StaticResource NavTabButtonStyle}" Click="MenuSobre_Click"/>
+                </StackPanel>
+                <Border Grid.Column="1" Background="#1A1A2E" BorderBrush="#513BA6" BorderThickness="1" CornerRadius="8" Padding="10,4" VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="VERSÃO: " Foreground="#8A8A9E" FontSize="11" FontWeight="Bold"/>
+                        <TextBlock x:Name="TxtHeaderVersion" Text="v18.08.2026.1703" Foreground="#00E5FF" FontSize="11" FontWeight="Bold" FontFamily="Consolas"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
         </Border>
 
         <!-- Container de Conteúdo Dinâmico -->

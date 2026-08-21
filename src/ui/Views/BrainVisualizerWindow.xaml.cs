@@ -33,6 +33,9 @@ namespace InnovPlayUI.Views
         [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl)]
         private static extern int Engine_Learn_GetStrategy(int index, out LearnStrategyExport outStrategy);
 
+        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        private static extern int Engine_RefreshDevices();
+
         private class SynapsePulse
         {
             public Ellipse Particle { get; set; } = null!;
@@ -322,6 +325,16 @@ namespace InnovPlayUI.Views
             }
             
             TxtGlobalAccuracy.Text = $"{globalAccuracy}%";
+
+            try
+            {
+                int activeDevs = Engine_RefreshDevices();
+                if (TxtActiveDevices != null)
+                {
+                    TxtActiveDevices.Text = activeDevs.ToString();
+                }
+            }
+            catch { }
 
             double screenMin = Math.Min(screenWidth, screenHeight);
             double totalAvailableRadius = screenMin * 0.30;
