@@ -1,0 +1,815 @@
+<UserControl x:Class="InnovPlayUI.Views.MonitorProView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="#0B0B13"
+             FontFamily="Segoe UI">
+    
+    <UserControl.Resources>
+        <!-- Estilos de Botões de Ação Pro -->
+        <Style x:Key="ProActionButton" TargetType="Button">
+            <Setter Property="Background" Value="#0D0D18"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Margin" Value="2"/>
+            <Setter Property="Height" Value="30"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" 
+                                BorderBrush="{TemplateBinding BorderBrush}" 
+                                BorderThickness="1.2" CornerRadius="6">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#1F1F35"/>
+                                <Setter TargetName="border" Property="Effect">
+                                    <Setter.Value>
+                                        <DropShadowEffect Color="{Binding BorderBrush.Color, RelativeSource={RelativeSource TemplatedParent}}" BlurRadius="8" ShadowDepth="0" Opacity="0.5"/>
+                                    </Setter.Value>
+                                </Setter>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#05050A"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="ProF1Style" BasedOn="{StaticResource ProActionButton}" TargetType="Button">
+            <Setter Property="Foreground" Value="#4EDEA3"/>
+            <Setter Property="BorderBrush" Value="#4EDEA3"/>
+        </Style>
+        <Style x:Key="ProF2Style" BasedOn="{StaticResource ProActionButton}" TargetType="Button">
+            <Setter Property="Foreground" Value="#FFD666"/>
+            <Setter Property="BorderBrush" Value="#FFD666"/>
+        </Style>
+        <Style x:Key="ProF3Style" BasedOn="{StaticResource ProActionButton}" TargetType="Button">
+            <Setter Property="Foreground" Value="#D2BBFF"/>
+            <Setter Property="BorderBrush" Value="#D2BBFF"/>
+        </Style>
+        <Style x:Key="ProF4Style" BasedOn="{StaticResource ProActionButton}" TargetType="Button">
+            <Setter Property="Foreground" Value="#5EB1FF"/>
+            <Setter Property="BorderBrush" Value="#5EB1FF"/>
+        </Style>
+        <Style x:Key="ProF5Style" BasedOn="{StaticResource ProActionButton}" TargetType="Button">
+            <Setter Property="Foreground" Value="#FF4D4D"/>
+            <Setter Property="BorderBrush" Value="#FF4D4D"/>
+        </Style>
+        <Style x:Key="ProF6Style" BasedOn="{StaticResource ProActionButton}" TargetType="Button">
+            <Setter Property="Foreground" Value="#FFB3AD"/>
+            <Setter Property="BorderBrush" Value="#FFB3AD"/>
+        </Style>
+        <Style x:Key="ProF7Style" BasedOn="{StaticResource ProActionButton}" TargetType="Button">
+            <Setter Property="Foreground" Value="#FFA500"/>
+            <Setter Property="BorderBrush" Value="#FFA500"/>
+        </Style>
+        <Style x:Key="ProF8Style" BasedOn="{StaticResource ProActionButton}" TargetType="Button">
+            <Setter Property="Foreground" Value="#00E5FF"/>
+            <Setter Property="BorderBrush" Value="#00E5FF"/>
+        </Style>
+        <Style x:Key="ProStopStyle" BasedOn="{StaticResource ProActionButton}" TargetType="Button">
+            <Setter Property="Foreground" Value="#FF6B6B"/>
+            <Setter Property="BorderBrush" Value="#FF6B6B"/>
+        </Style>
+
+        <Style x:Key="ProProgressBar" TargetType="ProgressBar">
+            <Setter Property="Background" Value="#151525"/>
+            <Setter Property="Foreground" Value="#4EDEA3"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ProgressBar">
+                        <Grid>
+                            <Border Background="{TemplateBinding Background}" CornerRadius="3"/>
+                            <Border x:Name="PART_Track" CornerRadius="3"/>
+                            <Border x:Name="PART_Indicator" HorizontalAlignment="Left" CornerRadius="3">
+                                <Border.Background>
+                                    <SolidColorBrush Color="#4EDEA3"/>
+                                </Border.Background>
+                            </Border>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="ViewModeToggleStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#8A8A9E"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding" Value="8,4"/>
+            <Setter Property="Margin" Value="1,0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" 
+                                BorderBrush="{TemplateBinding BorderBrush}" 
+                                BorderThickness="{TemplateBinding BorderThickness}" 
+                                CornerRadius="5" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#1F1F35"/>
+                                <Setter Property="Foreground" Value="#FFFFFF"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Estilo para Mini Botões do Card -->
+        <Style x:Key="MiniCardButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="#151525"/>
+            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Padding" Value="6,2"/>
+            <Setter Property="Margin" Value="2,0"/>
+            <Setter Property="Height" Value="22"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" 
+                                BorderBrush="{TemplateBinding BorderBrush}" 
+                                BorderThickness="1" CornerRadius="4" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#2A2A45"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#05050A"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Margin="0">
+        <Grid.RowDefinitions>
+            <!-- Linha 0: HUD Executivo de KPIs da Linha de Produção & Meta -->
+            <RowDefinition Height="Auto"/>
+            <!-- Linha 1: Workspace Central (Dispositivos + Cockpit) -->
+            <RowDefinition Height="*"/>
+            <!-- Linha 2: Console de Logs & Histórico -->
+            <RowDefinition Height="200"/>
+        </Grid.RowDefinitions>
+
+        <!-- ========================================================================= -->
+        <!-- LINHA 0: HUD DE KPIs EM TEMPO REAL COM META DE PRODUÇÃO                   -->
+        <!-- ========================================================================= -->
+        <Border Grid.Row="0" Background="#151525" CornerRadius="8" Padding="12,8" Margin="0,0,0,10" BorderBrush="#23233A" BorderThickness="1">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="1.2*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- KPI 1: Dispositivos Ativos -->
+                <Border Grid.Column="0" Background="#0D0D18" CornerRadius="6" Padding="10,6" Margin="0,0,6,0" BorderBrush="#23233A" BorderThickness="1">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="📱" FontSize="18" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                            <TextBlock Text="DISPOSITIVOS USB" Foreground="#8A8A9E" FontSize="9" FontWeight="Bold"/>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock x:Name="TxtKpiActiveDevices" Text="0" Foreground="#00E5FF" FontSize="15" FontWeight="Bold" FontFamily="Consolas"/>
+                                <TextBlock Text=" Ativos" Foreground="#A1A1AA" FontSize="10" VerticalAlignment="Bottom" Margin="4,0,0,2"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!-- KPI 2: Tempo Médio de Ciclo -->
+                <Border Grid.Column="1" Background="#0D0D18" CornerRadius="6" Padding="10,6" Margin="0,0,6,0" BorderBrush="#23233A" BorderThickness="1">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="⏱️" FontSize="18" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                            <TextBlock Text="TEMPO MÉDIO / TAB" Foreground="#8A8A9E" FontSize="9" FontWeight="Bold"/>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock x:Name="TxtKpiAvgTime" Text="--s" Foreground="#4EDEA3" FontSize="15" FontWeight="Bold" FontFamily="Consolas"/>
+                                <TextBlock Text=" p/ ciclo" Foreground="#A1A1AA" FontSize="10" VerticalAlignment="Bottom" Margin="4,0,0,2"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!-- KPI 3: Ritmo Estimado (Throughput) -->
+                <Border Grid.Column="2" Background="#0D0D18" CornerRadius="6" Padding="10,6" Margin="0,0,6,0" BorderBrush="#23233A" BorderThickness="1">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="📈" FontSize="18" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                            <TextBlock Text="RITMO ESTIMADO" Foreground="#8A8A9E" FontSize="9" FontWeight="Bold"/>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock x:Name="TxtKpiThroughput" Text="0" Foreground="#FFD666" FontSize="15" FontWeight="Bold" FontFamily="Consolas"/>
+                                <TextBlock Text=" tabs / hora" Foreground="#A1A1AA" FontSize="10" VerticalAlignment="Bottom" Margin="4,0,0,2"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!-- KPI 4: Concluídos na Sessão -->
+                <Border Grid.Column="3" Background="#0D0D18" CornerRadius="6" Padding="10,6" Margin="0,0,6,0" BorderBrush="#23233A" BorderThickness="1">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="✅" FontSize="18" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                            <TextBlock Text="EFICIÊNCIA SESSÃO" Foreground="#8A8A9E" FontSize="9" FontWeight="Bold"/>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock x:Name="TxtKpiCompletedCount" Text="0" Foreground="#4EDEA3" FontSize="15" FontWeight="Bold" FontFamily="Consolas"/>
+                                <TextBlock x:Name="TxtKpiSuccessRate" Text=" (100% OK)" Foreground="#A1A1AA" FontSize="10" VerticalAlignment="Bottom" Margin="4,0,0,2"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!-- KPI 5: Meta de Produção da Bancada -->
+                <Border Grid.Column="4" Background="#0D0D18" CornerRadius="6" Padding="10,6" BorderBrush="#23233A" BorderThickness="1">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="🎯" FontSize="18" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                            <Grid Margin="0,0,0,2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="META DO LOTE" Foreground="#D2BBFF" FontSize="9" FontWeight="Bold"/>
+                                <TextBlock x:Name="TxtMetaLabel" Grid.Column="1" Text="0 / 100 (0%)" Foreground="#00E5FF" FontSize="9" FontWeight="Bold" FontFamily="Consolas"/>
+                            </Grid>
+                            <ProgressBar x:Name="ProgressMetaLote" Height="5" Value="0" Maximum="100" Style="{StaticResource ProProgressBar}"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- ========================================================================= -->
+        <!-- LINHA 1: WORKSPACE CENTRAL (DISPOSITIVOS + COCKPIT)                        -->
+        <!-- ========================================================================= -->
+        <Grid Grid.Row="1" Margin="0,0,0,10">
+            <Grid.ColumnDefinitions>
+                <!-- Coluna Esquerda: Hub de Dispositivos (56%) -->
+                <ColumnDefinition Width="56*"/>
+                <!-- Coluna Direita: Cockpit de Operação (44%) -->
+                <ColumnDefinition Width="44*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- ===================================================================== -->
+            <!-- COLUNA ESQUERDA: HUB DE DISPOSITIVOS                                  -->
+            <!-- ===================================================================== -->
+            <Border Grid.Column="0" Background="#151525" CornerRadius="8" Padding="12" Margin="0,0,5,0" BorderBrush="#23233A" BorderThickness="1">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Cabeçalho do Hub com Alternador de Visualização & Densidade -->
+                    <Grid Grid.Row="0" Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="Bancada de Dispositivos" Foreground="#D2BBFF" FontSize="13" FontWeight="Bold" VerticalAlignment="Center"/>
+                            <TextBlock x:Name="TxtDeviceCountBadge" Text="[0]" Foreground="#00E5FF" FontSize="12" FontWeight="Bold" FontFamily="Consolas" Margin="6,0,0,0" VerticalAlignment="Center"/>
+                        </StackPanel>
+
+                        <!-- Controles de Visualização: Modo Lista / Grid + Densidade de Colunas -->
+                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                            <!-- Alternador de Densidade (2C, 3C, 4C) -->
+                            <Border x:Name="DensityPanel" Background="#0D0D18" CornerRadius="5" Padding="2" Margin="0,0,6,0" BorderBrush="#23233A" BorderThickness="1" Visibility="Collapsed">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="Grid: " Foreground="#8A8A9E" FontSize="10" FontWeight="Bold" VerticalAlignment="Center" Margin="4,0,2,0"/>
+                                    <Button x:Name="BtnDensity2" Content="2C" Style="{StaticResource ViewModeToggleStyle}" Click="BtnDensity2_Click"/>
+                                    <Button x:Name="BtnDensity3" Content="3C" Style="{StaticResource ViewModeToggleStyle}" Click="BtnDensity3_Click"/>
+                                    <Button x:Name="BtnDensity4" Content="4C" Style="{StaticResource ViewModeToggleStyle}" Click="BtnDensity4_Click"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Alternador Lista vs Cards -->
+                            <Border Background="#0D0D18" CornerRadius="5" Padding="2" BorderBrush="#23233A" BorderThickness="1">
+                                <StackPanel Orientation="Horizontal">
+                                    <Button x:Name="BtnViewList" Content="📑 Lista" Style="{StaticResource ViewModeToggleStyle}" Click="BtnViewList_Click"/>
+                                    <Button x:Name="BtnViewGrid" Content="🔲 Cards" Style="{StaticResource ViewModeToggleStyle}" Click="BtnViewGrid_Click"/>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Modo 1: Lista Detalhada Compacta -->
+                    <ListView x:Name="ListDevicesPro" Grid.Row="1" Background="#0A0A0F" Foreground="#E3E0F2" BorderBrush="#2A2A40" BorderThickness="1" 
+                              ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Auto">
+                        <ListView.View>
+                            <GridView>
+                                <GridViewColumn Header="Slot" Width="50">
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding SlotIndex}" Foreground="#D2BBFF" FontWeight="Bold" FontSize="11" FontFamily="Consolas" HorizontalAlignment="Center"/>
+                                        </DataTemplate>
+                                    </GridViewColumn.CellTemplate>
+                                </GridViewColumn>
+                                <GridViewColumn Header="Bateria" Width="75">
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Grid Width="60" Height="16" Margin="0,2">
+                                                <ProgressBar Value="{Binding BatteryValue}" Minimum="0" Maximum="100" Style="{StaticResource ProProgressBar}"/>
+                                                <TextBlock Text="{Binding Battery}" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#FFFFFF" FontWeight="Bold" FontSize="9" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </GridViewColumn.CellTemplate>
+                                </GridViewColumn>
+                                <GridViewColumn Header="Serial" Width="155">
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Serial}" Foreground="#E3E0F2" FontFamily="Consolas" FontWeight="SemiBold" FontSize="11" VerticalAlignment="Center"/>
+                                        </DataTemplate>
+                                    </GridViewColumn.CellTemplate>
+                                </GridViewColumn>
+                                <GridViewColumn Header="Modelo" Width="130">
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Model}" Foreground="#FFFFFF" FontWeight="SemiBold" FontSize="11" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                                        </DataTemplate>
+                                    </GridViewColumn.CellTemplate>
+                                </GridViewColumn>
+                                <GridViewColumn Header="Etapa / Progresso" Width="180">
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Grid Margin="0,2">
+                                                <ProgressBar Value="{Binding ProgressValue}" Minimum="0" Maximum="100" Height="16" Style="{StaticResource ProProgressBar}"/>
+                                                <TextBlock Text="{Binding CurrentStep}" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#FFFFFF" FontWeight="Bold" FontSize="9" TextTrimming="CharacterEllipsis"/>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </GridViewColumn.CellTemplate>
+                                </GridViewColumn>
+                                <GridViewColumn Header="Status" Width="90">
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Border Background="{Binding StatusColor}" CornerRadius="6" Padding="6,2" HorizontalAlignment="Center">
+                                                <TextBlock Text="{Binding Status}" Foreground="#000000" FontWeight="Bold" FontSize="9"/>
+                                            </Border>
+                                        </DataTemplate>
+                                    </GridViewColumn.CellTemplate>
+                                </GridViewColumn>
+                                <GridViewColumn Header="Ações" Width="145">
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                                <Button Content="▶" Style="{StaticResource MiniCardButtonStyle}" Foreground="#4EDEA3" BorderBrush="#4EDEA3" Width="26" Click="BtnCardRun_Click" Tag="{Binding Serial}" ToolTip="Iniciar automação neste tablet"/>
+                                                <Button Content="🛑" Style="{StaticResource MiniCardButtonStyle}" Foreground="#FF6B6B" BorderBrush="#FF6B6B" Width="26" Click="BtnCardStop_Click" Tag="{Binding Serial}" ToolTip="Parar processos"/>
+                                                <Button Content="🔌" Style="{StaticResource MiniCardButtonStyle}" Foreground="#FFD666" BorderBrush="#FFD666" Width="26" Click="BtnCardShutdown_Click" Tag="{Binding Serial}" ToolTip="Desligar aparelho"/>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </GridViewColumn.CellTemplate>
+                                </GridViewColumn>
+                            </GridView>
+                        </ListView.View>
+                        <ListView.Resources>
+                            <Style TargetType="GridViewColumnHeader">
+                                <Setter Property="Background" Value="#1A1A2E"/>
+                                <Setter Property="Foreground" Value="#8570E6"/>
+                                <Setter Property="FontWeight" Value="SemiBold"/>
+                                <Setter Property="FontSize" Value="10"/>
+                                <Setter Property="Padding" Value="3"/>
+                                <Setter Property="BorderThickness" Value="0"/>
+                            </Style>
+                        </ListView.Resources>
+                        <ListView.ItemContainerStyle>
+                            <Style TargetType="ListViewItem">
+                                <Setter Property="Padding" Value="0,2"/>
+                                <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                                <Setter Property="BorderBrush" Value="#1A1A2E"/>
+                                <Setter Property="Margin" Value="0"/>
+                                <Style.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Background" Value="#1A1A2E"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ListView.ItemContainerStyle>
+                    </ListView>
+
+                    <!-- Modo 2: Grade de Cards de Bancada com Mini-Cockpit -->
+                    <ScrollViewer x:Name="ScrollGridDevices" Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Visibility="Collapsed">
+                        <ItemsControl x:Name="CardsContainerDevices">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <UniformGrid x:Name="GridDeviceCards" Columns="2"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="#0D0D18" CornerRadius="8" Padding="8" Margin="3" BorderBrush="#23233A" BorderThickness="1">
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <!-- Linha 0: Slot + Modelo + Status -->
+                                                <RowDefinition Height="Auto"/>
+                                                <!-- Linha 1: Serial + Bateria -->
+                                                <RowDefinition Height="Auto"/>
+                                                <!-- Linha 2: Barra de Progresso + Etapa -->
+                                                <RowDefinition Height="Auto"/>
+                                                <!-- Linha 3: Mini Barra de Ações Rápidas do Card -->
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+
+                                            <!-- Header do Card -->
+                                            <Grid Grid.Row="0" Margin="0,0,0,4">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <Border Background="#2D1F5E" CornerRadius="4" Padding="4,1" Margin="0,0,4,0">
+                                                    <TextBlock Text="{Binding SlotIndex}" Foreground="#D2BBFF" FontWeight="Bold" FontSize="9" FontFamily="Consolas"/>
+                                                </Border>
+                                                <TextBlock Grid.Column="1" Text="{Binding Model}" Foreground="#FFFFFF" FontWeight="Bold" FontSize="11" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                                                <Border Grid.Column="2" Background="{Binding StatusColor}" CornerRadius="6" Padding="4,1">
+                                                    <TextBlock Text="{Binding Status}" Foreground="#000000" FontWeight="Bold" FontSize="8"/>
+                                                </Border>
+                                            </Grid>
+
+                                            <!-- Info do Card (Serial e Bateria) -->
+                                            <Grid Grid.Row="1" Margin="0,0,0,4">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="{Binding Serial}" Foreground="#8A8A9E" FontFamily="Consolas" FontSize="10"/>
+                                                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                                    <TextBlock Text="🔋 " FontSize="9"/>
+                                                    <TextBlock Text="{Binding Battery}" Foreground="#4EDEA3" FontWeight="Bold" FontSize="10"/>
+                                                </StackPanel>
+                                            </Grid>
+
+                                            <!-- Barra de Progresso & Etapa Atual -->
+                                            <Grid Grid.Row="2" Margin="0,0,0,6">
+                                                <ProgressBar Height="14" Value="{Binding ProgressValue}" Maximum="100" Style="{StaticResource ProProgressBar}"/>
+                                                <TextBlock Text="{Binding CurrentStep}" Foreground="#FFFFFF" FontWeight="Bold" FontSize="8" HorizontalAlignment="Center" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                            </Grid>
+
+                                            <!-- Mini Toolbar por Tablet -->
+                                            <Grid Grid.Row="3">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <Button Grid.Column="0" Content="▶ Rodar" Style="{StaticResource MiniCardButtonStyle}" Foreground="#4EDEA3" BorderBrush="#4EDEA3" Click="BtnCardRun_Click" Tag="{Binding Serial}"/>
+                                                <Button Grid.Column="1" Content="🛑 Parar" Style="{StaticResource MiniCardButtonStyle}" Foreground="#FF6B6B" BorderBrush="#FF6B6B" Click="BtnCardStop_Click" Tag="{Binding Serial}"/>
+                                                <Button Grid.Column="2" Content="🔌 Desligar" Style="{StaticResource MiniCardButtonStyle}" Foreground="#FFD666" BorderBrush="#FFD666" Click="BtnCardShutdown_Click" Tag="{Binding Serial}"/>
+                                            </Grid>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+
+            <!-- ===================================================================== -->
+            <!-- COLUNA DIREITA: COCKPIT DE CONFIGURAÇÃO & AÇÕES EM LOTE                -->
+            <!-- ===================================================================== -->
+            <Border Grid.Column="1" Background="#151525" CornerRadius="8" Padding="10" Margin="5,0,0,0" BorderBrush="#23233A" BorderThickness="1">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Focusable="False">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <!-- Card 1: Município & Arquivos -->
+                            <RowDefinition Height="Auto"/>
+                            <!-- Card 2: Automação PnP & Telemetria Gnirehtet -->
+                            <RowDefinition Height="Auto"/>
+                            <!-- Card 3: Disparo em Lote (Batch) -->
+                            <RowDefinition Height="Auto"/>
+                            <!-- Card 4: Matriz de Ações por Hardware -->
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- 1. Município e Badges de Arquivos -->
+                        <Border Grid.Row="0" Background="#0D0D18" CornerRadius="8" Padding="10,6" Margin="0,0,0,6" BorderBrush="#23233A" BorderThickness="1">
+                            <StackPanel>
+                                <Grid Margin="0,0,0,4">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <ComboBox x:Name="ComboMunicipiosPro" Height="24" Background="#513BA6" Foreground="#FFFFFF" BorderBrush="#8570E6" 
+                                              FontSize="11" SelectionChanged="ComboMunicipiosPro_SelectionChanged"/>
+                                    <Button Grid.Column="1" Content="⚙ Gerenciar" Background="#0A0A0F" Foreground="#4EDEA3" BorderBrush="#2A2A40" BorderThickness="1" 
+                                            Margin="6,0,0,0" Padding="8,0" FontSize="10" Cursor="Hand" Click="BtnGerenciarMunicipios_Click"/>
+                                </Grid>
+
+                                <!-- Badges Compactos de Arquivos -->
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- Badge APK -->
+                                    <Border Grid.Column="0" Background="#151525" CornerRadius="4" Padding="5,2" Margin="0,0,2,0">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock x:Name="IconApkPro" Text="✔" Foreground="#4EDEA3" FontSize="9" FontWeight="Bold" Margin="0,0,3,0"/>
+                                            <TextBlock Text="APK: " Foreground="#8570E6" FontSize="9" FontWeight="Bold"/>
+                                            <TextBlock x:Name="TxtApkNamePro" Text="..." Foreground="#A1A1AA" FontSize="9" TextTrimming="CharacterEllipsis"/>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- Badge Pacote ZIP -->
+                                    <Border Grid.Column="1" Background="#151525" CornerRadius="4" Padding="5,2" Margin="2,0,2,0">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock x:Name="IconPacotePro" Text="✔" Foreground="#4EDEA3" FontSize="9" FontWeight="Bold" Margin="0,0,3,0"/>
+                                            <TextBlock Text="ZIP: " Foreground="#8570E6" FontSize="9" FontWeight="Bold"/>
+                                            <TextBlock x:Name="TxtPacoteNamePro" Text="..." Foreground="#A1A1AA" FontSize="9" TextTrimming="CharacterEllipsis"/>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- Badge Wallpaper -->
+                                    <Border Grid.Column="2" Background="#151525" CornerRadius="4" Padding="5,2" Margin="2,0,0,0">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock x:Name="IconWpPro" Text="✔" Foreground="#4EDEA3" FontSize="9" FontWeight="Bold" Margin="0,0,3,0"/>
+                                            <TextBlock Text="WP: " Foreground="#8570E6" FontSize="9" FontWeight="Bold"/>
+                                            <TextBlock x:Name="TxtWpNamePro" Text="..." Foreground="#A1A1AA" FontSize="9" TextTrimming="CharacterEllipsis"/>
+                                        </StackPanel>
+                                    </Border>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- 2. Automação PnP & Status Gnirehtet -->
+                        <Border Grid.Row="1" Background="#0D0D18" CornerRadius="8" Padding="10,5" Margin="0,0,0,6" BorderBrush="#23233A" BorderThickness="1">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <CheckBox x:Name="ChkAutoInstallPro" Content="PnP:" Foreground="#E3E0F2" FontSize="10" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                <ComboBox x:Name="ComboAutoActionPro" Grid.Column="1" Height="22" Background="#1A1A2E" Foreground="#FFFFFF" BorderBrush="#2A2A40" FontSize="10" SelectedIndex="0">
+                                    <ComboBoxItem Content="[F1] Sincronização + Instalação"/>
+                                    <ComboBoxItem Content="[F2] Limpeza e Instalação"/>
+                                    <ComboBoxItem Content="[F3] Atualização de Pacote"/>
+                                    <ComboBoxItem Content="[F5] Desligamento Remoto"/>
+                                    <ComboBoxItem Content="[F6] Sincronização Avançada"/>
+                                    <ComboBoxItem Content="[F8] Conexão Ativa (Gnirehtet)"/>
+                                </ComboBox>
+                                <!-- Live Gnirehtet Status -->
+                                <Border Grid.Column="2" Background="#151525" CornerRadius="4" Padding="6,2" Margin="6,0,0,0">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="🌐 " FontSize="9"/>
+                                        <TextBlock x:Name="TxtGnirehtetStatus" Text="Gnirehtet: Ativo" Foreground="#00E5FF" FontWeight="Bold" FontSize="9"/>
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+                        </Border>
+
+                        <!-- 3. AÇÕES EM LOTE (BATCH COMMANDS) -->
+                        <Border Grid.Row="2" Background="#0D0D18" CornerRadius="8" Padding="8,5" Margin="0,0,0,6" BorderBrush="#513BA6" BorderThickness="1.2">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="1.4*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Button x:Name="BtnRunAll" Content="⚡ EXECUTAR EM TODOS" Background="#2D1F5E" Foreground="#4EDEA3" BorderBrush="#4EDEA3" 
+                                        BorderThickness="1" Height="26" FontSize="10" FontWeight="Bold" Cursor="Hand" Margin="0,0,4,0" Click="BtnRunAll_Click">
+                                    <Button.Resources>
+                                        <Style TargetType="Border">
+                                            <Setter Property="CornerRadius" Value="5"/>
+                                        </Style>
+                                    </Button.Resources>
+                                </Button>
+                                <Button x:Name="BtnShutdownCompleted" Grid.Column="1" Content="🔌 Desligar Concluídos" Background="#1A1A2E" Foreground="#FFD666" BorderBrush="#FFD666" 
+                                        BorderThickness="1" Height="26" FontSize="10" FontWeight="Bold" Cursor="Hand" Margin="4,0,0,0" Click="BtnShutdownCompleted_Click">
+                                    <Button.Resources>
+                                        <Style TargetType="Border">
+                                            <Setter Property="CornerRadius" Value="5"/>
+                                        </Style>
+                                    </Button.Resources>
+                                </Button>
+                            </Grid>
+                        </Border>
+
+                        <!-- 4. Matriz de Ações por Hardware -->
+                        <Border Grid.Row="3" Background="#0D0D18" CornerRadius="8" Padding="8,6" BorderBrush="#23233A" BorderThickness="1">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <!-- Seletor de Modelo em Pílula -->
+                                <Border Grid.Row="0" Background="#151525" CornerRadius="6" Padding="2" Margin="0,0,0,6" BorderBrush="#23233A" BorderThickness="1">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Button x:Name="BtnCategoryPositivoPro" Grid.Column="0" Content="Vision 7" Style="{StaticResource ViewModeToggleStyle}" Click="BtnCategoryPositivoPro_Click"/>
+                                        <Button x:Name="BtnCategoryMultilaserPro" Grid.Column="1" Content="TabMulti M7" Style="{StaticResource ViewModeToggleStyle}" Click="BtnCategoryMultilaserPro_Click"/>
+                                        <Button x:Name="BtnCategoryNokiaPro" Grid.Column="2" Content="Nokia T20" Style="{StaticResource ViewModeToggleStyle}" Click="BtnCategoryNokiaPro_Click"/>
+                                    </Grid>
+                                </Border>
+
+                                <!-- Painel Ações: Positivo Vision 7 -->
+                                <Grid x:Name="GridPositivoActionsPro" Grid.Row="1">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Button Grid.Row="0" Grid.Column="0" Content="[F1] Instalar" Style="{StaticResource ProF1Style}" Click="BtnF1_Click"/>
+                                    <Button Grid.Row="0" Grid.Column="1" Content="[F2] Limpar" Style="{StaticResource ProF2Style}" Click="BtnF2_Click"/>
+                                    <Button Grid.Row="0" Grid.Column="2" Content="[F3] Atualizar" Style="{StaticResource ProF3Style}" Click="BtnF3_Click"/>
+                                    <Button Grid.Row="0" Grid.Column="3" Content="[F4] Kiosk" Style="{StaticResource ProF4Style}" Click="BtnF4_Click"/>
+
+                                    <Button Grid.Row="1" Grid.Column="0" Content="[F5] Desligar" Style="{StaticResource ProF5Style}" Click="BtnF5_Click"/>
+                                    <Button Grid.Row="1" Grid.Column="1" Content="[F6] Sync" Style="{StaticResource ProF6Style}" Click="BtnF6_Click"/>
+                                    <Button Grid.Row="1" Grid.Column="2" Content="[F8] Gnirehtet" Style="{StaticResource ProF8Style}" Click="BtnF8_Click"/>
+                                    <Button Grid.Row="1" Grid.Column="3" Content="🛑 Parar" Style="{StaticResource ProStopStyle}" Click="BtnStop_Click"/>
+                                </Grid>
+
+                                <!-- Painel Ações: Multilaser TabMulti M7 -->
+                                <Grid x:Name="GridMultilaserActionsPro" Grid.Row="1" Visibility="Collapsed">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Button Grid.Column="0" Content="[F1] Instalar M7" Style="{StaticResource ProF1Style}" Click="BtnM7_F1_Click"/>
+                                    <Button Grid.Column="1" Content="[F2] Atualizar" Style="{StaticResource ProF2Style}" Click="BtnM7_F2_Click"/>
+                                    <Button Grid.Column="2" Content="[F3] Terminal" Style="{StaticResource ProF4Style}" Click="BtnM7_F3_Click"/>
+                                    <Button Grid.Column="3" Content="[F4] Desligar" Style="{StaticResource ProF5Style}" Click="BtnM7_F4_Click"/>
+                                    <Button Grid.Column="4" Content="🛑 Parar" Style="{StaticResource ProStopStyle}" Click="BtnStop_Click"/>
+                                </Grid>
+
+                                <!-- Painel Ações: Nokia T20 -->
+                                <Grid x:Name="GridNokiaActionsPro" Grid.Row="1" Visibility="Collapsed">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Button Grid.Column="0" Content="[F1] Sinc+Instal" Style="{StaticResource ProF1Style}" Click="BtnNokiaF1_Click"/>
+                                    <Button Grid.Column="1" Content="[F2] Reinstalar" Style="{StaticResource ProF2Style}" Click="BtnNokiaF2_Click"/>
+                                    <Button Grid.Column="2" Content="[F3] Atualizar" Style="{StaticResource ProF3Style}" Click="BtnNokiaF3_Click"/>
+                                    <Button Grid.Column="3" Content="🛑 Parar" Style="{StaticResource ProStopStyle}" Click="BtnStop_Click"/>
+                                </Grid>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </ScrollViewer>
+            </Border>
+        </Grid>
+
+        <!-- ========================================================================= -->
+        <!-- LINHA 2: CONSOLE INTELIGENTE DE LOGS COM FILTROS SEMÂNTICOS & EXPORTAÇÃO   -->
+        <!-- ========================================================================= -->
+        <Border Grid.Row="2" Background="#151525" CornerRadius="8" Padding="12,8" BorderBrush="#23233A" BorderThickness="1">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- Barra Superior do Console (Preenchimento Total, Filtros, Busca Larga e Ferramentas) -->
+                <Grid Grid.Row="0" Margin="0,0,0,6">
+                    <Grid.ColumnDefinitions>
+                        <!-- Lado Esquerdo: Título + Progresso -->
+                        <ColumnDefinition Width="Auto"/>
+                        <!-- Centro: Filtros Rápidos Semânticos + Badge Contador -->
+                        <ColumnDefinition Width="*"/>
+                        <!-- Lado Direito: Busca Expandida + Ações Rápidas -->
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Lado Esquerdo -->
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,12,0">
+                        <TextBlock Text="Console de Operação" Foreground="#D2BBFF" FontSize="12" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <ProgressBar x:Name="ExecutionProgressPro" Width="80" Height="5" Style="{StaticResource ProProgressBar}" Value="0" Maximum="100" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="LblProgressPro" Text="0%" Foreground="#4EDEA3" FontWeight="Bold" FontSize="10" VerticalAlignment="Center" Margin="4,0,0,0"/>
+                    </StackPanel>
+
+                    <!-- Centro: Filtros Rápidos -->
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <Border Background="#0D0D18" CornerRadius="5" Padding="2" BorderBrush="#23233A" BorderThickness="1">
+                            <StackPanel Orientation="Horizontal">
+                                <Button x:Name="BtnFilterAll" Content="Todos" Style="{StaticResource ViewModeToggleStyle}" Click="BtnFilterAll_Click"/>
+                                <Button x:Name="BtnFilterSuccess" Content="🟢 Sucessos" Style="{StaticResource ViewModeToggleStyle}" Click="BtnFilterSuccess_Click"/>
+                                <Button x:Name="BtnFilterError" Content="🔴 Falhas" Style="{StaticResource ViewModeToggleStyle}" Click="BtnFilterError_Click"/>
+                                <Button x:Name="BtnFilterSteps" Content="⚡ Etapas" Style="{StaticResource ViewModeToggleStyle}" Click="BtnFilterSteps_Click"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+
+                    <!-- Lado Direito: Busca Larga + Ferramentas -->
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                        <!-- Busca em Tempo Real Expandida -->
+                        <Border Background="#0D0D18" CornerRadius="5" Padding="6,2" Margin="0,0,6,0" BorderBrush="#23233A" BorderThickness="1">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="🔍 " Foreground="#8A8A9E" FontSize="10" VerticalAlignment="Center"/>
+                                <TextBox x:Name="TxtLogFilterPro" Width="140" Background="Transparent" Foreground="#E3E0F2" BorderThickness="0" 
+                                         FontSize="10" VerticalAlignment="Center" TextChanged="TxtLogFilterPro_TextChanged" ToolTip="Filtrar mensagens de log em tempo real"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Botão Copiar Tudo -->
+                        <Button Content="📋 Copiar" Background="#0A0A0F" Foreground="#D2BBFF" BorderBrush="#513BA6" BorderThickness="1" 
+                                Padding="8,2" FontSize="10" FontWeight="Bold" Margin="0,0,4,0" Click="BtnCopyLog_Click" ToolTip="Copiar todo o log exibido"/>
+
+                        <!-- Botão Exportar Log -->
+                        <Button Content="💾 Exportar" Background="#0A0A0F" Foreground="#00E5FF" BorderBrush="#00E5FF" BorderThickness="1" 
+                                Padding="8,2" FontSize="10" FontWeight="Bold" Margin="0,0,4,0" Click="BtnExportLog_Click" ToolTip="Salvar histórico da sessão em arquivo de texto"/>
+                        
+                        <!-- Botão Limpar -->
+                        <Button Content="🗑️ Limpar" Background="#0A0A0F" Foreground="#E3E0F2" BorderBrush="#8570E6" BorderThickness="1" 
+                                Padding="8,2" FontSize="10" Click="BtnClearLogPro_Click" ToolTip="Limpar console"/>
+                    </StackPanel>
+                </Grid>
+
+                <!-- TabControl com Abas Dinâmicas de Log -->
+                <TabControl x:Name="LogTabsPro" Grid.Row="1" Background="#0A0A0F" BorderBrush="#2A2A40" BorderThickness="1">
+                    <TabControl.Resources>
+                        <Style TargetType="TabItem">
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="TabItem">
+                                        <Border x:Name="TabBorder" Background="#151525" Padding="10,4" Margin="0,0,2,0" CornerRadius="5,5,0,0">
+                                            <ContentPresenter x:Name="ContentSite" VerticalAlignment="Center" HorizontalAlignment="Center" ContentSource="Header"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsSelected" Value="True">
+                                                <Setter TargetName="TabBorder" Property="Background" Value="#513BA6"/>
+                                                <Setter Property="Foreground" Value="#FFFFFF"/>
+                                            </Trigger>
+                                            <Trigger Property="IsSelected" Value="False">
+                                                <Setter Property="Foreground" Value="#8A8A9E"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                            <Setter Property="FontSize" Value="10"/>
+                            <Setter Property="FontWeight" Value="Bold"/>
+                        </Style>
+                    </TabControl.Resources>
+                    <TabItem Header="Global (Sistema)">
+                        <TextBox x:Name="TxtLogGlobalPro" Background="#0A0A0F" Foreground="#4EDEA3" BorderBrush="Transparent" BorderThickness="0" 
+                                 FontFamily="Consolas, Cascadia Code, Courier New" FontSize="11.5" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" IsReadOnly="True"
+                                 Padding="8,8,8,8" Margin="0,2,0,0" Text="[00:00:00] InnoBot RPA Studio (Layout Pro) inicializado. Monitorando portas ADB...&#x0a;"/>
+                    </TabItem>
+                </TabControl>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

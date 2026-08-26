@@ -6,6 +6,7 @@ namespace InnovPlayUI
     public partial class MainWindow : Window
     {
         private MonitorView _monitorView;
+        private MonitorProView _monitorProView;
         private RelatoriosView _relatoriosView;
         private ConfigView _configView;
         private InnoLearnView _learnView;
@@ -21,6 +22,7 @@ namespace InnovPlayUI
 
             // Instanciar views uma única vez
             _monitorView = new MonitorView();
+            _monitorProView = new MonitorProView();
             _relatoriosView = new RelatoriosView();
             _configView = new ConfigView();
             _learnView = new InnoLearnView();
@@ -69,6 +71,17 @@ namespace InnovPlayUI
             NavigateToMonitor();
         }
 
+        public void NavigateToMonitorPro()
+        {
+            MainContent.Content = _monitorProView;
+            UpdateMenuStyles(BtnMenuMonitorPro);
+        }
+
+        private void MenuMonitorPro_Click(object sender, RoutedEventArgs e)
+        {
+            NavigateToMonitorPro();
+        }
+
         private void MenuLearn_Click(object sender, RoutedEventArgs e)
         {
             NavigateToLearn();
@@ -108,7 +121,7 @@ namespace InnovPlayUI
             var brushActiveBg = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#2D1F5E"));
             var brushActiveBorder = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#513BA6"));
 
-            System.Windows.Controls.Button[] buttons = { BtnMenuMonitor, BtnMenuLearn, BtnMenuRelatorios, BtnMenuConfig, BtnMenuSobre };
+            System.Windows.Controls.Button[] buttons = { BtnMenuMonitor, BtnMenuMonitorPro, BtnMenuLearn, BtnMenuRelatorios, BtnMenuConfig, BtnMenuSobre };
 
             foreach (var btn in buttons)
             {
@@ -151,6 +164,7 @@ namespace InnovPlayUI
         public void ReloadAllViewsData()
         {
             _monitorView?.LoadMunicipios();
+            _monitorProView?.LoadMunicipios();
         }
 
         private void Window_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
@@ -200,6 +214,49 @@ namespace InnovPlayUI
                 else if (e.Key == System.Windows.Input.Key.Escape)
                 {
                     monitor.HandleEscPress();
+                    e.Handled = true;
+                }
+            }
+            else if (MainContent.Content is MonitorProView monitorPro)
+            {
+                if (e.Key == System.Windows.Input.Key.F1)
+                {
+                    monitorPro.BtnF1_Click(this, new RoutedEventArgs());
+                    e.Handled = true;
+                }
+                else if (e.Key == System.Windows.Input.Key.F2)
+                {
+                    monitorPro.BtnF2_Click(this, new RoutedEventArgs());
+                    e.Handled = true;
+                }
+                else if (e.Key == System.Windows.Input.Key.F3)
+                {
+                    monitorPro.BtnF3_Click(this, new RoutedEventArgs());
+                    e.Handled = true;
+                }
+                else if (e.Key == System.Windows.Input.Key.F4)
+                {
+                    monitorPro.BtnF4_Click(this, new RoutedEventArgs());
+                    e.Handled = true;
+                }
+                else if (e.Key == System.Windows.Input.Key.F5)
+                {
+                    monitorPro.BtnF5_Click(this, new RoutedEventArgs());
+                    e.Handled = true;
+                }
+                else if (e.Key == System.Windows.Input.Key.F6)
+                {
+                    monitorPro.BtnF6_Click(this, new RoutedEventArgs());
+                    e.Handled = true;
+                }
+                else if (e.Key == System.Windows.Input.Key.F8)
+                {
+                    monitorPro.BtnF8_Click(this, new RoutedEventArgs());
+                    e.Handled = true;
+                }
+                else if (e.Key == System.Windows.Input.Key.Escape)
+                {
+                    monitorPro.HandleEscPress();
                     e.Handled = true;
                 }
             }

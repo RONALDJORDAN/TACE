@@ -315,14 +315,165 @@ int F4_ExecutarFerramenta(const char *serial, int acao, LogCallback cb) {
       if (cb)
         cb("[ERROR] Falha ao ler a tela (UI Automator).");
     }
-    return PIPELINE_ERROR;
+  if (acao == 11) {
+    if (cb)
+      cb("[F4] Ferramenta 11: Leitura Visual do Endereço MAC do Wi-Fi...");
+
+    char args_mac[1024];
+
+    // 1. Acordar e desbloquear tela
+    if (cb) cb("  -> [Passo 1] Acordando o dispositivo e desbloqueando a tela...");
+    snprintf(args_mac, sizeof(args_mac), "-s %s shell \"dumpsys power | grep mWakefulness=\"", serial);
+    char *w_stat = adb_exec(args_mac);
+    if (w_stat) {
+      if (strstr(w_stat, "mWakefulness=Awake") == NULL) {
+        snprintf(args_mac, sizeof(args_mac), "-s %s shell input keyevent 26", serial);
+        char *pwr = adb_exec(args_mac);
+        if (pwr) free(pwr);
+        Sleep(800);
+      }
+      free(w_stat);
+    }
+    snprintf(args_mac, sizeof(args_mac), "-s %s shell input swipe 300 1000 300 300 300", serial);
+    char *swp = adb_exec(args_mac);
+    if (swp) free(swp);
+
+    // 2. Ligar o Wi-Fi para que a interface wlan0 inicialize o MAC
+    if (cb) cb("  -> [Passo 2] Ativando a antena Wi-Fi para inicializar a interface de rede...");
+    snprintf(args_mac, sizeof(args_mac), "-s %s shell \"svc wifi enable && settings put global wifi_on 1 && cmd wifi set-wifi-enabled enabled\"", serial);
+    char *w_en = adb_exec(args_mac);
+    if (w_en) free(w_en);
+    Sleep(2000); // Aguarda a placa de rede subir
+
+    // 3. Liberar e abrir as Configurações na tela 'Sobre o tablet'
+    if (cb) cb("  -> [Passo 3] Liberando e abrindo 'Configurações > Sobre o tablet'...");
+    snprintf(args_mac, sizeof(args_mac), "-s %s shell pm unsuspend com.android.settings", serial);
+    char *uns = adb_exec(args_mac);
+    if (uns) free(uns);
+
+    // Tenta abrir direto em 'Sobre o tablet' (DEVICE_INFO_SETTINGS)
+    snprintf(args_mac, sizeof(args_mac), "-s %s shell am start -a android.settings.DEVICE_INFO_SETTINGS", serial);
+    char *st_info = adb_exec(args_mac);
+    if (st_info) free(st_info);
+    Sleep(2000);
+
+    // 4. Mapeamento visual via UIAutomator
+    if (cb) cb("  -> [Passo 4] Mapeando elementos visuais da tela via UIAutomator...");
+    char mac_encontrado[64] = {0};
+
+    for (int attempt = 0; attempt < 3; attempt++) {
+      snprintf(args_mac, sizeof(args_mac), "-s %s shell uiautomator dump /sdcard/dump_mac.xml", serial);
+      char *dm = adb_exec(args_mac);
+      if (dm) free(dm);
+
+      snprintf(args_mac, sizeof(args_mac), "-s %s shell cat /sdcard/dump_mac.xml", serial);
+      char *xml = adb_exec(args_mac);
+
+      if (xml) {
+        // Procura por padrão de MAC ou textos de Endereço MAC
+        char *p_mac = strstr(xml, "Endereço MAC");
+        if (!p_mac) p_mac = strstr(xml, "Endereco MAC");
+        if (!p_mac) p_mac = strstr(xml, "MAC");
+        if (!p_mac) p_mac = strstr(xml, "Wi-Fi");
+
+        if (p_mac) {
+          // Varre ao redor procurando padrão de MAC: xx:xx:xx:xx:xx:xx
+          char *p_curr = p_mac;
+          for (int k = 0; k < 400 && *p_curr; k++, p_curr++) {
+            if ((isxdigit((unsigned char)p_curr[0]) && isxdigit((unsigned char)p_curr[1]) && p_curr[2] == ':' &&
+                 isxdigit((unsigned char)p_curr[3]) && isxdigit((unsigned char)p_curr[4]) && p_curr[5] == ':' &&
+                 isxdigit((unsigned char)p_curr[6]) && isxdigit((unsigned char)p_curr[7]) && p_curr[8] == ':')) {
+              strncpy(mac_encontrado, p_curr, 17);
+              mac_encontrado[17] = '\0';
+              break;
+            }
+          }
+        }
+
+        // Se não achou na busca direcionada, faz regex/scan no XML inteiro por xx:xx:xx:xx:xx:xx
+        if (strlen(mac_encontrado) == 0) {
+          char *p_scan = xml;
+          while (*p_scan) {
+            if ((isxdigit((unsigned char)p_scan[0]) && isxdigit((unsigned char)p_scan[1]) && p_scan[2] == ':' &&
+                 isxdigit((unsigned char)p_scan[3]) && isxdigit((unsigned char)p_scan[4]) && p_scan[5] == ':' &&
+                 isxdigit((unsigned char)p_scan[6]) && isxdigit((unsigned char)p_scan[7]) && p_scan[8] == ':' &&
+                 isxdigit((unsigned char)p_scan[9]) && isxdigit((unsigned char)p_scan[10]) && p_scan[11] == ':' &&
+                 isxdigit((unsigned char)p_scan[12]) && isxdigit((unsigned char)p_scan[13]) && p_scan[14] == ':' &&
+                 isxdigit((unsigned char)p_scan[15]) && isxdigit((unsigned char)p_scan[16]))) {
+              // Verifica se não é 02:00:00:00:00:00 (MAC dummy do Android)
+              if (strncmp(p_scan, "02:00:00:00:00:00", 17) != 0) {
+                strncpy(mac_encontrado, p_scan, 17);
+                mac_encontrado[17] = '\0';
+                break;
+              }
+            }
+            p_scan++;
+          }
+        }
+
+        free(xml);
+      }
+
+      if (strlen(mac_encontrado) > 0) break;
+
+      // Desliza um pouco para baixo caso o campo de MAC esteja mais abaixo na tela
+      if (attempt < 2) {
+        if (cb) cb("  -> Rolando a tela para baixo para localizar o campo de MAC...");
+        snprintf(args_mac, sizeof(args_mac), "-s %s shell input swipe 400 900 400 400 400", serial);
+        char *r_swp = adb_exec(args_mac);
+        if (r_swp) free(r_swp);
+        Sleep(1000);
+      }
+    }
+
+    // Fallback de baixo nível se o XML do Settings ocultar o resumo por restrição
+    if (strlen(mac_encontrado) == 0) {
+      if (cb) cb("  -> [Fallback] Consultando interface wlan0 do kernel...");
+      snprintf(args_mac, sizeof(args_mac), "-s %s shell \"cat /sys/class/net/wlan0/address || ip link show wlan0\"", serial);
+      char *out_k = adb_exec(args_mac);
+      if (out_k) {
+        char *p_scan = out_k;
+        while (*p_scan) {
+          if ((isxdigit((unsigned char)p_scan[0]) && isxdigit((unsigned char)p_scan[1]) && p_scan[2] == ':' &&
+               isxdigit((unsigned char)p_scan[3]) && isxdigit((unsigned char)p_scan[4]) && p_scan[5] == ':' &&
+               isxdigit((unsigned char)p_scan[6]) && isxdigit((unsigned char)p_scan[7]) && p_scan[8] == ':' &&
+               isxdigit((unsigned char)p_scan[9]) && isxdigit((unsigned char)p_scan[10]) && p_scan[11] == ':' &&
+               isxdigit((unsigned char)p_scan[12]) && isxdigit((unsigned char)p_scan[13]) && p_scan[14] == ':' &&
+               isxdigit((unsigned char)p_scan[15]) && isxdigit((unsigned char)p_scan[16]))) {
+            if (strncmp(p_scan, "02:00:00:00:00:00", 17) != 0) {
+              strncpy(mac_encontrado, p_scan, 17);
+              mac_encontrado[17] = '\0';
+              break;
+            }
+          }
+          p_scan++;
+        }
+        free(out_k);
+      }
+    }
+
+    // 5. Exibição e Retorno
+    if (strlen(mac_encontrado) > 0) {
+      char msg_suc[256];
+      snprintf(msg_suc, sizeof(msg_suc), "[+] [F4 - Ação 11] SUCESSO: Endereço MAC do Wi-Fi obtido -> [%s]", mac_encontrado);
+      if (cb) cb(msg_suc);
+    } else {
+      if (cb) cb("[WARNING] [F4 - Ação 11] Não foi possível ler o endereço MAC do dispositivo.");
+    }
+
+    // Retorna para a tela inicial
+    snprintf(args_mac, sizeof(args_mac), "-s %s shell input keyevent 3", serial);
+    char *hm = adb_exec(args_mac);
+    if (hm) free(hm);
+
+    return (strlen(mac_encontrado) > 0) ? PIPELINE_SUCCESS : PIPELINE_ERROR;
   }
 
-  if (acao < 1 || acao > 10) {
+  if (acao < 1 || acao > 11) {
     if (cb) {
       snprintf(msg, sizeof(msg),
                "[F4] Erro no aparelho [%s]: Comando (%d) invalido. Use numeros "
-               "de 1 a 10.",
+               "de 1 a 11.",
                serial, acao);
       cb(msg);
     }

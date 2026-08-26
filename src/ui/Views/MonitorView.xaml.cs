@@ -1366,7 +1366,8 @@ namespace InnovPlayUI.Views
             LogMessage("8 🌐 - Injetar Internet via Gnirehtet (LIGAR)");
             LogMessage("9 🔌 - Desligar Gnirehtet (PARAR)");
             LogMessage("10 🧹 - Remover Barra de Pesquisa Google (Visual/UIAutomator)");
-            LogMessage("👉 Digite os números separados por vírgula (Ex: 1,8,10) e pressione ENTER:\n");
+            LogMessage("11 📶 - Obter Endereço MAC Visual (Ligar Wi-Fi > Configurações > Sobre o tablet)");
+            LogMessage("👉 Digite os números separados por vírgula (Ex: 1,8,11) e pressione ENTER:\n");
             TxtInput.Focus();
         }
 
@@ -1410,9 +1411,9 @@ namespace InnovPlayUI.Views
 
             foreach (string part in parts)
             {
-                if (!int.TryParse(part.Trim(), out int acao) || acao < 1 || acao > 10)
+                if (!int.TryParse(part.Trim(), out int acao) || acao < 1 || acao > 11)
                 {
-                    LogMessage($"[Erro] Comando inválido: '{part}'. Digite números de 1 a 10 (ex: 1, 8, 10).");
+                    LogMessage($"[Erro] Comando inválido: '{part}'. Digite números de 1 a 11 (ex: 1, 8, 11).");
                     return;
                 }
                 acoes.Add(acao);

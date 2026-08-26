@@ -432,7 +432,33 @@
       - Adicionado o badge HUD `CONECTADOS` no topo do Mapa Neural para exibir dinamicamente os tablets lidos via USB (`Engine_RefreshDevices`), alinhando os nós e sinapses com o quantitativo de parâmetros neurais e estado dos dispositivos conectados.
     - **Reforço na Ferramenta de Desligamento F4 do TabMulti M7 ([`f4_tabmulti_m7.c`](file:///c:/PROJETOS/InnoBotRpa/src/core/functions/tabmulti/f4_tabmulti_m7.c)):**
       - Atualizada a rotina `M7_DesligarAparelho` para executar a desativação em múltiplas camadas do túnel de internet USB (Gnirehtet + `am force-stop`), antenas Wi-Fi (`svc wifi disable`, `wifi_on 0`, `wifi_scan_always_enabled 0`), antenas Bluetooth (`svc bluetooth disable`, `cmd bluetooth disable`, `service call bluetooth_manager 8`, `ble_scan_always_enabled 0`) e serviços de Localização (GPS), encerrando os aplicativos ativos antes de emitir o comando de desligamento físico (`reboot -p`).
-    - **Compilação e Auditoria de Build:** Motores DLL C (`InnoEngine.dll`) e UI C# WPF (`InnoRPAui.exe`) recompilados com 100% de sucesso (Zero Errors / Zero Warnings) no ambiente de Desenvolvimento ([data/output/InnoRPAui.exe](file:///c:/PROJETOS/InnoBotRpa/data/output/InnoRPAui.exe) - Ícone Azul Escuro). Registro de auditoria gravado sob `registros/2026-08-19/10-05_Plataforma_InnovTech_DESKTOP_BUILD`.
+- **26/08/2026:**
+  - **Implementação e Upgrade Completo do Monitor Pro (Studio - Layout Alternativo Avançado):**
+    - Criado o novo módulo `MonitorProView` (`src/ui/Views/MonitorProView.xaml` e `src/ui/Views/MonitorProView.xaml.cs`) com arquitetura de alta densidade de informação sem interferir no `MonitorView` clássico, que permanece 100% intacto e acessível.
+    - **HUD de KPIs da Linha com Meta de Produção:** Integrada barra superior em tempo real calculando Dispositivos Ativos, Tempo Médio de Ciclo por Tablet (`Stopwatch` por serial), Ritmo Estimado de Throughput (`tabs/hora`), Eficiência Global da Sessão (% Sucesso/Falha) e barra de progresso da Meta do Lote (ex: 24/100 Tabs).
+    - **Cards de Bancada Interativos (Multi-Grid Hub USB):**
+      - Tags de identificação de bancada (`[#01]`, `[#02]`, etc.).
+      - Barra de progresso individual em tempo real com indicador textual da etapa em andamento (ex: `[Etapa 4/7: Senha & Login]`, `[Etapa 6/7: Importando]`).
+      - Mini-Toolbar embutida em cada card com ações diretas (`▶ Rodar`, `🛑 Parar`, `🔌 Desligar`) por aparelho individual.
+      - Seletor de Densidade da Grade: Alternância dinâmica entre **2 Colunas** (Grandes), **3 Colunas** (Médios) e **4 Colunas** (Compactos para Hubs de 12 a 16 portas).
+    - **Ações em Lote & Telemetria no Cockpit:**
+      - Botão de disparo global em lote `⚡ EXECUTAR EM TODOS` (executa F1 em paralelo para todos os tablets conectados autorizados com 1 clique).
+      - Botão `🔌 Desligar Concluídos` (desliga com segurança apenas os tablets com 100% / Concluído).
+      - Badge Live `🌐 Gnirehtet: Ativo (USB Relay)` com telemetria contínua da rede reversa.
+    - **Console Inteligente com Filtros Semânticos & Exportador:**
+      - Pílulas de filtro rápido de logs por severidade: `[Todos]`, `[🟢 Sucessos]`, `[🔴 Falhas/Erros]` e `[⚡ Etapas]`.
+      - Botão de exportação de auditoria `💾 Exportar` gerando arquivo `.txt` estruturado na pasta `logs/`.
+    - **Integração na Casca Principal (`MainWindow.xaml` / `MainWindow.xaml.cs`):** Adicionado o botão `[⚡ Monitor Pro]` no menu superior `MÓDULOS DE ACESSO` com roteamento completo de atalhos de teclado (F1-F8, Duplo ESC).
+    - **Criação da Ferramenta 11 no Menu Kiosk F4 (Leitura Visual do Endereço MAC Wi-Fi no Positivo Vision 7):**
+      - Desenvolvida a ação `11` em `src/core/functions/vision7/f4_vision_tab7.c` e integrada no menu interativo do Terminal F4 Kiosk (`MonitorView.xaml.cs`).
+      - **Fluxo Visual Automatizado:**
+        1. Desperta e desbloqueia a tela do aparelho (`dumpsys power` + `input swipe`).
+        2. Ativa as antenas de Wi-Fi (`svc wifi enable`, `settings put global wifi_on 1`, `cmd wifi set-wifi-enabled enabled`) para inicialização da placa de rede.
+        3. Libera e abre diretamente o aplicativo de Configurações na tela 'Sobre o tablet' (`android.settings.DEVICE_INFO_SETTINGS`).
+        4. Realiza o mapeamento visual dos elementos via UIAutomator XML Dump e busca o campo de Endereço MAC do Wi-Fi com suporte a rolagem suave.
+        5. Aplica fallback resiliente via interface `wlan0` do kernel e exibe o MAC obtido em destaque verde no console.
+        6. Retorna o aparelho com segurança para a tela inicial (Home).
+    - Compilação do motor nativo em C (`InnoEngine.dll`) e da UI C# WPF (`InnoRPAui.exe`) validada com 100% de sucesso sob a política de **Zero Warnings e Zero Errors**, auditada sob o registro `registros/2026-08-26/16-46_Plataforma_InnovTech_DESKTOP_BUILD`.
 
 
 ## Submódulo: Funcionamento Analítico do InnoAI

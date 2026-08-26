@@ -67,6 +67,7 @@
                     <TextBlock Text="MÓDULOS DE ACESSO:" Foreground="#A1A1AA" VerticalAlignment="Center" Margin="5,0,20,0" FontWeight="Bold" FontSize="12"/>
                     
                     <Button x:Name="BtnMenuMonitor" Content="Monitor ADB (USB)" Style="{StaticResource NavTabButtonStyle}" Click="MenuMonitor_Click"/>
+                    <Button x:Name="BtnMenuMonitorPro" Content="⚡ Monitor Pro" Style="{StaticResource NavTabButtonStyle}" Click="MenuMonitorPro_Click"/>
                     <Button x:Name="BtnMenuLearn" Content="⚡ InnoLearn IA" Style="{StaticResource NavTabButtonStyle}" Click="MenuLearn_Click"/>
                     <Button x:Name="BtnMenuRelatorios" Content="Relatórios e Registros" Style="{StaticResource NavTabButtonStyle}" Click="MenuRelatorios_Click"/>
                     <Button x:Name="BtnMenuConfig" Content="Configurações" Style="{StaticResource NavTabButtonStyle}" Click="MenuConfig_Click"/>
