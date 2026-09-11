@@ -36,7 +36,7 @@ typedef struct {
   volatile int *is_installing;
 } T20_GnirehtetProgressData;
 
-static DWORD WINAPI T20_GnirehtetProgressBarThread(LPVOID lpParam) {
+__attribute__((unused)) static DWORD WINAPI T20_GnirehtetProgressBarThread(LPVOID lpParam) {
   T20_GnirehtetProgressData *pdata = (T20_GnirehtetProgressData *)lpParam;
   int seconds = 0;
   while (*(pdata->is_installing) && seconds <= 15) {
@@ -349,6 +349,8 @@ int T20_Etapa2(const char *serial, const char *apk_path, const char *package_nam
 
 // --- Etapa 2.1: Adicionar Atalho ---
 int T20_Etapa2_1_AddShortcut(const char *serial, const char *package_name, LogCallback cb) {
+  (void)serial;
+  (void)package_name;
   if (cb) cb("[F1 Nokia T20 - Etapa 2.1] Garantindo ícone de atalho na tela inicial...");
   return PIPELINE_SUCCESS;
 }
@@ -362,17 +364,17 @@ int T20_Etapa2_5(const char *serial, LogCallback cb) {
   char *last_slash = strrchr(exe_path, '\\');
   if (last_slash) *last_slash = '\0';
 
-  char gnirehtet_path[MAX_PATH];
-  char gnirehtet_apk[MAX_PATH];
-  char gnirehtet_dir[MAX_PATH];
+  char gnirehtet_path[512];
+  char gnirehtet_apk[512];
+  char gnirehtet_dir[512];
 
   snprintf(gnirehtet_dir, sizeof(gnirehtet_dir), "%s\\tools\\reverse_tethering", exe_path);
   if (GetFileAttributesA(gnirehtet_dir) == INVALID_FILE_ATTRIBUTES) {
     snprintf(gnirehtet_dir, sizeof(gnirehtet_dir), "%s\\..\\..\\tools\\reverse_tethering", exe_path);
   }
 
-  char full_gnirehtet_dir[MAX_PATH];
-  GetFullPathNameA(gnirehtet_dir, MAX_PATH, full_gnirehtet_dir, NULL);
+  char full_gnirehtet_dir[512];
+  GetFullPathNameA(gnirehtet_dir, sizeof(full_gnirehtet_dir), full_gnirehtet_dir, NULL);
   strncpy(gnirehtet_dir, full_gnirehtet_dir, sizeof(gnirehtet_dir) - 1);
 
   snprintf(gnirehtet_path, sizeof(gnirehtet_path), "%s\\gnirehtet.exe", gnirehtet_dir);
@@ -1295,6 +1297,7 @@ int T20_Etapa5(const char *serial, LogCallback cb) {
 
 // --- Stub da Etapa 6 (Reservado para reescrita dos novos passos) ---
 int T20_Etapa6(const char *serial, LogCallback cb) {
+  (void)serial;
   if (cb) cb("[F1 Nokia T20 - Etapa 6] (Etapa legada desativada para reescrita).");
   return PIPELINE_SUCCESS;
 }
@@ -1432,6 +1435,7 @@ int T20_Etapa7_PowerOff(const char *serial, LogCallback cb) {
 // Orquestrador Principal F1 — Nokia T20
 // ==========================================
 int T20_ExecutarPipelineCompleto(const char* serial, const char* apk_path, const char* pacote_path, const char* wp_path, const char* package_name, const char* login, const char* senha, const char* municipio, LogCallback cb) {
+  (void)wp_path;
   if (!serial || strlen(serial) == 0) {
     if (cb) cb("[ERROR] Serial do dispositivo Nokia T20 não informado!");
     return PIPELINE_ERROR;

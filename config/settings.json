@@ -4,5 +4,10 @@
   "font_mono_size": 13,
   "motor_c_enabled": true,
   "reverse_tethering_enabled": true,
+  "enable_device_vision7": true,
+  "enable_device_tabmulti": false,
+  "enable_device_nokia_t20": false,
+  "show_disconnected_devices": false,
+  "usb_monitor_interface": "Classic",
   "firebase_database_url": "https://matematica-em-foco-default-rtdb.firebaseio.com"
 }

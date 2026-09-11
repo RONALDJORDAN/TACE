@@ -14,7 +14,37 @@ namespace InnovPlayUI.Views
         public string Serial { get => _serial; set { _serial = value; OnPropertyChanged(nameof(Serial)); } }
 
         private string _model = string.Empty;
-        public string Model { get => _model; set { _model = value; OnPropertyChanged(nameof(Model)); } }
+        public string Model { get => _model; set { _model = value; OnPropertyChanged(nameof(Model)); OnPropertyChanged(nameof(Marca)); } }
+
+        private string _manufacturer = string.Empty;
+        public string Manufacturer { get => _manufacturer; set { _manufacturer = value; OnPropertyChanged(nameof(Manufacturer)); OnPropertyChanged(nameof(Marca)); } }
+
+        public string Marca
+        {
+            get
+            {
+                string mfr = (_manufacturer ?? "").Trim();
+                string mdl = (_model ?? "").Trim();
+
+                if (!string.IsNullOrEmpty(mfr) && mfr != "---" && mfr != "Desconhecido")
+                {
+                    if (mfr.IndexOf("Positivo", StringComparison.OrdinalIgnoreCase) >= 0) return "Positivo";
+                    if (mfr.IndexOf("Multilaser", StringComparison.OrdinalIgnoreCase) >= 0) return "Multilaser";
+                    if (mfr.IndexOf("HMD", StringComparison.OrdinalIgnoreCase) >= 0 || mfr.IndexOf("Nokia", StringComparison.OrdinalIgnoreCase) >= 0) return "Nokia";
+                    return mfr;
+                }
+
+                if (!string.IsNullOrEmpty(mdl) && mdl != "---" && mdl != "Desconhecido" && !mdl.StartsWith("Pendente"))
+                {
+                    if (mdl.IndexOf("Vision", StringComparison.OrdinalIgnoreCase) >= 0 || mdl.IndexOf("T307", StringComparison.OrdinalIgnoreCase) >= 0) return "Positivo";
+                    if (mdl.IndexOf("M7", StringComparison.OrdinalIgnoreCase) >= 0 || mdl.IndexOf("Multi", StringComparison.OrdinalIgnoreCase) >= 0) return "Multilaser";
+                    if (mdl.IndexOf("T20", StringComparison.OrdinalIgnoreCase) >= 0 || mdl.IndexOf("TA-", StringComparison.OrdinalIgnoreCase) >= 0) return "Nokia";
+                    return mdl;
+                }
+
+                return "Android";
+            }
+        }
 
         private string _androidVersion = string.Empty;
         public string AndroidVersion { get => _androidVersion; set { _androidVersion = value; OnPropertyChanged(nameof(AndroidVersion)); } }
@@ -581,26 +611,60 @@ namespace InnovPlayUI.Views
             public int authorized;
         }
 
-        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
-        public static extern int Engine_ExecuteF2_Reinstall(string serial, string apk_path, string pacote_path, string package_name, string login, string senha, string municipio, LogCallback cb);
+        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        public static extern int Engine_ExecuteF2_Reinstall(
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string serial, 
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string apk_path, 
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string pacote_path, 
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string package_name, 
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string login, 
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string senha, 
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string municipio, 
+            LogCallback cb);
 
-        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
-        public static extern int Engine_ExecuteF7_TabMulti(string serial, string apk_path, string pacote_path, string login, string senha, string municipio, LogCallback cb);
+        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        public static extern int Engine_ExecuteF7_TabMulti(
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string serial, 
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string apk_path, 
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string pacote_path, 
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string login, 
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string senha, 
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string municipio, 
+            LogCallback cb);
 
-        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
-        public static extern void Engine_RunAdbShell(string serial, string command, StringBuilder out_log, int max_len);
+        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void Engine_RunAdbShell(
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string serial, 
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string command, 
+            StringBuilder out_log, 
+            int max_len);
 
-        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
-        public static extern int Engine_ExecuteF2_TabMulti_Atualizar(string serial, string apk_path, string pacote_path, LogCallback cb);
+        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        public static extern int Engine_ExecuteF2_TabMulti_Atualizar(
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string serial, 
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string apk_path, 
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string pacote_path, 
+            LogCallback cb);
 
-        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
-        public static extern int Engine_ExecuteF3_TabMulti_Terminal(string serial, LogCallback cb);
+        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        public static extern int Engine_ExecuteF3_TabMulti_Terminal(
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string serial, 
+            LogCallback cb);
 
-        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
-        public static extern int Engine_ExecuteF4_TabMulti_Desligar(string serial, LogCallback cb);
+        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        public static extern int Engine_ExecuteF4_TabMulti_Desligar(
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string serial, 
+            LogCallback cb);
 
-        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
-        public static extern int Engine_ExecuteF5_TabMulti(string serial, string apk_path, string pacote_path, string login, string senha, string municipio, LogCallback cb);
+        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        public static extern int Engine_ExecuteF5_TabMulti(
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string serial, 
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string apk_path, 
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string pacote_path, 
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string login, 
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string senha, 
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string municipio, 
+            LogCallback cb);
 
         [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern int Engine_GetDeviceCount();
@@ -667,7 +731,26 @@ namespace InnovPlayUI.Views
             LoadMunicipios();
 
             LogMessage("Motor Inno RPA inicializado. Aguardando conexão de aparelhos ADB...");
+            UpdateCategoryVisibility();
             
+            // Subscrição para reagir imediatamente quando o usuário altera chaves em Configurações
+            InnovPlayUI.Core.SettingsManager.OnSettingsChanged += () =>
+            {
+                Dispatcher.BeginInvoke(() =>
+                {
+                    UpdateCategoryVisibility();
+                    for (int i = _devicesList.Count - 1; i >= 0; i--)
+                    {
+                        var d = _devicesList[i];
+                        if (!InnovPlayUI.Core.DeviceFilterHelper.IsDeviceModelAllowed(d.Serial, d.Model, ""))
+                        {
+                            _devicesList.RemoveAt(i);
+                            _knownSerials.Remove(d.Serial);
+                        }
+                    }
+                });
+            };
+
             _timer = new DispatcherTimer();
             _timer.Interval = TimeSpan.FromSeconds(5); // aumentado de 2s para 5s
             _timer.Tick += Timer_Tick;
@@ -809,72 +892,128 @@ namespace InnovPlayUI.Views
                             string serial = dev.serial;
                             string model = dev.authorized == 1 ? dev.model : "Pendente (Verifique a Tela)";
                             string mac = dev.authorized == 1 ? dev.mac : "N/A";
+                            if ((mac == "N/A" || mac == "---" || string.IsNullOrEmpty(mac)) && !string.IsNullOrEmpty(serial))
+                            {
+                                var existing = InnovPlayUI.Core.SQLiteDatabaseManager.BuscarPorSerial(serial);
+                                if (existing != null && !string.IsNullOrEmpty(existing.MAC) && existing.MAC != "N/A" && existing.MAC != "---")
+                                {
+                                    mac = existing.MAC;
+                                }
+                            }
                             string androidVer = (dev.authorized == 1 && !string.IsNullOrEmpty(dev.android_version)) ? $"Android {dev.android_version}" : "---";
+
+                            // Registra no banco SQLite para manter permanentemente para o futuro
+                            if (dev.authorized == 1)
+                            {
+                                InnovPlayUI.Core.SQLiteDatabaseManager.RegistrarSeNovo(serial, dev.manufacturer, model, mac);
+
+                            }
+
+                            // Se o modelo deste aparelho estiver DESATIVADO em Configurações, oculta do monitor ADB
+                            if (!InnovPlayUI.Core.DeviceFilterHelper.IsDeviceModelAllowed(serial, model, dev.manufacturer))
+                            {
+                                continue;
+                            }
 
                             newDevices.Add(new DeviceModel {
                                 Serial = serial,
                                 Model = model,
+                                Manufacturer = dev.manufacturer,
                                 MAC = mac,
                                 Battery = dev.battery,
                                 AndroidVersion = androidVer,
                                 Status = dev.authorized == 1 ? "Pronto" : "Pendente",
                                 StatusColor = dev.authorized == 1 ? "#8570E6" : "#FFD700"
                             });
-
-                            // Registra no banco apenas se for novo e autorizado
-                            if (dev.authorized == 1)
-                                InnovPlayUI.Core.SQLiteDatabaseManager.RegistrarSeNovo(serial, dev.manufacturer, model, mac);
                         }
                     }
 
+                    // Se a opção de exibir dispositivos desconectados / histórico estiver ATIVA:
+                    if (InnovPlayUI.Core.SettingsManager.ShowDisconnectedDevices)
+                    {
+                        var connectedSerials = new System.Collections.Generic.HashSet<string>();
+                        foreach (var d in newDevices) connectedSerials.Add(d.Serial);
+
+                        var historico = InnovPlayUI.Core.SQLiteDatabaseManager.LerTodos();
+                        foreach (var h in historico)
+                        {
+                            if (!string.IsNullOrEmpty(h.Serial) && !connectedSerials.Contains(h.Serial))
+                            {
+                                if (!InnovPlayUI.Core.DeviceFilterHelper.IsDeviceModelAllowed(h.Serial, h.Modelo, h.Fabricante))
+                                {
+                                    continue;
+                                }
+
+                                string modeloStr = string.IsNullOrEmpty(h.Modelo) || h.Modelo == "N/A" ? (string.IsNullOrEmpty(h.Fabricante) ? "Android Device" : h.Fabricante) : h.Modelo;
+                                string macStr = string.IsNullOrEmpty(h.MAC) || h.MAC == "N/A" ? "---" : h.MAC;
+                                string verStr = string.IsNullOrEmpty(h.Versao_Android) || h.Versao_Android == "N/A" ? "---" : h.Versao_Android;
+
+                                newDevices.Add(new DeviceModel {
+                                    Serial = h.Serial,
+                                    Model = modeloStr,
+                                    Manufacturer = h.Fabricante,
+                                    MAC = macStr,
+                                    Battery = "---",
+                                    AndroidVersion = verStr,
+                                    Status = "Desconectado (Histórico)",
+                                    StatusColor = "#6A6A8E"
+                                });
+                            }
+                        }
+                    }
 
                     // Retorna para a UI thread para aplicar diff inteligente
                     Dispatcher.BeginInvoke(() =>
                     {
-                        // Diff inteligente: remove apenas os que saíram
+                        // Diff inteligente: remove apenas os que saíram ou cujo modelo foi desativado em Configurações
                         var currentSerials = new System.Collections.Generic.HashSet<string>();
                         foreach (var d in newDevices) currentSerials.Add(d.Serial);
 
                         for (int i = _devicesList.Count - 1; i >= 0; i--)
                         {
-                            if (!currentSerials.Contains(_devicesList[i].Serial))
+                            var currentItem = _devicesList[i];
+                            if (!currentSerials.Contains(currentItem.Serial) || !InnovPlayUI.Core.DeviceFilterHelper.IsDeviceModelAllowed(currentItem.Serial, currentItem.Model, ""))
+                            {
                                 _devicesList.RemoveAt(i);
+                                _knownSerials.Remove(currentItem.Serial);
+                            }
                         }
 
-                        // Adiciona apenas os que são novos
+                        // Adiciona novos ou atualiza existentes
                         foreach (var nd in newDevices)
                         {
-                            if (!_knownSerials.Contains(nd.Serial))
+                            var existing = System.Linq.Enumerable.FirstOrDefault(_devicesList, d => d.Serial == nd.Serial);
+                            if (existing == null)
                             {
                                 _devicesList.Add(nd);
-                                _knownSerials.Add(nd.Serial);
-
-                                if (nd.Status == "Pronto" && ChkAutoInstall.IsChecked == true)
+                                if (!_knownSerials.Contains(nd.Serial))
                                 {
-                                    RunAutoInstallForDevice(nd);
+                                    _knownSerials.Add(nd.Serial);
+
+                                    if (nd.Status == "Pronto" && ChkAutoInstall.IsChecked == true)
+                                    {
+                                        RunAutoInstallForDevice(nd);
+                                    }
                                 }
                             }
                             else
                             {
-                                // Atualiza status de existentes
-                                foreach (var existing in _devicesList)
+                                if (existing.Status == "Pendente" && nd.Status == "Pronto" && ChkAutoInstall.IsChecked == true)
                                 {
-                                    if (existing.Serial == nd.Serial)
-                                    {
-                                        if (existing.Status == "Pendente" && nd.Status == "Pronto" && ChkAutoInstall.IsChecked == true)
-                                        {
-                                            RunAutoInstallForDevice(nd);
-                                        }
-                                        existing.Model = nd.Model;
-                                        existing.Battery = nd.Battery;
-                                        existing.AndroidVersion = nd.AndroidVersion;
-                                        if (existing.Status == "Pronto" || existing.Status == "Pendente" || string.IsNullOrEmpty(existing.Status))
-                                        {
-                                            existing.Status = nd.Status;
-                                            existing.StatusColor = nd.StatusColor;
-                                        }
-                                        break;
-                                    }
+                                    RunAutoInstallForDevice(nd);
+                                }
+                                existing.Model = nd.Model;
+                                existing.Manufacturer = nd.Manufacturer;
+                                existing.Battery = nd.Battery;
+                                existing.AndroidVersion = nd.AndroidVersion;
+                                if (!string.IsNullOrEmpty(nd.MAC) && nd.MAC != "N/A" && nd.MAC != "---" && nd.MAC != "02:00:00:00:00:00")
+                                {
+                                    existing.MAC = nd.MAC;
+                                }
+                                if (existing.Status == "Pronto" || existing.Status == "Pendente" || string.IsNullOrEmpty(existing.Status))
+                                {
+                                    existing.Status = nd.Status;
+                                    existing.StatusColor = nd.StatusColor;
                                 }
                             }
 
@@ -1221,6 +1360,7 @@ namespace InnovPlayUI.Views
                 string login = "";
                 string senha = "";
                 string municipio = "";
+                string wpPath = "";
                 
                 int idx = ComboMunicipios.SelectedIndex;
                 if (idx >= 0 && idx < _comboList.Count)
@@ -1240,6 +1380,15 @@ namespace InnovPlayUI.Views
                         pacotePath = System.IO.Path.GetFullPath(System.IO.Path.Combine(baseDir, pacotePath));
                     }
 
+                    string wpRaw = m.WallpaperPath;
+                    if (!string.IsNullOrEmpty(wpRaw))
+                    {
+                        if (!System.IO.Path.IsPathRooted(wpRaw))
+                            wpPath = System.IO.Path.GetFullPath(System.IO.Path.Combine(baseDir, wpRaw));
+                        else
+                            wpPath = wpRaw;
+                    }
+
                     login = m.Login;
                     senha = m.Senha;
                     municipio = m.Nome;
@@ -1257,6 +1406,7 @@ namespace InnovPlayUI.Views
                     string finalSerial = device.Serial;
                     string finalApkPath = apkPath;
                     string finalPacotePath = pacotePath;
+                    string finalWpPath = wpPath;
                     string finalPackageName = packageName;
                     string finalLogin = login;
                     string finalSenha = senha;
@@ -1269,12 +1419,28 @@ namespace InnovPlayUI.Views
                             Dispatcher.Invoke(() => LogMessage($"[{finalSerial}] {msg}"));
                         };
 
-                        int result = Engine_ExecuteF2_Reinstall(finalSerial, finalApkPath, finalPacotePath, finalPackageName, finalLogin, finalSenha, finalMunicipio, callback);
+                        bool isNokia = device != null && device.Model != null && (device.Model.IndexOf("Nokia", StringComparison.OrdinalIgnoreCase) >= 0 || device.Model.IndexOf("T20", StringComparison.OrdinalIgnoreCase) >= 0);
+                        bool isM7 = device != null && device.Model != null && (device.Model.IndexOf("Multilaser", StringComparison.OrdinalIgnoreCase) >= 0 || device.Model.IndexOf("M7", StringComparison.OrdinalIgnoreCase) >= 0);
+
+                        int result;
+                        if (isNokia)
+                        {
+                            result = Engine_ExecuteF2_NokiaT20(finalSerial, finalApkPath, finalPacotePath, finalWpPath, finalPackageName, finalLogin, finalSenha, finalMunicipio, callback);
+                        }
+                        else if (isM7)
+                        {
+                            result = Engine_ExecuteF2_TabMulti_Atualizar(finalSerial, finalApkPath, finalPacotePath, callback);
+                        }
+                        else
+                        {
+                            result = Engine_ExecuteF2_Reinstall(finalSerial, finalApkPath, finalPacotePath, finalPackageName, finalLogin, finalSenha, finalMunicipio, callback);
+                        }
                         
                         if (result != 0)
                         {
                              Dispatcher.Invoke(() => LogMessage($"[{finalSerial}] [ERRO] Reinstalação interrompida ou falhou."));
                         }
+                        GC.KeepAlive(callback);
                     });
                 }
             }
@@ -1285,8 +1451,13 @@ namespace InnovPlayUI.Views
         }
 
 
-        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
-        public static extern int Engine_ExecuteF3_UpdatePackage(string serial, string apk_path, string pacote_path, string package_name, LogCallback cb);
+        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        public static extern int Engine_ExecuteF3_UpdatePackage(
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string serial, 
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string apk_path, 
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string pacote_path, 
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string package_name, 
+            LogCallback cb);
 
         public void BtnF3_Click(object sender, RoutedEventArgs e)
         {
@@ -1353,22 +1524,53 @@ namespace InnovPlayUI.Views
         public void BtnF4_Click(object sender, RoutedEventArgs e)
         {
             currentTerminalMode = 4;
-            TxtInput.Visibility = Visibility.Visible;
-            LogMessage("\n=== [F4] MODO TERMINAL INTERATIVO (KIOSK) ===");
-            LogMessage("Opções disponíveis para aparelhos ADB:");
-            LogMessage("1 📷 - Suspender Câmera");
-            LogMessage("2 ⚙️ - Suspender Configurações");
-            LogMessage("3 🔓 - Liberar Câmera");
-            LogMessage("4 🔓 - Liberar Configurações");
-            LogMessage("5 🛑 - Suspender Ambos (Kiosk Máximo)");
-            LogMessage("6 🟢 - Liberar Ambos");
-            LogMessage("7 🖼️ - Definir Wallpaper (do Município selecionado)");
-            LogMessage("8 🌐 - Injetar Internet via Gnirehtet (LIGAR)");
-            LogMessage("9 🔌 - Desligar Gnirehtet (PARAR)");
-            LogMessage("10 🧹 - Remover Barra de Pesquisa Google (Visual/UIAutomator)");
-            LogMessage("11 📶 - Obter Endereço MAC Visual (Ligar Wi-Fi > Configurações > Sobre o tablet)");
-            LogMessage("👉 Digite os números separados por vírgula (Ex: 1,8,11) e pressione ENTER:\n");
-            TxtInput.Focus();
+            PanelHistoricoLogs.Visibility = Visibility.Collapsed;
+            PanelGestaoKiosk.Visibility = Visibility.Visible;
+            if (TxtKioskStatus != null)
+                TxtKioskStatus.Text = "Pronto. Selecione uma opção acima ou informe comandos em lote.";
+            LogMessage("\n[🛡️ Submódulo de Gestão Kiosk Ativado]");
+        }
+
+        private void BtnSairKiosk_Click(object sender, RoutedEventArgs e)
+        {
+            PanelGestaoKiosk.Visibility = Visibility.Collapsed;
+            PanelHistoricoLogs.Visibility = Visibility.Visible;
+            TxtInput.Visibility = Visibility.Collapsed;
+            currentTerminalMode = 0;
+            LogMessage("[🛡️ Submódulo de Gestão Kiosk Fechado - Histórico restaurado]");
+        }
+
+        private void BtnKioskAction_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button btn && btn.Tag != null)
+            {
+                string tag = btn.Tag?.ToString()?.Trim() ?? "";
+                if (!string.IsNullOrEmpty(tag))
+                {
+                    if (TxtKioskStatus != null)
+                        TxtKioskStatus.Text = $"⚡ Disparando ação [{tag}] para os dispositivos...";
+                    ExecuteF4Command(tag);
+                }
+            }
+        }
+
+        private void BtnKioskBatchRun_Click(object sender, RoutedEventArgs e)
+        {
+            string cmd = TxtKioskBatchInput.Text.Trim();
+            if (string.IsNullOrEmpty(cmd)) return;
+
+            if (TxtKioskStatus != null)
+                TxtKioskStatus.Text = $"⚡ Executando lote [{cmd}]...";
+            ExecuteF4Command(cmd);
+            TxtKioskBatchInput.Clear();
+        }
+
+        private void TxtKioskBatchInput_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            if (e.Key == System.Windows.Input.Key.Enter)
+            {
+                BtnKioskBatchRun_Click(sender, e);
+            }
         }
 
         private void TxtInput_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
@@ -1390,19 +1592,31 @@ namespace InnovPlayUI.Views
         }
         
         [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl)]
-        public static extern int Engine_ExecuteF4_Ferramenta(string serial, int acao, LogCallback cb);
+        public static extern int Engine_ExecuteF4_Ferramenta(
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string serial, 
+            int acao, 
+            LogCallback cb);
 
-        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
-        public static extern int Engine_ExecuteF4_Wallpaper(string serial, string wp_path, LogCallback cb);
+        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        public static extern int Engine_ExecuteF4_Wallpaper(
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string serial, 
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string wp_path, 
+            LogCallback cb);
 
-        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
-        public static extern int Engine_ExecuteF5_Shutdown(string serial, LogCallback cb);
+        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        public static extern int Engine_ExecuteF5_Shutdown(
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string serial, 
+            LogCallback cb);
 
-        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
-        public static extern int Engine_ExecuteF6_Sincronizacao(string serial, LogCallback cb);
+        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        public static extern int Engine_ExecuteF6_Sincronizacao(
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string serial, 
+            LogCallback cb);
 
-        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
-        public static extern int Engine_ExecuteF8_ActiveConnection(string serial, LogCallback cb);
+        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        public static extern int Engine_ExecuteF8_ActiveConnection(
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string serial, 
+            LogCallback cb);
 
         private void ExecuteF4Command(string cmd)
         {
@@ -1411,9 +1625,10 @@ namespace InnovPlayUI.Views
 
             foreach (string part in parts)
             {
-                if (!int.TryParse(part.Trim(), out int acao) || acao < 1 || acao > 11)
+                if (!int.TryParse(part.Trim(), out int acao) || acao < 1 || acao > 12)
                 {
-                    LogMessage($"[Erro] Comando inválido: '{part}'. Digite números de 1 a 11 (ex: 1, 8, 11).");
+                    LogMessage($"[Erro] Comando inválido: '{part}'. Digite números de 1 a 12 (ex: 11, 12, ou 5,7).");
+                    if (TxtKioskStatus != null) TxtKioskStatus.Text = $"⚠️ Comando inválido: '{part}'. Use números de 1 a 12.";
                     return;
                 }
                 acoes.Add(acao);
@@ -1423,6 +1638,7 @@ namespace InnovPlayUI.Views
             if (targetDevices.Count == 0)
             {
                 LogMessage("[Erro] Nenhum aparelho conectado para receber o comando.");
+                if (TxtKioskStatus != null) TxtKioskStatus.Text = "⚠️ Nenhum aparelho conectado para receber o comando.";
                 return;
             }
 
@@ -1436,6 +1652,7 @@ namespace InnovPlayUI.Views
                     if (string.IsNullOrEmpty(wpPath))
                     {
                         LogMessage("[Erro] O município selecionado não possui um Wallpaper configurado.");
+                        if (TxtKioskStatus != null) TxtKioskStatus.Text = "⚠️ O município selecionado não possui Wallpaper configurado.";
                         return;
                     }
                     
@@ -1449,15 +1666,20 @@ namespace InnovPlayUI.Views
                     if (!System.IO.File.Exists(wpPath))
                     {
                         LogMessage($"[Erro] Arquivo de Wallpaper não encontrado fisicamente em: {wpPath}");
+                        if (TxtKioskStatus != null) TxtKioskStatus.Text = $"⚠️ Arquivo de Wallpaper não encontrado: {wpPath}";
                         return;
                     }
                 }
                 else
                 {
                     LogMessage("[Erro] Selecione um município no menu superior antes de definir o Wallpaper.");
+                    if (TxtKioskStatus != null) TxtKioskStatus.Text = "⚠️ Selecione um município no menu superior antes de definir Wallpaper.";
                     return;
                 }
             }
+
+            if (TxtKioskStatus != null)
+                TxtKioskStatus.Text = $"✔ Disparando comando [{cmd}] para {targetDevices.Count} aparelho(s)...";
 
             foreach (var device in targetDevices)
             {
@@ -1912,6 +2134,59 @@ namespace InnovPlayUI.Views
             ComboAutoAction.SelectedIndex = 0;
         }
 
+        public void UpdateCategoryVisibility()
+        {
+            bool v7 = InnovPlayUI.Core.SettingsManager.EnableDeviceVision7;
+            bool m7 = InnovPlayUI.Core.SettingsManager.EnableDeviceTabMulti;
+            bool t20 = InnovPlayUI.Core.SettingsManager.EnableDeviceNokiaT20;
+
+            if (BtnCategoryPositivo != null) BtnCategoryPositivo.Visibility = v7 ? Visibility.Visible : Visibility.Collapsed;
+            if (BtnCategoryMultilaser != null) BtnCategoryMultilaser.Visibility = m7 ? Visibility.Visible : Visibility.Collapsed;
+            if (BtnCategoryNokia != null) BtnCategoryNokia.Visibility = t20 ? Visibility.Visible : Visibility.Collapsed;
+
+            // Se a categoria atualmente aberta foi desativada, alterna para uma que esteja ativa
+            if (GridPositivoActions.Visibility == Visibility.Visible && !v7)
+            {
+                if (m7 && BtnCategoryMultilaser != null) BtnCategoryMultilaser_Click(BtnCategoryMultilaser, new RoutedEventArgs());
+                else if (t20 && BtnCategoryNokia != null) BtnCategoryNokia_Click(BtnCategoryNokia, new RoutedEventArgs());
+                else
+                {
+                    GridPositivoActions.Visibility = Visibility.Collapsed;
+                    GridMultilaserActions.Visibility = Visibility.Collapsed;
+                    if (GridNokiaActions != null) GridNokiaActions.Visibility = Visibility.Collapsed;
+                }
+            }
+            else if (GridMultilaserActions.Visibility == Visibility.Visible && !m7)
+            {
+                if (v7 && BtnCategoryPositivo != null) BtnCategoryPositivo_Click(BtnCategoryPositivo, new RoutedEventArgs());
+                else if (t20 && BtnCategoryNokia != null) BtnCategoryNokia_Click(BtnCategoryNokia, new RoutedEventArgs());
+                else
+                {
+                    GridPositivoActions.Visibility = Visibility.Collapsed;
+                    GridMultilaserActions.Visibility = Visibility.Collapsed;
+                    if (GridNokiaActions != null) GridNokiaActions.Visibility = Visibility.Collapsed;
+                }
+            }
+            else if (GridNokiaActions != null && GridNokiaActions.Visibility == Visibility.Visible && !t20)
+            {
+                if (v7 && BtnCategoryPositivo != null) BtnCategoryPositivo_Click(BtnCategoryPositivo, new RoutedEventArgs());
+                else if (m7 && BtnCategoryMultilaser != null) BtnCategoryMultilaser_Click(BtnCategoryMultilaser, new RoutedEventArgs());
+                else
+                {
+                    GridPositivoActions.Visibility = Visibility.Collapsed;
+                    GridMultilaserActions.Visibility = Visibility.Collapsed;
+                    if (GridNokiaActions != null) GridNokiaActions.Visibility = Visibility.Collapsed;
+                }
+            }
+            else if (GridPositivoActions.Visibility != Visibility.Visible && GridMultilaserActions.Visibility != Visibility.Visible && (GridNokiaActions == null || GridNokiaActions.Visibility != Visibility.Visible))
+            {
+                // Se tudo estava fechado e alguma chave foi ativada
+                if (v7 && BtnCategoryPositivo != null) BtnCategoryPositivo_Click(BtnCategoryPositivo, new RoutedEventArgs());
+                else if (m7 && BtnCategoryMultilaser != null) BtnCategoryMultilaser_Click(BtnCategoryMultilaser, new RoutedEventArgs());
+                else if (t20 && BtnCategoryNokia != null) BtnCategoryNokia_Click(BtnCategoryNokia, new RoutedEventArgs());
+            }
+        }
+
         public void HandleEscPress()
         {
             if (DateTime.Now.Subtract(_lastEscTime).TotalSeconds < 1.0)
@@ -1939,6 +2214,13 @@ namespace InnovPlayUI.Views
 
         private void Window_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
+            if (e.Key == System.Windows.Input.Key.Escape && PanelGestaoKiosk != null && PanelGestaoKiosk.Visibility == Visibility.Visible)
+            {
+                BtnSairKiosk_Click(sender, e);
+                e.Handled = true;
+                return;
+            }
+
             if (e.Key == System.Windows.Input.Key.Space && !TxtInput.IsFocused && !TxtLogGlobal.IsFocused)
             {
                 e.Handled = true;

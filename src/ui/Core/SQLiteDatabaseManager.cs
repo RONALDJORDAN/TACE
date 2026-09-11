@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using Microsoft.Data.Sqlite;
 
 namespace InnovPlayUI.Core
@@ -31,7 +32,7 @@ namespace InnovPlayUI.Core
         {
             if (!string.IsNullOrEmpty(_dbPath)) return _dbPath;
 
-            string basePath = AppDomain.CurrentDomain.BaseDirectory;
+            string basePath = PathHelper.GetRootDirectory();
             string recordsDir = Path.Combine(basePath, "data");
 
             if (!Directory.Exists(recordsDir))
@@ -94,7 +95,7 @@ namespace InnovPlayUI.Core
 
         private static void ImportFromCsvIfExists(SqliteConnection connection)
         {
-            string oldCsvPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "registros_de_dispositivos", "banco_dispositivos.csv");
+            string oldCsvPath = Path.Combine(PathHelper.GetRootDirectory(), "registros_de_dispositivos", "banco_dispositivos.csv");
             if (!File.Exists(oldCsvPath)) return;
 
             try
@@ -204,7 +205,71 @@ namespace InnovPlayUI.Core
             lock (_cacheLock)
             {
                 var cache = GetSerialCache();
-                if (cache.Contains(serial)) return;
+                if (cache.Contains(serial))
+                {
+                    // Se o aparelho já está cadastrado no cache, mas agora temos um MAC válido (17 caracteres)
+                    // e o banco pode estar com MAC 'N/A', '---' ou vazio:
+                    if (!string.IsNullOrEmpty(mac) && mac.Length == 17 && mac != "02:00:00:00:00:00")
+                    {
+                        try
+                        {
+                            using (var connection = new SqliteConnection(_connectionString))
+                            {
+                                connection.Open();
+                                var cmd = connection.CreateCommand();
+                                cmd.CommandText = @"
+                                    UPDATE Dispositivos 
+                                    SET MAC = $mac 
+                                    WHERE Serial = $serial 
+                                      AND (MAC IS NULL OR MAC = '' OR MAC = 'N/A' OR MAC = '---' OR MAC = '02:00:00:00:00:00');";
+                                cmd.Parameters.AddWithValue("$mac", mac);
+                                cmd.Parameters.AddWithValue("$serial", serial);
+                                cmd.ExecuteNonQuery();
+                            }
+                            SincronizarCsv();
+                            _ = Task.Run(async () => {
+                                var d = BuscarPorSerial(serial);
+                                if (d != null) await SincronizarComInnovStockAsync(d);
+                            });
+                        }
+                        catch { }
+                    }
+                    return;
+                }
+
+                // Cuidado contra duplicidade: se já existir outro registro com este mesmo MAC, atualiza o serial sem duplicar linha
+                if (!string.IsNullOrEmpty(mac) && mac.Length == 17 && mac != "02:00:00:00:00:00")
+                {
+                    try
+                    {
+                        using (var connection = new SqliteConnection(_connectionString))
+                        {
+                            connection.Open();
+                            var checkCmd = connection.CreateCommand();
+                            checkCmd.CommandText = "SELECT Serial FROM Dispositivos WHERE MAC = $mac LIMIT 1;";
+                            checkCmd.Parameters.AddWithValue("$mac", mac);
+                            var existingSerial = checkCmd.ExecuteScalar() as string;
+                            if (!string.IsNullOrEmpty(existingSerial))
+                            {
+                                var updateCmd = connection.CreateCommand();
+                                updateCmd.CommandText = "UPDATE Dispositivos SET Serial = $serial, Fabricante = $fabricante, Modelo = $modelo WHERE MAC = $mac;";
+                                updateCmd.Parameters.AddWithValue("$serial", serial);
+                                updateCmd.Parameters.AddWithValue("$fabricante", string.IsNullOrEmpty(fabricante) ? "Desconhecido" : fabricante);
+                                updateCmd.Parameters.AddWithValue("$modelo", modelo);
+                                updateCmd.Parameters.AddWithValue("$mac", mac);
+                                updateCmd.ExecuteNonQuery();
+                                cache.Add(serial);
+                                SincronizarCsv();
+                                _ = Task.Run(async () => {
+                                    var d = BuscarPorSerial(serial);
+                                    if (d != null) await SincronizarComInnovStockAsync(d);
+                                });
+                                return;
+                            }
+                        }
+                    }
+                    catch { }
+                }
 
                 try
                 {
@@ -227,9 +292,74 @@ namespace InnovPlayUI.Core
                         cmd.ExecuteNonQuery();
                     }
                     cache.Add(serial);
+                    if (!string.IsNullOrEmpty(mac) && mac.Length == 17) SincronizarCsv();
+                    _ = Task.Run(async () => {
+                        var d = BuscarPorSerial(serial);
+                        if (d != null) await SincronizarComInnovStockAsync(d);
+                    });
                 }
                 catch { }
             }
+        }
+
+        public static DispositivoDB? BuscarPorSerial(string serial)
+        {
+            if (string.IsNullOrEmpty(serial)) return null;
+            InitializeDatabase();
+
+            try
+            {
+                using (var connection = new SqliteConnection(_connectionString))
+                {
+                    connection.Open();
+                    var cmd = connection.CreateCommand();
+                    cmd.CommandText = "SELECT ID, Serial, Fabricante, Modelo, Versao_Android, API_Level, Bateria, IMEI, MAC, DataRegistro FROM Dispositivos WHERE Serial = $serial LIMIT 1";
+                    cmd.Parameters.AddWithValue("$serial", serial);
+
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            string ser = reader.IsDBNull(1) ? string.Empty : reader.GetString(1);
+                            string fab = reader.IsDBNull(2) ? string.Empty : reader.GetString(2);
+                            string mod = reader.IsDBNull(3) ? string.Empty : reader.GetString(3);
+
+                            bool isVision7 = 
+                                (ser.IndexOf("T30764", StringComparison.OrdinalIgnoreCase) >= 0 || ser.IndexOf("T030764", StringComparison.OrdinalIgnoreCase) >= 0 || ser.IndexOf("T307G", StringComparison.OrdinalIgnoreCase) >= 0 || ser.IndexOf("T0307G", StringComparison.OrdinalIgnoreCase) >= 0) ||
+                                (mod.IndexOf("T0307G", StringComparison.OrdinalIgnoreCase) >= 0 || mod.IndexOf("T307G", StringComparison.OrdinalIgnoreCase) >= 0 || mod.IndexOf("T30764", StringComparison.OrdinalIgnoreCase) >= 0 || mod.IndexOf("T030764", StringComparison.OrdinalIgnoreCase) >= 0) ||
+                                (fab.IndexOf("T0307G", StringComparison.OrdinalIgnoreCase) >= 0 || fab.IndexOf("T307G", StringComparison.OrdinalIgnoreCase) >= 0 || fab.IndexOf("T30764", StringComparison.OrdinalIgnoreCase) >= 0);
+
+                            if (isVision7)
+                            {
+                                if (string.IsNullOrWhiteSpace(fab) || fab == "Desconhecido") fab = "Positivo";
+                                if (!mod.Contains("Vision"))
+                                {
+                                    string tagStr = !string.IsNullOrWhiteSpace(mod) && mod != "Desconhecido" ? mod : "T307G";
+                                    mod = "Tab Vision 7 (" + tagStr + ")";
+                                }
+                            }
+
+                            return new DispositivoDB
+                            {
+                                ID = reader.GetInt32(0),
+                                Serial = ser,
+                                Fabricante = fab,
+                                Modelo = mod,
+                                MarcaModelo = (fab + " " + mod).Trim(),
+                                Versao_Android = reader.IsDBNull(4) ? "N/A" : reader.GetString(4),
+                                API_Level = reader.IsDBNull(5) ? "N/A" : reader.GetString(5),
+                                Bateria = reader.IsDBNull(6) ? "N/A" : reader.GetString(6),
+                                IMEI = reader.IsDBNull(7) ? "N/A" : reader.GetString(7),
+                                MAC = reader.IsDBNull(8) ? "N/A" : reader.GetString(8),
+                                DataRegistro = reader.IsDBNull(9) ? "N/A" : reader.GetString(9)
+                            };
+                        }
+                    }
+                }
+            }
+            catch { }
+
+            return null;
         }
 
         public static List<DispositivoDB> LerTodos()
@@ -330,6 +460,8 @@ namespace InnovPlayUI.Core
                         transaction.Commit();
                     }
                 }
+                SincronizarCsv();
+                _ = Task.Run(() => SincronizarTodosComInnovStockAsync());
             }
             catch { }
         }
@@ -355,6 +487,128 @@ namespace InnovPlayUI.Core
             lock (_cacheLock)
             {
                 _serialCache = null;
+            }
+        }
+
+        public static void SincronizarCsv()
+        {
+            try
+            {
+                string baseDir = InnovPlayUI.Core.PathHelper.GetRootDirectory();
+                string dataDir = System.IO.Path.Combine(baseDir, "data");
+                if (!System.IO.Directory.Exists(dataDir)) System.IO.Directory.CreateDirectory(dataDir);
+
+                string csvPath = System.IO.Path.Combine(dataDir, "dispositivos_registrados.csv");
+                var todos = LerTodos();
+                var sb = new StringBuilder();
+                sb.AppendLine("ID;Serial;Fabricante;Modelo;Versao_Android;API_Level;Bateria;MAC;DataRegistro");
+                foreach (var d in todos)
+                {
+                    sb.AppendLine($"{d.ID};{d.Serial};{d.Fabricante};{d.Modelo};{d.Versao_Android};{d.API_Level};{d.Bateria};{d.MAC};{d.DataRegistro}");
+                }
+                System.IO.File.WriteAllText(csvPath, sb.ToString(), Encoding.UTF8);
+
+                string relatorioPath = System.IO.Path.Combine(dataDir, "relatorio_serial_mac.csv");
+                var sbRel = new StringBuilder();
+                sbRel.AppendLine("Serial;MAC;Fabricante;Modelo;DataRegistro");
+                foreach (var d in todos)
+                {
+                    sbRel.AppendLine($"{d.Serial};{d.MAC};{d.Fabricante};{d.Modelo};{d.DataRegistro}");
+                }
+                System.IO.File.WriteAllText(relatorioPath, sbRel.ToString(), Encoding.UTF8);
+            }
+            catch { }
+        }
+
+        private static readonly System.Net.Http.HttpClient _innovStockHttp = new System.Net.Http.HttpClient { Timeout = TimeSpan.FromSeconds(15) };
+
+        public static string SanitizeFirebaseKey(string key)
+        {
+            if (string.IsNullOrWhiteSpace(key)) return "unknown";
+            return key.Replace(".", "_").Replace("$", "_").Replace("[", "_").Replace("]", "_").Replace("#", "_").Replace("/", "_").Trim();
+        }
+
+        public static async Task<bool> SincronizarComInnovStockAsync(DispositivoDB disp)
+        {
+            if (disp == null || string.IsNullOrWhiteSpace(disp.Serial)) return false;
+            try
+            {
+                string baseUrl = SettingsManager.FirebaseDatabaseUrl.TrimEnd('/');
+                string safeKey = SanitizeFirebaseKey(disp.Serial);
+                string url = $"{baseUrl}/rpa_devices/{safeKey}.json";
+
+                var payload = new
+                {
+                    id = disp.ID,
+                    serial = disp.Serial,
+                    mac = string.IsNullOrWhiteSpace(disp.MAC) ? "N/A" : disp.MAC,
+                    fabricante = string.IsNullOrWhiteSpace(disp.Fabricante) ? "Desconhecido" : disp.Fabricante,
+                    modelo = string.IsNullOrWhiteSpace(disp.Modelo) ? "Desconhecido" : disp.Modelo,
+                    marcaModelo = disp.MarcaModelo,
+                    versao_android = string.IsNullOrWhiteSpace(disp.Versao_Android) ? "N/A" : disp.Versao_Android,
+                    api_level = string.IsNullOrWhiteSpace(disp.API_Level) ? "N/A" : disp.API_Level,
+                    bateria = string.IsNullOrWhiteSpace(disp.Bateria) ? "N/A" : disp.Bateria,
+                    imei = string.IsNullOrWhiteSpace(disp.IMEI) ? "N/A" : disp.IMEI,
+                    dataRegistro = string.IsNullOrWhiteSpace(disp.DataRegistro) ? DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") : disp.DataRegistro,
+                    syncedAt = DateTime.UtcNow.ToString("o"),
+                    origem = "Inno_RPA",
+                    machineId = Environment.MachineName
+                };
+
+                string json = System.Text.Json.JsonSerializer.Serialize(payload);
+                var content = new System.Net.Http.StringContent(json, Encoding.UTF8, "application/json");
+                var response = await _innovStockHttp.PutAsync(url, content);
+                return response.IsSuccessStatusCode;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public static async Task<int> SincronizarTodosComInnovStockAsync()
+        {
+            try
+            {
+                var todos = LerTodos();
+                if (todos == null || todos.Count == 0) return 0;
+
+                string baseUrl = SettingsManager.FirebaseDatabaseUrl.TrimEnd('/');
+                string url = $"{baseUrl}/rpa_devices.json";
+
+                var dict = new Dictionary<string, object>();
+                foreach (var disp in todos)
+                {
+                    if (string.IsNullOrWhiteSpace(disp.Serial)) continue;
+                    string safeKey = SanitizeFirebaseKey(disp.Serial);
+                    dict[safeKey] = new
+                    {
+                        id = disp.ID,
+                        serial = disp.Serial,
+                        mac = string.IsNullOrWhiteSpace(disp.MAC) ? "N/A" : disp.MAC,
+                        fabricante = string.IsNullOrWhiteSpace(disp.Fabricante) ? "Desconhecido" : disp.Fabricante,
+                        modelo = string.IsNullOrWhiteSpace(disp.Modelo) ? "Desconhecido" : disp.Modelo,
+                        marcaModelo = disp.MarcaModelo,
+                        versao_android = string.IsNullOrWhiteSpace(disp.Versao_Android) ? "N/A" : disp.Versao_Android,
+                        api_level = string.IsNullOrWhiteSpace(disp.API_Level) ? "N/A" : disp.API_Level,
+                        bateria = string.IsNullOrWhiteSpace(disp.Bateria) ? "N/A" : disp.Bateria,
+                        imei = string.IsNullOrWhiteSpace(disp.IMEI) ? "N/A" : disp.IMEI,
+                        dataRegistro = string.IsNullOrWhiteSpace(disp.DataRegistro) ? DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") : disp.DataRegistro,
+                        syncedAt = DateTime.UtcNow.ToString("o"),
+                        origem = "Inno_RPA",
+                        machineId = Environment.MachineName
+                    };
+                }
+
+                string json = System.Text.Json.JsonSerializer.Serialize(dict);
+                var content = new System.Net.Http.StringContent(json, Encoding.UTF8, "application/json");
+                var request = new System.Net.Http.HttpRequestMessage(new System.Net.Http.HttpMethod("PATCH"), url) { Content = content };
+                var response = await _innovStockHttp.SendAsync(request);
+                return response.IsSuccessStatusCode ? dict.Count : 0;
+            }
+            catch
+            {
+                return 0;
             }
         }
     }

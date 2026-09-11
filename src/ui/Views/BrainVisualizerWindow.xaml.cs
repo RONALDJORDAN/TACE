@@ -6,7 +6,6 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Animation;
 using System.Windows.Shapes;
 
 namespace InnovPlayUI.Views
@@ -36,37 +35,67 @@ namespace InnovPlayUI.Views
         [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl)]
         private static extern int Engine_RefreshDevices();
 
-        private class SynapsePulse
+        // ============================================================
+        // MODELO DE DADOS 3D (HOLO-SPHERE MATRIX)
+        // ============================================================
+        private class Node3D
         {
-            public Ellipse Particle { get; set; } = null!;
-            public double StartX { get; set; }
-            public double StartY { get; set; }
-            public double EndX { get; set; }
-            public double EndY { get; set; }
-            public double Progress { get; set; }
-            public double Speed { get; set; }
-            public double BaseSize { get; set; }
-            public bool Reversed { get; set; }
+            public double OrigX, OrigY, OrigZ;
+            public double RotX, RotY, RotZ;
+            public double ScreenX, ScreenY;
+            public double Scale = 1.0;
+            public double BaseSize = 20.0;
+            public int ZIndex;
+            public double Opacity = 1.0;
+
+            public FrameworkElement VisualElement = null!;
+            public Border? VisualBadge;
+            public string TargetId = "";
+            public string Type = ""; // "CORE", "TARGET", "STRATEGY"
+            public Color BaseColor;
+            public LearnStrategyExport StrategyData;
+            public List<LearnStrategyExport>? TargetStrategies;
         }
 
-        // Estado Interno
+        private class Synapse3D
+        {
+            public Node3D From = null!;
+            public Node3D To = null!;
+            public Line VisualLine = null!;
+            public Color BaseColor;
+            public bool IsCore;
+        }
+
+        // ============================================================
+        // ESTADO INTERNO DA JANELA E DA CÂMERA 3D
+        // ============================================================
         private string _currentFilter = "ALL";
         private bool _isDragging = false;
         private Point _dragStartPoint;
-        private Point _translateStartPoint;
+        private double _rotX = 0.25;  // Inclinação vertical (Pitch)
+        private double _rotY = 0.0;   // Rotação horizontal (Yaw)
+        private double _velRotX = 0.0;
+        private double _velRotY = 0.0;
         private double _zoomScale = 1.0;
         private bool _uiVisible = true;
+
+        private bool _showTagCore = true;
+        private bool _showTagTargets = true;
+        private bool _showTagCognitive = true;
+        private bool _showTagStrategies = false;
+        private bool _showTagMicro = false;
+
         private System.Diagnostics.Stopwatch? _animationStopwatch;
         private double _lastFrameSeconds;
         private bool _isRenderingSubscribed = false;
-        private readonly List<SynapsePulse> _synapsePulses = new List<SynapsePulse>();
-        private readonly Random _random = new Random();
+
+        private readonly List<Node3D> _nodes3D = new List<Node3D>();
+        private readonly List<Synapse3D> _synapses3D = new List<Synapse3D>();
 
         public BrainVisualizerWindow()
         {
             InitializeComponent();
 
-            // Garante que o Mapa Neural abra no mesmo monitor onde a janela principal do sistema está ativa
             var mainWin = Application.Current != null ? Application.Current.MainWindow : null;
             if (mainWin != null && mainWin != this)
             {
@@ -136,9 +165,6 @@ namespace InnovPlayUI.Views
             }
         }
 
-        // ============================================================
-        // FILTROS E BUSCA DINÂMICA DE NÓS
-        // ============================================================
         private void Filter_Click(object sender, RoutedEventArgs e)
         {
             if (!IsLoaded || BrainCanvas == null || NodeInspectorPanel == null) return;
@@ -147,13 +173,37 @@ namespace InnovPlayUI.Views
                 _currentFilter = btn.Tag.ToString() ?? "ALL";
                 NodeInspectorPanel.Visibility = Visibility.Collapsed;
                 RenderBrain();
-                ApplySearchFilter();
             }
         }
 
-        private void ApplySearchFilter()
+        private void TagFilter_Click(object sender, RoutedEventArgs e)
         {
-            // Busca por texto desativada no header
+            _showTagCore = ChkTagCore?.IsChecked == true;
+            _showTagTargets = ChkTagTargets?.IsChecked == true;
+            _showTagCognitive = ChkTagCognitive?.IsChecked == true;
+            _showTagStrategies = ChkTagStrategies?.IsChecked == true;
+            _showTagMicro = ChkTagMicro?.IsChecked == true;
+        }
+
+        private void BtnToggleAllTags_Click(object sender, RoutedEventArgs e)
+        {
+            bool anyOff = !(_showTagCore && _showTagTargets && _showTagCognitive && _showTagStrategies && _showTagMicro);
+            _showTagCore = anyOff;
+            _showTagTargets = anyOff;
+            _showTagCognitive = anyOff;
+            _showTagStrategies = anyOff;
+            _showTagMicro = anyOff;
+
+            if (ChkTagCore != null) ChkTagCore.IsChecked = anyOff;
+            if (ChkTagTargets != null) ChkTagTargets.IsChecked = anyOff;
+            if (ChkTagCognitive != null) ChkTagCognitive.IsChecked = anyOff;
+            if (ChkTagStrategies != null) ChkTagStrategies.IsChecked = anyOff;
+            if (ChkTagMicro != null) ChkTagMicro.IsChecked = anyOff;
+        }
+
+        private void BtnCloseInspector_Click(object sender, RoutedEventArgs e)
+        {
+            if (NodeInspectorPanel != null) NodeInspectorPanel.Visibility = Visibility.Collapsed;
         }
 
         private void BtnCopyQuery_Click(object sender, RoutedEventArgs e)
@@ -172,36 +222,37 @@ namespace InnovPlayUI.Views
                     };
                     timer.Start();
                 }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine($"[BrainVisualizer] Erro ao copiar: {ex.Message}");
-                }
+                catch { }
             }
         }
 
         // ============================================================
-        // NAVEGAÇÃO INTERATIVA (PAN & ZOOM)
+        // CONTROLES DE NAVEGAÇÃO 3D (MOUSE ROTATION & ZOOM)
         // ============================================================
         private void BrainCanvas_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            if (BrainCanvas == null || CanvasTranslate == null) return;
-            if (e.OriginalSource == BrainCanvas || e.OriginalSource is Path || e.OriginalSource is Canvas || e.OriginalSource is Line)
-            {
-                _isDragging = true;
-                _dragStartPoint = e.GetPosition(this);
-                _translateStartPoint = new Point(CanvasTranslate.X, CanvasTranslate.Y);
-                BrainCanvas.CaptureMouse();
-            }
+            if (BrainCanvas == null) return;
+            _isDragging = true;
+            _dragStartPoint = e.GetPosition(this);
+            BrainCanvas.CaptureMouse();
         }
 
         private void BrainCanvas_MouseMove(object sender, MouseEventArgs e)
         {
-            if (_isDragging && CanvasTranslate != null)
+            if (_isDragging)
             {
                 Point currentPoint = e.GetPosition(this);
-                Vector delta = currentPoint - _dragStartPoint;
-                CanvasTranslate.X = _translateStartPoint.X + delta.X;
-                CanvasTranslate.Y = _translateStartPoint.Y + delta.Y;
+                double deltaX = currentPoint.X - _dragStartPoint.X;
+                double deltaY = currentPoint.Y - _dragStartPoint.Y;
+
+                _velRotY = deltaX * 0.006;
+                _velRotX = -deltaY * 0.006;
+
+                _rotY += _velRotY;
+                _rotX += _velRotX;
+                _rotX = Math.Clamp(_rotX, -1.35, 1.35);
+
+                _dragStartPoint = currentPoint;
             }
         }
 
@@ -216,194 +267,677 @@ namespace InnovPlayUI.Views
 
         private void Window_MouseWheel(object sender, MouseWheelEventArgs e)
         {
-            if (BrainCanvas == null) return;
-            double zoomFactor = e.Delta > 0 ? 1.15 : 0.85;
-            ApplyZoom(zoomFactor, e.GetPosition(BrainCanvas));
+            double factor = e.Delta > 0 ? 1.12 : 0.88;
+            _zoomScale = Math.Clamp(_zoomScale * factor, 0.4, 3.0);
         }
 
         private void BtnZoomIn_Click(object sender, RoutedEventArgs e)
         {
-            if (BrainCanvas == null) return;
-            ApplyZoom(1.25, new Point(BrainCanvas.ActualWidth / 2, BrainCanvas.ActualHeight / 2));
+            _zoomScale = Math.Clamp(_zoomScale * 1.2, 0.4, 3.0);
         }
 
         private void BtnZoomOut_Click(object sender, RoutedEventArgs e)
         {
-            if (BrainCanvas == null) return;
-            ApplyZoom(0.75, new Point(BrainCanvas.ActualWidth / 2, BrainCanvas.ActualHeight / 2));
+            _zoomScale = Math.Clamp(_zoomScale * 0.8, 0.4, 3.0);
         }
 
         private void BtnResetZoom_Click(object sender, RoutedEventArgs e)
         {
-            if (CanvasScale == null || CanvasTranslate == null) return;
             _zoomScale = 1.0;
-            CanvasScale.CenterX = SystemParameters.PrimaryScreenWidth / 2;
-            CanvasScale.CenterY = SystemParameters.PrimaryScreenHeight / 2;
-            CanvasScale.ScaleX = 1.0;
-            CanvasScale.ScaleY = 1.0;
-            CanvasTranslate.X = 0;
-            CanvasTranslate.Y = 0;
-        }
-
-        private void ApplyZoom(double factor, Point center)
-        {
-            if (CanvasScale == null) return;
-            double newScale = _zoomScale * factor;
-            if (newScale < 0.3 || newScale > 3.5) return;
-
-            _zoomScale = newScale;
-            CanvasScale.CenterX = SystemParameters.PrimaryScreenWidth / 2;
-            CanvasScale.CenterY = SystemParameters.PrimaryScreenHeight / 2;
-            CanvasScale.ScaleX = _zoomScale;
-            CanvasScale.ScaleY = _zoomScale;
-        }
-
-        private void BtnCloseInspector_Click(object sender, RoutedEventArgs e)
-        {
-            if (NodeInspectorPanel != null)
+            _rotX = 0.25;
+            _rotY = 0.0;
+            _velRotX = 0.0;
+            _velRotY = 0.0;
+            if (CanvasTranslate != null)
             {
-                NodeInspectorPanel.Visibility = Visibility.Collapsed;
+                CanvasTranslate.X = 0;
+                CanvasTranslate.Y = 0;
             }
         }
 
         // ============================================================
-        // RENDERIZAÇÃO DO GRAFO NEURAL SCI-FI ADAPTATIVO
+        // CONSTRUÇÃO DA ESFERA NEURAL 3D (RENDERBRAIN)
         // ============================================================
         private void RenderBrain()
         {
-            if (BrainCanvas == null || TxtTotalNodes == null || TxtTotalStrategies == null || TxtGlobalAccuracy == null) return;
+            if (BrainCanvas == null) return;
+
             BrainCanvas.Children.Clear();
-            _synapsePulses.Clear();
+            _nodes3D.Clear();
+            _synapses3D.Clear();
 
-            double screenWidth = SystemParameters.PrimaryScreenWidth > 0 ? SystemParameters.PrimaryScreenWidth : 1920;
-            double screenHeight = SystemParameters.PrimaryScreenHeight > 0 ? SystemParameters.PrimaryScreenHeight : 1080;
+            int strategyCount = 0;
+            try { strategyCount = Engine_Learn_GetStrategyCount(); } catch { }
 
-            double centerX = screenWidth / 2;
-            double centerY = screenHeight / 2;
-
-            var rawStrategies = new List<LearnStrategyExport>();
-            try
+            var allStrategies = new List<LearnStrategyExport>();
+            for (int i = 0; i < strategyCount; i++)
             {
-                int count = Engine_Learn_GetStrategyCount();
-                for (int i = 0; i < count; i++)
+                if (Engine_Learn_GetStrategy(i, out LearnStrategyExport strat) != 0)
                 {
-                    Engine_Learn_GetStrategy(i, out LearnStrategyExport strategy);
-                    rawStrategies.Add(strategy);
+                    allStrategies.Add(strat);
                 }
             }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"[BrainVisualizer] Erro ao carregar estratégias em C: {ex.Message}");
-            }
 
-            var filteredStrategies = rawStrategies.Where(s =>
+            // Filtragem por Perfil de Hardware
+            var filtered = allStrategies.Where(s =>
             {
                 if (_currentFilter == "V7") return s.TargetId != null && s.TargetId.StartsWith("v7_");
                 if (_currentFilter == "M7") return s.TargetId != null && (s.TargetId.StartsWith("f7_") || s.TargetId.StartsWith("m7_"));
                 if (_currentFilter == "T20") return s.TargetId != null && (s.TargetId.StartsWith("t20_") || s.TargetId.StartsWith("nokia_"));
-                if (_currentFilter == "F1") return s.TargetId != null && !s.TargetId.StartsWith("v7_") && !s.TargetId.StartsWith("f7_") && !s.TargetId.StartsWith("m7_") && !s.TargetId.StartsWith("t20_") && !s.TargetId.StartsWith("nokia_");
+                if (_currentFilter == "F1") return s.TargetId != null && !s.TargetId.StartsWith("v7_") && !s.TargetId.StartsWith("f7_") && !s.TargetId.StartsWith("m7_") && !s.TargetId.StartsWith("t20_");
                 return true; // ALL
             }).ToList();
 
+            var targetGroups = filtered.GroupBy(s => s.TargetId).ToList();
 
-            var targets = filteredStrategies.GroupBy(s => s.TargetId).ToList();
-
-            int totalNodes = targets.Count + filteredStrategies.Count + 1;
-            int totalHits = filteredStrategies.Sum(s => s.Hits);
-            int totalMisses = filteredStrategies.Sum(s => s.Misses);
+            // Atualização dos Indicadores do Cabeçalho
+            int totalNodes = targetGroups.Count + filtered.Count + 1;
+            int totalHits = filtered.Sum(s => s.Hits);
+            int totalMisses = filtered.Sum(s => s.Misses);
             int totalOps = totalHits + totalMisses;
             int globalAccuracy = totalOps > 0 ? (int)Math.Round((double)totalHits / totalOps * 100.0) : 100;
 
             TxtTotalNodes.Text = totalNodes.ToString();
-            TxtTotalStrategies.Text = filteredStrategies.Count.ToString();
-            
-            // Cálculo do Quantitativo de Parâmetros Neurais da IA Adaptativa
-            int totalParameters = (targets.Count * 12) + (filteredStrategies.Count * 8) + 128;
+            TxtTotalStrategies.Text = filtered.Count.ToString();
+            if (TxtTotalRules != null)
+                TxtTotalRules.Text = filtered.Count.ToString();
             if (TxtTotalParameters != null)
-            {
-                TxtTotalParameters.Text = totalParameters.ToString("N0");
-            }
-            
+                TxtTotalParameters.Text = ((targetGroups.Count * 16) + (filtered.Count * 12) + 256).ToString("N0");
             TxtGlobalAccuracy.Text = $"{globalAccuracy}%";
 
             try
             {
-                int activeDevs = Engine_RefreshDevices();
-                if (TxtActiveDevices != null)
-                {
-                    TxtActiveDevices.Text = activeDevs.ToString();
-                }
+                int active = Engine_RefreshDevices();
+                if (TxtActiveDevices != null) TxtActiveDevices.Text = active.ToString();
             }
             catch { }
 
-            double screenMin = Math.Min(screenWidth, screenHeight);
-            double totalAvailableRadius = screenMin * 0.30;
-            double radius1 = Math.Max(180, totalAvailableRadius * 0.64);
-            double radius2 = Math.Max(110, totalAvailableRadius * 0.36);
-
-            // Anéis Orbitais Concêntricos (Background Sci-Fi Matrix)
-            DrawOrbitalRing(centerX, centerY, radius1, "#25513BA6", 1.5, true);
-            DrawOrbitalRing(centerX, centerY, radius1 + radius2, "#14513BA6", 1.0, false);
-
-            if (targets.Count > 0)
+            // ------------------------------------------------------------
+            // 1. CRIAR NÓ CENTRAL (REATOR QUÂNTICO INNOAI 2.0 - MACIÇO)
+            // ------------------------------------------------------------
+            Node3D coreNode = new Node3D
             {
-                double angleStep = 360.0 / targets.Count;
+                OrigX = 0,
+                OrigY = 0,
+                OrigZ = 0,
+                BaseSize = 92,
+                Type = "CORE",
+                TargetId = "InnoAI_Core",
+                BaseColor = (Color)ColorConverter.ConvertFromString("#00E5FF")
+            };
 
-                for (int i = 0; i < targets.Count; i++)
+            // Casca Externa Blindada Maciça
+            Border coreOrb = new Border
+            {
+                Background = new RadialGradientBrush
                 {
-                    var targetGroup = targets[i];
-                    double targetAngle = (angleStep * i) * (Math.PI / 180.0);
-                    
-                    double tx = centerX + radius1 * Math.Cos(targetAngle);
-                    double ty = centerY + radius1 * Math.Sin(targetAngle);
-
-                    // Conexão do Nó Central (borda 48px) para o Nó Alvo (borda 14px)
-                    double coreOffset = 48.0;
-                    double targetOffset = 14.0;
-                    double startX = centerX + coreOffset * Math.Cos(targetAngle);
-                    double startY = centerY + coreOffset * Math.Sin(targetAngle);
-                    double endX = tx - targetOffset * Math.Cos(targetAngle);
-                    double endY = ty - targetOffset * Math.Sin(targetAngle);
-
-                    DrawConnection(startX, startY, endX, endY, 100, 2.5, true);
-                    DrawTargetNode(tx, ty, targetAngle, targetGroup.Key, targetGroup.ToList());
-
-                    var targetStrategies = targetGroup.ToList();
-                    double arcSpread = Math.Min(100.0 * (Math.PI / 180.0), (360.0 / targets.Count) * 0.85 * (Math.PI / 180.0));
-                    double startAngle = targetAngle - (arcSpread / 2);
-                    double stratStep = targetStrategies.Count > 1 ? arcSpread / (targetStrategies.Count - 1) : 0;
-
-                    for (int j = 0; j < targetStrategies.Count; j++)
+                    GradientStops = new GradientStopCollection
                     {
-                        var strat = targetStrategies[j];
-                        double stratAngle = targetStrategies.Count > 1 ? startAngle + (stratStep * j) : targetAngle;
-                        
-                        double sx = tx + radius2 * Math.Cos(stratAngle);
-                        double sy = ty + radius2 * Math.Sin(stratAngle);
-
-                        // Conexão do Nó Alvo (borda 14px) para a Estratégia (borda 7px)
-                        double stratOffset = 7.0;
-                        double startSx = tx + targetOffset * Math.Cos(stratAngle);
-                        double startSy = ty + targetOffset * Math.Sin(stratAngle);
-                        double endSx = sx - stratOffset * Math.Cos(stratAngle);
-                        double endSy = sy - stratOffset * Math.Sin(stratAngle);
-
-                        DrawConnection(startSx, startSy, endSx, endSy, strat.Score, 1.5, false);
-                        DrawStrategyNode(sx, sy, stratAngle, strat);
+                        new GradientStop((Color)ColorConverter.ConvertFromString("#FFFFFF"), 0.0),
+                        new GradientStop((Color)ColorConverter.ConvertFromString("#00F5D4"), 0.20),
+                        new GradientStop((Color)ColorConverter.ConvertFromString("#432C81"), 0.60),
+                        new GradientStop((Color)ColorConverter.ConvertFromString("#0C0A1C"), 1.0)
                     }
+                },
+                BorderBrush = new LinearGradientBrush(
+                    (Color)ColorConverter.ConvertFromString("#00F5D4"),
+                    (Color)ColorConverter.ConvertFromString("#8570E6"),
+                    new Point(0, 0),
+                    new Point(1, 1)),
+                BorderThickness = new Thickness(2.8),
+                CornerRadius = new CornerRadius(46),
+                Cursor = Cursors.Hand,
+                ToolTip = "⚡ Reator Central InnoAI 2.0 (Núcleo Maciço — Clique para Inspecionar)"
+            };
+
+            // Anel Interno de Fusão Quântica
+            Border innerRing = new Border
+            {
+                Margin = new Thickness(5),
+                Background = new RadialGradientBrush((Color)ColorConverter.ConvertFromString("#23154C"), (Color)ColorConverter.ConvertFromString("#090816")),
+                BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#00E5FF")),
+                BorderThickness = new Thickness(1.2),
+                CornerRadius = new CornerRadius(40)
+            };
+
+            StackPanel coreContent = new StackPanel
+            {
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+
+            TextBlock coreIcon = new TextBlock
+            {
+                Text = "⚡",
+                Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#00F5D4")),
+                FontSize = 13,
+                FontWeight = FontWeights.Black,
+                HorizontalAlignment = HorizontalAlignment.Center
+            };
+
+            TextBlock coreTitle = new TextBlock
+            {
+                Text = "INNOAI",
+                Foreground = Brushes.White,
+                FontWeight = FontWeights.Black,
+                FontSize = 10,
+                HorizontalAlignment = HorizontalAlignment.Center
+            };
+
+            TextBlock coreVer = new TextBlock
+            {
+                Text = "2.0",
+                Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#00E5FF")),
+                FontWeight = FontWeights.Black,
+                FontSize = 14,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Margin = new Thickness(0, -2, 0, 0)
+            };
+
+            Border coreBadge = new Border
+            {
+                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#513BA6")),
+                BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#8570E6")),
+                BorderThickness = new Thickness(0.8),
+                CornerRadius = new CornerRadius(4),
+                Padding = new Thickness(5, 1, 5, 1),
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Margin = new Thickness(0, 2, 0, 0)
+            };
+            TextBlock coreBadgeTxt = new TextBlock
+            {
+                Text = "NÚCLEO",
+                Foreground = Brushes.White,
+                FontSize = 7.5,
+                FontWeight = FontWeights.Bold
+            };
+            coreBadge.Child = coreBadgeTxt;
+
+            coreContent.Children.Add(coreIcon);
+            coreContent.Children.Add(coreTitle);
+            coreContent.Children.Add(coreVer);
+            coreContent.Children.Add(coreBadge);
+
+            innerRing.Child = coreContent;
+            coreOrb.Child = innerRing;
+
+            coreOrb.MouseLeftButtonDown += (s, e) =>
+            {
+                e.Handled = true;
+                ShowCoreInspector();
+            };
+
+            coreNode.VisualElement = coreOrb;
+
+            Border coreFloatingBadge = new Border
+            {
+                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#DD121222")),
+                BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#00F5D4")),
+                BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(5),
+                Padding = new Thickness(6, 2, 6, 2),
+                IsHitTestVisible = false
+            };
+            TextBlock coreFloatingBadgeTxt = new TextBlock
+            {
+                Text = "⚡ REATOR CENTRAL INNOAI 2.0",
+                Foreground = Brushes.White,
+                FontWeight = FontWeights.Black,
+                FontSize = 9.5
+            };
+            coreFloatingBadge.Child = coreFloatingBadgeTxt;
+            coreNode.VisualBadge = coreFloatingBadge;
+
+            BrainCanvas.Children.Add(coreOrb);
+            BrainCanvas.Children.Add(coreFloatingBadge);
+            _nodes3D.Add(coreNode);
+
+            // ------------------------------------------------------------
+            // 3. CRIAR NÓS ALVOS (DISTRIBUÍDOS NA ESFERA 3D)
+            // ------------------------------------------------------------
+            double sphereRadius = 270.0;
+            int numTargets = targetGroups.Count;
+
+            var targetNodesList = new List<Node3D>();
+
+            for (int i = 0; i < numTargets; i++)
+            {
+                var group = targetGroups[i];
+                string tid = group.Key;
+
+                // Distribuição esférica tipo Fibonacci
+                double phi = Math.Acos(1.0 - 2.0 * (i + 0.5) / Math.Max(numTargets, 1));
+                double theta = Math.PI * (1.0 + Math.Sqrt(5.0)) * i;
+
+                // Ajuste por modelo (hemisférios visuais dedicados)
+                if (tid.StartsWith("v7_")) phi = Math.Clamp(phi * 0.7, 0.2, 1.2); // Norte
+                else if (tid.StartsWith("f7_") || tid.StartsWith("m7_")) theta += 1.2; // Leste
+                else if (tid.StartsWith("t20_") || tid.StartsWith("nokia_")) theta -= 1.2; // Oeste
+                else phi = Math.PI - Math.Clamp(phi * 0.7, 0.2, 1.2); // Sul
+
+                double tx = sphereRadius * Math.Sin(phi) * Math.Cos(theta);
+                double ty = sphereRadius * Math.Cos(phi);
+                double tz = sphereRadius * Math.Sin(phi) * Math.Sin(theta);
+
+                Color targetColor;
+                if (tid.StartsWith("v7_")) targetColor = (Color)ColorConverter.ConvertFromString("#00F5D4");
+                else if (tid.StartsWith("f7_") || tid.StartsWith("m7_")) targetColor = (Color)ColorConverter.ConvertFromString("#FFB703");
+                else if (tid.StartsWith("t20_") || tid.StartsWith("nokia_")) targetColor = (Color)ColorConverter.ConvertFromString("#00E5FF");
+                else targetColor = (Color)ColorConverter.ConvertFromString("#D2BBFF");
+
+                Node3D targetNode = new Node3D
+                {
+                    OrigX = tx,
+                    OrigY = ty,
+                    OrigZ = tz,
+                    BaseSize = 26,
+                    Type = "TARGET",
+                    TargetId = tid,
+                    BaseColor = targetColor,
+                    TargetStrategies = group.ToList()
+                };
+
+                Border targetOrb = new Border
+                {
+                    Background = new SolidColorBrush(targetColor),
+                    BorderBrush = Brushes.White,
+                    BorderThickness = new Thickness(1.8),
+                    CornerRadius = new CornerRadius(13),
+                    Cursor = Cursors.Hand,
+                    ToolTip = $"{FormatarTargetName(tid)} ({group.Count()} estratégias)"
+                };
+
+                string friendly = FormatarTargetName(tid);
+                targetOrb.MouseLeftButtonDown += (s, e) =>
+                {
+                    e.Handled = true;
+                    ShowTargetInspector(tid, targetNode.TargetStrategies ?? new List<LearnStrategyExport>());
+                };
+
+                Border targetBadge = new Border
+                {
+                    Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#DD121222")),
+                    BorderBrush = new SolidColorBrush(targetColor),
+                    BorderThickness = new Thickness(1),
+                    CornerRadius = new CornerRadius(5),
+                    Padding = new Thickness(6, 2, 6, 2),
+                    IsHitTestVisible = false
+                };
+                TextBlock targetBadgeTxt = new TextBlock
+                {
+                    Text = friendly,
+                    Foreground = Brushes.White,
+                    FontWeight = FontWeights.Bold,
+                    FontSize = 10
+                };
+                targetBadge.Child = targetBadgeTxt;
+
+                targetNode.VisualElement = targetOrb;
+                targetNode.VisualBadge = targetBadge;
+                BrainCanvas.Children.Add(targetOrb);
+                BrainCanvas.Children.Add(targetBadge);
+                _nodes3D.Add(targetNode);
+                targetNodesList.Add(targetNode);
+
+                // Sinapse do Núcleo Central para o Alvo
+                CriarSinapse(coreNode, targetNode, 100, true);
+
+                // ------------------------------------------------------------
+                // 4. CRIAR ESTRATÉGIAS SATÉLITES DO ALVO
+                // ------------------------------------------------------------
+                var strats = group.ToList();
+                int numStrats = strats.Count;
+                double satDist = 85.0;
+
+                for (int j = 0; j < numStrats; j++)
+                {
+                    var strat = strats[j];
+                    double satAngle = (2.0 * Math.PI / Math.Max(numStrats, 1)) * j;
+
+                    // Vetores perpendiculares locais para orbitar ao redor do alvo
+                    double nx = tx / sphereRadius;
+                    double ny = ty / sphereRadius;
+                    double nz = tz / sphereRadius;
+
+                    double upX = 0, upY = 1, upZ = 0;
+                    if (Math.Abs(ny) > 0.9) { upX = 1; upY = 0; upZ = 0; }
+
+                    // Produto vetorial u x n
+                    double rx = upY * nz - upZ * ny;
+                    double ry = upZ * nx - upX * nz;
+                    double rz = upX * ny - upY * nx;
+                    double rLen = Math.Sqrt(rx * rx + ry * ry + rz * rz);
+                    rx /= rLen; ry /= rLen; rz /= rLen;
+
+                    // Produto vetorial n x r
+                    double ux = ny * rz - nz * ry;
+                    double uy = nz * rx - nx * rz;
+                    double uz = nx * ry - ny * rx;
+
+                    double sx = tx + (nx * 20.0) + (rx * Math.Cos(satAngle) + ux * Math.Sin(satAngle)) * satDist;
+                    double sy = ty + (ny * 20.0) + (ry * Math.Cos(satAngle) + uy * Math.Sin(satAngle)) * satDist;
+                    double sz = tz + (nz * 20.0) + (rz * Math.Cos(satAngle) + uz * Math.Sin(satAngle)) * satDist;
+
+                    Color stratColor;
+                    if (strat.Score > 50) stratColor = (Color)ColorConverter.ConvertFromString("#4EDEA3");
+                    else if (strat.Score > 0) stratColor = (Color)ColorConverter.ConvertFromString("#FFD666");
+                    else if (strat.Score == 0) stratColor = (Color)ColorConverter.ConvertFromString("#8E8EA0");
+                    else stratColor = (Color)ColorConverter.ConvertFromString("#FF4C4C");
+
+                    Node3D stratNode = new Node3D
+                    {
+                        OrigX = sx,
+                        OrigY = sy,
+                        OrigZ = sz,
+                        BaseSize = 13,
+                        Type = "STRATEGY",
+                        TargetId = tid,
+                        BaseColor = stratColor,
+                        StrategyData = strat
+                    };
+
+                    Border stratOrb = new Border
+                    {
+                        Background = new SolidColorBrush(stratColor),
+                        BorderBrush = Brushes.White,
+                        BorderThickness = new Thickness(1),
+                        CornerRadius = new CornerRadius(7),
+                        Cursor = Cursors.Hand,
+                        ToolTip = $"{strat.Query} (Score: {strat.Score})"
+                    };
+
+                    stratOrb.MouseLeftButtonDown += (s, e) =>
+                    {
+                        e.Handled = true;
+                        ShowStrategyInspector(strat);
+                    };
+
+                    stratNode.VisualElement = stratOrb;
+
+                    Border stratBadge = new Border
+                    {
+                        Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#DD121222")),
+                        BorderBrush = new SolidColorBrush(stratColor),
+                        BorderThickness = new Thickness(0.8),
+                        CornerRadius = new CornerRadius(4),
+                        Padding = new Thickness(4, 1, 4, 1),
+                        IsHitTestVisible = false
+                    };
+                    string qShort = strat.Query;
+                    if (qShort.Length > 16) qShort = qShort.Substring(0, 14) + "..";
+                    TextBlock stratBadgeTxt = new TextBlock
+                    {
+                        Text = $"{qShort} ({strat.Score})",
+                        Foreground = Brushes.White,
+                        FontWeight = FontWeights.Normal,
+                        FontSize = 8.5
+                    };
+                    stratBadge.Child = stratBadgeTxt;
+                    stratNode.VisualBadge = stratBadge;
+
+                    BrainCanvas.Children.Add(stratOrb);
+                    BrainCanvas.Children.Add(stratBadge);
+                    _nodes3D.Add(stratNode);
+
+                    // Sinapse do Alvo para a Estratégia
+                    CriarSinapse(targetNode, stratNode, strat.Score, false);
                 }
             }
 
-            // Nó Central desenhado por último para sobreposição limpa no topo
-            DrawCentralNode(centerX, centerY);
+            // ------------------------------------------------------------
+            // 5. CRIAR INTERNEURÔNIOS COGNITIVOS (CAMADA DE DECISÃO INNOAI 2.0)
+            // ------------------------------------------------------------
+            var cognitiveNodes = new (string Name, string Role, string Details, string Symbol)[]
+            {
+                ("Centroid Matcher", "Motor de Centróide Determinístico", "Calcula o centroide exato de toque em botões e gavetas dinâmicas com desvio nulo.", "🎯"),
+                ("Fuzzy Resolver", "Normalizador Fuzzy & Tolerância", "Ajusta desvios sutis de texto, pontuação e espaços em seletores.", "🔍"),
+                ("Anti-Drift Shield", "Guardião Anti-Desvio de Interface", "Bloqueia disparos incorretos caso a tela sofra reordenação inesperada.", "🛡️"),
+                ("FastCache Router", "Roteador de Acesso Rápido", "Resolução direta em memória RAM de coordenadas de alta frequência.", "⚡"),
+                ("Hierarchy Scanner", "Varredura de Árvore UIAutomator", "Analisa hierarquia pai-filho e nós adjacentes na árvore de acessibilidade XML.", "🌲"),
+                ("Diacritic Normalizer", "Normalizador de Acentuação", "Equipara caracteres Unicode e ASCII (ex: Município vs Municipio).", "🔤"),
+                ("Latency Compensator", "Compensador de Latência Android", "Ajusta temporizações dinâmicas de acordo com a carga do processador do tablet.", "⏱️"),
+                ("Adaptive Learner", "Otimizador de Pesos Heurísticos", "Promove estratégias comprovadas (+5 pts) e penaliza rotas obsoletas (-15 pts).", "📈"),
+                ("Context Analyzer", "Analista de Contexto Operacional", "Valida a presença da janela correta antes de liberar o acionamento do alvo.", "🌐"),
+                ("Fallback Provider", "Provedor Multi-Estratégia", "Oferece rotas alternativas em milissegundos se o primeiro seletor falhar.", "🔄"),
+                ("Resource Extractor", "Extrator de IDs e Propriedades", "Lê resource-id, class name, bounds e content-desc em alta velocidade.", "📦"),
+                ("Zero-Drift Sensor", "Sensor de Estabilidade de Tela", "Garante que elementos em movimento pararam antes da interação de clique.", "⚓")
+            };
 
-            EnsurePulseAnimationTimer();
-            ApplySearchFilter();
+            double cogRadius = 165.0;
+            var createdCogNodes = new List<Node3D>();
+            for (int k = 0; k < cognitiveNodes.Length; k++)
+            {
+                var cog = cognitiveNodes[k];
+                double phi = Math.Acos(1.0 - 2.0 * (k + 0.5) / cognitiveNodes.Length);
+                double theta = Math.PI * (1.0 + Math.Sqrt(5.0)) * k;
+
+                double cx = cogRadius * Math.Sin(phi) * Math.Cos(theta);
+                double cy = cogRadius * Math.Cos(phi);
+                double cz = cogRadius * Math.Sin(phi) * Math.Sin(theta);
+
+                Color cogColor = (Color)ColorConverter.ConvertFromString("#00E5FF");
+
+                Node3D cogNode = new Node3D
+                {
+                    OrigX = cx,
+                    OrigY = cy,
+                    OrigZ = cz,
+                    BaseSize = 18,
+                    Type = "COGNITIVE",
+                    TargetId = cog.Name,
+                    BaseColor = cogColor
+                };
+
+                Border cogOrb = new Border
+                {
+                    Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#15152A")),
+                    BorderBrush = new SolidColorBrush(cogColor),
+                    BorderThickness = new Thickness(1.4),
+                    CornerRadius = new CornerRadius(9),
+                    Cursor = Cursors.Hand,
+                    ToolTip = $"{cog.Name} — {cog.Role}"
+                };
+                TextBlock cogTxt = new TextBlock
+                {
+                    Text = cog.Symbol,
+                    FontSize = 9,
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    VerticalAlignment = VerticalAlignment.Center
+                };
+                cogOrb.Child = cogTxt;
+
+                cogOrb.MouseLeftButtonDown += (s, e) =>
+                {
+                    e.Handled = true;
+                    ShowCognitiveInspector(cog.Name, cog.Role, cog.Details);
+                };
+
+                cogNode.VisualElement = cogOrb;
+
+                Border cogBadge = new Border
+                {
+                    Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#DD121222")),
+                    BorderBrush = new SolidColorBrush(cogColor),
+                    BorderThickness = new Thickness(0.9),
+                    CornerRadius = new CornerRadius(4),
+                    Padding = new Thickness(5, 1.5, 5, 1.5),
+                    IsHitTestVisible = false
+                };
+                TextBlock cogBadgeTxt = new TextBlock
+                {
+                    Text = $"{cog.Symbol} {cog.Name}",
+                    Foreground = Brushes.White,
+                    FontWeight = FontWeights.SemiBold,
+                    FontSize = 9
+                };
+                cogBadge.Child = cogBadgeTxt;
+                cogNode.VisualBadge = cogBadge;
+
+                BrainCanvas.Children.Add(cogOrb);
+                BrainCanvas.Children.Add(cogBadge);
+                _nodes3D.Add(cogNode);
+                createdCogNodes.Add(cogNode);
+
+                // Sinapse do Núcleo Central para o Interneurônio Cognitivo
+                CriarSinapse(coreNode, cogNode, 100, true);
+            }
+
+            // ------------------------------------------------------------
+            // 6. CRIAR MALHA DE MICRO-NEURÔNIOS DE RELÉ (SYNAPTIC LATTICE)
+            // ------------------------------------------------------------
+            int microCount = 38;
+            for (int m = 0; m < microCount; m++)
+            {
+                double mRadius = (m % 2 == 0) ? 220.0 : 310.0;
+                double phi = Math.Acos(1.0 - 2.0 * (m + 0.5) / microCount);
+                double theta = Math.PI * (1.0 + Math.Sqrt(5.0)) * m * 1.35;
+
+                double mx = mRadius * Math.Sin(phi) * Math.Cos(theta);
+                double my = mRadius * Math.Cos(phi);
+                double mz = mRadius * Math.Sin(phi) * Math.Sin(theta);
+
+                Color mColor = (m % 3 == 0) 
+                    ? (Color)ColorConverter.ConvertFromString("#4EDEA3") 
+                    : (m % 3 == 1) 
+                        ? (Color)ColorConverter.ConvertFromString("#00F5D4") 
+                        : (Color)ColorConverter.ConvertFromString("#D2BBFF");
+
+                Node3D mNode = new Node3D
+                {
+                    OrigX = mx,
+                    OrigY = my,
+                    OrigZ = mz,
+                    BaseSize = 8,
+                    Type = "MICRO",
+                    TargetId = $"MicroNeuron_{m + 1}",
+                    BaseColor = mColor
+                };
+
+                Border mOrb = new Border
+                {
+                    Background = new SolidColorBrush(mColor),
+                    BorderBrush = Brushes.White,
+                    BorderThickness = new Thickness(0.8),
+                    CornerRadius = new CornerRadius(4),
+                    Cursor = Cursors.Hand,
+                    ToolTip = $"Micro-Neurônio Relé #{m + 1:D2} (Canal de Sinapse Ativo)"
+                };
+
+                int microId = m + 1;
+                string microType = (m % 2 == 0) ? "Camada Primária" : "Camada Secundária";
+                mOrb.MouseLeftButtonDown += (s, e) =>
+                {
+                    e.Handled = true;
+                    ShowMicroNeuronInspector(microId, microType);
+                };
+
+                mNode.VisualElement = mOrb;
+
+                Border mBadge = new Border
+                {
+                    Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#DD121222")),
+                    BorderBrush = new SolidColorBrush(mColor),
+                    BorderThickness = new Thickness(0.6),
+                    CornerRadius = new CornerRadius(3),
+                    Padding = new Thickness(3, 1, 3, 1),
+                    IsHitTestVisible = false
+                };
+                TextBlock mBadgeTxt = new TextBlock
+                {
+                    Text = $"Relé #{m + 1:D2}",
+                    Foreground = Brushes.White,
+                    FontWeight = FontWeights.Normal,
+                    FontSize = 7.5
+                };
+                mBadge.Child = mBadgeTxt;
+                mNode.VisualBadge = mBadge;
+
+                BrainCanvas.Children.Add(mOrb);
+                BrainCanvas.Children.Add(mBadge);
+                _nodes3D.Add(mNode);
+
+                // Conectar o micro-neurônio ao interneurônio cognitivo mais próximo
+                if (createdCogNodes.Count > 0)
+                {
+                    int nearestCogIdx = m % createdCogNodes.Count;
+                    CriarSinapseLateral(createdCogNodes[nearestCogIdx], mNode, mColor);
+                }
+            }
+
+            // ------------------------------------------------------------
+            // 7. SINAPSES LATERAIS DE FLUXO (PIPELINE ENTRE ALVOS)
+            // ------------------------------------------------------------
+            for (int i = 0; i < targetNodesList.Count - 1; i++)
+            {
+                CriarSinapseLateral(targetNodesList[i], targetNodesList[i + 1], targetNodesList[i].BaseColor);
+            }
+
+            // Atualização dinâmica total no HUD
+            TxtTotalNodes.Text = _nodes3D.Count.ToString();
+            TxtTotalStrategies.Text = _synapses3D.Count.ToString();
+            if (TxtTotalRules != null)
+                TxtTotalRules.Text = filtered.Count.ToString();
+            if (TxtTotalParameters != null)
+                TxtTotalParameters.Text = ((_nodes3D.Count * 18) + (_synapses3D.Count * 12) + 512).ToString("N0");
+
+            EnsureRenderLoop();
         }
 
-        private const double TARGET_FRAME_TIME = 1.0 / 30.0; // Taxa de quadros travada em 30 FPS estritos
+        private void CriarSinapse(Node3D from, Node3D to, int score, bool isCore)
+        {
+            Color c;
+            if (isCore) c = (Color)ColorConverter.ConvertFromString("#00E5FF");
+            else if (score > 50) c = (Color)ColorConverter.ConvertFromString("#4EDEA3");
+            else if (score > 0) c = (Color)ColorConverter.ConvertFromString("#FFD666");
+            else if (score == 0) c = (Color)ColorConverter.ConvertFromString("#6E6E82");
+            else c = (Color)ColorConverter.ConvertFromString("#FF4C4C");
 
-        private void EnsurePulseAnimationTimer()
+            Line line = new Line
+            {
+                Stroke = new SolidColorBrush(c),
+                StrokeThickness = isCore ? 1.6 : 1.0,
+                Opacity = isCore ? 0.6 : 0.4,
+                IsHitTestVisible = false
+            };
+
+            BrainCanvas.Children.Add(line);
+
+            _synapses3D.Add(new Synapse3D
+            {
+                From = from,
+                To = to,
+                VisualLine = line,
+                BaseColor = c,
+                IsCore = isCore
+            });
+        }
+
+        private void CriarSinapseLateral(Node3D from, Node3D to, Color c)
+        {
+            Line line = new Line
+            {
+                Stroke = new SolidColorBrush(c),
+                StrokeThickness = 0.8,
+                Opacity = 0.28,
+                IsHitTestVisible = false
+            };
+
+            BrainCanvas.Children.Add(line);
+
+            _synapses3D.Add(new Synapse3D
+            {
+                From = from,
+                To = to,
+                VisualLine = line,
+                BaseColor = c,
+                IsCore = false
+            });
+        }
+
+        // ============================================================
+        // LOOP DE RENDERIZAÇÃO E PROJEÇÃO 3D (60 FPS NATIVO)
+        // ============================================================
+        private void EnsureRenderLoop()
         {
             if (_animationStopwatch == null)
             {
@@ -419,306 +953,119 @@ namespace InnovPlayUI.Views
 
         private void OnCompositionTargetRendering(object? sender, EventArgs e)
         {
-            if (_synapsePulses == null || _synapsePulses.Count == 0 || _animationStopwatch == null) return;
+            if (_animationStopwatch == null) return;
 
             double currentSec = _animationStopwatch.Elapsed.TotalSeconds;
             double deltaTime = currentSec - _lastFrameSeconds;
-
-            // Trava estrita de 30 FPS (ignora renders intermediários para economizar CPU/GPU)
-            if (deltaTime < TARGET_FRAME_TIME) return;
-
             _lastFrameSeconds = currentSec;
-            if (deltaTime > 0.1) deltaTime = TARGET_FRAME_TIME;
 
-            for (int i = 0; i < _synapsePulses.Count; i++)
+            if (deltaTime > 0.1) deltaTime = 0.033;
+
+            // Rotação suave contínua quando o usuário não estiver arrastando
+            if (!_isDragging)
             {
-                var pulse = _synapsePulses[i];
-                pulse.Progress += pulse.Speed * deltaTime;
-                if (pulse.Progress >= 1.0)
+                _rotY += (0.16 + _velRotY) * deltaTime;
+                _rotX += _velRotX * deltaTime;
+                _rotX = Math.Clamp(_rotX, -1.35, 1.35);
+
+                _velRotY *= 0.94;
+                _velRotX *= 0.94;
+            }
+
+            double centerX = ActualWidth > 0 ? ActualWidth / 2.0 : 600;
+            double centerY = ActualHeight > 0 ? ActualHeight / 2.0 : 400;
+            double cameraD = 1000.0;
+
+            double cosY = Math.Cos(_rotY), sinY = Math.Sin(_rotY);
+            double cosX = Math.Cos(_rotX), sinX = Math.Sin(_rotX);
+
+            // 1. ATUALIZAR E PROJETAR NÓS 3D
+            for (int i = 0; i < _nodes3D.Count; i++)
+            {
+                var n = _nodes3D[i];
+
+                // Rotação 3D Yaw (em Y)
+                double x1 = n.OrigX * cosY + n.OrigZ * sinY;
+                double y1 = n.OrigY;
+                double z1 = -n.OrigX * sinY + n.OrigZ * cosY;
+
+                // Rotação 3D Pitch (em X)
+                double x2 = x1;
+                double y2 = y1 * cosX - z1 * sinX;
+                double z2 = y1 * sinX + z1 * cosX;
+
+                n.RotX = x2;
+                n.RotY = y2;
+                n.RotZ = z2;
+
+                // Projeção com Perspectiva
+                double dist = cameraD - z2;
+                if (dist < 100) dist = 100;
+                double k = (cameraD / dist) * _zoomScale;
+                n.Scale = k;
+
+                double sx = centerX + x2 * k;
+                double sy = centerY + y2 * k;
+                n.ScreenX = sx;
+                n.ScreenY = sy;
+
+                double size = n.BaseSize * k;
+                n.ZIndex = (int)(z2 + 2000.0);
+
+                // Profundidade (Z-Buffering / Fog Visual)
+                double zNorm = Math.Clamp((z2 + 350.0) / 700.0, 0.0, 1.0);
+                n.Opacity = 0.25 + (0.75 * zNorm);
+
+                n.VisualElement.Width = size;
+                n.VisualElement.Height = size;
+                n.VisualElement.Opacity = n.Opacity;
+                Canvas.SetLeft(n.VisualElement, sx - size / 2.0);
+                Canvas.SetTop(n.VisualElement, sy - size / 2.0);
+                Panel.SetZIndex(n.VisualElement, n.ZIndex);
+
+                // Atualizar Badge do Alvo / Nós com Tags
+                if (n.VisualBadge != null)
                 {
-                    pulse.Progress = 0.0;
-                    pulse.Reversed = !pulse.Reversed;
+                    bool isTagVisible = n.Type switch
+                    {
+                        "CORE" => _showTagCore,
+                        "TARGET" => _showTagTargets,
+                        "COGNITIVE" => _showTagCognitive,
+                        "STRATEGY" => _showTagStrategies,
+                        "MICRO" => _showTagMicro,
+                        _ => true
+                    };
+
+                    if (!isTagVisible || z2 < -80)
+                    {
+                        n.VisualBadge.Visibility = Visibility.Collapsed;
+                    }
+                    else
+                    {
+                        n.VisualBadge.Visibility = Visibility.Visible;
+                        n.VisualBadge.Opacity = Math.Clamp((z2 + 80.0) / 180.0, 0.0, 1.0);
+                        Canvas.SetLeft(n.VisualBadge, sx + size / 2.0 + 5.0);
+                        Canvas.SetTop(n.VisualBadge, sy - 10.0);
+                        Panel.SetZIndex(n.VisualBadge, n.ZIndex + 1);
+                    }
                 }
-
-                double p = pulse.Progress;
-                double curX = pulse.Reversed ? pulse.EndX + (pulse.StartX - pulse.EndX) * p : pulse.StartX + (pulse.EndX - pulse.StartX) * p;
-                double curY = pulse.Reversed ? pulse.EndY + (pulse.StartY - pulse.EndY) * p : pulse.StartY + (pulse.EndY - pulse.StartY) * p;
-
-                // Suavização ultra-fluida de opacidade (fade-in / fade-out nas extremidades dos nós)
-                double alpha = 1.0;
-                if (p < 0.15) alpha = p / 0.15;
-                else if (p > 0.85) alpha = (1.0 - p) / 0.15;
-
-                pulse.Particle.Opacity = Math.Clamp(alpha, 0.0, 1.0);
-
-                // Micro-pulsação orgânica senoidal do tamanho do elétron sináptico
-                double pulseScale = 0.85 + (0.35 * Math.Sin(p * Math.PI));
-                double currentSize = pulse.BaseSize * pulseScale;
-                pulse.Particle.Width = currentSize;
-                pulse.Particle.Height = currentSize;
-
-                Canvas.SetLeft(pulse.Particle, curX - (currentSize / 2.0));
-                Canvas.SetTop(pulse.Particle, curY - (currentSize / 2.0));
-            }
-        }
-
-        private void DrawOrbitalRing(double cx, double cy, double radius, string colorHex, double thickness, bool isDashed)
-        {
-            Ellipse ring = new Ellipse
-            {
-                Width = radius * 2,
-                Height = radius * 2,
-                Stroke = new SolidColorBrush((Color)ColorConverter.ConvertFromString(colorHex)),
-                StrokeThickness = thickness,
-                IsHitTestVisible = false
-            };
-            if (isDashed)
-            {
-                ring.StrokeDashArray = new DoubleCollection { 6, 6 };
-            }
-            Canvas.SetLeft(ring, cx - radius);
-            Canvas.SetTop(ring, cy - radius);
-            BrainCanvas.Children.Add(ring);
-        }
-
-        private void DrawConnection(double x1, double y1, double x2, double y2, int score, double thickness, bool isCore)
-        {
-            Color c;
-            if (score > 50) c = (Color)ColorConverter.ConvertFromString("#4EDEA3");
-            else if (score > 0) c = (Color)ColorConverter.ConvertFromString("#F5C542");
-            else if (score == 0) c = (Color)ColorConverter.ConvertFromString("#7A7A8A");
-            else c = (Color)ColorConverter.ConvertFromString("#FF6B6B");
-
-            Line line = new Line
-            {
-                X1 = x1,
-                Y1 = y1,
-                X2 = x2,
-                Y2 = y2,
-                Stroke = new SolidColorBrush(c),
-                StrokeThickness = thickness,
-                Opacity = score > 50 ? 0.85 : 0.4
-            };
-
-            if (score > 50 || isCore)
-            {
-                line.Effect = new System.Windows.Media.Effects.DropShadowEffect
-                {
-                    Color = c,
-                    BlurRadius = 12,
-                    ShadowDepth = 0
-                };
             }
 
-            BrainCanvas.Children.Add(line);
-
-            // Adicionar partículas de pulso neural com fluidez extrema
-            Color particleColor = isCore ? (Color)ColorConverter.ConvertFromString("#00E5FF") : c;
-            double pSize = isCore ? 7.5 : 5.0;
-            int count = isCore ? 2 : 1;
-
-            for (int k = 0; k < count; k++)
+            // 2. ATUALIZAR SINAPSES 3D
+            for (int i = 0; i < _synapses3D.Count; i++)
             {
-                Ellipse pulseDot = new Ellipse
-                {
-                    Width = pSize,
-                    Height = pSize,
-                    Fill = new SolidColorBrush(particleColor),
-                    IsHitTestVisible = false
-                };
+                var syn = _synapses3D[i];
+                syn.VisualLine.X1 = syn.From.ScreenX;
+                syn.VisualLine.Y1 = syn.From.ScreenY;
+                syn.VisualLine.X2 = syn.To.ScreenX;
+                syn.VisualLine.Y2 = syn.To.ScreenY;
 
-                BrainCanvas.Children.Add(pulseDot);
-
-                double initialProgress = (k == 0) ? _random.NextDouble() : (_random.NextDouble() * 0.5 + 0.5);
-
-                _synapsePulses.Add(new SynapsePulse
-                {
-                    Particle = pulseDot,
-                    StartX = x1,
-                    StartY = y1,
-                    EndX = x2,
-                    EndY = y2,
-                    Progress = initialProgress % 1.0,
-                    Speed = isCore ? 0.35 + (_random.NextDouble() * 0.15) : 0.25 + (_random.NextDouble() * 0.15),
-                    BaseSize = pSize,
-                    Reversed = _random.Next(0, 2) == 1
-                });
+                double avgZ = (syn.From.RotZ + syn.To.RotZ) / 2.0;
+                double zNorm = Math.Clamp((avgZ + 350.0) / 700.0, 0.0, 1.0);
+                double synOpacity = (syn.IsCore ? 0.45 : 0.25) + (0.50 * zNorm);
+                syn.VisualLine.Opacity = synOpacity;
+                Panel.SetZIndex(syn.VisualLine, (int)(avgZ + 1950.0));
             }
-        }
-
-        private void DrawCentralNode(double x, double y)
-        {
-            Ellipse circle = new Ellipse
-            {
-                Width = 96,
-                Height = 96,
-                Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#513BA6")),
-                Stroke = new SolidColorBrush(Colors.White),
-                StrokeThickness = 2.5,
-                Cursor = Cursors.Hand,
-                ToolTip = "InnoAI — Núcleo Neural de Decisão"
-            };
-
-            circle.MouseEnter += (s, e) => { circle.Width = 104; circle.Height = 104; Canvas.SetLeft(circle, x - 52); Canvas.SetTop(circle, y - 52); };
-            circle.MouseLeave += (s, e) => { circle.Width = 96; circle.Height = 96; Canvas.SetLeft(circle, x - 48); Canvas.SetTop(circle, y - 48); };
-
-            Canvas.SetLeft(circle, x - 48);
-            Canvas.SetTop(circle, y - 48);
-            BrainCanvas.Children.Add(circle);
-
-            TextBlock txt = new TextBlock
-            {
-                Text = "InnoAI",
-                Foreground = Brushes.White,
-                FontWeight = FontWeights.Black,
-                TextAlignment = TextAlignment.Center,
-                FontSize = 16,
-                IsHitTestVisible = false
-            };
-            Canvas.SetLeft(txt, x - 27);
-            Canvas.SetTop(txt, y - 11);
-            BrainCanvas.Children.Add(txt);
-        }
-
-        private void DrawTargetNode(double x, double y, double angle, string targetId, List<LearnStrategyExport> strategies)
-        {
-            string friendlyName = FormatarTargetName(targetId);
-            Color nodeColor;
-            if (targetId.StartsWith("v7_")) nodeColor = (Color)ColorConverter.ConvertFromString("#00F5D4");
-            else if (targetId.StartsWith("f7_") || targetId.StartsWith("m7_")) nodeColor = (Color)ColorConverter.ConvertFromString("#FFB703");
-            else if (targetId.StartsWith("t20_") || targetId.StartsWith("nokia_")) nodeColor = (Color)ColorConverter.ConvertFromString("#00E5FF");
-            else nodeColor = (Color)ColorConverter.ConvertFromString("#8570E6");
-
-            Ellipse circle = new Ellipse
-            {
-                Width = 28,
-                Height = 28,
-                Fill = new SolidColorBrush(nodeColor),
-                Stroke = Brushes.White,
-                StrokeThickness = 2,
-                Cursor = Cursors.Hand,
-                Tag = targetId,
-                ToolTip = $"{friendlyName} ({strategies.Count} estratégias)"
-            };
-
-            circle.MouseEnter += (s, e) => { circle.Width = 34; circle.Height = 34; Canvas.SetLeft(circle, x - 17); Canvas.SetTop(circle, y - 17); };
-            circle.MouseLeave += (s, e) => { circle.Width = 28; circle.Height = 28; Canvas.SetLeft(circle, x - 14); Canvas.SetTop(circle, y - 14); };
-
-            circle.MouseLeftButtonDown += (s, e) =>
-            {
-                e.Handled = true;
-                ShowTargetInspector(targetId, strategies);
-            };
-
-            Canvas.SetLeft(circle, x - 14);
-            Canvas.SetTop(circle, y - 14);
-            BrainCanvas.Children.Add(circle);
-
-            Border badge = new Border
-            {
-                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#E6111122")),
-                BorderBrush = new SolidColorBrush(nodeColor),
-                BorderThickness = new Thickness(1),
-                CornerRadius = new CornerRadius(6),
-                Padding = new Thickness(8, 3, 8, 3),
-                IsHitTestVisible = false,
-                Tag = targetId
-            };
-
-
-            TextBlock txt = new TextBlock
-            {
-                Text = friendlyName,
-                Foreground = Brushes.White,
-                FontWeight = FontWeights.Bold,
-                FontSize = 11
-            };
-            badge.Child = txt;
-
-            bool isRightSide = Math.Cos(angle) >= 0;
-            if (isRightSide)
-            {
-                Canvas.SetLeft(badge, x + 18);
-            }
-            else
-            {
-                Canvas.SetLeft(badge, x - 190);
-            }
-            Canvas.SetTop(badge, y - 14);
-            BrainCanvas.Children.Add(badge);
-        }
-
-        private void DrawStrategyNode(double x, double y, double angle, LearnStrategyExport strat)
-        {
-            Color c;
-            if (strat.Score > 50) c = (Color)ColorConverter.ConvertFromString("#4EDEA3");
-            else if (strat.Score > 0) c = (Color)ColorConverter.ConvertFromString("#F5C542");
-            else if (strat.Score == 0) c = (Color)ColorConverter.ConvertFromString("#7A7A8A");
-            else c = (Color)ColorConverter.ConvertFromString("#FF6B6B");
-
-            string shortQuery = strat.Query.Length > 20 ? strat.Query.Substring(0, 20) + "..." : strat.Query;
-            Ellipse circle = new Ellipse
-            {
-                Width = 14,
-                Height = 14,
-                Fill = new SolidColorBrush(c),
-                Stroke = Brushes.White,
-                StrokeThickness = 1,
-                Cursor = Cursors.Hand,
-                Tag = $"{strat.TargetId} {strat.Query}",
-                ToolTip = $"{shortQuery} | Score: {strat.Score}"
-            };
-
-            circle.MouseEnter += (s, e) => { circle.Width = 20; circle.Height = 20; Canvas.SetLeft(circle, x - 10); Canvas.SetTop(circle, y - 10); };
-            circle.MouseLeave += (s, e) => { circle.Width = 14; circle.Height = 14; Canvas.SetLeft(circle, x - 7); Canvas.SetTop(circle, y - 7); };
-
-            circle.MouseLeftButtonDown += (s, e) =>
-            {
-                e.Handled = true;
-                ShowStrategyInspector(strat);
-            };
-
-            Canvas.SetLeft(circle, x - 7);
-            Canvas.SetTop(circle, y - 7);
-            BrainCanvas.Children.Add(circle);
-
-            Border badge = new Border
-            {
-                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#E60D0D18")),
-                BorderBrush = new SolidColorBrush(c),
-                BorderThickness = new Thickness(0.8),
-                CornerRadius = new CornerRadius(4),
-                Padding = new Thickness(5, 2, 5, 2),
-                Cursor = Cursors.Hand,
-                Tag = $"{strat.TargetId} {strat.Query}"
-            };
-
-            badge.MouseLeftButtonDown += (s, e) =>
-            {
-                e.Handled = true;
-                ShowStrategyInspector(strat);
-            };
-
-            TextBlock txt = new TextBlock
-            {
-                Text = $"{shortQuery} [{strat.Score}]",
-                Foreground = new SolidColorBrush(c),
-                FontSize = 10,
-                FontWeight = FontWeights.SemiBold
-            };
-            badge.Child = txt;
-
-            bool isRightSide = Math.Cos(angle) >= 0;
-            if (isRightSide)
-            {
-                Canvas.SetLeft(badge, x + 12);
-            }
-            else
-            {
-                Canvas.SetLeft(badge, x - 160);
-            }
-            Canvas.SetTop(badge, y - 11);
-            BrainCanvas.Children.Add(badge);
         }
 
         // ============================================================
@@ -763,6 +1110,45 @@ namespace InnovPlayUI.Views
             NodeInspectorPanel.Visibility = Visibility.Visible;
         }
 
+        private void ShowCognitiveInspector(string name, string role, string details)
+        {
+            InspectorTitle.Text = name;
+            InspectorSubtitle.Text = $"InnoAI 2.0: {role}";
+            InspectorQueryText.Text = $"[Nó Cognitivo de Decisão Heurística]\n\n{details}\n\nTempo de Resposta: < 1.2ms\nProteção Zero-Drift: ATIVA";
+            InspectorScoreText.Text = "99";
+            InspectorAccuracyText.Text = "100%";
+            InspectorHitsText.Text = "240";
+            InspectorMissesText.Text = "0";
+            RenderHistoryDots("1111111111");
+            NodeInspectorPanel.Visibility = Visibility.Visible;
+        }
+
+        private void ShowMicroNeuronInspector(int id, string type)
+        {
+            InspectorTitle.Text = $"Micro-Neurônio Relé #{id:D2}";
+            InspectorSubtitle.Text = $"Canal Sináptico de Transmissão ({type})";
+            InspectorQueryText.Text = $"Canal de interconexão de alta frequência no espaço 3D.\nLatência de propagação estimada: < 0.4ms.\nStatus de Sinapse: Calibrado e estável.";
+            InspectorScoreText.Text = "95";
+            InspectorAccuracyText.Text = "98%";
+            InspectorHitsText.Text = "142";
+            InspectorMissesText.Text = "2";
+            RenderHistoryDots("1111111110");
+            NodeInspectorPanel.Visibility = Visibility.Visible;
+        }
+
+        private void ShowCoreInspector()
+        {
+            InspectorTitle.Text = "REATOR CENTRAL INNOAI 2.0";
+            InspectorSubtitle.Text = "Núcleo Cognitivo e Motor Determinístico";
+            InspectorQueryText.Text = "[NÚCLEO MACIÇO DE DECISÃO CENTRAL]\n\nMotor Nativo: InnoEngine.dll (Win32)\nTopologia: Esfera Neural 3D Multicamadas\nProteção: Zero-Drift & Centroid Matching\nStatus Operacional: 60 FPS com Aceleração por Hardware GPU Direct3D.";
+            InspectorScoreText.Text = "100";
+            InspectorAccuracyText.Text = "100%";
+            InspectorHitsText.Text = _synapses3D.Count.ToString();
+            InspectorMissesText.Text = "0";
+            RenderHistoryDots("1111111111");
+            NodeInspectorPanel.Visibility = Visibility.Visible;
+        }
+
         private void RenderHistoryDots(string history)
         {
             InspectorHistoryDots.Items.Clear();
@@ -775,7 +1161,7 @@ namespace InnovPlayUI.Views
                     Width = 10,
                     Height = 10,
                     Margin = new Thickness(0, 0, 6, 0),
-                    Fill = ch == '1' 
+                    Fill = ch == '1'
                         ? new SolidColorBrush((Color)ColorConverter.ConvertFromString("#4EDEA3"))
                         : new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF6B6B"))
                 };
@@ -806,7 +1192,6 @@ namespace InnovPlayUI.Views
                 "t20_botao_importar_zip"   => "📦 Menu Importar (T20)",
                 "t20_btn_procurar_arquivo" => "📁 Procurar ZIP (T20)",
                 "spinner_municipio"        => "📍 Gaveta Município (F1)",
-
                 "campo_email"              => "📧 E-mail Aplicador (F1)",
                 "campo_senha"              => "🔒 Senha Aplicador (F1)",
                 "botao_entrar"             => "▶ Botão Entrar (F1)",

@@ -4,36 +4,32 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              mc:Ignorable="d" 
-             d:DesignHeight="950" d:DesignWidth="1000"
-             Background="Transparent">
+             d:DesignHeight="700" d:DesignWidth="1150"
+             Background="#0B0B13"
+             FontFamily="Segoe UI">
 
     <UserControl.Resources>
-        <!-- Estilo dos Botões de Navegação entre Abas da Central de Ajuda -->
-        <Style x:Key="SubTabButtonStyle" TargetType="Button">
-            <Setter Property="Background" Value="#151525"/>
-            <Setter Property="Foreground" Value="#8A8A9E"/>
+        <!-- Estilo dos Botões do Menu Lateral -->
+        <Style x:Key="SideMenuButton" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#A1A1AA"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="14,12"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
             <Setter Property="FontSize" Value="13"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Padding" Value="16,10,16,10"/>
-            <Setter Property="Margin" Value="0,0,8,0"/>
             <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="Margin" Value="0,2"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="border"
-                                Background="{TemplateBinding Background}"
-                                BorderBrush="#2A2A40"
-                                BorderThickness="1"
-                                CornerRadius="8"
-                                Padding="{TemplateBinding Padding}">
-                            <ContentPresenter x:Name="content"
-                                              HorizontalAlignment="Center"
-                                              VerticalAlignment="Center"/>
+                        <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="8" Margin="{TemplateBinding Margin}">
+                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" 
+                                              VerticalAlignment="Center" Margin="{TemplateBinding Padding}"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#23233A"/>
+                                <Setter TargetName="bd" Property="Background" Value="#222238"/>
                                 <Setter Property="Foreground" Value="#FFFFFF"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
@@ -42,372 +38,260 @@
             </Setter>
         </Style>
 
-        <Style x:Key="ActiveSubTabButtonStyle" TargetType="Button" BasedOn="{StaticResource SubTabButtonStyle}">
-            <Setter Property="Background" Value="#513BA6"/>
+        <!-- Estilos para os Cards Base -->
+        <Style x:Key="CardStyle" TargetType="Border">
+            <Setter Property="Background" Value="#0D0D18"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="BorderBrush" Value="#23233A"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="20"/>
+            <Setter Property="Margin" Value="0,0,0,14"/>
+        </Style>
+
+        <!-- Estilos para as Sections de Categoria -->
+        <Style x:Key="CategoryTitle" TargetType="TextBlock">
             <Setter Property="Foreground" Value="#FFFFFF"/>
+            <Setter Property="FontSize" Value="18"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Margin" Value="0,0,0,4"/>
+        </Style>
+        <Style x:Key="CategoryDesc" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#85859E"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Margin" Value="0,0,0,16"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
         </Style>
     </UserControl.Resources>
 
     <Grid Margin="0">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
+        <!-- Layout Principal com Menu Lateral -->
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="240"/>
+            <ColumnDefinition Width="15"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
 
-        <!-- Header Principal da Documentação da Plataforma -->
-        <Border Grid.Row="0" Background="#111120" CornerRadius="12" Padding="25" Margin="0,0,0,15" BorderBrush="#513BA6" BorderThickness="1.5">
+        <!-- MENU LATERAL COM OS SUBMÓDULOS DE AJUDA -->
+        <Border Grid.Column="0" Background="#151525" CornerRadius="12" Padding="14" BorderBrush="#23233A" BorderThickness="1">
             <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
 
-                <StackPanel VerticalAlignment="Center">
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                        <Border Background="#513BA6" CornerRadius="6" Padding="8,3,8,3" Margin="0,0,10,0">
-                            <TextBlock Text="CENTRAL DE AJUDA &amp; DOCUMENTAÇÃO" Foreground="#FFFFFF" FontSize="11" FontWeight="Black"/>
-                        </Border>
-                        <Border Background="#064E3B" CornerRadius="6" Padding="8,3,8,3" Margin="0,0,10,0">
-                            <TextBlock Text="✓ GUIA DE MÓDULOS" Foreground="#00F5D4" FontSize="11" FontWeight="Bold"/>
-                        </Border>
-                        <Border Background="#1E3A8A" CornerRadius="6" Padding="8,3,8,3">
-                            <TextBlock Text="❓ FAQ &amp; DÚVIDAS" Foreground="#00E5FF" FontSize="11" FontWeight="Bold"/>
-                        </Border>
+                <!-- Cabeçalho do Menu -->
+                <StackPanel Grid.Row="0" Margin="0,0,0,20">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="6,4,0,10">
+                        <TextBlock Text="ℹ️" FontSize="20" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                        <TextBlock Text="Sobre &amp; Ajuda" Foreground="#FFFFFF" FontSize="16" FontWeight="Black" VerticalAlignment="Center"/>
                     </StackPanel>
-
-                    <TextBlock Text="Plataforma InnovPlay RPA — Guia do Usuário" Foreground="#FFFFFF" FontSize="24" FontWeight="Black"/>
-                    <TextBlock Text="Aprenda o que procurar, onde encontrar cada módulo e como resolver as dúvidas mais comuns do sistema." 
-                               Foreground="#A1A1AA" FontSize="13" Margin="0,4,0,0" TextWrapping="Wrap"/>
+                    <Separator Background="#23233A" Margin="0,5,0,5"/>
+                    <TextBlock Text="DOCUMENTAÇÃO E GUIA" Foreground="#8570E6" FontSize="10" FontWeight="Bold" Margin="6,5,0,0"/>
                 </StackPanel>
 
-                <Border Grid.Column="1" Background="#191930" CornerRadius="10" Padding="15" VerticalAlignment="Center" BorderBrush="#2A2A40" BorderThickness="1">
-                    <StackPanel HorizontalAlignment="Center">
-                        <TextBlock Text="VERSÃO EM EXECUÇÃO" Foreground="#8A8A9E" FontSize="10" FontWeight="Bold" HorizontalAlignment="Center"/>
-                        <TextBlock x:Name="TxtAboutVersion" Text="v18.08.2026.1714" Foreground="#4EDEA3" FontSize="15" FontWeight="Black" Margin="0,4,0,2" HorizontalAlignment="Center" FontFamily="Consolas"/>
-                        <TextBlock Text="Plataforma InnovTech" Foreground="#7A7A8A" FontSize="11" HorizontalAlignment="Center"/>
+                <!-- Botões de Submódulos -->
+                <StackPanel Grid.Row="1">
+                    <Button x:Name="BtnSubGuia" Content="🗺️  1. Guia de Módulos" Style="{StaticResource SideMenuButton}" Click="BtnSubGuia_Click" Foreground="#4EDEA3" Background="#2A2A40"/>
+                    <Button x:Name="BtnSubFaq" Content="❓  2. Dúvidas e FAQ" Style="{StaticResource SideMenuButton}" Click="BtnSubFaq_Click"/>
+                    <Button x:Name="BtnSubArquitetura" Content="🛡️  3. Arquitetura &amp; Licença" Style="{StaticResource SideMenuButton}" Click="BtnSubArquitetura_Click"/>
+                </StackPanel>
+
+                <!-- Rodapé informativo do Menu -->
+                <Border Grid.Row="2" Background="#0A0A0F" CornerRadius="8" Padding="10" BorderBrush="#202035" BorderThickness="1">
+                    <StackPanel>
+                        <TextBlock Text="Plataforma InnovTech" Foreground="#4EDEA3" FontSize="11" FontWeight="Bold"/>
+                        <TextBlock x:Name="TxtAboutVersion" Text="v18.08.2026.1724" Foreground="#85859E" FontSize="10" FontFamily="Consolas" Margin="0,2,0,0"/>
                     </StackPanel>
                 </Border>
             </Grid>
         </Border>
 
-        <!-- Sub-Barra de Navegação em Abas da Central de Ajuda -->
-        <Border Grid.Row="1" Background="#151525" CornerRadius="10" Padding="8" Margin="0,0,0,15" BorderBrush="#23233A" BorderThickness="1">
-            <StackPanel Orientation="Horizontal">
-                <Button x:Name="BtnTabGuide" Content="🗺️  Guia de Módulos (Onde Procurar)" Style="{StaticResource ActiveSubTabButtonStyle}" Click="BtnTabGuide_Click"/>
-                <Button x:Name="BtnTabFaq" Content="❓  Central de Dúvidas (FAQ)" Style="{StaticResource SubTabButtonStyle}" Click="BtnTabFaq_Click"/>
-                <Button x:Name="BtnTabTech" Content="🛡️  Arquitetura &amp; Licenciamento" Style="{StaticResource SubTabButtonStyle}" Click="BtnTabTech_Click"/>
-            </StackPanel>
-        </Border>
+        <!-- ÁREA DE CONTEÚDO DA CENTRAL DE AJUDA -->
+        <Grid Grid.Column="2">
 
-        <!-- Conteúdo Principal Dinâmico por Abas -->
-        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
-            <Grid Margin="0,0,15,0">
+            <!-- ========================================================================= -->
+            <!-- SUBMÓDULO 1: GUIA DE MÓDULOS -->
+            <!-- ========================================================================= -->
+            <Border x:Name="PanelGuia" Background="#151525" CornerRadius="12" Padding="20" BorderBrush="#23233A" BorderThickness="1" Visibility="Visible">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <TextBlock Text="🗺️ Mapa de Módulos — O que procurar e onde encontrar" Style="{StaticResource CategoryTitle}"/>
+                        <TextBlock Text="Visão rápida de todas as esteiras e ferramentas disponíveis na Plataforma InnovTech." Style="{StaticResource CategoryDesc}"/>
 
-                <!-- ========================================================================================= -->
-                <!-- ABA 1: GUIA DE MÓDULOS ("O QUE É & ONDE PROCURAR?") -->
-                <!-- ========================================================================================= -->
-                <StackPanel x:Name="PanelGuide" Visibility="Visible">
-                    
-                    <Border Background="#151525" CornerRadius="10" Padding="20" Margin="0,0,0,15" BorderBrush="#513BA6" BorderThickness="1">
-                        <StackPanel>
-                            <TextBlock Text="🗺️ Mapa de Funcionalidades — O que procurar e onde encontrar no Inno RPA" Foreground="#00E5FF" FontSize="18" FontWeight="Bold" Margin="0,0,0,6"/>
-                            <TextBlock Text="Esta seção serve como seu mapa de navegação rápido. Veja abaixo a finalidade de cada menu e onde localizá-lo." Foreground="#A1A1AA" FontSize="13" TextWrapping="Wrap"/>
-                        </StackPanel>
-                    </Border>
-
-                    <!-- Módulo 1: Monitor ADB -->
-                    <Border Background="#151525" CornerRadius="10" Padding="20" Margin="0,0,0,15" BorderBrush="#2A2A40" BorderThickness="1">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <Border Width="50" Height="50" CornerRadius="10" Background="#1E1E35" Margin="0,0,18,0" BorderBrush="#00F5D4" BorderThickness="1">
-                                <TextBlock Text="📱" FontSize="26" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            </Border>
-                            <StackPanel Grid.Column="1">
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
-                                    <TextBlock Text="1. Monitor ADB (USB)" Foreground="#FFFFFF" FontSize="16" FontWeight="Bold"/>
-                                    <Border Background="#064E3B" CornerRadius="4" Padding="6,2,6,2" Margin="12,0,0,0">
-                                        <TextBlock Text="ONDE FICA: Menu Superior ➔ 'Monitor ADB (USB)'" Foreground="#00F5D4" FontSize="11" FontWeight="Bold"/>
-                                    </Border>
-                                </StackPanel>
-                                <TextBlock Text="• O que é: O centro de comando principal para provisionar tablets conectados via cabo USB." Foreground="#E3E0F2" FontSize="13" TextWrapping="Wrap" Margin="0,2,0,4"/>
-                                <TextBlock Text="• O que procurar aqui: Botão 'Listar Dispositivos ADB', seleção do município desejado, botões de esteira F1 a F8 (Instalação, Reinstalação, Kiosk, Desligamento) e log de acompanhamento ao vivo." Foreground="#A1A1AA" FontSize="13" TextWrapping="Wrap"/>
-                            </StackPanel>
-                        </Grid>
-                    </Border>
-
-                    <!-- Módulo 2: InnoLearn IA -->
-                    <Border Background="#151525" CornerRadius="10" Padding="20" Margin="0,0,0,15" BorderBrush="#2A2A40" BorderThickness="1">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <Border Width="50" Height="50" CornerRadius="10" Background="#1E1E35" Margin="0,0,18,0" BorderBrush="#00E5FF" BorderThickness="1">
-                                <TextBlock Text="⚡" FontSize="26" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            </Border>
-                            <StackPanel Grid.Column="1">
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
-                                    <TextBlock Text="2. InnoLearn IA (Motor Adaptativo Heurístico)" Foreground="#FFFFFF" FontSize="16" FontWeight="Bold"/>
-                                    <Border Background="#1E3A8A" CornerRadius="4" Padding="6,2,6,2" Margin="12,0,0,0">
-                                        <TextBlock Text="ONDE FICA: Menu Superior ➔ '⚡ InnoLearn IA'" Foreground="#00E5FF" FontSize="11" FontWeight="Bold"/>
-                                    </Border>
-                                </StackPanel>
-                                <TextBlock Text="• O que é: O módulo de inteligência artificial que aprende as posições e centróides da tela do Android." Foreground="#E3E0F2" FontSize="13" TextWrapping="Wrap" Margin="0,2,0,4"/>
-                                <TextBlock Text="• O que procurar aqui: Tabela de centróides aprendidos (X, Y), taxa de acerto (Hits/Misses), botão para recarregar base neural e o botão '🌌 Visualizar Mapa Neural 2D' para abrir a janela holográfica." Foreground="#A1A1AA" FontSize="13" TextWrapping="Wrap"/>
-                            </StackPanel>
-                        </Grid>
-                    </Border>
-
-                    <!-- Módulo 3: Relatórios e Registros -->
-                    <Border Background="#151525" CornerRadius="10" Padding="20" Margin="0,0,0,15" BorderBrush="#2A2A40" BorderThickness="1">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <Border Width="50" Height="50" CornerRadius="10" Background="#1E1E35" Margin="0,0,18,0" BorderBrush="#FFB703" BorderThickness="1">
-                                <TextBlock Text="📜" FontSize="26" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            </Border>
-                            <StackPanel Grid.Column="1">
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
-                                    <TextBlock Text="3. Relatórios e Registros Auditoria" Foreground="#FFFFFF" FontSize="16" FontWeight="Bold"/>
-                                    <Border Background="#78350F" CornerRadius="4" Padding="6,2,6,2" Margin="12,0,0,0">
-                                        <TextBlock Text="ONDE FICA: Menu Superior ➔ 'Relatórios e Registros'" Foreground="#FFB703" FontSize="11" FontWeight="Bold"/>
-                                    </Border>
-                                </StackPanel>
-                                <TextBlock Text="• O que é: O histórico completo de todas as execuções realizadas em cada tablet." Foreground="#E3E0F2" FontSize="13" TextWrapping="Wrap" Margin="0,2,0,4"/>
-                                <TextBlock Text="• O que procurar aqui: Tabela detalhada por data/hora, número de série do tablet, município aplicado, status de sucesso/erro e botões para exportar registros em relatório." Foreground="#A1A1AA" FontSize="13" TextWrapping="Wrap"/>
-                            </StackPanel>
-                        </Grid>
-                    </Border>
-
-                    <!-- Módulo 4: Configurações e OTA -->
-                    <Border Background="#151525" CornerRadius="10" Padding="20" Margin="0,0,0,15" BorderBrush="#2A2A40" BorderThickness="1">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <Border Width="50" Height="50" CornerRadius="10" Background="#1E1E35" Margin="0,0,18,0" BorderBrush="#513BA6" BorderThickness="1">
-                                <TextBlock Text="⚙️" FontSize="26" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            </Border>
-                            <StackPanel Grid.Column="1">
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
-                                    <TextBlock Text="4. Configurações &amp; Atualização OTA Remote" Foreground="#FFFFFF" FontSize="16" FontWeight="Bold"/>
-                                    <Border Background="#3B0764" CornerRadius="4" Padding="6,2,6,2" Margin="12,0,0,0">
-                                        <TextBlock Text="ONDE FICA: Menu Superior ➔ 'Configurações' ➔ '🔄 Atualização OTA'" Foreground="#C084FC" FontSize="11" FontWeight="Bold"/>
-                                    </Border>
-                                </StackPanel>
-                                <TextBlock Text="• O que é: O painel de opções de rede, modelo de aparelhos cadastrados, backup de dados e sistema de atualizações remotas via nuvem (Firebase)." Foreground="#E3E0F2" FontSize="13" TextWrapping="Wrap" Margin="0,2,0,4"/>
-                                <TextBlock Text="• O que procurar aqui: Na opção '🔄 Atualização OTA', você consulta se há novas compilações lançadas na nuvem, faz o download automático e instala com 1 clique." Foreground="#A1A1AA" FontSize="13" TextWrapping="Wrap"/>
-                            </StackPanel>
-                        </Grid>
-                    </Border>
-
-                    <!-- Módulo 5: Script de Atualizações do Desenvolvedor -->
-                    <Border Background="#151525" CornerRadius="10" Padding="20" Margin="0,0,0,15" BorderBrush="#2A2A40" BorderThickness="1">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <Border Width="50" Height="50" CornerRadius="10" Background="#1E1E35" Margin="0,0,18,0" BorderBrush="#FF4D6D" BorderThickness="1">
-                                <TextBlock Text="🛠️" FontSize="26" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            </Border>
-                            <StackPanel Grid.Column="1">
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
-                                    <TextBlock Text="5. Ferramenta de Geração de Releases (Desenvolvedor)" Foreground="#FFFFFF" FontSize="16" FontWeight="Bold"/>
-                                    <Border Background="#831843" CornerRadius="4" Padding="6,2,6,2" Margin="12,0,0,0">
-                                        <TextBlock Text="ONDE FICA: Pasta 'controle/' na raiz do seu projeto" Foreground="#F472B6" FontSize="11" FontWeight="Bold"/>
-                                    </Border>
-                                </StackPanel>
-                                <TextBlock Text="• O que é: O script de automação para você (administrador) gerar novos pacotes `.ZIP` de atualização para disponibilizar aos clientes via OTA." Foreground="#E3E0F2" FontSize="13" TextWrapping="Wrap" Margin="0,2,0,4"/>
-                                <TextBlock Text="• O que procurar aqui: Execute o arquivo controle/Atualizacao.bat. Ele gerará a nova versão baseada em Data+Hora e criará o arquivo controle/InnoRPA_v[data.hora].zip pronto para enviar no Painel Web (web/ota_dashboard.html)." Foreground="#A1A1AA" FontSize="13" TextWrapping="Wrap"/>
-                            </StackPanel>
-                        </Grid>
-                    </Border>
-
-                </StackPanel>
-
-
-                <!-- ========================================================================================= -->
-                <!-- ABA 2: CENTRAL DE DÚVIDAS FREQUENTES (FAQ) -->
-                <!-- ========================================================================================= -->
-                <StackPanel x:Name="PanelFaq" Visibility="Collapsed">
-                    
-                    <Border Background="#151525" CornerRadius="10" Padding="20" Margin="0,0,0,15" BorderBrush="#00E5FF" BorderThickness="1">
-                        <StackPanel>
-                            <TextBlock Text="❓ Central de Dúvidas Frequentes (Perguntas &amp; Respostas)" Foreground="#00E5FF" FontSize="18" FontWeight="Bold" Margin="0,0,0,6"/>
-                            <TextBlock Text="Encontre respostas objetivas para as dúvidas e situações mais comuns durante o uso do Inno RPA." Foreground="#A1A1AA" FontSize="13" TextWrapping="Wrap"/>
-                        </StackPanel>
-                    </Border>
-
-                    <!-- FAQ 1 -->
-                    <Border Background="#151525" CornerRadius="10" Padding="18" Margin="0,0,0,12" BorderBrush="#2A2A40" BorderThickness="1">
-                        <StackPanel>
-                            <TextBlock Text="P: O que fazer se um tablet conectado no cabo USB não aparecer na lista do Monitor ADB?" Foreground="#4EDEA3" FontSize="15" FontWeight="Bold" Margin="0,0,0,6"/>
-                            <TextBlock Text="R: Siga estes passos de verificação rápida:" Foreground="#E3E0F2" FontSize="13" FontWeight="SemiBold" Margin="0,0,0,4"/>
-                            <TextBlock Text="  1. Certifique-se de que a 'Depuração USB' está ATIVADA no Android (Configurações ➔ Opções do Desenvolvedor ➔ Depuração USB)." Foreground="#A1A1AA" FontSize="13" TextWrapping="Wrap" Margin="0,0,0,2"/>
-                            <TextBlock Text="  2. Verifique se o cabo USB transmite DADOS (evite cabos exclusivamente para carregamento)." Foreground="#A1A1AA" FontSize="13" TextWrapping="Wrap" Margin="0,0,0,2"/>
-                            <TextBlock Text="  3. Olhe para a tela do tablet e confirme se apareceu a mensagem de autorização 'Permitir depuração USB neste computador?'. Marque 'Sempre permitir' e clique em OK." Foreground="#A1A1AA" FontSize="13" TextWrapping="Wrap"/>
-                        </StackPanel>
-                    </Border>
-
-                    <!-- FAQ 2 -->
-                    <Border Background="#151525" CornerRadius="10" Padding="18" Margin="0,0,0,12" BorderBrush="#2A2A40" BorderThickness="1">
-                        <StackPanel>
-                            <TextBlock Text="P: Como funciona o sistema de Atualização Remota via OTA?" Foreground="#4EDEA3" FontSize="15" FontWeight="Bold" Margin="0,0,0,6"/>
-                            <TextBlock Text="R: Em Configurações ➔ 🔄 Atualização OTA, clique em 'Verificar Atualizações'. O Inno RPA consultará o servidor Firebase na nuvem. Caso exista uma versão mais recente do que a sua, o botão '⚡ Instalar Atualização Agora' ficará verde. Ao clicar nele, o aplicativo baixa os arquivos, fecha sozinho, substitui os executáveis e reinicia atualizado." Foreground="#A1A1AA" FontSize="13" TextWrapping="Wrap" LineHeight="20"/>
-                        </StackPanel>
-                    </Border>
-
-                    <!-- FAQ 3 -->
-                    <Border Background="#151525" CornerRadius="10" Padding="18" Margin="0,0,0,12" BorderBrush="#2A2A40" BorderThickness="1">
-                        <StackPanel>
-                            <TextBlock Text="P: Os meus bancos de dados, cadastros ou configurações serão apagados na atualização OTA?" Foreground="#4EDEA3" FontSize="15" FontWeight="Bold" Margin="0,0,0,6"/>
-                            <TextBlock Text="R: NUNCA! O atualizador OTA substitui apenas os arquivos executáveis e motores de código (InnoRPAui.exe e InnoEngine.dll). Todos os seus bancos de dados (inno_database.db), arquivos de configuração (settings.json) e cadastros de municípios permanecem 100% intactos e preservados." Foreground="#A1A1AA" FontSize="13" TextWrapping="Wrap" LineHeight="20"/>
-                        </StackPanel>
-                    </Border>
-
-                    <!-- FAQ 4 -->
-                    <Border Background="#151525" CornerRadius="10" Padding="18" Margin="0,0,0,12" BorderBrush="#2A2A40" BorderThickness="1">
-                        <StackPanel>
-                            <TextBlock Text="P: Como saber qual a versão exata do meu Inno RPA?" Foreground="#4EDEA3" FontSize="15" FontWeight="Bold" Margin="0,0,0,6"/>
-                            <TextBlock Text="R: O Inno RPA utiliza o sistema de versões baseadas em data + hora da compilação (ex: v18.08.2026.1714). Você pode conferir a sua versão exata em três locais: no título da janela no topo do Windows, na pílula roxa no canto superior direito do menu principal, ou no painel de Configurações ➔ Atualização OTA." Foreground="#A1A1AA" FontSize="13" TextWrapping="Wrap" LineHeight="20"/>
-                        </StackPanel>
-                    </Border>
-
-                    <!-- FAQ 5 -->
-                    <Border Background="#151525" CornerRadius="10" Padding="18" Margin="0,0,0,12" BorderBrush="#2A2A40" BorderThickness="1">
-                        <StackPanel>
-                            <TextBlock Text="P: Onde adiciono novos pacotes de municípios ou arquivos APK?" Foreground="#4EDEA3" FontSize="15" FontWeight="Bold" Margin="0,0,0,6"/>
-                            <TextBlock Text="R: Basta colocar as pastas dos novos municípios em 'data/input/municipios/' e os arquivos APK em 'data/input/apps/'. O robô irá listar e reconhecer os novos arquivos imediatamente na tela de Monitor USB sem precisar reiniciar a aplicação." Foreground="#A1A1AA" FontSize="13" TextWrapping="Wrap" LineHeight="20"/>
-                        </StackPanel>
-                    </Border>
-
-                    <!-- FAQ 6 -->
-                    <Border Background="#151525" CornerRadius="10" Padding="18" Margin="0,0,0,12" BorderBrush="#2A2A40" BorderThickness="1">
-                        <StackPanel>
-                            <TextBlock Text="P: O que é o sistema Anti-Crash Guard do Inno RPA?" Foreground="#4EDEA3" FontSize="15" FontWeight="Bold" Margin="0,0,0,6"/>
-                            <TextBlock Text="R: É um guardião triplo de resiliência que previne travamentos. Ele monitora falhas na interface gráfica em C#, captura exceções de memória no motor DLL em C e monitora o tablet via Watchdog. Se um aplicativo fechar por falta de RAM no tablet, o Inno o relança automaticamente sem abortar o lote de trabalho." Foreground="#A1A1AA" FontSize="13" TextWrapping="Wrap" LineHeight="20"/>
-                        </StackPanel>
-                    </Border>
-
-                </StackPanel>
-
-
-                <!-- ========================================================================================= -->
-                <!-- ABA 3: ARQUITETURA, ENGENHARIA & LICENCIAMENTO -->
-                <!-- ========================================================================================= -->
-                <StackPanel x:Name="PanelTech" Visibility="Collapsed">
-                    
-                    <!-- MÓDULO VISÃO GERAL -->
-                    <Border Background="#151525" CornerRadius="10" Padding="22" Margin="0,0,0,18" BorderBrush="#2A2A40" BorderThickness="1">
-                        <StackPanel>
-                            <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                                <TextBlock Text="⚡" FontSize="20" Margin="0,0,10,0"/>
-                                <TextBlock Text="Módulo Tecnológico: Visão Geral da Arquitetura" Foreground="#4EDEA3" FontSize="18" FontWeight="Bold" VerticalAlignment="Center"/>
-                            </StackPanel>
-                            <TextBlock Text="O InnovPlay RPA (Metatron Engine) é uma plataforma industrial de Automação Robótica de Processos (RPA) desenvolvida para orquestrar, configurar e testar dispositivos Android nativos (Tablets e Totens)." Foreground="#E3E0F2" FontSize="14" TextWrapping="Wrap" LineHeight="22" Margin="0,0,0,10"/>
-                            <TextBlock Text="A ferramenta opera via ADB (Android Debug Bridge) em C nativo Win32, permitindo o provisionamento em massa sem dependência de internet durante as rotinas robóticas." Foreground="#A1A1AA" FontSize="13" TextWrapping="Wrap" LineHeight="20"/>
-                        </StackPanel>
-                    </Border>
-
-                    <!-- DESTAQUE IA INNOLEARN -->
-                    <Border Background="#0F1428" CornerRadius="12" Padding="24" Margin="0,0,0,18" BorderBrush="#00E5FF" BorderThickness="1.5">
-                        <StackPanel>
-                            <Grid Margin="0,0,0,14">
+                        <!-- Módulo 1: Monitor ADB USB -->
+                        <Border Style="{StaticResource CardStyle}">
+                            <Grid>
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="🧠" FontSize="24" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                                    <TextBlock Text="Motor Heurístico InnoLearn IA (C Nativo)" Foreground="#00E5FF" FontSize="18" FontWeight="Black" VerticalAlignment="Center"/>
+                                <Border Background="#1A1A2E" CornerRadius="8" Padding="12" Margin="0,0,16,0" BorderBrush="#00F5D4" BorderThickness="1">
+                                    <TextBlock Text="📱" FontSize="28" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                </Border>
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                        <TextBlock Text="1. Monitor ADB (USB)" Foreground="#FFFFFF" FontSize="15" FontWeight="Bold"/>
+                                        <Border Background="#064E3B" CornerRadius="4" Padding="6,2" Margin="10,0,0,0">
+                                            <TextBlock Text="Menu Superior ➔ 'Monitor ADB (USB)'" Foreground="#00F5D4" FontSize="10" FontWeight="Bold"/>
+                                        </Border>
+                                    </StackPanel>
+                                    <TextBlock Text="• O que é: O centro de comando principal para provisionamento de múltiplos tablets simultâneos via cabo USB." Foreground="#E3E0F2" FontSize="12" TextWrapping="Wrap" Margin="0,2,0,4"/>
+                                    <TextBlock Text="• Principais recursos: Grade de telemetria ao vivo com medidor de bateria, botões [F1] a [F8] por modelo de tablet, seletor de municípios e log de execução por dispositivo." Foreground="#85859E" FontSize="11" TextWrapping="Wrap"/>
                                 </StackPanel>
-                                <Border Grid.Column="1" Background="#0A2235" CornerRadius="6" Padding="8,4,8,4" BorderBrush="#00E5FF" BorderThickness="1">
-                                    <TextBlock Text="TECNOLOGIA PATENTEAR" Foreground="#00E5FF" FontSize="10" FontWeight="Bold"/>
-                                </Border>
                             </Grid>
+                        </Border>
 
-                            <UniformGrid Columns="2" Margin="0,0,0,10">
-                                <Border Background="#151D36" CornerRadius="8" Padding="15" Margin="0,0,8,10" BorderBrush="#203058" BorderThickness="1">
-                                    <StackPanel>
-                                        <TextBlock Text="🎯 Leitura de Centróides XML" Foreground="#00F5D4" FontSize="14" FontWeight="Bold" Margin="0,0,0,6"/>
-                                        <TextBlock Text="Extrai a árvore da interface gráfica do tablet em tempo real e calcula centróides (X,Y) via inno_normalize_char." Foreground="#A1A1AA" FontSize="13" TextWrapping="Wrap"/>
-                                    </StackPanel>
+                        <!-- Módulo 2: InnoLearn IA -->
+                        <Border Style="{StaticResource CardStyle}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Border Background="#1A1A2E" CornerRadius="8" Padding="12" Margin="0,0,16,0" BorderBrush="#00E5FF" BorderThickness="1">
+                                    <TextBlock Text="⚡" FontSize="28" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                                 </Border>
-
-                                <Border Background="#151D36" CornerRadius="8" Padding="15" Margin="8,0,0,10" BorderBrush="#203058" BorderThickness="1">
-                                    <StackPanel>
-                                        <TextBlock Text="📈 Score Heurístico Dinâmico" Foreground="#FFB703" FontSize="14" FontWeight="Bold" Margin="0,0,0,6"/>
-                                        <TextBlock Text="Cada seletor visual é ranqueado por acertos (Hits) e falhas (Misses), refinando a navegação continuamente." Foreground="#A1A1AA" FontSize="13" TextWrapping="Wrap"/>
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                        <TextBlock Text="2. InnoLearn IA (Mapeamento Visual)" Foreground="#FFFFFF" FontSize="15" FontWeight="Bold"/>
+                                        <Border Background="#102530" CornerRadius="4" Padding="6,2" Margin="10,0,0,0">
+                                            <TextBlock Text="Menu Superior ➔ '⚡ InnoLearn IA'" Foreground="#00E5FF" FontSize="10" FontWeight="Bold"/>
+                                        </Border>
                                     </StackPanel>
+                                    <TextBlock Text="• O que é: Módulo inteligente que inspeciona a interface do tablet, capturando a tela e a árvore UI XML." Foreground="#E3E0F2" FontSize="12" TextWrapping="Wrap" Margin="0,2,0,4"/>
+                                    <TextBlock Text="• Principais recursos: Detecção visual com cálculo automático de centroides de clique e exportação de fluxos JSON para a IA." Foreground="#85859E" FontSize="11" TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <!-- Módulo 3: Relatórios e Registros -->
+                        <Border Style="{StaticResource CardStyle}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Border Background="#1A1A2E" CornerRadius="8" Padding="12" Margin="0,0,16,0" BorderBrush="#4EDEA3" BorderThickness="1">
+                                    <TextBlock Text="📊" FontSize="28" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                                 </Border>
-
-                                <Border Background="#151D36" CornerRadius="8" Padding="15" Margin="0,0,8,0" BorderBrush="#203058" BorderThickness="1">
-                                    <StackPanel>
-                                        <TextBlock Text="💾 Persistência JSON + SQLite" Foreground="#8570E6" FontSize="14" FontWeight="Bold" Margin="0,0,0,6"/>
-                                        <TextBlock Text="Salvamento automático em data/inno_learn.json e data/inno_database.db para aprendizado permanente." Foreground="#A1A1AA" FontSize="13" TextWrapping="Wrap"/>
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                        <TextBlock Text="3. Relatórios &amp; Hub de Auditoria" Foreground="#FFFFFF" FontSize="15" FontWeight="Bold"/>
+                                        <Border Background="#0D2E1A" CornerRadius="4" Padding="6,2" Margin="10,0,0,0">
+                                            <TextBlock Text="Menu Superior ➔ 'Relatórios e Registros'" Foreground="#4EDEA3" FontSize="10" FontWeight="Bold"/>
+                                        </Border>
                                     </StackPanel>
+                                    <TextBlock Text="• O que é: Central de dados dividida em 4 submódulos: Métricas/Dashboard, Banco de Dados, Auditoria/Logs e Exportação." Foreground="#E3E0F2" FontSize="12" TextWrapping="Wrap" Margin="0,2,0,4"/>
+                                    <TextBlock Text="• Principais recursos: Leitor de logs integrado, emissão de PDF A4, planilhas Excel e etiquetas térmicas patrimoniais (6cm x 3cm)." Foreground="#85859E" FontSize="11" TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <!-- Módulo 4: Configurações -->
+                        <Border Style="{StaticResource CardStyle}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Border Background="#1A1A2E" CornerRadius="8" Padding="12" Margin="0,0,16,0" BorderBrush="#8570E6" BorderThickness="1">
+                                    <TextBlock Text="⚙️" FontSize="28" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                                 </Border>
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                        <TextBlock Text="4. Configurações Globais" Foreground="#FFFFFF" FontSize="15" FontWeight="Bold"/>
+                                        <Border Background="#2A174E" CornerRadius="4" Padding="6,2" Margin="10,0,0,0">
+                                            <TextBlock Text="Menu Superior ➔ 'Configurações'" Foreground="#D2BBFF" FontSize="10" FontWeight="Bold"/>
+                                        </Border>
+                                    </StackPanel>
+                                    <TextBlock Text="• O que é: Painel administrativo para ativar/desativar modelos de tablets, gerenciar backups .zip e atualizar o sistema via nuvem OTA." Foreground="#E3E0F2" FontSize="12" TextWrapping="Wrap" Margin="0,2,0,4"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
 
-                                <Border Background="#151D36" CornerRadius="8" Padding="15" Margin="8,0,0,0" BorderBrush="#203058" BorderThickness="1">
-                                    <StackPanel>
-                                        <TextBlock Text="🌌 Visualizador Neural 2D" Foreground="#00E5FF" FontSize="14" FontWeight="Bold" Margin="0,0,0,6"/>
-                                        <TextBlock Text="Renderização das conexões da IA em tempo real com partículas a 60 FPS em hardware otimizado." Foreground="#A1A1AA" FontSize="13" TextWrapping="Wrap"/>
-                                    </StackPanel>
-                                </Border>
-                            </UniformGrid>
-                        </StackPanel>
-                    </Border>
+            <!-- ========================================================================= -->
+            <!-- SUBMÓDULO 2: CENTRAL DE DÚVIDAS (FAQ) -->
+            <!-- ========================================================================= -->
+            <Border x:Name="PanelFaq" Background="#151525" CornerRadius="12" Padding="20" BorderBrush="#23233A" BorderThickness="1" Visibility="Collapsed">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <TextBlock Text="❓ Perguntas Frequentes &amp; Resolução de Problemas (FAQ)" Style="{StaticResource CategoryTitle}"/>
+                        <TextBlock Text="Respostas diretas para as situações mais comuns encontradas durante o provisionamento na bancada." Style="{StaticResource CategoryDesc}"/>
 
-                    <!-- DESENVOLVEDOR E CONTATO -->
-                    <Border Background="#151525" CornerRadius="10" Padding="22" Margin="0,0,0,18" BorderBrush="#2A2A40" BorderThickness="1">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            
-                            <Border Width="80" Height="80" CornerRadius="40" Background="#2A2A40" Margin="0,0,20,0" BorderBrush="#513BA6" BorderThickness="2">
-                                <TextBlock Text="👨‍💻" FontSize="40" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            </Border>
-                            
-                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                <TextBlock Text="DESENVOLVEDOR E ARQUITETO DE SOFTWARE" Foreground="#8A8A9E" FontSize="11" FontWeight="Bold"/>
-                                <TextBlock Text="Jordan Araujo" Foreground="#FFFFFF" FontSize="22" FontWeight="Black" Margin="0,2,0,6"/>
-                                
-                                <WrapPanel>
-                                    <StackPanel Orientation="Horizontal" Margin="0,0,20,4">
-                                        <TextBlock Text="✉ E-mail: " Foreground="#A1A1AA" FontSize="13"/>
-                                        <TextBlock Text="contato@jordanaraujo.com" Foreground="#4EDEA3" FontSize="13" FontWeight="SemiBold"/>
-                                    </StackPanel>
-                                    <StackPanel Orientation="Horizontal" Margin="0,0,20,4">
-                                        <TextBlock Text="📸 Instagram: " Foreground="#A1A1AA" FontSize="13"/>
-                                        <TextBlock Text="@jordan.araujo" Foreground="#4EDEA3" FontSize="13" FontWeight="SemiBold"/>
-                                    </StackPanel>
-                                </WrapPanel>
+                        <!-- FAQ 1 -->
+                        <Border Style="{StaticResource CardStyle}">
+                            <StackPanel>
+                                <TextBlock Text="🔌 1. Conectei o tablet via cabo USB, mas ele aparece como 'Pendente' ou 'Desconhecido'. O que fazer?" Foreground="#FFD666" FontSize="14" FontWeight="Bold" Margin="0,0,0,6"/>
+                                <TextBlock Text="• Causa: O tablet está aguardando a permissão de Depuração USB na tela." Foreground="#E3E0F2" FontSize="12" Margin="0,0,0,4"/>
+                                <TextBlock Text="• Solução: Olhe para a tela do tablet, marque a caixinha 'Sempre permitir a partir deste computador' e toque em 'Permitir'. O status no Inno RPA mudará para 'Pronto' imediatamente." Foreground="#85859E" FontSize="12" TextWrapping="Wrap"/>
                             </StackPanel>
-                        </Grid>
-                    </Border>
+                        </Border>
 
-                    <!-- TERMOS DE USO E LICENÇA -->
-                    <Border Background="#2B1A20" CornerRadius="10" Padding="20" BorderBrush="#FF4B4B" BorderThickness="1.5">
-                        <StackPanel>
-                            <TextBlock Text="⚠ Termos de Uso e Licenciamento (Propriedade Intelectual Reservada)" Foreground="#FF4B4B" FontSize="16" FontWeight="Bold" Margin="0,0,0,10"/>
-                            <TextBlock Text="Esta é uma ferramenta de engenharia industrial com finalidade ESTRITA de USO PESSOAL e EXCLUSIVO do desenvolvedor (Jordan Araujo)." Foreground="#E3E0F2" FontSize="13" TextWrapping="Wrap" Margin="0,0,0,6" FontWeight="SemiBold"/>
-                            <TextBlock Text="É EXPRESSAMENTE PROIBIDO o uso, cópia, distribuição, modificação, engenharia reversa, venda ou exploração comercial deste software, seus códigos-fonte ou executáveis gerados por qualquer outra pessoa ou entidade corporativa sem a autorização prévia e por escrito do desenvolvedor autor. Todos os direitos estão reservados." Foreground="#FCA5A5" FontSize="12" TextWrapping="Wrap" LineHeight="19"/>
-                        </StackPanel>
-                    </Border>
+                        <!-- FAQ 2 -->
+                        <Border Style="{StaticResource CardStyle}">
+                            <StackPanel>
+                                <TextBlock Text="🛑 2. O processo travou ou o tablet começou a executar algo incorreto. Como interromper na hora?" Foreground="#FF6B6B" FontSize="14" FontWeight="Bold" Margin="0,0,0,6"/>
+                                <TextBlock Text="• Solução: Pressione a tecla ESC ou a tecla ESPAÇO no teclado. O sistema envia uma Parada de Emergência Global para todos os dispositivos conectados, cancelando os subprocessos." Foreground="#85859E" FontSize="12" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Border>
 
-                </StackPanel>
+                        <!-- FAQ 3 -->
+                        <Border Style="{StaticResource CardStyle}">
+                            <StackPanel>
+                                <TextBlock Text="📁 3. Onde coloco os APKs, Pacotes ZIP e papéis de parede dos novos municípios?" Foreground="#00F5D4" FontSize="14" FontWeight="Bold" Margin="0,0,0,6"/>
+                                <TextBlock Text="• Local: Coloque os arquivos dentro da pasta /data/input/apps/ e vincule os nomes no arquivo /config/municipios.csv ou clique no botão '⚙ Gerenciar' na tela do Monitor ADB." Foreground="#85859E" FontSize="12" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Border>
 
-            </Grid>
-        </ScrollViewer>
+                        <!-- FAQ 4 -->
+                        <Border Style="{StaticResource CardStyle}">
+                            <StackPanel>
+                                <TextBlock Text="🖥️ 4. Como alternar para Tela Cheia no Inno RPA?" Foreground="#5EB1FF" FontSize="14" FontWeight="Bold" Margin="0,0,0,6"/>
+                                <TextBlock Text="• Atalho: Pressione a tecla F11 a qualquer momento ou clique no botão '⛶ F11' no canto superior direito para expandir para 100% da tela." Foreground="#85859E" FontSize="12" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+
+            <!-- ========================================================================= -->
+            <!-- SUBMÓDULO 3: ARQUITETURA & LICENCIAMENTO -->
+            <!-- ========================================================================= -->
+            <Border x:Name="PanelArquitetura" Background="#151525" CornerRadius="12" Padding="20" BorderBrush="#23233A" BorderThickness="1" Visibility="Collapsed">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <TextBlock Text="🛡️ Arquitetura do Sistema &amp; Licenciamento" Style="{StaticResource CategoryTitle}"/>
+                        <TextBlock Text="Detalhes técnicos de governança, isolamento de hardware e propriedade intelectual." Style="{StaticResource CategoryDesc}"/>
+
+                        <Border Style="{StaticResource CardStyle}">
+                            <StackPanel>
+                                <TextBlock Text="Engenharia Híbrida C + C# WPF" Foreground="#4EDEA3" FontSize="15" FontWeight="Bold" Margin="0,0,0,8"/>
+                                <TextBlock Text="O Inno RPA opera com arquitetura de alta performance dividida em duas camadas:" Foreground="#E3E0F2" FontSize="12" Margin="0,0,0,8"/>
+                                <TextBlock Text="1. Backend Nativo (C Puro / InnoEngine.dll): Responsável pelas operações I/O críticas, comunicação Fast-Track ADB, tunelamento e injeções de comandos nos tablets com latência zero." Foreground="#85859E" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,4"/>
+                                <TextBlock Text="2. Frontend Executivo (C# .NET 8 WPF): Interface gráfica moderna, reativa, com renderização fluida, cockpit de telemetria e integração com banco SQLite local." Foreground="#85859E" FontSize="12" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource CardStyle}">
+                            <StackPanel>
+                                <TextBlock Text="Isolamento Estrito por Equipamento (Regra de Ouro #1)" Foreground="#00E5FF" FontSize="15" FontWeight="Bold" Margin="0,0,0,8"/>
+                                <TextBlock Text="Cada fabricante e modelo homologado possui seu próprio pipeline de código isolado (v7_pipeline.c para Positivo Tab Vision 7, m7_pipeline.c para Multilaser TabMulti M7, e t20_pipeline.c para Nokia T20), garantindo efeito colateral zero em atualizações." Foreground="#85859E" FontSize="12" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource CardStyle}">
+                            <StackPanel>
+                                <TextBlock Text="Licenciamento &amp; Direitos" Foreground="#FFFFFF" FontSize="15" FontWeight="Bold" Margin="0,0,0,8"/>
+                                <TextBlock Text="Plataforma InnovTech © 2026. Todos os direitos reservados. Desenvolvido para automação robótica educacional de alta escala." Foreground="#85859E" FontSize="12" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+        </Grid>
     </Grid>
 </UserControl>

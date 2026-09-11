@@ -5,8 +5,11 @@
 #include "f5_vision_tab7.h"
 #include "../../drivers/adb.h"
 
+#define adb_exec(args) adb_exec_retry(args, 3, 2000, (AdbLogCallback)cb)
 
-
+// =============================================================================
+//  MÓDULO F5: DESLIGAMENTO REMOTO E LIMPEZA TOTAL (VISION TAB 7)
+// =============================================================================
 int F5_ExecutarDesligamento(const char* serial, LogCallback cb) {
     char cmd[512];
     char* out;
@@ -95,22 +98,27 @@ int F5_ExecutarDesligamento(const char* serial, LogCallback cb) {
         Sleep(500);
     }
 
-    // 3e. Lê o XML e clica no botão 'Limpar tudo'
+    // 3e. Lê o XML e clica no botão 'Limpar tudo' (Fast Memory Dump primeiro)
     int v7_cleared = 0;
-    snprintf(cmd, sizeof(cmd), "-s %s shell uiautomator dump /sdcard/dump_recents.xml 2>/dev/null", serial);
-    out = adb_exec(cmd);
-    if (out) free(out);
-    snprintf(cmd, sizeof(cmd), "-s %s shell cat /sdcard/dump_recents.xml", serial);
-    out = adb_exec(cmd);
-    if (out) {
-        char *p = strstr(out, "Limpar tudo");
-        if (!p) p = strstr(out, "LIMPAR TUDO");
-        if (!p) p = strstr(out, "Clear all");
-        if (!p) p = strstr(out, "CLEAR ALL");
-        if (!p) p = strstr(out, "Limpar");
-        if (!p) p = strstr(out, "LIMPAR");
-        if (!p) p = strstr(out, "Fechar tudo");
-        if (!p) p = strstr(out, "FECHAR TUDO");
+    char *xml_recents = adb_dump_stdout(serial);
+    if (!xml_recents || strlen(xml_recents) < 100) {
+        if (xml_recents) free(xml_recents);
+        snprintf(cmd, sizeof(cmd), "-s %s shell uiautomator dump /sdcard/dump_recents.xml 2>/dev/null", serial);
+        out = adb_exec(cmd);
+        if (out) free(out);
+        snprintf(cmd, sizeof(cmd), "-s %s shell cat /sdcard/dump_recents.xml", serial);
+        xml_recents = adb_exec(cmd);
+    }
+
+    if (xml_recents) {
+        char *p = strstr(xml_recents, "Limpar tudo");
+        if (!p) p = strstr(xml_recents, "LIMPAR TUDO");
+        if (!p) p = strstr(xml_recents, "Clear all");
+        if (!p) p = strstr(xml_recents, "CLEAR ALL");
+        if (!p) p = strstr(xml_recents, "Limpar");
+        if (!p) p = strstr(xml_recents, "LIMPAR");
+        if (!p) p = strstr(xml_recents, "Fechar tudo");
+        if (!p) p = strstr(xml_recents, "FECHAR TUDO");
         if (p) {
             char *b = strstr(p, "bounds=\"[");
             if (b) {
@@ -124,7 +132,7 @@ int F5_ExecutarDesligamento(const char* serial, LogCallback cb) {
                 }
             }
         }
-        free(out);
+        free(xml_recents);
     }
 
     if (!v7_cleared) {
@@ -134,7 +142,7 @@ int F5_ExecutarDesligamento(const char* serial, LogCallback cb) {
         Sleep(500);
 
         if (cb) cb("[-] [LIMPEZA MANUAL VISUAL] Toque de fallback no botao de limpar recentes...");
-        snprintf(cmd, sizeof(cmd), "-s %s shell input tap 300 1100", serial);
+        snprintf(cmd, sizeof(cmd), "-s %s shell input tap 300 950", serial);
         out = adb_exec(cmd);
         if (out) free(out);
     }

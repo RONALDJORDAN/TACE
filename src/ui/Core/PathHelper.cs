@@ -7,16 +7,18 @@ namespace InnovPlayUI.Core
     {
         public static string GetRootDirectory()
         {
-            string baseDir = AppDomain.CurrentDomain.BaseDirectory;
-            
-            // Check if we are in Release Mode (Plug & Play) where 'config' or 'tools' is next to the executable
-            if (Directory.Exists(Path.Combine(baseDir, "config")) && Directory.Exists(Path.Combine(baseDir, "tools")))
+            string current = AppDomain.CurrentDomain.BaseDirectory;
+            DirectoryInfo? dir = new DirectoryInfo(current);
+            while (dir != null)
             {
-                return baseDir;
+                if (Directory.Exists(Path.Combine(dir.FullName, "tools")) && Directory.Exists(Path.Combine(dir.FullName, "config")))
+                {
+                    return dir.FullName;
+                }
+                dir = dir.Parent;
             }
-            
-            // Fallback to Development Mode (IDE)
-            return Path.GetFullPath(Path.Combine(baseDir, "..", ".."));
+
+            return AppDomain.CurrentDomain.BaseDirectory;
         }
         public static string RemoveAccents(string text)
         {

@@ -67,9 +67,9 @@ char* adb_exec(const char* args) {
         if (dwAvail > 0) {
             if (ReadFile(hReadPipe, buffer, sizeof(buffer) - 1, &bytesRead, NULL) && bytesRead > 0) {
                 if (total_read + bytesRead < 131071) {
-                    buffer[bytesRead] = '\0';
-                    strcat(output, buffer);
+                    memcpy(output + total_read, buffer, bytesRead);
                     total_read += bytesRead;
+                    output[total_read] = '\0';
                 }
             }
         } else {
@@ -77,9 +77,9 @@ char* adb_exec(const char* args) {
                 while (PeekNamedPipe(hReadPipe, NULL, 0, NULL, &dwAvail, NULL) && dwAvail > 0) {
                     if (ReadFile(hReadPipe, buffer, sizeof(buffer) - 1, &bytesRead, NULL) && bytesRead > 0) {
                         if (total_read + bytesRead < 131071) {
-                            buffer[bytesRead] = '\0';
-                            strcat(output, buffer);
+                            memcpy(output + total_read, buffer, bytesRead);
                             total_read += bytesRead;
+                            output[total_read] = '\0';
                         }
                     }
                 }
@@ -89,7 +89,9 @@ char* adb_exec(const char* args) {
     }
 
     CloseHandle(hReadPipe);
-    WaitForSingleObject(pi.hProcess, 3000);
+    if (WaitForSingleObject(pi.hProcess, 3000) == WAIT_TIMEOUT) {
+        TerminateProcess(pi.hProcess, 1);
+    }
     CloseHandle(pi.hProcess);
     CloseHandle(pi.hThread);
 
@@ -256,7 +258,6 @@ int adb_list_devices(AdbDevice* devices, int max_devices) {
                     "echo VER:$(getprop ro.build.version.release);"
                     "echo SDK:$(getprop ro.build.version.sdk);"
                     "echo BAT:$(dumpsys battery 2>/dev/null | grep ' level:' | tr -d ' ');"
-                    "echo MAC:$(cat /sys/class/net/wlan0/address 2>/dev/null || echo N/A);"
                     "echo IMEI:$(service call iphonesubinfo 1 2>/dev/null | grep -oE '[0-9a-f]{8}' | tr -d '\\\\n' || echo N/A)"
                     "\"",
                     serial);
@@ -293,12 +294,6 @@ int adb_list_devices(AdbDevice* devices, int max_devices) {
                             if (colon && strlen(colon) > 1) {
                                 snprintf(d->battery, 15, "%s%%", colon + 1);
                             }
-                        }
-                        else if (strncmp(inner_line, "MAC:", 4) == 0 && strlen(inner_line) > 4) {
-                            strncpy(d->mac, inner_line + 4, MAX_MAC - 1);
-                            /* Filtra erros de permissÃ£o */
-                            if (strstr(d->mac, "ermission") || strstr(d->mac, "enied") || strstr(d->mac, "No such"))
-                                strcpy(d->mac, "N/A");
                         }
                         else if (strncmp(inner_line, "IMEI:", 5) == 0 && strlen(inner_line) > 5) {
                             strncpy(d->imei, inner_line + 5, MAX_IMEI - 1);
@@ -354,95 +349,7 @@ void adb_get_imei(const char* serial, char* out_imei, int max_len) {
     free(out);
 }
 
-void adb_get_mac(const char* serial, char* out_mac, int max_len) {
-    char args[256];
-    
-    // Tentativa 1: Via InnovSecurity Device Owner ContentProvider
-    snprintf(args, sizeof(args), "-s %s shell content query --uri content://com.innov.security.provider/device_info 2>/dev/null", serial);
-    char* provider_out = adb_exec(args);
-    if (provider_out && strstr(provider_out, "Row: 0")) {
-        // Extrai o trecho mac=...
-        char* mac_ptr = strstr(provider_out, "mac=");
-        if (mac_ptr) {
-            mac_ptr += 4;
-            char* end_ptr = strchr(mac_ptr, ' ');
-            if (!end_ptr) end_ptr = strpbrk(mac_ptr, "\r\n");
-            
-            if (end_ptr) {
-                int len = end_ptr - mac_ptr;
-                if (len >= max_len) len = max_len - 1;
-                strncpy(out_mac, mac_ptr, len);
-                out_mac[len] = '\0';
-                
-                if (strcmp(out_mac, "Permission Denied") != 0 && strcmp(out_mac, "N/A") != 0 && strcmp(out_mac, "02:00:00:00:00:00") != 0) {
-                    free(provider_out);
-                    return; // Sucesso com o app Device Owner
-                }
-            }
-        }
-    }
-    if (provider_out) free(provider_out);
 
-    // Tentativa 2: Extrair o MAC da conexao atual via Dumpsys (Android 11+ com Wi-Fi conectado)
-    snprintf(args, sizeof(args), "-s %s shell \"dumpsys connectivity | grep -oE 'MAC: ([0-9a-fA-F]{2}:){5}[0-9a-fA-F]{2}'\"", serial);
-    char* dumpsys_out = adb_exec(args);
-    if (dumpsys_out && strstr(dumpsys_out, "MAC: ")) {
-        char* mac_ptr = strstr(dumpsys_out, "MAC: ") + 5;
-        char* nl = strpbrk(mac_ptr, "\r\n ");
-        if (nl) *nl = '\0';
-        
-        if (strlen(mac_ptr) == 17 && strcmp(mac_ptr, "02:00:00:00:00:00") != 0) {
-            strncpy(out_mac, mac_ptr, max_len - 1);
-            out_mac[max_len - 1] = '\0';
-            free(dumpsys_out);
-            return;
-        }
-    }
-    if (dumpsys_out) free(dumpsys_out);
-
-    // Tentativa 3: Inferência pelo endereço Bluetooth (Muito confiavel no Android 11+)
-    snprintf(args, sizeof(args), "-s %s shell \"settings get secure bluetooth_address\"", serial);
-    char* bt_out = adb_exec(args);
-    if (bt_out && strlen(bt_out) >= 17 && strcmp(bt_out, "null") != 0 && strncmp(bt_out, "null", 4) != 0) {
-        char* nl = strpbrk(bt_out, "\r\n");
-        if (nl) *nl = '\0';
-        
-        if (strlen(bt_out) == 17) {
-            // Calcula o Wi-Fi MAC (Wi-Fi MAC e geralmente o BT MAC - 1)
-            int mac[6];
-            if (sscanf(bt_out, "%02x:%02x:%02x:%02x:%02x:%02x", &mac[0], &mac[1], &mac[2], &mac[3], &mac[4], &mac[5]) == 6 ||
-                sscanf(bt_out, "%02X:%02X:%02X:%02X:%02X:%02X", &mac[0], &mac[1], &mac[2], &mac[3], &mac[4], &mac[5]) == 6) {
-                
-                mac[5] = (mac[5] - 1) & 0xFF; // Subtrai 1 do ultimo byte
-                snprintf(out_mac, max_len, "%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-            } else {
-                snprintf(out_mac, max_len, "%s (BT)", bt_out);
-            }
-            free(bt_out);
-            return;
-        }
-    }
-    if (bt_out) free(bt_out);
-
-    // Tentativa 4: Fallback (Android antigo ou aparelhos com Root)
-    snprintf(args, sizeof(args), "-s %s shell \"cat /sys/class/net/wlan0/address 2>/dev/null\"", serial);
-    char* out = adb_exec(args);
-    if (!out || strlen(out) < 3) {
-        strncpy(out_mac, "N/A", max_len - 1);
-        if (out) free(out);
-        return;
-    }
-    char* nl = strpbrk(out, "\r\n");
-    if (nl) *nl = '\0';
-    
-    // Filtro de sujeira
-    if (strstr(out, "Permission") || strstr(out, "denied") || strstr(out, "cat:") || strstr(out, "No such")) {
-        strncpy(out_mac, "N/A (Seguranca)", max_len - 1);
-    } else {
-        strncpy(out_mac, out, max_len - 1);
-    }
-    free(out);
-}
 
 int adb_get_packages(const char* serial, AdbPackage* packages, int max_pkgs) {
     char args[256];

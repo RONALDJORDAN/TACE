@@ -41,3 +41,26 @@ InnoRPA_Release/
 output/
 output_teste/
 
+# Compiladores e ferramentas pesadas locais
+tools/mingw64/
+tools/
+*.o
+*.obj
+*.exe
+*.dll
+
+# IDEs e configurações locais
+.vscode/
+.clangd
+compile_commands.json
+
+# Scratch e testes temporários
+scratch/
+
+# Dados locais e relatórios dinâmicos
+data/
+/municipios.csv
+/version.txt
+*.db
+*.sqlite
+*.sqlite3

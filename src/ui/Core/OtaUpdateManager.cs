@@ -176,22 +176,157 @@ namespace InnovPlayUI.Core
         }
 
         /// <summary>
-        /// Compara a versão remota com a versão local instalada
+        /// Compara a versão remota com a versão local instalada.
+        /// Retorna TRUE estritamente se a versão remota for MAIS NOVA que a versão local.
+        /// Se a versão local for igual ou mais recente, retorna FALSE (não atualiza).
         /// </summary>
         public bool IsUpdateAvailable(OtaManifest? manifest)
         {
             if (manifest == null || string.IsNullOrWhiteSpace(manifest.Version)) return false;
 
-            try
+            string localStr = CurrentVersion.Trim();
+            string remoteStr = manifest.Version.Trim();
+
+            // Se as strings forem idênticas, não há atualização
+            if (string.Equals(localStr, remoteStr, StringComparison.OrdinalIgnoreCase))
             {
-                Version localVer = Version.Parse(CurrentVersion);
-                Version remoteVer = Version.Parse(manifest.Version);
-                return remoteVer > localVer;
+                return false;
             }
-            catch
+
+            return IsRemoteVersionStrictlyNewer(localStr, remoteStr);
+        }
+
+        /// <summary>
+        /// Valida se a versão remota é cronologicamente ou numericamente estritamente superior à local.
+        /// </summary>
+        public static bool IsRemoteVersionStrictlyNewer(string localVersionStr, string remoteVersionStr)
+        {
+            if (string.IsNullOrWhiteSpace(remoteVersionStr) || string.IsNullOrWhiteSpace(localVersionStr))
             {
-                return !string.Equals(manifest.Version.Trim(), CurrentVersion.Trim(), StringComparison.OrdinalIgnoreCase);
+                return false;
             }
+
+            // 1. Tenta analisar como Timestamp / Data (DD.MM.YYYY.HHmm ou YYYY.MM.DD...)
+            DateTime? localDate = TryParseDateVersion(localVersionStr);
+            DateTime? remoteDate = TryParseDateVersion(remoteVersionStr);
+
+            if (localDate.HasValue && remoteDate.HasValue)
+            {
+                // Só atualiza se a data remota for estritamente maior que a data local
+                return remoteDate.Value > localDate.Value;
+            }
+
+            // 2. Se a versão local é timestamp (versão de build nova) e a remota é semântica antiga (ex: "1.0.0"), local é mais recente
+            if (localDate.HasValue && !remoteDate.HasValue)
+            {
+                return false;
+            }
+
+            // 3. Tenta comparar como Version Semântica tradicional (Major.Minor.Build.Revision)
+            string cleanLocal = CleanVersionString(localVersionStr);
+            string cleanRemote = CleanVersionString(remoteVersionStr);
+
+            if (Version.TryParse(cleanLocal, out var lVer) && Version.TryParse(cleanRemote, out var rVer))
+            {
+                return rVer > lVer;
+            }
+
+            // 4. Comparação Numérica Segmentada (Token a Token)
+            string[] localParts = cleanLocal.Split(new[] { '.', '-', '_' }, StringSplitOptions.RemoveEmptyEntries);
+            string[] remoteParts = cleanRemote.Split(new[] { '.', '-', '_' }, StringSplitOptions.RemoveEmptyEntries);
+
+            int maxLen = Math.Max(localParts.Length, remoteParts.Length);
+            for (int i = 0; i < maxLen; i++)
+            {
+                string lp = i < localParts.Length ? localParts[i] : "0";
+                string rp = i < remoteParts.Length ? remoteParts[i] : "0";
+
+                bool lIsNum = long.TryParse(lp, out long lNum);
+                bool rIsNum = long.TryParse(rp, out long rNum);
+
+                if (lIsNum && rIsNum)
+                {
+                    if (rNum > lNum) return true;
+                    if (rNum < lNum) return false;
+                }
+                else
+                {
+                    int cmp = string.Compare(rp, lp, StringComparison.OrdinalIgnoreCase);
+                    if (cmp > 0) return true;
+                    if (cmp < 0) return false;
+                }
+            }
+
+            // Se for equivalente ou menor, NUNCA atualiza
+            return false;
+        }
+
+        private static string CleanVersionString(string ver)
+        {
+            if (string.IsNullOrWhiteSpace(ver)) return "0.0";
+            ver = ver.Trim().TrimStart('v', 'V').Trim();
+            return ver;
+        }
+
+        public static DateTime? TryParseDateVersion(string versionStr)
+        {
+            if (string.IsNullOrWhiteSpace(versionStr)) return null;
+            string clean = CleanVersionString(versionStr);
+
+            string[] parts = clean.Split(new[] { '.', '-', '_' }, StringSplitOptions.RemoveEmptyEntries);
+
+            // 4 partes: DD.MM.YYYY.HHmm (Ex: 02.09.2026.1630)
+            if (parts.Length == 4)
+            {
+                if (int.TryParse(parts[0], out int p0) &&
+                    int.TryParse(parts[1], out int p1) &&
+                    int.TryParse(parts[2], out int p2) &&
+                    int.TryParse(parts[3], out int p3))
+                {
+                    // Formato DD.MM.YYYY.HHmm (ano na posição 2)
+                    if (p2 >= 2000 && p2 <= 2100 && p1 >= 1 && p1 <= 12 && p0 >= 1 && p0 <= 31)
+                    {
+                        int hour = p3 / 100;
+                        int min = p3 % 100;
+                        if (hour >= 0 && hour <= 23 && min >= 0 && min <= 59)
+                        {
+                            return new DateTime(p2, p1, p0, hour, min, 0);
+                        }
+                        return new DateTime(p2, p1, p0);
+                    }
+                    // Formato YYYY.MM.DD.HHmm (ano na posição 0)
+                    if (p0 >= 2000 && p0 <= 2100 && p1 >= 1 && p1 <= 12 && p2 >= 1 && p2 <= 31)
+                    {
+                        int hour = p3 / 100;
+                        int min = p3 % 100;
+                        if (hour >= 0 && hour <= 23 && min >= 0 && min <= 59)
+                        {
+                            return new DateTime(p0, p1, p2, hour, min, 0);
+                        }
+                        return new DateTime(p0, p1, p2);
+                    }
+                }
+            }
+
+            // 3 partes: DD.MM.YYYY ou YYYY.MM.DD
+            if (parts.Length == 3)
+            {
+                if (int.TryParse(parts[0], out int p0) &&
+                    int.TryParse(parts[1], out int p1) &&
+                    int.TryParse(parts[2], out int p2))
+                {
+                    if (p2 >= 2000 && p2 <= 2100 && p1 >= 1 && p1 <= 12 && p0 >= 1 && p0 <= 31)
+                    {
+                        return new DateTime(p2, p1, p0);
+                    }
+                    if (p0 >= 2000 && p0 <= 2100 && p1 >= 1 && p1 <= 12 && p2 >= 1 && p2 <= 31)
+                    {
+                        return new DateTime(p0, p1, p2);
+                    }
+                }
+            }
+
+            return null;
         }
 
         /// <summary>
@@ -266,7 +401,11 @@ namespace InnovPlayUI.Core
         {
             try
             {
-                string scriptPath = Path.Combine(PathHelper.GetRootDirectory(), "scripts", "apply_ota_update.bat");
+                string scriptPath = Path.Combine(PathHelper.GetRootDirectory(), "scripts", "desenvolvimento", "apply_ota_update.bat");
+                if (!File.Exists(scriptPath))
+                {
+                    scriptPath = Path.Combine(PathHelper.GetRootDirectory(), "scripts", "apply_ota_update.bat");
+                }
                 if (!File.Exists(scriptPath))
                 {
                     CreateApplyUpdateScript(scriptPath);

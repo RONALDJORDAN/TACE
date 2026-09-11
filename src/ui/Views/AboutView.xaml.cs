@@ -10,7 +10,7 @@ namespace InnovPlayUI.Views
         {
             InitializeComponent();
             
-            // Define a versão atualizada no card de cabeçalho
+            // Define a versão atualizada no rodapé do menu lateral
             try
             {
                 TxtAboutVersion.Text = $"v{Core.OtaUpdateManager.CurrentVersion}";
@@ -18,45 +18,47 @@ namespace InnovPlayUI.Views
             catch { }
         }
 
-        private void BtnTabGuide_Click(object sender, RoutedEventArgs e)
+        private void BtnSubGuia_Click(object sender, RoutedEventArgs e)
         {
-            SwitchTab(PanelGuide, BtnTabGuide);
+            SwitchSubmodule(BtnSubGuia, PanelGuia);
         }
 
-        private void BtnTabFaq_Click(object sender, RoutedEventArgs e)
+        private void BtnSubFaq_Click(object sender, RoutedEventArgs e)
         {
-            SwitchTab(PanelFaq, BtnTabFaq);
+            SwitchSubmodule(BtnSubFaq, PanelFaq);
         }
 
-        private void BtnTabTech_Click(object sender, RoutedEventArgs e)
+        private void BtnSubArquitetura_Click(object sender, RoutedEventArgs e)
         {
-            SwitchTab(PanelTech, BtnTabTech);
+            SwitchSubmodule(BtnSubArquitetura, PanelArquitetura);
         }
 
-        private void SwitchTab(StackPanel targetPanel, Button targetButton)
+        private void SwitchSubmodule(Button activeButton, FrameworkElement activePanel)
         {
-            // Oculta todos os painéis
-            PanelGuide.Visibility = Visibility.Collapsed;
+            var brushNormal = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#A1A1AA"));
+            var bgNormal = Brushes.Transparent;
+            var brushActive = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#4EDEA3"));
+            var bgActive = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#2A2A40"));
+
+            // Resetar botões do menu lateral
+            BtnSubGuia.Foreground = brushNormal;
+            BtnSubGuia.Background = bgNormal;
+            BtnSubFaq.Foreground = brushNormal;
+            BtnSubFaq.Background = bgNormal;
+            BtnSubArquitetura.Foreground = brushNormal;
+            BtnSubArquitetura.Background = bgNormal;
+
+            // Ativar botão clicado
+            activeButton.Foreground = brushActive;
+            activeButton.Background = bgActive;
+
+            // Ocultar todos os painéis
+            PanelGuia.Visibility = Visibility.Collapsed;
             PanelFaq.Visibility = Visibility.Collapsed;
-            PanelTech.Visibility = Visibility.Collapsed;
+            PanelArquitetura.Visibility = Visibility.Collapsed;
 
-            // Restaura o estilo neutro de todos os botões de sub-aba
-            ResetButtonStyle(BtnTabGuide);
-            ResetButtonStyle(BtnTabFaq);
-            ResetButtonStyle(BtnTabTech);
-
-            // Exibe o painel selecionado
-            targetPanel.Visibility = Visibility.Visible;
-
-            // Aplica estilo ativo ao botão selecionado
-            targetButton.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#513BA6"));
-            targetButton.Foreground = Brushes.White;
-        }
-
-        private void ResetButtonStyle(Button btn)
-        {
-            btn.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#151525"));
-            btn.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#8A8A9E"));
+            // Mostrar o painel ativo
+            activePanel.Visibility = Visibility.Visible;
         }
     }
 }

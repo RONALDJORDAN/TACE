@@ -4,13 +4,14 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" 
-             d:DesignHeight="700" d:DesignWidth="1100" Background="#0B0B13">
+             d:DesignHeight="700" d:DesignWidth="1150" Background="#0B0B13"
+             FontFamily="Segoe UI">
 
     <UserControl.Resources>
         <!-- Estilo Moderno para Toggle Switch -->
         <Style x:Key="ToggleSwitchStyle" TargetType="CheckBox">
             <Setter Property="Foreground" Value="#E3E0F2"/>
-            <Setter Property="FontSize" Value="15"/>
+            <Setter Property="FontSize" Value="14"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Template">
                 <Setter.Value>
@@ -23,12 +24,12 @@
                                     </Ellipse.RenderTransform>
                                 </Ellipse>
                             </Border>
-                            <ContentPresenter VerticalAlignment="Center" Margin="15,0,0,0"/>
+                            <ContentPresenter VerticalAlignment="Center" Margin="12,0,0,0"/>
                         </StackPanel>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsChecked" Value="True">
                                 <Setter TargetName="Track" Property="Background" Value="#513BA6"/>
-                                <Setter TargetName="Track" Property="BorderBrush" Value="#513BA6"/>
+                                <Setter TargetName="Track" Property="BorderBrush" Value="#8570E6"/>
                                 <Setter TargetName="Thumb" Property="Fill" Value="#FFFFFF"/>
                                 <Setter TargetName="Thumb" Property="Margin" Value="24,0,0,0"/>
                             </Trigger>
@@ -41,28 +42,28 @@
             </Setter>
         </Style>
 
-        <!-- Estilo dos Botões Laterais Premium -->
+        <!-- Estilo dos Botões do Menu Lateral -->
         <Style x:Key="SideMenuButton" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Foreground" Value="#A1A1AA"/>
             <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Padding" Value="15,12"/>
+            <Setter Property="Padding" Value="14,12"/>
             <Setter Property="HorizontalContentAlignment" Value="Left"/>
-            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontSize" Value="13"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Margin" Value="0,2"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}" CornerRadius="8">
+                        <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="8" Margin="{TemplateBinding Margin}">
                             <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" 
                                               VerticalAlignment="Center" Margin="{TemplateBinding Padding}"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#1A1A2E"/>
-                                <Setter Property="Foreground" Value="#E3E0F2"/>
+                                <Setter TargetName="bd" Property="Background" Value="#222238"/>
+                                <Setter Property="Foreground" Value="#FFFFFF"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -72,403 +73,478 @@
         
         <!-- Estilos para os Cards Base -->
         <Style x:Key="CardStyle" TargetType="Border">
-            <Setter Property="Background" Value="#151525"/>
-            <Setter Property="CornerRadius" Value="12"/>
-            <Setter Property="BorderBrush" Value="#2A2A40"/>
+            <Setter Property="Background" Value="#0D0D18"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="BorderBrush" Value="#23233A"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Padding" Value="25"/>
-            <Setter Property="Margin" Value="0,0,0,20"/>
-            <Setter Property="Effect">
-                <Setter.Value>
-                    <DropShadowEffect Color="#000000" BlurRadius="15" ShadowDepth="4" Opacity="0.15"/>
-                </Setter.Value>
-            </Setter>
+            <Setter Property="Padding" Value="20"/>
+            <Setter Property="Margin" Value="0,0,0,14"/>
         </Style>
 
         <!-- Estilos para as Sections de Categoria -->
         <Style x:Key="CategoryTitle" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="#E3E0F2"/>
-            <Setter Property="FontSize" Value="20"/>
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+            <Setter Property="FontSize" Value="18"/>
             <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="Margin" Value="0,0,0,5"/>
+            <Setter Property="Margin" Value="0,0,0,4"/>
         </Style>
         <Style x:Key="CategoryDesc" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="#8A8A9E"/>
-            <Setter Property="FontSize" Value="13"/>
-            <Setter Property="Margin" Value="0,0,0,20"/>
+            <Setter Property="Foreground" Value="#85859E"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Margin" Value="0,0,0,16"/>
             <Setter Property="TextWrapping" Value="Wrap"/>
         </Style>
     </UserControl.Resources>
 
     <Grid Margin="0">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
+        <!-- Layout Principal com Menu Lateral -->
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="240"/>
+            <ColumnDefinition Width="15"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
 
-        <StackPanel Grid.Row="0" Margin="0,0,0,30" Orientation="Horizontal" VerticalAlignment="Center">
-            <Border Background="#151525" CornerRadius="10" Padding="12" Margin="0,0,15,0" BorderThickness="1" BorderBrush="#2A2A40">
-                <TextBlock Text="⚙️" FontSize="26" VerticalAlignment="Center"/>
-            </Border>
-            <StackPanel VerticalAlignment="Center">
-                <TextBlock Text="Configurações Avançadas" Foreground="#E3E0F2" FontSize="28" FontWeight="Bold"/>
-                <TextBlock Text="Gerencie preferências, rede e backups corporativos do Inno RPA" Foreground="#A1A1AA" FontSize="14" Margin="0,2,0,0"/>
-            </StackPanel>
-        </StackPanel>
+        <!-- MENU LATERAL COM OS SUBMÓDULOS DE CONFIGURAÇÃO -->
+        <Border Grid.Column="0" Background="#151525" CornerRadius="12" Padding="14" BorderBrush="#23233A" BorderThickness="1">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
 
-        <!-- Layout Duas Colunas -->
-        <Grid Grid.Row="1">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="280"/>
-                <ColumnDefinition Width="40"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
-
-            <!-- Menu Lateral (Submódulos) -->
-            <Border Grid.Column="0" Background="#151525" CornerRadius="16" Padding="15" BorderThickness="1" BorderBrush="#2A2A40" VerticalAlignment="Top">
-                <StackPanel>
-                    <TextBlock Text="MÓDULOS GLOBAIS" Foreground="#513BA6" FontSize="12" FontWeight="Bold" Margin="10,5,0,15"/>
-                    <Button x:Name="BtnSubGeral" Content="🎛️  Sistema e Controle Geral" Style="{StaticResource SideMenuButton}" Click="BtnSubGeral_Click" Foreground="#4EDEA3" Background="#2A2A40"/>
-                    <Button x:Name="BtnSubRede" Content="🌐  Rede e Conectividade" Style="{StaticResource SideMenuButton}" Click="BtnSubRede_Click"/>
-                    <Button x:Name="BtnSubAparelhos" Content="📱  Aparelhos Suportados" Style="{StaticResource SideMenuButton}" Click="BtnSubAparelhos_Click"/>
-                    <Button x:Name="BtnSubLogs" Content="📜  Logs e Auditoria" Style="{StaticResource SideMenuButton}" Click="BtnSubLogs_Click"/>
-                    
-                    <TextBlock Text="DADOS E SISTEMA" Foreground="#513BA6" FontSize="12" FontWeight="Bold" Margin="10,25,0,15"/>
-                    <Button x:Name="BtnSubOta" Content="🔄  Atualização OTA" Style="{StaticResource SideMenuButton}" Click="BtnSubOta_Click"/>
-                    <Button x:Name="BtnSubDados" Content="💾  Gestão e Backup" Style="{StaticResource SideMenuButton}" Click="BtnSubDados_Click"/>
-                    <Button x:Name="BtnSubBibliotecas" Content="📚  Tecnologias &amp; Bibliotecas" Style="{StaticResource SideMenuButton}" Click="BtnSubBibliotecas_Click"/>
-                </StackPanel>
-            </Border>
-
-            <!-- Área de Conteúdo -->
-            <Grid Grid.Column="2">
-                <!-- Painel 1: Sistema e Controle Geral -->
-                <StackPanel x:Name="PanelGeral" Visibility="Visible">
-                    <TextBlock Text="Sistema e Controle" Style="{StaticResource CategoryTitle}"/>
-                    <TextBlock Text="Ajustes críticos do motor de automação C e injeções DllImport." Style="{StaticResource CategoryDesc}"/>
-
-                    <Border Style="{StaticResource CardStyle}">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <StackPanel VerticalAlignment="Center" Margin="0,0,20,0">
-                                <TextBlock Text="Motor C (InnoEngine)" Foreground="#E3E0F2" FontSize="16" FontWeight="Bold"/>
-                                <TextBlock Text="Módulo nativo que controla ADB Fast-Track. Desativar fará o sistema usar fallback em Python." Foreground="#A1A1AA" FontSize="13" Margin="0,5,0,0" TextWrapping="Wrap"/>
-                            </StackPanel>
-                            <CheckBox Grid.Column="1" x:Name="ToggleMotor" Content="Ativo" Style="{StaticResource ToggleSwitchStyle}" IsChecked="True" Checked="ToggleMotor_Checked" Unchecked="ToggleMotor_Unchecked" VerticalAlignment="Center"/>
-                        </Grid>
-                    </Border>
+                <!-- Cabeçalho do Menu -->
+                <StackPanel Grid.Row="0" Margin="0,0,0,20">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="6,4,0,10">
+                        <TextBlock Text="⚙️" FontSize="20" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                        <TextBlock Text="Configurações" Foreground="#FFFFFF" FontSize="16" FontWeight="Black" VerticalAlignment="Center"/>
+                    </StackPanel>
+                    <Separator Background="#23233A" Margin="0,5,0,5"/>
+                    <TextBlock Text="SUBMÓDULOS DO SISTEMA" Foreground="#8570E6" FontSize="10" FontWeight="Bold" Margin="6,5,0,0"/>
                 </StackPanel>
 
-                <!-- Painel 2: Rede e Conectividade -->
-                <StackPanel x:Name="PanelRede" Visibility="Collapsed">
-                    <TextBlock Text="Rede e Conectividade" Style="{StaticResource CategoryTitle}"/>
-                    <TextBlock Text="Configurações de roteamento de pacotes e tunelamento TCP/IP via cabo USB." Style="{StaticResource CategoryDesc}"/>
-
-                    <Border Style="{StaticResource CardStyle}">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <StackPanel VerticalAlignment="Center" Margin="0,0,20,0">
-                                <TextBlock Text="Reverse Tethering Automático" Foreground="#E3E0F2" FontSize="16" FontWeight="Bold"/>
-                                <TextBlock Text="Injeta a internet local da sua máquina diretamente no tablet sem depender do Wi-Fi escolar." Foreground="#A1A1AA" FontSize="13" Margin="0,5,0,0" TextWrapping="Wrap"/>
-                            </StackPanel>
-                            <CheckBox Grid.Column="1" x:Name="ToggleTethering" Content="Automático" Style="{StaticResource ToggleSwitchStyle}" Checked="ToggleTethering_Checked" Unchecked="ToggleTethering_Unchecked" VerticalAlignment="Center"/>
-                        </Grid>
-                    </Border>
-                    
-                    <Border Style="{StaticResource CardStyle}">
-                        <StackPanel>
-                            <Grid Margin="0,0,0,15">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <StackPanel VerticalAlignment="Center" Margin="0,0,20,0">
-                                    <TextBlock Text="Teste de Velocidade de Internet" Foreground="#E3E0F2" FontSize="16" FontWeight="Bold"/>
-                                    <TextBlock Text="Avalia a estabilidade e latência da sua conexão (Escala de 1 a 10)." Foreground="#A1A1AA" FontSize="13" Margin="0,5,0,0" TextWrapping="Wrap"/>
-                                </StackPanel>
-                                <Button Grid.Column="1" x:Name="BtnTesteVelocidade" Content="🚀 Iniciar Teste" Background="#2A2A40" Foreground="#5EB1FF" BorderThickness="1" BorderBrush="#5EB1FF" Padding="20,8" Cursor="Hand" FontWeight="Bold" FontSize="14" Click="BtnTesteVelocidade_Click" VerticalAlignment="Center">
-                                    <Button.Resources>
-                                        <Style TargetType="Border">
-                                            <Setter Property="CornerRadius" Value="8"/>
-                                        </Style>
-                                    </Button.Resources>
-                                </Button>
-                            </Grid>
-                            
-                            <!-- Indicador de Qualidade (1 a 10) -->
-                            <StackPanel>
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
-                                    <TextBlock Text="Qualidade da Conexão: " Foreground="#8A8A9E" FontSize="13"/>
-                                    <TextBlock x:Name="TxtResultadoTeste" Text="Aguardando teste..." Foreground="#A1A1AA" FontSize="13" FontWeight="Bold"/>
-                                </StackPanel>
-                                
-                                <ItemsControl x:Name="SpeedScoreItems">
-                                    <ItemsControl.ItemsPanel>
-                                        <ItemsPanelTemplate>
-                                            <StackPanel Orientation="Horizontal"/>
-                                        </ItemsPanelTemplate>
-                                    </ItemsControl.ItemsPanel>
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <Border Width="30" Height="10" CornerRadius="5" Margin="0,0,8,0" Background="{Binding Color}"/>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </StackPanel>
-                        </StackPanel>
-                    </Border>
+                <!-- Botões de Submódulos -->
+                <StackPanel Grid.Row="1">
+                    <Button x:Name="BtnSubGeral" Content="🎛️  1. Sistema &amp; Controle" Style="{StaticResource SideMenuButton}" Click="BtnSubGeral_Click" Foreground="#4EDEA3" Background="#2A2A40"/>
+                    <Button x:Name="BtnSubAparelhos" Content="📱  2. Aparelhos Suportados" Style="{StaticResource SideMenuButton}" Click="BtnSubAparelhos_Click"/>
+                    <Button x:Name="BtnSubRede" Content="🌐  3. Rede &amp; Tethering" Style="{StaticResource SideMenuButton}" Click="BtnSubRede_Click"/>
+                    <Button x:Name="BtnSubOta" Content="🔄  4. Atualização OTA" Style="{StaticResource SideMenuButton}" Click="BtnSubOta_Click"/>
+                    <Button x:Name="BtnSubDados" Content="💾  5. Backup &amp; Gestão" Style="{StaticResource SideMenuButton}" Click="BtnSubDados_Click"/>
+                    <Button x:Name="BtnSubBibliotecas" Content="📚  6. Tecnologias &amp; Licença" Style="{StaticResource SideMenuButton}" Click="BtnSubBibliotecas_Click"/>
                 </StackPanel>
 
-                <!-- Painel 3: Aparelhos Suportados -->
-                <StackPanel x:Name="PanelAparelhos" Visibility="Collapsed">
-                    <TextBlock Text="Base Oficial de Hardware" Style="{StaticResource CategoryTitle}"/>
-                    <TextBlock Text="Modelos de tablets homologados com lógicas customizadas mapeadas pelo motor C." Style="{StaticResource CategoryDesc}"/>
-
-                    <Border Style="{StaticResource CardStyle}" Padding="0" Background="Transparent" BorderThickness="0" Effect="{x:Null}">
-                        <Border Background="#151525" BorderBrush="#2A2A40" BorderThickness="1" CornerRadius="12" Padding="20">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                
-                                <Border Background="#1A1A2E" CornerRadius="8" Padding="15" Margin="0,0,20,0">
-                                    <TextBlock Text="📱" FontSize="36" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                                </Border>
-                                
-                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                    <TextBlock Text="Positivo Tab Vision 7" Foreground="#4EDEA3" FontSize="18" FontWeight="Bold"/>
-                                    <TextBlock Text="Módulos Suportados: F1, F2, F3, F4, F5" Foreground="#A1A1AA" FontSize="13" Margin="0,5,0,0"/>
-                                    <TextBlock Text="Engine: C++ Nativo | UI Automator: Completo" Foreground="#8A8A9E" FontSize="12" Margin="0,3,0,0"/>
-                                </StackPanel>
-                                
-                                <Border Grid.Column="2" Background="#0A0A0F" BorderBrush="#513BA6" BorderThickness="1" CornerRadius="20" Padding="15,5" VerticalAlignment="Center">
-                                    <TextBlock Text="Ativo" Foreground="#513BA6" FontWeight="Bold" FontSize="12"/>
-                                </Border>
-                            </Grid>
-                        </Border>
-                    </Border>
-
-                    <!-- Novo Modelo m7_MULTI -->
-                    <Border Style="{StaticResource CardStyle}" Padding="0" Background="Transparent" BorderThickness="0" Effect="{x:Null}">
-                        <Border Background="#151525" BorderBrush="#2A2A40" BorderThickness="1" CornerRadius="12" Padding="20">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                
-                                <Border Background="#1A1A2E" CornerRadius="8" Padding="15" Margin="0,0,20,0">
-                                    <TextBlock Text="📱" FontSize="36" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                                </Border>
-                                
-                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                    <TextBlock Text="Multilaser M7 (m7_MULTI)" Foreground="#4EDEA3" FontSize="18" FontWeight="Bold"/>
-                                    <TextBlock Text="Módulos Suportados: F7, F2, F3, F5" Foreground="#A1A1AA" FontSize="13" Margin="0,5,0,0"/>
-                                    <TextBlock Text="Engine: C++ Nativo | UI Automator: Completo" Foreground="#8A8A9E" FontSize="12" Margin="0,3,0,0"/>
-                                </StackPanel>
-                                
-                                <Border Grid.Column="2" Background="#0A0A0F" BorderBrush="#513BA6" BorderThickness="1" CornerRadius="20" Padding="15,5" VerticalAlignment="Center">
-                                    <TextBlock Text="Ativo" Foreground="#513BA6" FontWeight="Bold" FontSize="12"/>
-                                </Border>
-                            </Grid>
-                        </Border>
-                    </Border>
-                </StackPanel>
-
-                <!-- Painel 4: Logs e Auditoria -->
-                <StackPanel x:Name="PanelLogs" Visibility="Collapsed">
-                    <TextBlock Text="Auditoria e Logs" Style="{StaticResource CategoryTitle}"/>
-                    <TextBlock Text="Rastreabilidade e governança de processos automáticos." Style="{StaticResource CategoryDesc}"/>
-
-                    <Border Style="{StaticResource CardStyle}">
-                        <StackPanel>
-                            <TextBlock Text="Gravação de Logs (C e C#)" Foreground="#E3E0F2" FontSize="16" FontWeight="Bold"/>
-                            <TextBlock Text="O sistema grava logs nativos da DLL (.c) no diretório /logs/ e históricos de compilação ou execução de tarefas pesadas no diretório /registros/ separados por data e hora exata." Foreground="#A1A1AA" FontSize="13" Margin="0,5,0,20" TextWrapping="Wrap"/>
-                            
-                            <Border Background="#0A0A0F" BorderBrush="#2A2A40" BorderThickness="1" CornerRadius="8" Padding="15">
-                                <StackPanel>
-                                    <TextBlock Text="📄 logs/app_errors.log" Foreground="#5EB1FF" FontSize="13" FontFamily="Consolas" Margin="0,0,0,5"/>
-                                    <TextBlock Text="📄 registros/YYYY-MM-DD/HH-MM_EXECUTION.log" Foreground="#5EB1FF" FontSize="13" FontFamily="Consolas"/>
-                                </StackPanel>
-                            </Border>
-                        </StackPanel>
-                    </Border>
-                </StackPanel>
-
-                <!-- Painel OTA: Atualização Remota e Telemetria -->
-                <StackPanel x:Name="PanelOta" Visibility="Collapsed">
-                    <TextBlock Text="Atualização do Sistema (OTA Remote)" Style="{StaticResource CategoryTitle}"/>
-                    <TextBlock Text="Verifique e aplique atualizações remotas via nuvem (Firebase)." Style="{StaticResource CategoryDesc}"/>
-
-                    <Border Style="{StaticResource CardStyle}">
-                        <StackPanel>
-                            <Grid Margin="0,0,0,15">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <StackPanel VerticalAlignment="Center" Margin="0,0,20,0">
-                                    <TextBlock Text="Versão Instalada do Software" Foreground="#E3E0F2" FontSize="16" FontWeight="Bold"/>
-                                    <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
-                                        <TextBlock x:Name="TxtCurrentVersion" Text="v1.0.0" Foreground="#4EDEA3" FontSize="15" FontWeight="Bold" FontFamily="Consolas"/>
-                                        <TextBlock x:Name="TxtStatusOta" Text=" (Conectado à nuvem)" Foreground="#8A8A9E" FontSize="13" Margin="10,0,0,0" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </StackPanel>
-                                <Button Grid.Column="1" x:Name="BtnCheckOta" Content="🔍 Verificar Atualizações" Background="#2A2A40" Foreground="#5EB1FF" BorderThickness="1" BorderBrush="#5EB1FF" Padding="15,8" Cursor="Hand" FontWeight="Bold" FontSize="13" Click="BtnCheckOta_Click" VerticalAlignment="Center">
-                                    <Button.Resources>
-                                        <Style TargetType="Border">
-                                            <Setter Property="CornerRadius" Value="8"/>
-                                        </Style>
-                                    </Button.Resources>
-                                </Button>
-                            </Grid>
-
-                            <!-- Card de Atualização Disponível -->
-                            <Border x:Name="BorderUpdateAvailable" Visibility="Collapsed" Background="#1A1A2E" BorderBrush="#513BA6" BorderThickness="1" CornerRadius="10" Padding="15" Margin="0,10,0,15">
-                                <StackPanel>
-                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                                        <TextBlock Text="🚀 Nova Versão Disponível: " Foreground="#00E5FF" FontSize="15" FontWeight="Bold"/>
-                                        <TextBlock x:Name="TxtNewVersion" Text="v1.1.0" Foreground="#00E5FF" FontSize="15" FontWeight="Bold" FontFamily="Consolas"/>
-                                    </StackPanel>
-                                    <TextBlock x:Name="TxtChangelog" Text="Melhorias de desempenho e estabilidade..." Foreground="#E3E0F2" FontSize="13" TextWrapping="Wrap" Margin="0,0,0,15"/>
-                                    
-                                    <Button x:Name="BtnInstallOta" Content="⚡ Instalar Atualização Agora" Background="#513BA6" Foreground="#FFFFFF" BorderThickness="0" Padding="20,10" Cursor="Hand" FontWeight="Bold" FontSize="14" Click="BtnInstallOta_Click">
-                                        <Button.Resources>
-                                            <Style TargetType="Border">
-                                                <Setter Property="CornerRadius" Value="8"/>
-                                            </Style>
-                                        </Button.Resources>
-                                    </Button>
-                                </StackPanel>
-                            </Border>
-
-                            <!-- Progresso do Download OTA -->
-                            <Border x:Name="PanelOtaProgress" Visibility="Collapsed" Background="#0A0A0F" CornerRadius="8" Padding="15" Margin="0,10,0,0">
-                                <StackPanel>
-                                    <TextBlock x:Name="TxtOtaProgressStatus" Text="Baixando atualização..." Foreground="#00E5FF" FontSize="13" FontWeight="SemiBold" Margin="0,0,0,8" HorizontalAlignment="Center"/>
-                                    <ProgressBar x:Name="OtaProgressBar" Height="10" Background="#151525" Foreground="#00E5FF" BorderThickness="0" Value="0" Maximum="100">
-                                        <ProgressBar.Resources>
-                                            <Style TargetType="Border">
-                                                <Setter Property="CornerRadius" Value="5"/>
-                                            </Style>
-                                        </ProgressBar.Resources>
-                                    </ProgressBar>
-                                </StackPanel>
-                            </Border>
-                        </StackPanel>
-                    </Border>
-
-                    <!-- Telemetria Automática Toggle -->
-                    <Border Style="{StaticResource CardStyle}">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <StackPanel VerticalAlignment="Center" Margin="0,0,20,0">
-                                <TextBlock Text="Telemetria Remota de Versão" Foreground="#E3E0F2" FontSize="16" FontWeight="Bold"/>
-                                <TextBlock Text="Reporta periodicamente ao Firebase a versão e status desta máquina para inventário no Painel Web." Foreground="#A1A1AA" FontSize="13" Margin="0,5,0,0" TextWrapping="Wrap"/>
-                            </StackPanel>
-                            <CheckBox Grid.Column="1" x:Name="ToggleTelemetry" Content="Ativo" Style="{StaticResource ToggleSwitchStyle}" IsChecked="True" Checked="ToggleTelemetry_Checked" Unchecked="ToggleTelemetry_Unchecked" VerticalAlignment="Center"/>
-                        </Grid>
-                    </Border>
-                </StackPanel>
-
-                <!-- Painel 5: Gestão de Dados -->
-                <StackPanel x:Name="PanelDados" Visibility="Collapsed">
-                    <TextBlock Text="Gestão e Backup de Dados" Style="{StaticResource CategoryTitle}"/>
-                    <TextBlock Text="Proteja os dados estruturados do sistema, incluindo relatórios, configurações e dicionários." Style="{StaticResource CategoryDesc}"/>
-
-                    <Border Style="{StaticResource CardStyle}" Padding="20">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            
-                            <StackPanel VerticalAlignment="Center" Margin="0,0,20,0">
-                                <TextBlock Text="Exportar Pacote (Backup Completo)" Foreground="#4EDEA3" FontSize="16" FontWeight="Bold"/>
-                                <TextBlock Text="Comprime todo o ambiente (logs, registros, imagens e tabelas XML) em um único arquivo .zip portátil." Foreground="#A1A1AA" FontSize="13" Margin="0,5,0,0" TextWrapping="Wrap"/>
-                            </StackPanel>
-                            
-                            <Button Grid.Column="1" x:Name="BtnExportar" Content="⬇ Exportar" Background="#2A2A40" Foreground="#4EDEA3" BorderThickness="1" BorderBrush="#4EDEA3" Padding="20,10" Cursor="Hand" FontWeight="Bold" FontSize="14" Click="BtnExportar_Click" VerticalAlignment="Center">
-                                <Button.Resources>
-                                    <Style TargetType="Border">
-                                        <Setter Property="CornerRadius" Value="8"/>
-                                    </Style>
-                                </Button.Resources>
-                            </Button>
-                        </Grid>
-                    </Border>
-
-                    <Border Style="{StaticResource CardStyle}" Padding="20" Margin="0,0,0,15">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            
-                            <StackPanel VerticalAlignment="Center" Margin="0,0,20,0">
-                                <TextBlock Text="Importar Pacote (.zip)" Foreground="#513BA6" FontSize="16" FontWeight="Bold"/>
-                                <TextBlock Text="Sobrescreve a base local de dados com um backup anterior. Recomenda-se cautela." Foreground="#A1A1AA" FontSize="13" Margin="0,5,0,0" TextWrapping="Wrap"/>
-                            </StackPanel>
-                            
-                            <Button Grid.Column="1" x:Name="BtnImportar" Content="⬆ Importar" Background="#513BA6" Foreground="#FFFFFF" BorderThickness="0" Padding="20,10" Cursor="Hand" FontWeight="Bold" FontSize="14" Click="BtnImportar_Click" VerticalAlignment="Center">
-                                <Button.Resources>
-                                    <Style TargetType="Border">
-                                        <Setter Property="CornerRadius" Value="8"/>
-                                    </Style>
-                                </Button.Resources>
-                            </Button>
-                        </Grid>
-                    </Border>
-                    
-                    <!-- Progresso da Operação -->
-                    <Border x:Name="PanelProgresso" Visibility="Collapsed" Background="#1A1A2E" CornerRadius="8" Padding="20" BorderThickness="1" BorderBrush="#513BA6">
-                        <StackPanel>
-                            <TextBlock x:Name="TxtStatusProgresso" Text="Aguarde, processando..." Foreground="#4EDEA3" FontSize="14" FontWeight="SemiBold" Margin="0,0,0,10" HorizontalAlignment="Center"/>
-                            <ProgressBar x:Name="BarraProgresso" Height="12" Background="#0A0A0F" Foreground="#4EDEA3" BorderThickness="0" Value="0" Maximum="100">
-                                <ProgressBar.Resources>
-                                    <Style TargetType="Border">
-                                        <Setter Property="CornerRadius" Value="6"/>
-                                    </Style>
-                                </ProgressBar.Resources>
-                            </ProgressBar>
-                        </StackPanel>
-                    </Border>
-                </StackPanel>
-
-                <!-- Painel 6: Tecnologias e Bibliotecas -->
-                <StackPanel x:Name="PanelBibliotecas" Visibility="Collapsed">
-                    <TextBlock Text="Tecnologias Open-Source" Style="{StaticResource CategoryTitle}"/>
-                    <TextBlock Text="Bibliotecas injetadas e frameworks parceiros utilizados pela Plataforma." Style="{StaticResource CategoryDesc}"/>
-
-                    <Border Style="{StaticResource CardStyle}">
-                        <StackPanel>
-                            <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
-                                <Border Background="#1A1A2E" CornerRadius="8" Padding="10" Margin="0,0,15,0">
-                                    <TextBlock Text="📦" FontSize="20"/>
-                                </Border>
-                                <StackPanel VerticalAlignment="Center">
-                                    <TextBlock Text="QRCoder (v1.8.0)" Foreground="#5EB1FF" FontSize="16" FontWeight="Bold"/>
-                                    <TextBlock Text="Framework C# (System.Drawing)" Foreground="#8A8A9E" FontSize="12"/>
-                                </StackPanel>
-                            </StackPanel>
-                            <TextBlock Text="Utilizado no módulo de Relatórios (Filtros e Exportações) para a geração das Etiquetas Patrimoniais em PDF com código QR rastreável." Foreground="#A1A1AA" FontSize="13" Margin="0,0,0,10" TextWrapping="Wrap"/>
-                            <TextBlock Text="Vantagem Arquitetural: Funciona 100% offline em memória RAM, dispensando APIs baseadas na web para conversão binária e permitindo injeção de MAC Addresses no Bitmap nativo." Foreground="#8A8A9E" FontSize="12" TextWrapping="Wrap"/>
-                        </StackPanel>
-                    </Border>
-                </StackPanel>
+                <!-- Rodapé informativo do Menu -->
+                <Border Grid.Row="2" Background="#0A0A0F" CornerRadius="8" Padding="10" BorderBrush="#202035" BorderThickness="1">
+                    <StackPanel>
+                        <TextBlock Text="Inno RPA Engine: Ativo" Foreground="#4EDEA3" FontSize="11" FontWeight="Bold"/>
+                        <TextBlock Text="MinGW64 GCC Nativo C" Foreground="#85859E" FontSize="10" Margin="0,2,0,0"/>
+                    </StackPanel>
+                </Border>
             </Grid>
+        </Border>
+
+        <!-- ÁREA DE CONTEÚDO DAS CONFIGURAÇÕES -->
+        <Grid Grid.Column="2">
+
+            <!-- ========================================================================= -->
+            <!-- SUBMÓDULO 1: SISTEMA E CONTROLE GERAL -->
+            <!-- ========================================================================= -->
+            <Border x:Name="PanelGeral" Background="#151525" CornerRadius="12" Padding="20" BorderBrush="#23233A" BorderThickness="1" Visibility="Visible">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <TextBlock Text="Sistema &amp; Controle Geral" Style="{StaticResource CategoryTitle}"/>
+                        <TextBlock Text="Ajustes críticos do motor de automação em C Puro e opções de visualização do monitor." Style="{StaticResource CategoryDesc}"/>
+
+                        <!-- Interface Padrão do Monitor USB ADB -->
+                        <Border Style="{StaticResource CardStyle}">
+                            <StackPanel>
+                                <Grid Margin="0,0,0,12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel VerticalAlignment="Center" Margin="0,0,20,0">
+                                        <TextBlock Text="Interface Principal do Monitor USB (ADB)" Foreground="#FFFFFF" FontSize="15" FontWeight="Bold"/>
+                                        <TextBlock Text="Escolha a experiência de interface gráfica usada para operar e monitorar os tablets conectados na bancada." Foreground="#85859E" FontSize="12" Margin="0,4,0,0" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                    <Border Grid.Column="1" Background="#1A1A2E" BorderBrush="#513BA6" BorderThickness="1" CornerRadius="6" Padding="8,4" VerticalAlignment="Center">
+                                        <TextBlock x:Name="TxtInterfaceActiveIndicator" Text="Modo Atual: Clássico" Foreground="#00E5FF" FontSize="11" FontWeight="Bold"/>
+                                    </Border>
+                                </Grid>
+
+                                <!-- Grid com os Cards Interativos de Escolha -->
+                                <Grid Margin="0,6,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="14"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- Card Opção 1: Monitor Clássico -->
+                                    <Border x:Name="CardInterfaceClassic" Grid.Column="0" Background="#18182A" BorderBrush="#00E5FF" BorderThickness="2" CornerRadius="10" Padding="14" Cursor="Hand" MouseLeftButtonDown="CardInterfaceClassic_Click">
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="*"/>
+                                            </Grid.RowDefinitions>
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                                <TextBlock Text="📟" FontSize="18" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                                <TextBlock Text="Monitor Clássico (ADB)" Foreground="#FFFFFF" FontSize="13" FontWeight="Bold" VerticalAlignment="Center"/>
+                                                <Border x:Name="BadgeClassicActive" Margin="10,0,0,0" Background="#0A1E2B" BorderBrush="#00E5FF" BorderThickness="1" CornerRadius="4" Padding="6,2" VerticalAlignment="Center" Visibility="Visible">
+                                                    <TextBlock Text="ATIVO" Foreground="#00E5FF" FontSize="9" FontWeight="Black"/>
+                                                </Border>
+                                            </StackPanel>
+                                            <TextBlock Grid.Row="1" Text="Interface em lista tradicional para visualização sequencial de bancada com atalhos diretos e terminal interativo Kiosk." Foreground="#85859E" FontSize="11" TextWrapping="Wrap" LineHeight="16"/>
+                                        </Grid>
+                                    </Border>
+
+                                    <!-- Card Opção 2: Monitor Pro -->
+                                    <Border x:Name="CardInterfacePro" Grid.Column="2" Background="#0E0E18" BorderBrush="#23233A" BorderThickness="1" CornerRadius="10" Padding="14" Cursor="Hand" MouseLeftButtonDown="CardInterfacePro_Click">
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="*"/>
+                                            </Grid.RowDefinitions>
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                                <TextBlock Text="⚡" FontSize="18" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                                <TextBlock Text="Monitor Pro (Grid)" Foreground="#FFFFFF" FontSize="13" FontWeight="Bold" VerticalAlignment="Center"/>
+                                                <Border x:Name="BadgeProActive" Margin="10,0,0,0" Background="#2B0A1E" BorderBrush="#FF007F" BorderThickness="1" CornerRadius="4" Padding="6,2" VerticalAlignment="Center" Visibility="Collapsed">
+                                                    <TextBlock Text="ATIVO" Foreground="#FF007F" FontSize="9" FontWeight="Black"/>
+                                                </Border>
+                                            </StackPanel>
+                                            <TextBlock Grid.Row="1" Text="Visualização Cyber-Industrial em cards/grid dinâmicos com telemetria visual em tempo real e cartões detalhados por aparelho." Foreground="#85859E" FontSize="11" TextWrapping="Wrap" LineHeight="16"/>
+                                        </Grid>
+                                    </Border>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Motor C -->
+                        <Border Style="{StaticResource CardStyle}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel VerticalAlignment="Center" Margin="0,0,20,0">
+                                    <TextBlock Text="Motor C Nativo (InnoEngine.dll)" Foreground="#FFFFFF" FontSize="15" FontWeight="Bold"/>
+                                    <TextBlock Text="Módulo de alta velocidade que controla a comunicação direta com os tablets via protocolo Fast-Track ADB." Foreground="#85859E" FontSize="12" Margin="0,4,0,0" TextWrapping="Wrap"/>
+                                </StackPanel>
+                                <CheckBox Grid.Column="1" x:Name="ToggleMotor" Content="Ativo" Style="{StaticResource ToggleSwitchStyle}" IsChecked="True" Checked="ToggleMotor_Checked" Unchecked="ToggleMotor_Unchecked" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- Dispositivos Desconectados -->
+                        <Border Style="{StaticResource CardStyle}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel VerticalAlignment="Center" Margin="0,0,20,0">
+                                    <TextBlock Text="Monitor USB ADB: Exibir Dispositivos Desconectados (Histórico)" Foreground="#FFFFFF" FontSize="15" FontWeight="Bold"/>
+                                    <TextBlock Text="Quando ativado, o monitor exibe também os aparelhos desconectados com badge sutil. Quando desativado, o monitor exibe estritamente os aparelhos conectados via cabo USB no momento." Foreground="#85859E" FontSize="12" Margin="0,4,0,0" TextWrapping="Wrap"/>
+                                </StackPanel>
+                                <CheckBox Grid.Column="1" x:Name="ToggleShowDisconnected" Content="Exibir" Style="{StaticResource ToggleSwitchStyle}" IsChecked="False" Checked="ToggleShowDisconnected_Checked" Unchecked="ToggleShowDisconnected_Unchecked" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+
+            <!-- ========================================================================= -->
+            <!-- SUBMÓDULO 2: APARELHOS SUPORTADOS -->
+            <!-- ========================================================================= -->
+            <Border x:Name="PanelAparelhos" Background="#151525" CornerRadius="12" Padding="20" BorderBrush="#23233A" BorderThickness="1" Visibility="Collapsed">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <TextBlock Text="Base Oficial de Hardware Suportado" Style="{StaticResource CategoryTitle}"/>
+                        <TextBlock Text="Ative ou desative modelos de tablets. Quando a chave estiver desligada, os aparelhos desse modelo não aparecerão no monitor USB ADB e seus menus inferiores ficarão ocultos." Style="{StaticResource CategoryDesc}"/>
+
+                        <!-- Modelo 1: Positivo Tab Vision 7 -->
+                        <Border Style="{StaticResource CardStyle}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <Border Background="#1A1A2E" CornerRadius="8" Padding="12" Margin="0,0,16,0" BorderBrush="#00F5D4" BorderThickness="1">
+                                    <TextBlock Text="📱" FontSize="28" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                </Border>
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <TextBlock Text="Positivo Tab Vision 7 (T307G)" Foreground="#00F5D4" FontSize="16" FontWeight="Bold"/>
+                                    <TextBlock Text="Módulos Suportados: [F1], [F2], [F3], [F4], [F5], [F6], [F8]" Foreground="#E3E0F2" FontSize="12" Margin="0,4,0,0"/>
+                                    <TextBlock Text="Engine: C Nativo (v7_pipeline.c) | Chipset: Allwinner A133" Foreground="#85859E" FontSize="11" Margin="0,2,0,0"/>
+                                </StackPanel>
+                                <CheckBox Grid.Column="2" x:Name="ToggleDeviceVision7" Content="Monitorar" Style="{StaticResource ToggleSwitchStyle}" IsChecked="True" Checked="ToggleDevice_Changed" Unchecked="ToggleDevice_Changed" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- Modelo 2: Multilaser TabMulti M7 -->
+                        <Border Style="{StaticResource CardStyle}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <Border Background="#1A1A2E" CornerRadius="8" Padding="12" Margin="0,0,16,0" BorderBrush="#FFB703" BorderThickness="1">
+                                    <TextBlock Text="📱" FontSize="28" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                </Border>
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <TextBlock Text="Multilaser TabMulti M7 (m7_MULTI)" Foreground="#FFB703" FontSize="16" FontWeight="Bold"/>
+                                    <TextBlock Text="Módulos Suportados: [F1], [F2], [F3], [F4], [F5]" Foreground="#E3E0F2" FontSize="12" Margin="0,4,0,0"/>
+                                    <TextBlock Text="Engine: C Nativo (m7_pipeline.c) | Suporte Multi-Launcher" Foreground="#85859E" FontSize="11" Margin="0,2,0,0"/>
+                                </StackPanel>
+                                <CheckBox Grid.Column="2" x:Name="ToggleDeviceTabMulti" Content="Monitorar" Style="{StaticResource ToggleSwitchStyle}" IsChecked="True" Checked="ToggleDevice_Changed" Unchecked="ToggleDevice_Changed" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- Modelo 3: Nokia T20 (Android 11) -->
+                        <Border Style="{StaticResource CardStyle}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <Border Background="#1A1A2E" CornerRadius="8" Padding="12" Margin="0,0,16,0" BorderBrush="#D2BBFF" BorderThickness="1">
+                                    <TextBlock Text="📱" FontSize="28" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                </Border>
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <TextBlock Text="Nokia T20 (Android 11)" Foreground="#D2BBFF" FontSize="16" FontWeight="Bold"/>
+                                    <TextBlock Text="Módulos Suportados: [F1], [F2], [F3] (Pipeline Especial Android 11)" Foreground="#E3E0F2" FontSize="12" Margin="0,4,0,0"/>
+                                    <TextBlock Text="Engine: C Nativo (t20_pipeline.c) | Compatibilidade com Scoped Storage" Foreground="#85859E" FontSize="11" Margin="0,2,0,0"/>
+                                </StackPanel>
+                                <CheckBox Grid.Column="2" x:Name="ToggleDeviceNokiaT20" Content="Monitorar" Style="{StaticResource ToggleSwitchStyle}" IsChecked="True" Checked="ToggleDevice_Changed" Unchecked="ToggleDevice_Changed" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+
+            <!-- ========================================================================= -->
+            <!-- SUBMÓDULO 3: REDE & CONECTIVIDADE -->
+            <!-- ========================================================================= -->
+            <Border x:Name="PanelRede" Background="#151525" CornerRadius="12" Padding="20" BorderBrush="#23233A" BorderThickness="1" Visibility="Collapsed">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <TextBlock Text="Rede &amp; Conectividade (Reverse Tethering)" Style="{StaticResource CategoryTitle}"/>
+                        <TextBlock Text="Configurações de roteamento de pacotes TCP/IP via cabo USB com Gnirehtet." Style="{StaticResource CategoryDesc}"/>
+
+                        <!-- Reverse Tethering -->
+                        <Border Style="{StaticResource CardStyle}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel VerticalAlignment="Center" Margin="0,0,20,0">
+                                    <TextBlock Text="Reverse Tethering Automático (Gnirehtet)" Foreground="#FFFFFF" FontSize="15" FontWeight="Bold"/>
+                                    <TextBlock Text="Injeta a conexão cabeada do computador diretamente no tablet, contornando bloqueios de Wi-Fi nas escolas." Foreground="#85859E" FontSize="12" Margin="0,4,0,0" TextWrapping="Wrap"/>
+                                </StackPanel>
+                                <CheckBox Grid.Column="1" x:Name="ToggleTethering" Content="Automático" Style="{StaticResource ToggleSwitchStyle}" Checked="ToggleTethering_Checked" Unchecked="ToggleTethering_Unchecked" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- Teste de Velocidade -->
+                        <Border Style="{StaticResource CardStyle}">
+                            <StackPanel>
+                                <Grid Margin="0,0,0,15">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel VerticalAlignment="Center" Margin="0,0,20,0">
+                                        <TextBlock Text="Diagnóstico de Estabilidade de Conexão" Foreground="#FFFFFF" FontSize="15" FontWeight="Bold"/>
+                                        <TextBlock Text="Executa um ping de diagnóstico e latência avaliando a conexão (Escala de 1 a 10)." Foreground="#85859E" FontSize="12" Margin="0,4,0,0" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                    <Button Grid.Column="1" x:Name="BtnTesteVelocidade" Content="🚀 Iniciar Teste" Background="#2A2A40" Foreground="#5EB1FF" BorderThickness="1" BorderBrush="#5EB1FF" Padding="16,8" Cursor="Hand" FontWeight="Bold" FontSize="13" Click="BtnTesteVelocidade_Click" VerticalAlignment="Center"/>
+                                </Grid>
+
+                                <!-- Indicador de Pontos -->
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                        <TextBlock Text="Qualidade da Conexão: " Foreground="#85859E" FontSize="12"/>
+                                        <TextBlock x:Name="TxtResultadoTeste" Text="Aguardando teste..." Foreground="#4EDEA3" FontSize="12" FontWeight="Bold"/>
+                                    </StackPanel>
+                                    <ItemsControl x:Name="SpeedScoreItems">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <StackPanel Orientation="Horizontal"/>
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border Width="26" Height="8" CornerRadius="4" Margin="0,0,6,0" Background="{Binding Color}"/>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+
+            <!-- ========================================================================= -->
+            <!-- SUBMÓDULO 4: ATUALIZAÇÕES OTA -->
+            <!-- ========================================================================= -->
+            <Border x:Name="PanelOta" Background="#151525" CornerRadius="12" Padding="20" BorderBrush="#23233A" BorderThickness="1" Visibility="Collapsed">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <TextBlock Text="Atualização do Sistema (OTA Remote)" Style="{StaticResource CategoryTitle}"/>
+                        <TextBlock Text="Verifique a disponibilidade de novos patches de compilação ou atualizações na nuvem." Style="{StaticResource CategoryDesc}"/>
+
+                        <Border Style="{StaticResource CardStyle}">
+                            <StackPanel>
+                                <Grid Margin="0,0,0,12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel VerticalAlignment="Center" Margin="0,0,20,0">
+                                        <TextBlock Text="Versão do Sistema em Execução" Foreground="#FFFFFF" FontSize="15" FontWeight="Bold"/>
+                                        <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                            <TextBlock x:Name="TxtCurrentVersion" Text="v1.0.0" Foreground="#4EDEA3" FontSize="14" FontWeight="Bold" FontFamily="Consolas"/>
+                                            <TextBlock x:Name="TxtStatusOta" Text=" (Conectado à nuvem)" Foreground="#85859E" FontSize="12" Margin="10,0,0,0" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                    <Button Grid.Column="1" x:Name="BtnCheckOta" Content="🔍 Verificar Atualizações" Background="#2A2A40" Foreground="#5EB1FF" BorderThickness="1" BorderBrush="#5EB1FF" Padding="15,8" Cursor="Hand" FontWeight="Bold" FontSize="12" Click="BtnCheckOta_Click" VerticalAlignment="Center"/>
+                                </Grid>
+
+                                <!-- Card de Atualização Disponível -->
+                                <Border x:Name="BorderUpdateAvailable" Visibility="Collapsed" Background="#1A1A2E" BorderBrush="#513BA6" BorderThickness="1" CornerRadius="8" Padding="15" Margin="0,10,0,10">
+                                    <StackPanel>
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                            <TextBlock Text="🚀 Nova Versão Disponível: " Foreground="#00E5FF" FontSize="14" FontWeight="Bold"/>
+                                            <TextBlock x:Name="TxtNewVersion" Text="v1.1.0" Foreground="#00E5FF" FontSize="14" FontWeight="Bold" FontFamily="Consolas"/>
+                                        </StackPanel>
+                                        <TextBlock x:Name="TxtChangelog" Text="Melhorias de desempenho e estabilidade..." Foreground="#E3E0F2" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,12"/>
+                                        <Button x:Name="BtnInstallOta" Content="⚡ Instalar Atualização Agora" Background="#513BA6" Foreground="#FFFFFF" BorderThickness="0" Padding="18,8" Cursor="Hand" FontWeight="Bold" FontSize="13" Click="BtnInstallOta_Click"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- Progresso do Download OTA -->
+                                <Border x:Name="PanelOtaProgress" Visibility="Collapsed" Background="#0A0A0F" CornerRadius="8" Padding="12" Margin="0,8,0,0">
+                                    <StackPanel>
+                                        <TextBlock x:Name="TxtOtaProgressStatus" Text="Baixando atualização..." Foreground="#00E5FF" FontSize="12" FontWeight="SemiBold" Margin="0,0,0,6" HorizontalAlignment="Center"/>
+                                        <ProgressBar x:Name="OtaProgressBar" Height="8" Background="#151525" Foreground="#00E5FF" BorderThickness="0" Value="0" Maximum="100"/>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Telemetria Automática -->
+                        <Border Style="{StaticResource CardStyle}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel VerticalAlignment="Center" Margin="0,0,20,0">
+                                    <TextBlock Text="Telemetria Automática de Versão" Foreground="#FFFFFF" FontSize="15" FontWeight="Bold"/>
+                                    <TextBlock Text="Reporta periodicamente ao servidor a versão desta máquina para inventário no painel corporativo." Foreground="#85859E" FontSize="12" Margin="0,4,0,0" TextWrapping="Wrap"/>
+                                </StackPanel>
+                                <CheckBox Grid.Column="1" x:Name="ToggleTelemetry" Content="Ativo" Style="{StaticResource ToggleSwitchStyle}" IsChecked="True" Checked="ToggleTelemetry_Checked" Unchecked="ToggleTelemetry_Unchecked" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+
+            <!-- ========================================================================= -->
+            <!-- SUBMÓDULO 5: BACKUP & GESTÃO DE DADOS -->
+            <!-- ========================================================================= -->
+            <Border x:Name="PanelDados" Background="#151525" CornerRadius="12" Padding="20" BorderBrush="#23233A" BorderThickness="1" Visibility="Collapsed">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <TextBlock Text="Gestão &amp; Backup de Dados" Style="{StaticResource CategoryTitle}"/>
+                        <TextBlock Text="Proteja e restaure a base de dados SQLite, configurações e arquivos de pacotes em um arquivo .zip." Style="{StaticResource CategoryDesc}"/>
+
+                        <!-- Exportar Backup -->
+                        <Border Style="{StaticResource CardStyle}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel VerticalAlignment="Center" Margin="0,0,20,0">
+                                    <TextBlock Text="Exportar Pacote (Backup Completo)" Foreground="#4EDEA3" FontSize="15" FontWeight="Bold"/>
+                                    <TextBlock Text="Comprime todo o ambiente (inno_database.db, configurações e logs) em um único arquivo .zip." Foreground="#85859E" FontSize="12" Margin="0,4,0,0" TextWrapping="Wrap"/>
+                                </StackPanel>
+                                <Button Grid.Column="1" x:Name="BtnExportar" Content="⬇ Exportar" Background="#2A2A40" Foreground="#4EDEA3" BorderThickness="1" BorderBrush="#4EDEA3" Padding="18,8" Cursor="Hand" FontWeight="Bold" FontSize="13" Click="BtnExportar_Click" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- Importar Backup -->
+                        <Border Style="{StaticResource CardStyle}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel VerticalAlignment="Center" Margin="0,0,20,0">
+                                    <TextBlock Text="Importar Pacote de Backup (.zip)" Foreground="#D2BBFF" FontSize="15" FontWeight="Bold"/>
+                                    <TextBlock Text="Restaura a base de dados local a partir de um backup anterior." Foreground="#85859E" FontSize="12" Margin="0,4,0,0" TextWrapping="Wrap"/>
+                                </StackPanel>
+                                <Button Grid.Column="1" x:Name="BtnImportar" Content="⬆ Importar" Background="#513BA6" Foreground="#FFFFFF" BorderThickness="0" Padding="18,8" Cursor="Hand" FontWeight="Bold" FontSize="13" Click="BtnImportar_Click" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- Progresso -->
+                        <Border x:Name="PanelProgresso" Visibility="Collapsed" Background="#0A0A0F" CornerRadius="8" Padding="15" BorderThickness="1" BorderBrush="#513BA6">
+                            <StackPanel>
+                                <TextBlock x:Name="TxtStatusProgresso" Text="Processando backup..." Foreground="#4EDEA3" FontSize="12" FontWeight="SemiBold" Margin="0,0,0,8" HorizontalAlignment="Center"/>
+                                <ProgressBar x:Name="BarraProgresso" Height="8" Background="#151525" Foreground="#4EDEA3" BorderThickness="0" Value="0" Maximum="100"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+
+            <!-- ========================================================================= -->
+            <!-- SUBMÓDULO 6: TECNOLOGIAS & LICENÇAS -->
+            <!-- ========================================================================= -->
+            <Border x:Name="PanelBibliotecas" Background="#151525" CornerRadius="12" Padding="20" BorderBrush="#23233A" BorderThickness="1" Visibility="Collapsed">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <TextBlock Text="Tecnologias &amp; Bibliotecas Open-Source" Style="{StaticResource CategoryTitle}"/>
+                        <TextBlock Text="Componentes nativos e bibliotecas de alta performance integradas à Plataforma InnovTech." Style="{StaticResource CategoryDesc}"/>
+
+                        <Border Style="{StaticResource CardStyle}">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                    <Border Background="#1A1A2E" CornerRadius="6" Padding="8" Margin="0,0,12,0" BorderBrush="#8570E6" BorderThickness="1">
+                                        <TextBlock Text="📦" FontSize="18"/>
+                                    </Border>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="QRCoder (v1.8.0)" Foreground="#5EB1FF" FontSize="15" FontWeight="Bold"/>
+                                        <TextBlock Text="Framework Nativo C# (GDI+ / System.Drawing)" Foreground="#85859E" FontSize="11"/>
+                                    </StackPanel>
+                                </StackPanel>
+                                <TextBlock Text="Utilizado no módulo de Relatórios para geração das Etiquetas Térmicas Patrimoniais (6cm x 3cm) com QR Code em alta definição, processado 100% offline em memória RAM." Foreground="#E3E0F2" FontSize="12" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource CardStyle}">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                    <Border Background="#1A1A2E" CornerRadius="6" Padding="8" Margin="0,0,12,0" BorderBrush="#00F5D4" BorderThickness="1">
+                                        <TextBlock Text="⚡" FontSize="18"/>
+                                    </Border>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="MinGW-w64 GCC Compiler" Foreground="#00F5D4" FontSize="15" FontWeight="Bold"/>
+                                        <TextBlock Text="Compilação Nativa em C Puro (Win64 Fast-Track)" Foreground="#85859E" FontSize="11"/>
+                                    </StackPanel>
+                                </StackPanel>
+                                <TextBlock Text="Compilador C embarcado utilizado para compilar a InnoEngine.dll com zero dependências externas e execução em tempo real na bancada de automação." Foreground="#E3E0F2" FontSize="12" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
         </Grid>
     </Grid>
 </UserControl>

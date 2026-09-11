@@ -7,6 +7,7 @@ using System.Windows.Controls;
 using Microsoft.Win32;
 using System.Net.NetworkInformation;
 using System.Collections.ObjectModel;
+using InnovPlayUI.Core;
 
 namespace InnovPlayUI.Views
 {
@@ -26,28 +27,17 @@ namespace InnovPlayUI.Views
             try
             {
                 _isInitializingSettings = true;
-                string configPath = Path.Combine(InnovPlayUI.Core.PathHelper.GetRootDirectory(), "config", "settings.json");
-                if (File.Exists(configPath))
-                {
-                    string json = File.ReadAllText(configPath);
-                    if (json.Contains("\"motor_c_enabled\": false") || json.Contains("\"motor_c_enabled\":false"))
-                    {
-                        ToggleMotor.IsChecked = false;
-                    }
-                    else
-                    {
-                        ToggleMotor.IsChecked = true;
-                    }
+                SettingsManager.Load();
+                
+                ToggleMotor.IsChecked = SettingsManager.MotorCEnabled;
+                ToggleTethering.IsChecked = SettingsManager.ReverseTetheringEnabled;
+                ToggleShowDisconnected.IsChecked = SettingsManager.ShowDisconnectedDevices;
 
-                    if (json.Contains("\"reverse_tethering_enabled\": false") || json.Contains("\"reverse_tethering_enabled\":false"))
-                    {
-                        ToggleTethering.IsChecked = false;
-                    }
-                    else
-                    {
-                        ToggleTethering.IsChecked = true;
-                    }
-                }
+                ToggleDeviceVision7.IsChecked = SettingsManager.EnableDeviceVision7;
+                ToggleDeviceTabMulti.IsChecked = SettingsManager.EnableDeviceTabMulti;
+                ToggleDeviceNokiaT20.IsChecked = SettingsManager.EnableDeviceNokiaT20;
+
+                UpdateInterfaceSelectionUI(SettingsManager.UsbMonitorInterface);
             }
             catch (Exception ex)
             {
@@ -65,25 +55,15 @@ namespace InnovPlayUI.Views
 
             try
             {
-                string configPath = Path.Combine(InnovPlayUI.Core.PathHelper.GetRootDirectory(), "config", "settings.json");
-                string configDir = Path.GetDirectoryName(configPath) ?? "";
-                if (!Directory.Exists(configDir) && !string.IsNullOrEmpty(configDir))
-                {
-                    Directory.CreateDirectory(configDir);
-                }
+                SettingsManager.MotorCEnabled = ToggleMotor.IsChecked == true;
+                SettingsManager.ReverseTetheringEnabled = ToggleTethering.IsChecked == true;
+                SettingsManager.ShowDisconnectedDevices = ToggleShowDisconnected.IsChecked == true;
 
-                bool motorEnabled = ToggleMotor.IsChecked == true;
-                bool tetheringEnabled = ToggleTethering.IsChecked == true;
+                SettingsManager.EnableDeviceVision7 = ToggleDeviceVision7.IsChecked == true;
+                SettingsManager.EnableDeviceTabMulti = ToggleDeviceTabMulti.IsChecked == true;
+                SettingsManager.EnableDeviceNokiaT20 = ToggleDeviceNokiaT20.IsChecked == true;
 
-                string json = "{\n" +
-                              $"  \"font_ui_size\": 14,\n" +
-                              $"  \"font_title_size\": 20,\n" +
-                              $"  \"font_mono_size\": 13,\n" +
-                              $"  \"motor_c_enabled\": {(motorEnabled ? "true" : "false")},\n" +
-                              $"  \"reverse_tethering_enabled\": {(tetheringEnabled ? "true" : "false")}\n" +
-                              "}";
-
-                File.WriteAllText(configPath, json);
+                SettingsManager.Save();
             }
             catch (Exception ex)
             {
@@ -99,6 +79,54 @@ namespace InnovPlayUI.Views
                 items.Add(new SpeedScoreItem { Color = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#2A2A40")) });
             }
             SpeedScoreItems.ItemsSource = items;
+        }
+
+        private void UpdateInterfaceSelectionUI(string selectedInterface)
+        {
+            bool isPro = selectedInterface.Equals("Pro", StringComparison.OrdinalIgnoreCase);
+
+            if (isPro)
+            {
+                CardInterfacePro.Background = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#18182A"));
+                CardInterfacePro.BorderBrush = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#FF007F"));
+                CardInterfacePro.BorderThickness = new Thickness(2);
+                BadgeProActive.Visibility = Visibility.Visible;
+
+                CardInterfaceClassic.Background = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#0E0E18"));
+                CardInterfaceClassic.BorderBrush = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#23233A"));
+                CardInterfaceClassic.BorderThickness = new Thickness(1);
+                BadgeClassicActive.Visibility = Visibility.Collapsed;
+
+                TxtInterfaceActiveIndicator.Text = "Modo Atual: ⚡ Monitor Pro";
+                TxtInterfaceActiveIndicator.Foreground = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#FF007F"));
+            }
+            else
+            {
+                CardInterfaceClassic.Background = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#18182A"));
+                CardInterfaceClassic.BorderBrush = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#00E5FF"));
+                CardInterfaceClassic.BorderThickness = new Thickness(2);
+                BadgeClassicActive.Visibility = Visibility.Visible;
+
+                CardInterfacePro.Background = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#0E0E18"));
+                CardInterfacePro.BorderBrush = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#23233A"));
+                CardInterfacePro.BorderThickness = new Thickness(1);
+                BadgeProActive.Visibility = Visibility.Collapsed;
+
+                TxtInterfaceActiveIndicator.Text = "Modo Atual: 📟 Clássico";
+                TxtInterfaceActiveIndicator.Foreground = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#00E5FF"));
+            }
+        }
+
+        private void CardInterfaceClassic_Click(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            SettingsManager.UsbMonitorInterface = "Classic";
+            UpdateInterfaceSelectionUI("Classic");
+        }
+
+        private void CardInterfacePro_Click(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            SettingsManager.UsbMonitorInterface = "Pro";
+            UpdateInterfaceSelectionUI("Pro");
         }
 
         private void BtnSubGeral_Click(object sender, RoutedEventArgs e)
@@ -119,11 +147,6 @@ namespace InnovPlayUI.Views
         private InnovPlayUI.Core.OtaUpdateManager _otaManager = new InnovPlayUI.Core.OtaUpdateManager();
         private InnovPlayUI.Core.OtaManifest? _availableManifest = null;
 
-        private void BtnSubLogs_Click(object sender, RoutedEventArgs e)
-        {
-            SwitchSubmodule(BtnSubLogs, PanelLogs);
-        }
-
         private void BtnSubOta_Click(object sender, RoutedEventArgs e)
         {
             SwitchSubmodule(BtnSubOta, PanelOta);
@@ -141,10 +164,10 @@ namespace InnovPlayUI.Views
             SwitchSubmodule(BtnSubBibliotecas, PanelBibliotecas);
         }
 
-        private void SwitchSubmodule(System.Windows.Controls.Button activeButton, System.Windows.Controls.StackPanel activePanel)
+        private void SwitchSubmodule(System.Windows.Controls.Button activeButton, FrameworkElement activePanel)
         {
             var brushNormal = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#A1A1AA"));
-            var bgNormal = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Colors.Transparent);
+            var bgNormal = System.Windows.Media.Brushes.Transparent;
             var brushActive = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#4EDEA3"));
             var bgActive = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#2A2A40"));
 
@@ -155,8 +178,6 @@ namespace InnovPlayUI.Views
             BtnSubRede.Background = bgNormal;
             BtnSubAparelhos.Foreground = brushNormal;
             BtnSubAparelhos.Background = bgNormal;
-            BtnSubLogs.Foreground = brushNormal;
-            BtnSubLogs.Background = bgNormal;
             BtnSubOta.Foreground = brushNormal;
             BtnSubOta.Background = bgNormal;
             BtnSubDados.Foreground = brushNormal;
@@ -172,7 +193,6 @@ namespace InnovPlayUI.Views
             PanelGeral.Visibility = Visibility.Collapsed;
             PanelRede.Visibility = Visibility.Collapsed;
             PanelAparelhos.Visibility = Visibility.Collapsed;
-            PanelLogs.Visibility = Visibility.Collapsed;
             PanelOta.Visibility = Visibility.Collapsed;
             PanelDados.Visibility = Visibility.Collapsed;
             PanelBibliotecas.Visibility = Visibility.Collapsed;
@@ -197,6 +217,21 @@ namespace InnovPlayUI.Views
         }
 
         private void ToggleTethering_Unchecked(object sender, RoutedEventArgs e)
+        {
+            SaveSettings();
+        }
+
+        private void ToggleShowDisconnected_Checked(object sender, RoutedEventArgs e)
+        {
+            SaveSettings();
+        }
+
+        private void ToggleShowDisconnected_Unchecked(object sender, RoutedEventArgs e)
+        {
+            SaveSettings();
+        }
+
+        private void ToggleDevice_Changed(object sender, RoutedEventArgs e)
         {
             SaveSettings();
         }

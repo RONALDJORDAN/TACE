@@ -436,7 +436,7 @@ static int f7_selecionar_municipio_m7(const char *serial, const char *municipio,
   // Versão ASCII sem acentos como fallback para busca no Android (ex: Pao de Acucar)
   char ascii_municipio[256] = {0};
   int a_idx = 0;
-  for (const char *p = utf8_municipio; *p && a_idx < sizeof(ascii_municipio) - 1; ) {
+  for (const char *p = utf8_municipio; *p && (size_t)a_idx < sizeof(ascii_municipio) - 1; ) {
     int skip = 0;
     char norm = f7_normalize_char((unsigned char)*p, (unsigned char)*(p + 1), &skip);
     ascii_municipio[a_idx++] = norm;
@@ -650,7 +650,7 @@ static int f7_check_password_field_filled(const char *xml, const char *senha) {
                     int count_content = 0;
                     for (int i = 0; i < tlen; i++) {
                         unsigned char c = (unsigned char)tstart[i];
-                        if (c == '*' || c == '.' || c == 0x2022 || c == 0x2023) {
+                        if (c == '*' || c == '.' || c == 0x95) {
                             count_content++;
                         } else if (c == 0xE2 && i + 2 < tlen) {
                             count_content++;
@@ -1311,7 +1311,6 @@ int M7_ExecutarPipeline(const char *serial, const char *apk_path, const char *pa
       goto final_step_error;
   }
 
-final_step:
   if (cb) cb("[-] Desligando tunelamento Gnirehtet...");
   M7_StopGnirehtet(serial, cb);
 

@@ -12,13 +12,35 @@ namespace InnovPlayUI
         private InnoLearnView _learnView;
         private AboutView _aboutView;
 
+        [System.Runtime.InteropServices.DllImport("InnoEngine.dll", CallingConvention = System.Runtime.InteropServices.CallingConvention.Cdecl)]
+        public static extern int Engine_GetDeviceCount();
+
+        private System.Windows.Threading.DispatcherTimer? _headerTelemetryTimer;
+
         public MainWindow()
         {
             InitializeComponent();
             
             string versionStr = InnovPlayUI.Core.OtaUpdateManager.CurrentVersion;
             Title = $"Inno RPA (Plataforma InnovTech) - v{versionStr}";
-            TxtHeaderVersion.Text = $"v{versionStr}";
+            TxtHeaderVersion.Text = versionStr;
+
+            // Timer para telemetria contínua de dispositivos conectados no cabeçalho
+            _headerTelemetryTimer = new System.Windows.Threading.DispatcherTimer();
+            _headerTelemetryTimer.Interval = TimeSpan.FromSeconds(2.5);
+            _headerTelemetryTimer.Tick += (s, e) =>
+            {
+                try
+                {
+                    int count = Engine_GetDeviceCount();
+                    if (TxtHeaderDeviceCount != null)
+                    {
+                        TxtHeaderDeviceCount.Text = $"{count} {(count == 1 ? "DISPOSITIVO" : "DISPOSITIVOS")}";
+                    }
+                }
+                catch { }
+            };
+            _headerTelemetryTimer.Start();
 
             // Instanciar views uma única vez
             _monitorView = new MonitorView();
@@ -28,8 +50,28 @@ namespace InnovPlayUI
             _learnView = new InnoLearnView();
             _aboutView = new AboutView();
             
-            // Abre o Monitor USB como página inicial padrão
-            NavigateToMonitor();
+            // Atualiza a visibilidade da barra de navegação para exibir apenas a interface de monitor escolhida
+            UpdateMonitorNavigationVisibility();
+
+            // Abre a interface do Monitor USB configurada como página inicial padrão
+            NavigateToDefaultMonitor();
+
+            // Escuta mudanças de configuração em tempo de execução
+            InnovPlayUI.Core.SettingsManager.OnSettingsChanged += () =>
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    UpdateMonitorNavigationVisibility();
+                    if (MainContent.Content is MonitorView && InnovPlayUI.Core.SettingsManager.UsbMonitorInterface.Equals("Pro", StringComparison.OrdinalIgnoreCase))
+                    {
+                        NavigateToMonitorPro();
+                    }
+                    else if (MainContent.Content is MonitorProView && !InnovPlayUI.Core.SettingsManager.UsbMonitorInterface.Equals("Pro", StringComparison.OrdinalIgnoreCase))
+                    {
+                        NavigateToMonitor();
+                    }
+                });
+            };
 
             Loaded += MainWindow_Loaded;
         }
@@ -57,6 +99,34 @@ namespace InnovPlayUI
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"[Startup OTA Check Error] {ex.Message}");
+            }
+        }
+
+        public void UpdateMonitorNavigationVisibility()
+        {
+            bool isPro = InnovPlayUI.Core.SettingsManager.UsbMonitorInterface.Equals("Pro", StringComparison.OrdinalIgnoreCase);
+            if (isPro)
+            {
+                BtnMenuMonitor.Visibility = Visibility.Collapsed;
+                BtnMenuMonitorPro.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                BtnMenuMonitor.Visibility = Visibility.Visible;
+                BtnMenuMonitorPro.Visibility = Visibility.Collapsed;
+            }
+        }
+
+        public void NavigateToDefaultMonitor()
+        {
+            UpdateMonitorNavigationVisibility();
+            if (InnovPlayUI.Core.SettingsManager.UsbMonitorInterface.Equals("Pro", StringComparison.OrdinalIgnoreCase))
+            {
+                NavigateToMonitorPro();
+            }
+            else
+            {
+                NavigateToMonitor();
             }
         }
 
@@ -167,8 +237,57 @@ namespace InnovPlayUI
             _monitorProView?.LoadMunicipios();
         }
 
+        // =========================================================================
+        // MODO TELA CHEIA (FULLSCREEN F11)
+        // =========================================================================
+        private bool _isFullScreen = false;
+        private WindowStyle _previousWindowStyle = WindowStyle.SingleBorderWindow;
+        private WindowState _previousWindowState = WindowState.Maximized;
+        private ResizeMode _previousResizeMode = ResizeMode.CanResize;
+
+        public void ToggleFullScreen()
+        {
+            if (!_isFullScreen)
+            {
+                // Entra em modo Fullscreen completo
+                _previousWindowStyle = this.WindowStyle;
+                _previousWindowState = this.WindowState;
+                _previousResizeMode = this.ResizeMode;
+
+                this.WindowStyle = WindowStyle.None;
+                this.ResizeMode = ResizeMode.NoResize;
+                this.WindowState = WindowState.Normal;
+                this.WindowState = WindowState.Maximized;
+                _isFullScreen = true;
+
+                if (BtnToggleFullScreen != null) BtnToggleFullScreen.Content = "🗗 Restaurar";
+            }
+            else
+            {
+                // Restaura o modo janela padrão
+                this.WindowStyle = _previousWindowStyle;
+                this.ResizeMode = _previousResizeMode;
+                this.WindowState = _previousWindowState;
+                _isFullScreen = false;
+
+                if (BtnToggleFullScreen != null) BtnToggleFullScreen.Content = "⛶ F11";
+            }
+        }
+
+        private void BtnToggleFullScreen_Click(object sender, RoutedEventArgs e)
+        {
+            ToggleFullScreen();
+        }
+
         private void Window_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
+            if (e.Key == System.Windows.Input.Key.F11)
+            {
+                ToggleFullScreen();
+                e.Handled = true;
+                return;
+            }
+
             if (MainContent.Content is MonitorView monitor)
             {
                 if (e.Key == System.Windows.Input.Key.F1)

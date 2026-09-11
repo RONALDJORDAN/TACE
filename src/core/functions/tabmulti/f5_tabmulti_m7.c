@@ -15,6 +15,7 @@ int M7_ExecutarPipelineF5(const char *serial, const char *apk_path,
                           const char *pacote_path, const char *wp_path,
                           const char *login, const char *senha,
                           const char *municipio, LogCallback cb) {
+  (void)wp_path;
   if (!serial)
     return PIPELINE_ERROR;
 

@@ -6,7 +6,6 @@
 #include <stdio.h>
 #include <string.h>
 
-
 // --- Helper: Escapa strings para uso seguro no adb shell input text ---
 static void escape_adb_text(const char *src, char *dest) {
   while (*src) {
@@ -57,29 +56,45 @@ static DWORD WINAPI V7_GnirehtetProgressBarThread(LPVOID lpParam) {
   return 0;
 }
 
-// ==========================================
-// MÃƒÂ³dulo: [F1] SincronizaÃƒÂ§ÃƒÂ£o + Pipeline Completo do F1
-// Aparelho Alvo: Positivo Tab Vision 7
-// ==========================================
+// =============================================================================
+//  MÓDULO F1: SINCRONIZAÇÃO E PIPELINE COMPLETO DE PREPARAÇÃO
+//  Dispositivo Alvo: Positivo Tab Vision 7 (AllWinner / Android 14)
+//  Arquitetura: Motor C Nativo (Inno RPA Engine)
+//  Isolamento Estrito: src/core/functions/vision7/ (Regra de Ouro #1)
+// =============================================================================
 
-// --- Etapa 1: PreparaÃƒÂ§ÃƒÂ£o do Sistema (Wake & Unlock) ---
+// =============================================================================
+//  [ETAPA 1] PREPARAÇÃO DO SISTEMA, SMART WAKEUP E TRAVA DE ORIENTAÇÃO
+// =============================================================================
+//  O que esta etapa faz:
+//  1. Smart Wakeup: Consulta o subsistema de energia (`dumpsys power`) para
+//     verificar se a tela está em estado de suspensão (Dozing / Asleep).
+//     Se desligada, envia o KEYCODE_POWER (26) para acender a tela fisicamente.
+//  2. Desbloqueio: Emite um swipe de baixo para cima (300,1000 -> 300,300) para
+//     destravar o Keyguard do Android.
+//  3. Trava de Orientação e Timeout: Desativa rotação automática pelo
+//  acelerômetro,
+//     trava a orientação fixa em Portrait (Vertical - 0 graus) e define o tempo
+//     limite de tela desligada (screen_off_timeout) para 5 minutos (300000ms),
+//     evitando que o display apague durante as etapas subsequentes.
+// =============================================================================
 int V7_Etapa1(const char *serial, LogCallback cb) {
   if (cb)
     cb("[F1 - Etapa 1] Acordando o dispositivo e desbloqueando a tela...");
 
   char args[256];
 
-  // 1. Verificar se a tela estÃƒÂ¡ apagada (Smart Wakeup)
+  // 1. Verificar se a tela está apagada (Smart Wakeup)
   snprintf(args, sizeof(args),
            "-s %s shell \"dumpsys power | grep mWakefulness=\"", serial);
   char *wake_status = adb_exec(args);
 
   if (wake_status) {
-    // Se a string "mWakefulness=Awake" NÃƒÆ’O estiver presente, a tela estÃƒÂ¡
+    // Se a string "mWakefulness=Awake" NÃO estiver presente, a tela está
     // apagada (Dozing, Asleep, etc)
     if (strstr(wake_status, "mWakefulness=Awake") == NULL) {
       if (cb)
-        cb("[-] Tela desligada detectada (Dozing/Asleep). Pressionando botÃƒÂ£o "
+        cb("[-] Tela desligada detectada (Dozing/Asleep). Pressionando botão "
            "Power virtual...");
       snprintf(args, sizeof(args), "-s %s shell input keyevent 26",
                serial); // KEYCODE_POWER
@@ -90,69 +105,187 @@ int V7_Etapa1(const char *serial, LogCallback cb) {
       Sleep(800); // Aguarda a tela acender fisicamente
     } else {
       if (cb)
-        cb("[-] A tela jÃƒÂ¡ estava acesa. Ignorando botÃƒÂ£o Power.");
+        cb("[-] A tela já estava acesa. Ignorando botão Power.");
     }
     free(wake_status);
   }
 
-  // 2. Simular deslize para desbloquear
+  // 2. Simular deslize vertical para desbloquear o Keyguard
   snprintf(args, sizeof(args), "-s %s shell input swipe 300 1000 300 300 300",
            serial);
   char *out = adb_exec(args);
   if (out)
     free(out);
 
-  // 3. Garantir orientação vertical (Portrait), desativar rotação automática e definir tempo limite para 5 minutos
+  // 3. Garantir orientação vertical (Portrait), desativar rotação automática e
+  // definir timeout de 5 min
   if (cb)
-    cb("[-] Trava de tela na vertical (Portrait) e desativacao de rotacao automatica...");
+    cb("[-] Trava de tela na vertical (Portrait) e desativacao de rotacao "
+       "automatica...");
   snprintf(args, sizeof(args),
            "-s %s shell \"settings put system accelerometer_rotation 0 && "
            "settings put system user_rotation 0 && wm user-rotation lock 0 && "
-           "settings put system screen_off_timeout 300000\"", serial);
+           "settings put system screen_off_timeout 300000\"",
+           serial);
   char *out_timeout = adb_exec(args);
   if (out_timeout)
     free(out_timeout);
 
-
   if (cb)
-    cb("[-] Tela desbloqueada com sucesso.");
+    cb("[-] Tela desbloqueada e configurada com sucesso.");
   return PIPELINE_SUCCESS;
 }
 
-static const char *V7_CAMERA_PACKAGES[] = {
-    "com.softwinner.camera2",
-    "com.android.camera2",
-    "com.android.camera",
-    "com.sec.android.app.camera",
-    "com.motorola.camera2",
-    "com.motorola.camera3",
-    "com.google.android.GoogleCamera",
-    "com.huawei.camera",
-    "com.mediatek.camera"
-};
-static const int V7_NUM_CAMERA_PACKAGES = sizeof(V7_CAMERA_PACKAGES) / sizeof(V7_CAMERA_PACKAGES[0]);
+static const char *V7_DEBLOAT_PACKAGES[] = {
+    // 1. Câmeras
+    "com.softwinner.camera2", "com.android.camera2", "com.android.camera",
+    "com.sec.android.app.camera", "com.motorola.camera2",
+    "com.motorola.camera3", "com.google.android.GoogleCamera",
+    "com.huawei.camera", "com.mediatek.camera",
 
-// --- Etapa 1.5: Suspensao da Camera via ADB ---
+    // 2. Calculadora
+    "com.google.android.calculator", "com.android.calculator2",
+
+    // 3. Google Chrome
+    "com.android.chrome", "com.chrome.beta", "com.chrome.dev",
+    "com.chrome.canary",
+
+    // 4. Contatos
+    "com.google.android.contacts", "com.android.contacts",
+
+    // 5. Google Drive e Editores
+    "com.google.android.apps.docs", "com.google.android.apps.docs.editors.docs",
+    "com.google.android.apps.docs.editors.sheets",
+    "com.google.android.apps.docs.editors.slides",
+
+    // 6. Emergência / Safety Hub
+    "com.google.android.apps.safetyhub", "com.android.emergency",
+
+    // 7. Files by Google / Files Go (Preserva DocumentsUI para o seletor SAF)
+    "com.google.android.apps.nbu.files", "com.google.android.apps.nbu.filesgo",
+
+    // 8. Galeria Google Go / Fotos / Galeria AOSP
+    "com.google.android.apps.photosgo", "com.google.android.apps.photos",
+    "com.android.gallery3d", "com.android.gallery",
+
+    // 9. Google TV / Play Filmes
+    "com.google.android.videos", "com.google.android.tv",
+
+    // 10. Gravador de Som / Google Recorder
+    "com.google.android.apps.recorder", "com.android.soundrecorder",
+    "com.softwinner.soundrecorder",
+
+    // 11. Google Maps / Maps Go
+    "com.google.android.apps.maps", "com.google.android.apps.mapslite",
+
+    // 12. Google Meet / Duo
+    "com.google.android.apps.tachyon", "com.google.android.apps.meetings",
+
+    // 13. Google Play Store
+    "com.android.vending",
+
+    // 14. Relógio / DeskClock
+    "com.google.android.deskclock", "com.android.deskclock",
+
+    // 15. YouTube / YouTube Kids
+    "com.google.android.youtube", "com.google.android.youtube.tv",
+    "com.google.android.apps.youtube.kids",
+
+    // 16. YouTube Music
+    "com.google.android.apps.youtube.music",
+
+    // 17. Google Search / Gmail (Bloatware Google)
+    "com.google.android.googlequicksearchbox",
+    "com.google.android.apps.searchlite", "com.google.android.gm",
+    "com.google.android.gm.lite",
+
+    // 18. Google Assistente / Assistant Go
+    "com.google.android.apps.assistant",
+    "com.google.android.apps.googleassistant",
+    "com.android.hotwordenrollment.okgoogle",
+    "com.android.hotwordenrollment.xgoogle",
+
+    // 19. Google Agenda / Calendar / Calendar Go
+    "com.google.android.calendar", "com.android.calendar",
+    "com.google.android.syncadapters.calendar"};
+static const int V7_NUM_DEBLOAT_PACKAGES =
+    sizeof(V7_DEBLOAT_PACKAGES) / sizeof(V7_DEBLOAT_PACKAGES[0]);
+
+// =============================================================================
+//  [ETAPA 1.5] DEBLOAT: DESATIVAÇÃO, SUSPENSÃO E REMOÇÃO DE APPS GOOGLE /
+//  BLOATWARES
+// =============================================================================
+//  O que esta etapa faz:
+//  1. Processamento em Lote (Batched): Agrupa 6 comandos por requisição ADB
+//  shell
+//     para maximizar a velocidade de execução via USB.
+//  2. Blindagem e Desativação: Para cada um dos pacotes da lista
+//     (Câmeras, Calculadora, Chrome, Contatos, Drive, Google TV, Maps, Meet,
+//     Play Store, Relógio, YouTube, Assistente, Agenda, etc.), executa três níveis de isolamento:
+//     - `pm disable-user --user 0 <pkg>` (desativa para o usuário atual)
+//     - `pm suspend <pkg>` (suspende execução de background)
+//     - `pm uninstall -k --user 0 <pkg>` (remove o binário do espaço de
+//     usuário)
+//  3. Preservação Crítica: Preserva intencionalmente o seletor nativo do
+//  sistema
+//     DocumentsUI (Storage Access Framework) para permitir a importação do ZIP.
+// =============================================================================
 int V7_Etapa1_5(const char *serial, LogCallback cb) {
   if (cb)
-    cb("[F1 - Etapa 1.5] Suspendendo pacotes de Câmera via ADB...");
+    cb("[F1 - Etapa 1.5] Desativando e removendo pacotes (Google, Agenda, "
+       "Assistente, Calculadora, Chrome, Contatos, Drive, Emergência, Files, "
+       "Galeria, TV, Gravador, Maps, Meet, Play Store, Relógio, YouTube, "
+       "Câmeras)...");
 
-  char args[512];
+  char cmd_batch[4096];
+  int count_in_batch = 0;
+  int offset = snprintf(cmd_batch, sizeof(cmd_batch), "-s %s shell \"", serial);
+  if (offset < 0 || offset >= (int)sizeof(cmd_batch))
+    return PIPELINE_ERROR;
 
-  // Suspendendo a Câmera via ADB usando o loop pm suspend
-  for (int i = 0; i < V7_NUM_CAMERA_PACKAGES; i++) {
-    snprintf(args, sizeof(args), "-s %s shell pm suspend %s", serial, V7_CAMERA_PACKAGES[i]);
-    char *out_cam = adb_exec(args);
-    if (out_cam) free(out_cam);
+  for (int i = 0; i < V7_NUM_DEBLOAT_PACKAGES; i++) {
+    const char *pkg = V7_DEBLOAT_PACKAGES[i];
+    offset += snprintf(cmd_batch + offset, sizeof(cmd_batch) - offset,
+                       "pm disable-user --user 0 %s 2>/dev/null; pm suspend %s "
+                       "2>/dev/null; pm uninstall -k --user 0 %s 2>/dev/null; ",
+                       pkg, pkg, pkg);
+    count_in_batch++;
+
+    if (count_in_batch >= 6 || i == V7_NUM_DEBLOAT_PACKAGES - 1) {
+      if (offset < (int)sizeof(cmd_batch) - 2) {
+        cmd_batch[offset++] = '\"';
+        cmd_batch[offset] = '\0';
+      }
+      char *out_dis = adb_exec(cmd_batch);
+      if (out_dis)
+        free(out_dis);
+
+      // Reset para o próximo lote
+      offset = snprintf(cmd_batch, sizeof(cmd_batch), "-s %s shell \"", serial);
+      count_in_batch = 0;
+    }
   }
 
   if (cb)
-    cb("[+] Suspensão da Câmera via ADB concluída com sucesso!");
+    cb("[+] Desativação e remoção dos pacotes concluída com sucesso!");
   // ..: DevMark: Antigravity IDE :..
   return PIPELINE_SUCCESS;
 }
 
-// --- Etapa 1.6: Limpeza do Armazenamento e CÃƒÂ³pia ---
+// =============================================================================
+//  [ETAPA 1.6] PURGA DO ARMAZENAMENTO INTERNO E UPLOAD DE ARQUIVOS (APK + ZIP)
+// =============================================================================
+//  O que esta etapa faz:
+//  1. Limpeza Seletiva: Apaga todos os arquivos e pastas da raiz do `/sdcard/`,
+//     preservando rigorosamente as pastas do sistema `Android` e `Pictures`
+//     (necessária para receber o wallpaper municipal customizado).
+//  2. Criação da Estrutura de Pastas: Cria os diretórios de destino da
+//  aplicação:
+//     `/sdcard/innovava`, `/sdcard/InnovAva` e `/sdcard/avaliacoes/`.
+//  3. Upload Seguro (ADB Push): Transmite o APK instalador e o Pacote ZIP de
+//     avaliações para as três pastas estruturadas, garantindo compatibilidade
+//     total com diferentes versões de compilação da aplicação Android.
+// =============================================================================
 int V7_Etapa1_6(const char *serial, const char *apk_path,
                 const char *pacote_path, LogCallback cb) {
   if (cb)
@@ -163,7 +296,8 @@ int V7_Etapa1_6(const char *serial, const char *apk_path,
 
   // 1. Limpeza preservando 'Android' e 'Pictures' (necessaria para wallpaper)
   snprintf(args, sizeof(args),
-           "-s %s shell \"cd /sdcard && ls | grep -vwE 'Android|Pictures|innovava|InnovAva|avaliacoes' | "
+           "-s %s shell \"cd /sdcard && ls | grep -vwE "
+           "'Android|Pictures|innovava|InnovAva|avaliacoes' | "
            "xargs rm -rf\"",
            serial);
   char *out_limpeza = adb_exec(args);
@@ -178,7 +312,10 @@ int V7_Etapa1_6(const char *serial, const char *apk_path,
     free(out_mkpic);
 
   // 2. Criar as pastas innovava, InnovAva e avaliacoes
-  snprintf(args, sizeof(args), "-s %s shell \"mkdir -p /sdcard/innovava /sdcard/InnovAva /sdcard/avaliacoes && rm -rf /sdcard/innovava/* /sdcard/InnovAva/* /sdcard/avaliacoes/*\"",
+  snprintf(args, sizeof(args),
+           "-s %s shell \"mkdir -p /sdcard/innovava /sdcard/InnovAva "
+           "/sdcard/avaliacoes && rm -rf /sdcard/innovava/* /sdcard/InnovAva/* "
+           "/sdcard/avaliacoes/*\"",
            serial);
   char *out_mkdir = adb_exec(args);
   if (out_mkdir)
@@ -191,17 +328,23 @@ int V7_Etapa1_6(const char *serial, const char *apk_path,
     adb_get_safe_path(apk_path, safe_apk, MAX_PATH);
     if (cb)
       cb("  -> Transmitindo APK para /sdcard/innovava/ ...");
-    snprintf(args, sizeof(args), "-s %s push \"%s\" /sdcard/innovava/", serial, safe_apk);
+    snprintf(args, sizeof(args), "-s %s push \"%s\" /sdcard/innovava/", serial,
+             safe_apk);
     char *out_push1 = adb_exec(args);
-    if (out_push1) free(out_push1);
+    if (out_push1)
+      free(out_push1);
 
-    snprintf(args, sizeof(args), "-s %s push \"%s\" /sdcard/InnovAva/", serial, safe_apk);
+    snprintf(args, sizeof(args), "-s %s push \"%s\" /sdcard/InnovAva/", serial,
+             safe_apk);
     out_push1 = adb_exec(args);
-    if (out_push1) free(out_push1);
+    if (out_push1)
+      free(out_push1);
 
-    snprintf(args, sizeof(args), "-s %s push \"%s\" /sdcard/avaliacoes/", serial, safe_apk);
+    snprintf(args, sizeof(args), "-s %s push \"%s\" /sdcard/avaliacoes/",
+             serial, safe_apk);
     out_push1 = adb_exec(args);
-    if (out_push1) free(out_push1);
+    if (out_push1)
+      free(out_push1);
   }
 
   // 4. Fazer o PUSH do Pacote ZIP
@@ -209,26 +352,51 @@ int V7_Etapa1_6(const char *serial, const char *apk_path,
     adb_get_safe_path(pacote_path, safe_pacote, MAX_PATH);
     if (cb)
       cb("  -> Transmitindo PACOTE ZIP para /sdcard/innovava/ ...");
-    snprintf(args, sizeof(args), "-s %s push \"%s\" /sdcard/innovava/", serial, safe_pacote);
+    snprintf(args, sizeof(args), "-s %s push \"%s\" /sdcard/innovava/", serial,
+             safe_pacote);
     char *out_push2 = adb_exec(args);
-    if (out_push2) free(out_push2);
+    if (out_push2)
+      free(out_push2);
 
-    snprintf(args, sizeof(args), "-s %s push \"%s\" /sdcard/InnovAva/", serial, safe_pacote);
+    snprintf(args, sizeof(args), "-s %s push \"%s\" /sdcard/InnovAva/", serial,
+             safe_pacote);
     out_push2 = adb_exec(args);
-    if (out_push2) free(out_push2);
+    if (out_push2)
+      free(out_push2);
 
-    snprintf(args, sizeof(args), "-s %s push \"%s\" /sdcard/avaliacoes/", serial, safe_pacote);
+    snprintf(args, sizeof(args), "-s %s push \"%s\" /sdcard/avaliacoes/",
+             serial, safe_pacote);
     out_push2 = adb_exec(args);
-    if (out_push2) free(out_push2);
+    if (out_push2)
+      free(out_push2);
   }
 
   if (cb)
-    cb("[+] Armazenamento do Positivo Vision 7 (pasta /sdcard/innovava) preparado com sucesso!");
+    cb("[+] Armazenamento do Positivo Vision 7 (pasta /sdcard/innovava) "
+       "preparado com sucesso!");
 
   return PIPELINE_SUCCESS;
 }
 
-// --- Etapa 2: Instalação Silenciosa do APK ---
+// =============================================================================
+//  [ETAPA 2] INSTALAÇÃO SILENCIOSA DO APLICATIVO PRINCIPAL (APK)
+// =============================================================================
+//  O que esta etapa faz:
+//  1. Validação Prévia: Checa se o pacote alvo já está instalado no sistema
+//     via `pm list packages`. Se encontrado, executa a desinstalação prévia
+//     limpa (`adb uninstall`) para evitar conflitos de cache ou assinaturas.
+//  2. Estratégia de Instalação de Alta Velocidade (Push + PM Install):
+//     Transmite o APK para o armazenamento temporário
+//     `/data/local/tmp/app_install.apk` e dispara o instalador de pacotes local
+//     `pm install --user 0`. Esta abordagem elimina os erros de stream timeout
+//     comuns em cabos USB longos.
+//  3. Fallback: Se o `pm install` falhar, aciona `adb install --user 0` direto.
+//  4. Otimização de Performance e Background: Concede permissão
+//  `RUN_IN_BACKGROUND`
+//     via AppOps e insere o pacote na lista branca do Doze Mode do Android
+//     (`dumpsys deviceidle whitelist +<pkg>`), garantindo que o app não seja
+//     morto.
+// =============================================================================
 int V7_Etapa2(const char *serial, const char *apk_path,
               const char *package_name, LogCallback cb) {
   if (cb)
@@ -279,15 +447,23 @@ int V7_Etapa2(const char *serial, const char *apk_path,
 
   int install_success = 0;
 
-  // Metodo primario: push + pm install via shell (evita Failure [null] do streamed install)
+  // Metodo primario: push + pm install via shell (evita Failure [null] do
+  // streamed install)
   if (cb)
-    cb("[-] Enviando APK ao dispositivo via push e instalando via pm install...");
+    cb("[-] Enviando APK ao dispositivo via push e instalando via pm "
+       "install...");
 
-  snprintf(args, sizeof(args), "-s %s push \"%s\" /data/local/tmp/app_install.apk", serial, safe_apk);
+  snprintf(args, sizeof(args),
+           "-s %s push \"%s\" /data/local/tmp/app_install.apk", serial,
+           safe_apk);
   char *out_push = adb_exec(args);
-  if (out_push) free(out_push);
+  if (out_push)
+    free(out_push);
 
-  snprintf(args, sizeof(args), "-s %s shell \"pm install --user 0 /data/local/tmp/app_install.apk && rm -f /data/local/tmp/app_install.apk\"", serial);
+  snprintf(args, sizeof(args),
+           "-s %s shell \"pm install --user 0 /data/local/tmp/app_install.apk "
+           "&& rm -f /data/local/tmp/app_install.apk\"",
+           serial);
 
 #undef adb_exec
   char *out = adb_exec(args);
@@ -297,23 +473,30 @@ int V7_Etapa2(const char *serial, const char *apk_path,
     install_success = 1;
   }
 
-  // Fallback: adb install direto sem -r (instalacao limpa caso pm install falhe)
+  // Fallback: adb install direto sem -r (instalacao limpa caso pm install
+  // falhe)
   if (!install_success) {
     if (cb)
       cb("[-] pm install falhou. Tentando via adb install direto...");
-    if (out) { free(out); out = NULL; }
+    // Libera saída do pm install antes do fallback
+    if (out) {
+      free(out);
+      out = NULL;
+    }
 
-    snprintf(args, sizeof(args), "-s %s install --user 0 \"%s\"", serial, safe_apk);
+    snprintf(args, sizeof(args), "-s %s install --user 0 \"%s\"", serial,
+             safe_apk);
     char *out2 = adb_exec(args);
     if (out2) {
       if (strstr(out2, "Success")) {
         install_success = 1;
+        free(out2);
+        out2 = NULL;
       } else {
-        if (out) free(out);
+        // Guarda mensagem de erro para exibição posterior
         out = out2;
         out2 = NULL;
       }
-      if (out2) free(out2);
     }
   }
 
@@ -321,17 +504,25 @@ int V7_Etapa2(const char *serial, const char *apk_path,
     if (cb)
       cb("[-] APK instalado com sucesso!");
 
-    if (cb) cb("[-] Removendo restricoes de background para o InnovAva...");
+    if (cb)
+      cb("[-] Removendo restricoes de background para o InnovAva...");
     char args_bypass[1024];
-    snprintf(args_bypass, sizeof(args_bypass), "-s %s shell appops set %s RUN_IN_BACKGROUND allow", serial, package_name);
+    snprintf(args_bypass, sizeof(args_bypass),
+             "-s %s shell appops set %s RUN_IN_BACKGROUND allow", serial,
+             package_name);
     char *out_bp = adb_exec(args_bypass);
-    if (out_bp) free(out_bp);
+    if (out_bp)
+      free(out_bp);
 
-    snprintf(args_bypass, sizeof(args_bypass), "-s %s shell dumpsys deviceidle whitelist +%s", serial, package_name);
+    snprintf(args_bypass, sizeof(args_bypass),
+             "-s %s shell dumpsys deviceidle whitelist +%s", serial,
+             package_name);
     out_bp = adb_exec(args_bypass);
-    if (out_bp) free(out_bp);
+    if (out_bp)
+      free(out_bp);
 
-    if (out) free(out);
+    if (out)
+      free(out);
     return PIPELINE_SUCCESS;
   } else {
     if (cb) {
@@ -345,16 +536,36 @@ int V7_Etapa2(const char *serial, const char *apk_path,
         snprintf(err_msg, sizeof(err_msg),
                  "[ERROR] Falha na instalacao. Retorno ADB: %s", out);
       } else {
-        snprintf(err_msg, sizeof(err_msg), "[ERROR] Falha na instalacao do APK.");
+        snprintf(err_msg, sizeof(err_msg),
+                 "[ERROR] Falha na instalacao do APK.");
       }
       cb(err_msg);
     }
-    if (out) free(out);
+    if (out)
+      free(out);
     return PIPELINE_ERROR;
   }
 }
 
-// --- Etapa 2.5: Estabelecimento de ConexÃƒÂ£o (Reverse Tethering) ---
+// =============================================================================
+//  [ETAPA 2.5] ESTABELECIMENTO DE CONEXÃO REVERSE TETHERING (GNIREHTET USB)
+// =============================================================================
+//  O que esta etapa faz:
+//  1. Verificação e Instalação da APK Gnirehtet: Checa se o cliente de VPN
+//     `com.genymobile.gnirehtet` está presente. Se ausente ou desatualizado,
+//     instala com permissão global (`-g`).
+//  2. Bypass de Permissão VPN via AppOps: Concede silenciosamente a autorização
+//     `ACTIVATE_VPN` e `RUN_IN_BACKGROUND` sem disparar diálogos visuais na
+//     tela.
+//  3. Whitelist e Desativação do AWBMS: Adiciona o serviço à lista branca do
+//     Doze Mode e desativa o gerenciador de background proprietário AllWinner
+//     (`settings put global awbms_enabled 0`).
+//  4. Inicialização do Servidor Relay e Túnel: Mata instâncias residuais na
+//  porta
+//     31416, sobe o executável nativo `gnirehtet relay` no Windows e ativa o
+//     túnel no tablet (`gnirehtet start <serial>`), fornecendo acesso à
+//     internet do PC através do cabo USB de forma 100% cabeada.
+// =============================================================================
 int V7_Etapa2_5(const char *serial, LogCallback cb) {
   if (cb)
     cb("[F1 - Etapa 2.5] Inicializando Reverse Tethering (Gnirehtet)...");
@@ -369,11 +580,11 @@ int V7_Etapa2_5(const char *serial, LogCallback cb) {
   char gnirehtet_apk[MAX_PATH];
   char gnirehtet_dir[MAX_PATH];
 
-  // Tenta achar no diretÃƒÂ³rio Release
+  // Tenta achar no diretório Release
   snprintf(gnirehtet_dir, sizeof(gnirehtet_dir), "%s\\tools\\reverse_tethering",
            exe_path);
   if (GetFileAttributesA(gnirehtet_dir) == INVALID_FILE_ATTRIBUTES) {
-    // Se nÃƒÂ£o achou, fallback para diretÃƒÂ³rio de Dev
+    // Se não achou, fallback para diretório de Dev
     snprintf(gnirehtet_dir, sizeof(gnirehtet_dir),
              "%s\\..\\..\\tools\\reverse_tethering", exe_path);
   }
@@ -458,29 +669,37 @@ int V7_Etapa2_5(const char *serial, LogCallback cb) {
 
   if (cb)
     cb("  -> Removendo restricoes de bateria e background do Gnirehtet...");
-  
+
   // Permite rodar em background irrestrito
-  snprintf(args_op, sizeof(args_op),
-           "-s %s shell appops set com.genymobile.gnirehtet RUN_IN_BACKGROUND allow", serial);
+  snprintf(
+      args_op, sizeof(args_op),
+      "-s %s shell appops set com.genymobile.gnirehtet RUN_IN_BACKGROUND allow",
+      serial);
   out_op = adb_exec(args_op);
-  if (out_op) free(out_op);
+  if (out_op)
+    free(out_op);
 
   // Coloca na whitelist de otimizacao de bateria (Ignorar Doze Mode)
   snprintf(args_op, sizeof(args_op),
-           "-s %s shell dumpsys deviceidle whitelist +com.genymobile.gnirehtet", serial);
+           "-s %s shell dumpsys deviceidle whitelist +com.genymobile.gnirehtet",
+           serial);
   out_op = adb_exec(args_op);
-  if (out_op) free(out_op);
+  if (out_op)
+    free(out_op);
 
-  if (cb) cb("  -> Desativando AWBMS (AllWinner Background Manager) via Settings...");
+  if (cb)
+    cb("  -> Desativando AWBMS (AllWinner Background Manager) via Settings...");
   snprintf(args_op, sizeof(args_op),
            "-s %s shell settings put global awbms_enabled 0", serial);
   out_op = adb_exec(args_op);
-  if (out_op) free(out_op);
+  if (out_op)
+    free(out_op);
 
   snprintf(args_op, sizeof(args_op),
            "-s %s shell settings put global awbms_disable 1", serial);
   out_op = adb_exec(args_op);
-  if (out_op) free(out_op);
+  if (out_op)
+    free(out_op);
 
   // Matar relays antigos para evitar conflito de porta 31416
   if (cb)
@@ -555,7 +774,17 @@ int V7_Etapa2_5(const char *serial, LogCallback cb) {
   return PIPELINE_SUCCESS;
 }
 
-// --- Etapa 3: LiberaÃƒÂ§ÃƒÂ£o de PermissÃƒÂµes e Abertura ---
+// =============================================================================
+//  [ETAPA 3] LIBERAÇÃO DE PERMISSÕES DE RUNTIME E ABERTURA DO APLICATIVO
+// =============================================================================
+//  O que esta etapa faz:
+//  1. Concessão em Lote: Executa `pm grant` silenciosamente para as permissões
+//     essenciais da aplicação (Câmera, Leitura/Escrita de Armazenamento e
+//     Localização Fina/Grosseira).
+//  2. Inicialização em Primeiro Plano (Monkey Launch): Utiliza o utilitário
+//     `monkey -p <pkg> -c android.intent.category.LAUNCHER 1` para disparar a
+//     Activity inicial diretamente, contornando restrições de inicialização.
+// =============================================================================
 int V7_Etapa3(const char *serial, const char *package_name, LogCallback cb) {
   if (cb)
     cb("[F1 - Etapa 3] Liberando permissoes e abrindo aplicativo...");
@@ -575,9 +804,11 @@ int V7_Etapa3(const char *serial, const char *package_name, LogCallback cb) {
            "pm grant %s android.permission.WRITE_EXTERNAL_STORAGE && "
            "pm grant %s android.permission.ACCESS_FINE_LOCATION && "
            "pm grant %s android.permission.ACCESS_COARSE_LOCATION\"",
-           serial, package_name, package_name, package_name, package_name, package_name);
+           serial, package_name, package_name, package_name, package_name,
+           package_name);
   char *out = adb_exec(args);
-  if (out) free(out);
+  if (out)
+    free(out);
 
   if (cb)
     cb("[-] Permissoes vitais concedidas silenciosamente em lote.");
@@ -607,12 +838,11 @@ int get_centroid_from_xml(const char *xml, const char *search_str, int *out_cx,
   return adb_get_centroid_fuzzy(xml, search_str, out_cx, out_cy, skip_count);
 }
 
-
-
 // --- Helper: Extrai centroide da ULTIMA ocorrencia de uma tag XML ---
 static int get_last_centroid_from_xml(const char *xml, const char *search_str,
                                       int *out_cx, int *out_cy) {
-  if (!xml || !search_str) return 0;
+  if (!xml || !search_str)
+    return 0;
   char *p = (char *)xml;
   int found = 0;
   while ((p = strstr(p, search_str)) != NULL) {
@@ -621,8 +851,10 @@ static int get_last_centroid_from_xml(const char *xml, const char *search_str,
       int x1, y1, x2, y2;
       if (sscanf(b_start, "bounds=\"[%d,%d][%d,%d]\"", &x1, &y1, &x2, &y2) ==
           4) {
-        if (out_cx) *out_cx = (x1 + x2) / 2;
-        if (out_cy) *out_cy = (y1 + y2) / 2;
+        if (out_cx)
+          *out_cx = (x1 + x2) / 2;
+        if (out_cy)
+          *out_cy = (y1 + y2) / 2;
         found = 1;
       }
     }
@@ -654,17 +886,20 @@ char *dump_and_read_xml(const char *serial, LogCallback cb) {
 
   // Caminho absoluto para o arquivo de dump local isolado por serial
   char local_xml[MAX_PATH];
-  snprintf(local_xml, sizeof(local_xml), "%s\\window_dump_%s.xml", exe_dir, serial);
+  snprintf(local_xml, sizeof(local_xml), "%s\\window_dump_%s.xml", exe_dir,
+           serial);
 
   char adb_args[512];
   snprintf(adb_args, sizeof(adb_args),
-           "-s %s shell uiautomator dump /sdcard/window_dump_%s.xml", serial, serial);
+           "-s %s shell uiautomator dump /sdcard/window_dump_%s.xml", serial,
+           serial);
   char *dump_out = adb_exec(adb_args);
   if (dump_out)
     free(dump_out);
 
   snprintf(adb_args, sizeof(adb_args),
-           "-s %s pull /sdcard/window_dump_%s.xml \"%s\"", serial, serial, local_xml);
+           "-s %s pull /sdcard/window_dump_%s.xml \"%s\"", serial, serial,
+           local_xml);
   char *pull_out = adb_exec(adb_args);
   if (pull_out)
     free(pull_out);
@@ -690,6 +925,7 @@ char *dump_and_read_xml(const char *serial, LogCallback cb) {
 }
 
 static void stop_gnirehtet_nosleep(const char *serial, LogCallback cb) {
+  (void)cb; // Funcao silenciosa: nao emite logs, apenas encerra o processo
   char cmd_stop[1024];
   char exe_path2[MAX_PATH];
   GetModuleFileNameA(NULL, exe_path2, MAX_PATH);
@@ -778,7 +1014,34 @@ static int ensure_device_internet(const char *serial, LogCallback cb) {
   return 0;
 }
 
-// --- Etapa 4: Login AutomÃƒÂ¡tico (Screen Reading via UIAutomator) ---
+// =============================================================================
+//  [ETAPA 4] AUTENTICAÇÃO E LOGIN AUTOMÁTICO (INNOLEARN / SCAN DUAL EM TEMPO
+//  REAL)
+// =============================================================================
+//  O que esta etapa faz:
+//  1. Validação de Lockscreen: Envia evento KEYCODE_MENU (82) e swipe de
+//  segurança
+//     para garantir que a tela de bloqueio não cubra o aplicativo.
+//  2. Seleção Inteligente de Município: Utiliza o InnoLearn para localizar a
+//  gaveta/spinner
+//     de municípios no layout XML. Se o município já estiver selecionado, pula
+//     a etapa; caso contrário, abre a gaveta, localiza o nome do município (com
+//     tratamento UTF-8) e clica nas coordenadas centróides exatas.
+//  3. Injeção de E-mail com Foto Dinâmica: Faz o dump XML fresco da tela,
+//  localiza
+//     o campo de texto de login/e-mail, clica, injeta o texto com escape seguro
+//     de caracteres e fecha o teclado virtual do Android (IME) para desobstruir
+//     a visão.
+//  4. Injeção de Senha: Tira uma nova "foto" (dump XML) da tela, localiza o
+//  campo
+//     de senha via InnoLearn, toca, digita a senha mascarada e esconde o
+//     teclado.
+//  5. Validação Prévia e Clique em Entrar: Verifica se o município correto
+//  permanece
+//     selecionado na tela antes do clique. Localiza o botão 'Entrar' e aciona o
+//     clique centróide, autenticando a aplicação com o backend via túnel
+//     Gnirehtet.
+// =============================================================================
 int V7_Etapa4(const char *serial, const char *login, const char *senha,
               const char *municipio, LogCallback cb) {
   if (cb)
@@ -817,8 +1080,14 @@ int V7_Etapa4(const char *serial, const char *login, const char *senha,
   char *xml1 = dump_and_read_xml(serial, cb);
 
   if (xml1) {
-    // DUMP DEBUG para que possamos analisar a Ã¡rvore se falhar
-    FILE *debug_f = fopen("logs/window_dump_debug.xml", "w");
+    // DUMP DEBUG para que possamos analisar a arvore se falhar
+    // Usa caminho absoluto para garantir que a pasta logs/ seja encontrada
+    char exe_dir_dbg[MAX_PATH];
+    get_exe_dir(exe_dir_dbg, MAX_PATH);
+    char dbg_xml_path[MAX_PATH];
+    snprintf(dbg_xml_path, sizeof(dbg_xml_path),
+             "%s\\logs\\window_dump_debug.xml", exe_dir_dbg);
+    FILE *debug_f = fopen(dbg_xml_path, "w");
     if (debug_f) {
       fwrite(xml1, 1, strlen(xml1), debug_f);
       fclose(debug_f);
@@ -840,15 +1109,18 @@ int V7_Etapa4(const char *serial, const char *login, const char *senha,
       mlen--;
     }
 
-    // Converte o nome do municipio para UTF-8 de forma segura (C# envia UTF-8 via LPUTF8Str)
+    // Converte o nome do municipio para UTF-8 de forma segura (C# envia UTF-8
+    // via LPUTF8Str)
     char utf8_municipio[256];
     WCHAR w_municipio[128];
-    if (MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, safe_municipio, -1, w_municipio, 128) != 0) {
+    if (MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, safe_municipio, -1,
+                            w_municipio, 128) != 0) {
       strncpy(utf8_municipio, safe_municipio, sizeof(utf8_municipio) - 1);
       utf8_municipio[sizeof(utf8_municipio) - 1] = '\0';
     } else {
       MultiByteToWideChar(CP_ACP, 0, safe_municipio, -1, w_municipio, 128);
-      WideCharToMultiByte(CP_UTF8, 0, w_municipio, -1, utf8_municipio, 256, NULL, NULL);
+      WideCharToMultiByte(CP_UTF8, 0, w_municipio, -1, utf8_municipio, 256,
+                          NULL, NULL);
     }
 
     // Procura primeiro se o municÃ­pio alvo JÃ  estÃ¡ selecionado na tela
@@ -946,8 +1218,8 @@ int V7_Etapa4(const char *serial, const char *login, const char *senha,
             learn_find_element("v7_campo_email", xml_email, 0, cb);
         if (res_email.found) {
           learn_record_hit("v7_campo_email", res_email.winning_strategy);
-          learn_save_fallback_coord("v7_campo_email", res_email.cx, res_email.cy,
-                                    1);
+          learn_save_fallback_coord("v7_campo_email", res_email.cx,
+                                    res_email.cy, 1);
           cx = res_email.cx;
           cy = res_email.cy;
           if (cb)
@@ -1001,7 +1273,9 @@ int V7_Etapa4(const char *serial, const char *login, const char *senha,
     if (t2)
       free(t2);
     Sleep(500);
-    snprintf(args_local, sizeof(args_local), "-s %s shell \"dumpsys input_method | grep mInputShown=true && input keyevent 4 || input keyevent 111\"",
+    snprintf(args_local, sizeof(args_local),
+             "-s %s shell \"dumpsys input_method | grep mInputShown=true && "
+             "input keyevent 4 || input keyevent 111\"",
              serial);
     char *tk1 = adb_exec(args_local);
     if (tk1)
@@ -1032,8 +1306,8 @@ int V7_Etapa4(const char *serial, const char *login, const char *senha,
             learn_find_element("v7_campo_senha", xml_senha, 0, cb);
         if (res_senha.found) {
           learn_record_hit("v7_campo_senha", res_senha.winning_strategy);
-          learn_save_fallback_coord("v7_campo_senha", res_senha.cx, res_senha.cy,
-                                    1);
+          learn_save_fallback_coord("v7_campo_senha", res_senha.cx,
+                                    res_senha.cy, 1);
           cx = res_senha.cx;
           cy = res_senha.cy;
           if (cb)
@@ -1087,7 +1361,9 @@ int V7_Etapa4(const char *serial, const char *login, const char *senha,
     if (t4)
       free(t4);
     Sleep(500);
-    snprintf(args_local, sizeof(args_local), "-s %s shell \"dumpsys input_method | grep mInputShown=true && input keyevent 4 || input keyevent 111\"",
+    snprintf(args_local, sizeof(args_local),
+             "-s %s shell \"dumpsys input_method | grep mInputShown=true && "
+             "input keyevent 4 || input keyevent 111\"",
              serial);
     char *tk2 = adb_exec(args_local);
     if (tk2)
@@ -1114,34 +1390,53 @@ int V7_Etapa4(const char *serial, const char *login, const char *senha,
           fclose(dbg);
         }
 
-        // === VALIDAÇÃO PRÉVIA VIA XML: Confirma se o município alvo está visível no seletor ===
+        // === VALIDAÇÃO PRÉVIA VIA XML: Confirma se o município alvo está
+        // visível no seletor ===
         if (municipio && strlen(municipio) > 0) {
           if (get_centroid_from_xml_fuzzy(xml_btn, municipio, NULL, NULL, 0)) {
             if (cb) {
               char log_msg[256];
-              snprintf(log_msg, sizeof(log_msg), "  -> [Validação XML V7] OK: Município '%s' confirmado no seletor!", municipio);
+              snprintf(log_msg, sizeof(log_msg),
+                       "  -> [Validação XML V7] OK: Município '%s' confirmado "
+                       "no seletor!",
+                       municipio);
               cb(log_msg);
             }
           } else {
             if (cb) {
               char log_msg[256];
-              snprintf(log_msg, sizeof(log_msg), "[WARNING] [Validação XML V7] Município '%s' NÃO detectado no seletor! Re-executando seleção...", municipio);
+              snprintf(log_msg, sizeof(log_msg),
+                       "[WARNING] [Validação XML V7] Município '%s' NÃO "
+                       "detectado no seletor! Re-executando seleção...",
+                       municipio);
               cb(log_msg);
             }
-            LearnFindResult res_retry = learn_find_element("v7_spinner_municipio", xml_btn, 0, cb);
+            LearnFindResult res_retry =
+                learn_find_element("v7_spinner_municipio", xml_btn, 0, cb);
             if (res_retry.found) {
-              snprintf(args_local, sizeof(args_local), "-s %s shell input tap %d %d", serial, res_retry.cx, res_retry.cy);
-              char *tr1 = adb_exec(args_local); if (tr1) free(tr1);
+              snprintf(args_local, sizeof(args_local),
+                       "-s %s shell input tap %d %d", serial, res_retry.cx,
+                       res_retry.cy);
+              char *tr1 = adb_exec(args_local);
+              if (tr1)
+                free(tr1);
               Sleep(1500);
               char *xml_m_retry = dump_and_read_xml(serial, cb);
               if (xml_m_retry) {
                 int mcx = 0, mcy = 0;
-                if (get_centroid_from_xml_fuzzy(xml_m_retry, municipio, &mcx, &mcy, 0)) {
-                  snprintf(args_local, sizeof(args_local), "-s %s shell input tap %d %d", serial, mcx, mcy);
-                  char *tr2 = adb_exec(args_local); if (tr2) free(tr2);
+                if (get_centroid_from_xml_fuzzy(xml_m_retry, municipio, &mcx,
+                                                &mcy, 0)) {
+                  snprintf(args_local, sizeof(args_local),
+                           "-s %s shell input tap %d %d", serial, mcx, mcy);
+                  char *tr2 = adb_exec(args_local);
+                  if (tr2)
+                    free(tr2);
                   if (cb) {
                     char log_msg[256];
-                    snprintf(log_msg, sizeof(log_msg), "[+] [Validação XML V7] Município '%s' re-selecionado com sucesso!", municipio);
+                    snprintf(log_msg, sizeof(log_msg),
+                             "[+] [Validação XML V7] Município '%s' "
+                             "re-selecionado com sucesso!",
+                             municipio);
                     cb(log_msg);
                   }
                 }
@@ -1157,10 +1452,10 @@ int V7_Etapa4(const char *serial, const char *login, const char *senha,
         LearnFindResult res_btn =
             learn_find_element("v7_botao_entrar", xml_btn, 0, cb);
 
-
         if (res_btn.found) {
           learn_record_hit("v7_botao_entrar", res_btn.winning_strategy);
-          learn_save_fallback_coord("v7_botao_entrar", res_btn.cx, res_btn.cy, 1);
+          learn_save_fallback_coord("v7_botao_entrar", res_btn.cx, res_btn.cy,
+                                    1);
           cx = res_btn.cx;
           cy = res_btn.cy;
           if (cb)
@@ -1174,7 +1469,8 @@ int V7_Etapa4(const char *serial, const char *login, const char *senha,
             LearnTarget *t_btn = learn_db_find_target("v7_botao_entrar");
             if (t_btn) {
               for (int _mi = 0; _mi < t_btn->strategy_count; _mi++) {
-                learn_record_miss("v7_botao_entrar", t_btn->strategies[_mi].query);
+                learn_record_miss("v7_botao_entrar",
+                                  t_btn->strategies[_mi].query);
               }
             }
           } else {
@@ -1210,7 +1506,8 @@ int V7_Etapa4(const char *serial, const char *login, const char *senha,
   char exe_dir_clean[MAX_PATH];
   get_exe_dir(exe_dir_clean, MAX_PATH);
   char local_xml_clean[MAX_PATH];
-  snprintf(local_xml_clean, sizeof(local_xml_clean), "%s\\window_dump_%s.xml", exe_dir_clean, serial);
+  snprintf(local_xml_clean, sizeof(local_xml_clean), "%s\\window_dump_%s.xml",
+           exe_dir_clean, serial);
   remove(local_xml_clean);
   snprintf(args, sizeof(args), "-s %s shell rm /sdcard/window_dump_%s.xml",
            serial, serial);
@@ -1223,10 +1520,25 @@ int V7_Etapa4(const char *serial, const char *login, const char *senha,
   return PIPELINE_SUCCESS;
 }
 
-// --- Etapa 5: Importacao do ZIP (Abertura do Menu Lateral) ---
+// =============================================================================
+//  [ETAPA 5] NAVEGAÇÃO PARA IMPORTAÇÃO DO PACOTE AVALIATIVO (MENU LATERAL)
+// =============================================================================
+//  O que esta etapa faz:
+//  1. Re-Wakeup de Segurança: Garante tela acesa e desbloqueada.
+//  2. Abertura do Drawer de Navegação: Executa um swipe da borda esquerda para
+//     a direita (0,500 -> 500,500) para expandir o menu lateral do InnovAva.
+//  3. Detecção e Clique em 'Importar ZIP': Captura o XML de tela via dump em
+//  RAM,
+//     identifica as coordenadas centróides do texto 'Importar ZIP' e efetua o
+//     toque.
+//  4. Desativação de Redes: Imediatamente ao carregar a tela de importação,
+//  desliga
+//     o túnel Gnirehtet e a interface Wi-Fi para isolamento completo.
+// =============================================================================
 int V7_Etapa5(const char *serial, LogCallback cb) {
   if (cb)
-    cb("[F1 - Etapa 5] Garantindo tela acesa/desbloqueada e abrindo menu lateral...");
+    cb("[F1 - Etapa 5] Garantindo tela acesa/desbloqueada e abrindo menu "
+       "lateral...");
 
   // 0. Garantir desbloqueio de tela
   V7_Etapa1(serial, cb);
@@ -1237,9 +1549,11 @@ int V7_Etapa5(const char *serial, LogCallback cb) {
 
   if (cb)
     cb("[-] Abrindo menu lateral (Swipe da esquerda para direita)...");
-  snprintf(args, sizeof(args), "-s %s shell input swipe 0 500 500 500 300", serial);
+  snprintf(args, sizeof(args), "-s %s shell input swipe 0 500 500 500 300",
+           serial);
   char *swp = adb_exec(args);
-  if (swp) free(swp);
+  if (swp)
+    free(swp);
   Sleep(2000); // Aguarda a animacao do menu lateral
 
   if (cb)
@@ -1253,22 +1567,27 @@ int V7_Etapa5(const char *serial, LogCallback cb) {
         get_centroid_from_xml(xml_menu, "IMPORTAR", &cx, &cy, 0)) {
       if (cb)
         cb("[-] Opcao 'Importar ZIP' localizada com precisao. Clicando...");
-      snprintf(args, sizeof(args), "-s %s shell input tap %d %d", serial, cx, cy);
+      snprintf(args, sizeof(args), "-s %s shell input tap %d %d", serial, cx,
+               cy);
       char *tp = adb_exec(args);
-      if (tp) free(tp);
+      if (tp)
+        free(tp);
       Sleep(1500);
 
       // Desligar Gnirehtet e Wi-Fi imediatamente ao chegar em Importar ZIP
       if (cb)
-        cb("[-] Tela de importacao aberta. Desligando tunel Gnirehtet e Wi-Fi imediatamente...");
+        cb("[-] Tela de importacao aberta. Desligando tunel Gnirehtet e Wi-Fi "
+           "imediatamente...");
       stop_gnirehtet_nosleep(serial, cb);
       snprintf(args, sizeof(args), "-s %s shell svc wifi disable", serial);
       char *out_w = adb_exec(args);
-      if (out_w) free(out_w);
+      if (out_w)
+        free(out_w);
 
     } else {
       if (cb)
-        cb("[WARNING] Opcao 'Importar ZIP' nao encontrada diretamente no menu lateral.");
+        cb("[WARNING] Opcao 'Importar ZIP' nao encontrada diretamente no menu "
+           "lateral.");
     }
     free(xml_menu);
   }
@@ -1276,10 +1595,26 @@ int V7_Etapa5(const char *serial, LogCallback cb) {
   return PIPELINE_SUCCESS;
 }
 
-// --- Etapa 6: Selecao do Arquivo ZIP (Botao Procurar Arquivo) ---
+// =============================================================================
+//  [ETAPA 6] SELEÇÃO DO PACOTE ZIP NO SELETOR DE ARQUIVOS (DOCUMENTSUI / SAF)
+// =============================================================================
+//  O que esta etapa faz:
+//  1. Acionamento do Seletor: Localiza o botão 'PROCURAR ARQUIVO .ZIP' na UI
+//     e clica para abrir o gerenciador nativo de arquivos do Android.
+//  2. Otimização Fast-Path: Verifica se o pacote `.zip` já está imediatamente
+//     visível na pasta atual. Se encontrado, seleciona sem necessidade de
+//     navegação.
+//  3. Navegação Hierárquica no Storage Access Framework:
+//     - Realiza swipe lateral para abrir a árvore de unidades do DocumentsUI.
+//     - Clica na unidade de Armazenamento Interno ('T307G' / 'Armazenamento
+//     interno').
+//     - Localiza e entra na pasta `avaliacoes`.
+//     - Clica no arquivo `.zip` da prova com cálculo de coordenadas centróides.
+// =============================================================================
 int V7_Etapa6(const char *serial, LogCallback cb) {
   if (cb)
-    cb("[F1 - Etapa 6] Garantindo desbloqueio e buscando o botao 'Procurar arquivo'...");
+    cb("[F1 - Etapa 6] Garantindo desbloqueio e buscando o botao 'Procurar "
+       "arquivo'...");
 
   // 0. Garantir desbloqueio de tela antes da selecao de arquivo
   V7_Etapa1(serial, cb);
@@ -1288,12 +1623,14 @@ int V7_Etapa6(const char *serial, LogCallback cb) {
   int cx = 0, cy = 0;
   int btn_found = 0;
 
-  // 1. Clicar no botão 'Procurar arquivo .zip' com busca precisa (sem clique cego em Exportar)
+  // 1. Clicar no botão 'Procurar arquivo .zip' com busca precisa (sem clique
+  // cego em Exportar)
   Sleep(2000); // Aguarda tela de importaçao
   for (int retry = 0; retry < 3; retry++) {
     char *xml_import = dump_and_read_xml(serial, cb);
     if (xml_import) {
-      if (get_centroid_from_xml(xml_import, "PROCURAR ARQUIVO ZIP", &cx, &cy, 0) ||
+      if (get_centroid_from_xml(xml_import, "PROCURAR ARQUIVO ZIP", &cx, &cy,
+                                0) ||
           get_centroid_from_xml(xml_import, "PROCURAR ARQUIVO", &cx, &cy, 0) ||
           get_centroid_from_xml(xml_import, "Procurar arquivo", &cx, &cy, 0) ||
           get_centroid_from_xml(xml_import, "Procurar", &cx, &cy, 0) ||
@@ -1301,9 +1638,11 @@ int V7_Etapa6(const char *serial, LogCallback cb) {
 
         if (cb)
           cb("[-] Botao 'Procurar arquivo' localizado. Clicando...");
-        snprintf(args, sizeof(args), "-s %s shell input tap %d %d", serial, cx, cy);
+        snprintf(args, sizeof(args), "-s %s shell input tap %d %d", serial, cx,
+                 cy);
         char *t1 = adb_exec(args);
-        if (t1) free(t1);
+        if (t1)
+          free(t1);
         btn_found = 1;
         free(xml_import);
         break;
@@ -1315,7 +1654,8 @@ int V7_Etapa6(const char *serial, LogCallback cb) {
 
   if (!btn_found) {
     if (cb)
-      cb("[WARNING] Botao 'Procurar arquivo' nao detectado no XML. Re-acendendo tela...");
+      cb("[WARNING] Botao 'Procurar arquivo' nao detectado no XML. "
+         "Re-acendendo tela...");
     V7_Etapa1(serial, cb);
   }
 
@@ -1323,8 +1663,7 @@ int V7_Etapa6(const char *serial, LogCallback cb) {
 
   // [FAST-PATH RESTAURADO E MELHORADO A PEDIDO]
   // O sistema verifica primeiro se ja esta na pasta avaliacoes e o arquivo zip
-  // esta visivel. Se nao estiver, ele faz o swipe e busca o armazenamento
-  // interno.
+  // esta visivel.
   if (cb)
     cb("[-] Verificando se o pacote ZIP ja esta visivel na tela...");
   char *xml_fast = dump_and_read_xml(serial, cb);
@@ -1357,7 +1696,7 @@ int V7_Etapa6(const char *serial, LogCallback cb) {
     return PIPELINE_SUCCESS;
   }
 
-  // Se o Fast-Path falhar (esta em Recentes ou outra pasta), forÃ§a menu lateral
+  // Se o Fast-Path falhar (esta em Recentes ou outra pasta), forca menu lateral
   // via Swipe
   if (cb)
     cb("[-] Pacote nao detectado na tela atual. Abrindo menu lateral "
@@ -1473,44 +1812,68 @@ int V7_Etapa6(const char *serial, LogCallback cb) {
   return PIPELINE_SUCCESS;
 }
 
-// --- Etapa 7a: Aguardar importacao e Fechar todos os apps ---
-static bool F1_Etapa7_CloseApps(const char *serial, const char *package_name,
-                                LogCallback cb) {
+// =============================================================================
+//  [ETAPA 7a] MONITORAMENTO DA IMPORTAÇÃO E FECHAMENTO FORÇADO DE APLICATIVOS
+// =============================================================================
+//  O que esta etapa faz:
+//  1. Tempo Mínimo de Descompressão: Aguarda 5 segundos para que a rotina
+//  interna
+//     do InnovAva descompacte as avaliações no SQLite local.
+//  2. Monitoramento de Reaparecimento: Varre o XML da tela a cada segundo até
+//  detectar
+//     o reaparecimento do botão 'PROCURAR ARQUIVO .ZIP', confirmando que a
+//     extração terminou.
+//  3. Encerramento de Segurança: Envia eventos Back (x3) e Home, executando em
+//  seguida
+//     `am force-stop` na aplicação principal e no DocumentsUI, finalizando com
+//     `am kill-all`.
+// =============================================================================
+int F1_Etapa7_CloseApps(const char *serial, const char *package_name,
+                        LogCallback cb) {
   if (cb)
-    cb("[F1 - Etapa 7] Pacote selecionado. Aguardando 5 segundos para inicio do processamento de importacao...");
-  
-  Sleep(5000); // 5 segundos obrigatorios solicitados pelo usuario para descompacatar/processar
+    cb("[F1 - Etapa 7] Pacote selecionado. Aguardando 5 segundos para inicio "
+       "do processamento de importacao...");
+
+  Sleep(5000); // 5 segundos obrigatorios solicitados pelo usuario para
+               // descompactar/processar
 
   if (cb)
-    cb("[-] Monitorando o reaparecimento do botao 'PROCURAR ARQUIVO .ZIP' (confirmacao de importacao)...");
-  
+    cb("[-] Monitorando o reaparecimento do botao 'PROCURAR ARQUIVO .ZIP' "
+       "(confirmacao de importacao)...");
+
   int import_sucesso = 0;
   int max_import_checks = 25; // 25 checagens de ~1s (~25s max no total)
   for (int i = 0; i < max_import_checks; i++) {
-      char *xml_check = dump_and_read_xml(serial, NULL);
-      if (xml_check) {
-          int ix = 0, iy = 0;
-          if (get_centroid_from_xml(xml_check, "PROCURAR ARQUIVO .ZIP", &ix, &iy, 0) ||
-              get_centroid_from_xml(xml_check, "PROCURAR ARQUIVO ZIP", &ix, &iy, 0) ||
-              get_centroid_from_xml(xml_check, "Procurar Arquivo", &ix, &iy, 0) ||
-              get_centroid_from_xml(xml_check, "PROCURAR ARQUIVO", &ix, &iy, 0) ||
-              get_centroid_from_xml(xml_check, "ARQUIVO .ZIP", &ix, &iy, 0) ||
-              get_centroid_from_xml(xml_check, "arquivo zip", &ix, &iy, 0) ||
-              get_centroid_from_xml(xml_check, "Procurar", &ix, &iy, 0) ||
-              get_centroid_from_xml(xml_check, "PROCURAR", &ix, &iy, 0)) {
-              import_sucesso = 1;
-              free(xml_check);
-              break;
-          }
-          free(xml_check);
+    char *xml_check = dump_and_read_xml(serial, NULL);
+    if (xml_check) {
+      int ix = 0, iy = 0;
+      if (get_centroid_from_xml(xml_check, "PROCURAR ARQUIVO .ZIP", &ix, &iy,
+                                0) ||
+          get_centroid_from_xml(xml_check, "PROCURAR ARQUIVO ZIP", &ix, &iy,
+                                0) ||
+          get_centroid_from_xml(xml_check, "Procurar Arquivo", &ix, &iy, 0) ||
+          get_centroid_from_xml(xml_check, "PROCURAR ARQUIVO", &ix, &iy, 0) ||
+          get_centroid_from_xml(xml_check, "ARQUIVO .ZIP", &ix, &iy, 0) ||
+          get_centroid_from_xml(xml_check, "arquivo zip", &ix, &iy, 0) ||
+          get_centroid_from_xml(xml_check, "Procurar", &ix, &iy, 0) ||
+          get_centroid_from_xml(xml_check, "PROCURAR", &ix, &iy, 0)) {
+        import_sucesso = 1;
+        free(xml_check);
+        break;
       }
-      Sleep(1000);
+      free(xml_check);
+    }
+    Sleep(1000);
   }
 
   if (import_sucesso) {
-      if (cb) cb("[+] Botao 'PROCURAR ARQUIVO .ZIP' reapareceu! Importacao do ZIP concluida com sucesso!");
+    if (cb)
+      cb("[+] Botao 'PROCURAR ARQUIVO .ZIP' reapareceu! Importacao do ZIP "
+         "concluida com sucesso!");
   } else {
-      if (cb) cb("[WARNING] Tempo limite excedido aguardando o botao 'PROCURAR ARQUIVO .ZIP'. Prosseguindo assim mesmo...");
+    if (cb)
+      cb("[WARNING] Tempo limite excedido aguardando o botao 'PROCURAR ARQUIVO "
+         ".ZIP'. Prosseguindo assim mesmo...");
   }
 
   if (cb)
@@ -1532,14 +1895,14 @@ static bool F1_Etapa7_CloseApps(const char *serial, const char *package_name,
   if (home_out)
     free(home_out);
 
-  // ForÃƒÂ§a a parada do aplicativo principal
+  // Força a parada do aplicativo principal
   snprintf(cmd, sizeof(cmd), "-s %s shell am force-stop %s", serial,
            package_name);
   char *stop_app = adb_exec(cmd);
   if (stop_app)
     free(stop_app);
 
-  // ForÃƒÂ§a a parada do gerenciador de arquivos (Google e AOSP)
+  // Força a parada do gerenciador de arquivos (Google e AOSP)
   snprintf(cmd, sizeof(cmd),
            "-s %s shell am force-stop com.google.android.documentsui", serial);
   char *stop_docs = adb_exec(cmd);
@@ -1552,7 +1915,7 @@ static bool F1_Etapa7_CloseApps(const char *serial, const char *package_name,
   if (stop_docs2)
     free(stop_docs2);
 
-  // Killa apps em background
+  // Finaliza apps em background
   snprintf(cmd, sizeof(cmd), "-s %s shell am kill-all", serial);
   char *kill_all = adb_exec(cmd);
   if (kill_all)
@@ -1563,7 +1926,21 @@ static bool F1_Etapa7_CloseApps(const char *serial, const char *package_name,
   return PIPELINE_SUCCESS;
 }
 
-// --- Etapa 7b: Limpeza completa, Modo Escuro e Desligamento ---
+// =============================================================================
+//  [ETAPA 7b] LIMPEZA DA TELA DE RECENTES, PARADA FORÇADA E SHUTDOWN FÍSICO
+// =============================================================================
+//  O que esta etapa faz:
+//  1. Limpeza Visual de Recentes: Abre a lista de multitarefas
+//  (`KEYCODE_APP_SWITCH` 187),
+//     desliza os cartões para a direita e clica em 'Limpar tudo' / 'Clear all'
+//     via XML.
+//  2. Purga Final de Processos: Garante que os processos em background sejam
+//     encerrados via `am force-stop` e `am kill-all`.
+//  3. Desligamento Físico do Aparelho: Realiza uma contagem regressiva de 5
+//  segundos
+//     e dispara o comando nativo `reboot -p`, desligando o hardware do tablet
+//     por completo.
+// =============================================================================
 int V7_Etapa7_PowerOff(const char *serial, LogCallback cb) {
   char cmd[512];
   char msg[128];
@@ -1639,16 +2016,20 @@ int V7_Etapa7_PowerOff(const char *serial, LogCallback cb) {
     free(h2);
   Sleep(1000);
 
-  // 2. Forca parada de todos os aplicativos principais e processos em background
+  // 2. Forca parada de todos os aplicativos principais e processos em
+  // background
   snprintf(cmd, sizeof(cmd),
-           "-s %s shell \"input keyevent 3 && am force-stop br.com.yantec.innovava && "
-           "am force-stop com.google.android.documentsui && am force-stop com.android.documentsui && "
-           "am force-stop com.android.chrome && am kill-all\"", serial);
+           "-s %s shell \"input keyevent 3 && am force-stop "
+           "br.com.yantec.innovava && "
+           "am force-stop com.google.android.documentsui && am force-stop "
+           "com.android.documentsui && "
+           "am force-stop com.android.chrome && am kill-all\"",
+           serial);
   char *ka = adb_exec(cmd);
   if (ka)
     free(ka);
 
-  // 5. Contagem regressiva e desligamento
+  // 3. Contagem regressiva e desligamento
   if (cb)
     cb("[-] Preparacao finalizada. Iniciando contagem para desligar...");
   for (int i = 5; i >= 1; i--) {
@@ -1671,16 +2052,33 @@ int V7_Etapa7_PowerOff(const char *serial, LogCallback cb) {
   return PIPELINE_SUCCESS;
 }
 
-// Etapa 1.7: Desativacao de recursos inuteis para poupar hardware e configuracao do sistema
+// =============================================================================
+//  [ETAPA 1.7] OTIMIZAÇÃO DE ENERGIA, HARDWARE, BRILHO (70%) E ESCALA DE FONTE
+//  (1.5)
+// =============================================================================
+//  O que esta etapa faz:
+//  1. Desligamento de Rádios e Sensores: Desativa Wi-Fi, Bluetooth e GPS
+//  (`location_mode 0`),
+//     além de proibir a varredura contínua de Wi-Fi e BLE em segundo plano.
+//  2. Calibração Visual: Define o brilho fixo em 70% (178/255) sem ajuste
+//  automático
+//     e aumenta a escala da fonte para 1.5, garantindo legibilidade perfeita.
+//  3. Trava de Rotação: Garante que a orientação do sistema permaneça fixa em
+//  Portrait.
+// =============================================================================
 int V7_Etapa1_7(const char *serial, LogCallback cb) {
   if (cb)
-    cb("[F1 - Etapa 1.7] Otimizando redes, brilho (70%), Fonte (1.5) e Rotacao Trava Portrait (lock 0)...");
+    cb("[F1 - Etapa 1.7] Otimizando redes, brilho (70%), Fonte (1.5) e Rotacao "
+       "Trava Portrait (lock 0)...");
   char cmd[1024];
 
   snprintf(cmd, sizeof(cmd),
-           "-s %s shell \"svc wifi disable && svc bluetooth disable && settings put secure location_mode 0 && "
-           "settings put global wifi_scan_always_enabled 0 && settings put global ble_scan_always_enabled 0 && "
-           "settings put system screen_brightness_mode 0 && settings put system screen_brightness 178 && "
+           "-s %s shell \"svc wifi disable && svc bluetooth disable && "
+           "settings put secure location_mode 0 && "
+           "settings put global wifi_scan_always_enabled 0 && settings put "
+           "global ble_scan_always_enabled 0 && "
+           "settings put system screen_brightness_mode 0 && settings put "
+           "system screen_brightness 178 && "
            "settings put system font_scale 1.5 && wm user-rotation lock 0\"",
            serial);
   char *t1 = adb_exec(cmd);
@@ -1690,10 +2088,21 @@ int V7_Etapa1_7(const char *serial, LogCallback cb) {
   return PIPELINE_SUCCESS;
 }
 
-// Desliga o tunel Gnirehtet sem ligar o Wi-Fi
+// =============================================================================
+//  [ETAPA 4.5] ENCERRAMENTO DO REVERSE TETHERING GNIREHTET
+// =============================================================================
+//  O que esta etapa faz:
+//  1. Delay de Conclusão: Aguarda 2 segundos após a autenticação para permitir
+//  a
+//     troca de pacotes de token e autorização na rede.
+//  2. Finalização do Túnel: Dispara `gnirehtet stop <serial>`, desativando a
+//  VPN USB
+//     e encerrando a interface de rede virtual no tablet com segurança.
+// =============================================================================
 int V7_Etapa4_5_StopGnirehtet(const char *serial, LogCallback cb) {
   if (cb)
-    cb("[F1 - Etapa 4.5] Aguardando 2s para concluir login e Desligando Gnirehtet...");
+    cb("[F1 - Etapa 4.5] Aguardando 2s para concluir login e Desligando "
+       "Gnirehtet...");
 
   // Aguardar 2 segundos apos o clique no botao Entrar
   Sleep(2000);
@@ -1740,18 +2149,26 @@ int V7_Etapa4_5_StopGnirehtet(const char *serial, LogCallback cb) {
     if (cb)
       cb("[WARNING] Falha ao tentar desligar o Gnirehtet.");
   }
-  return PIPELINE_SUCCESS; // We always return true to not break the pipeline
+  return PIPELINE_SUCCESS;
 }
 
-// Etapa 1.9: Remover todos os atalhos da tela inicial (Limpando dados do
-// Launcher)
+// =============================================================================
+//  [ETAPA 1.9] LIMPEZA DA ÁREA DE TRABALHO E ATALHOS DO LAUNCHER
+// =============================================================================
+//  O que esta etapa faz:
+//  1. Reset do Launcher: Executa `pm clear com.android.launcher3` e
+//     `pm clear com.sec.android.app.launcher`, removendo widgets, pastas e
+//     ícones fantasmas, entregando a tela inicial limpa e padronizada.
+// =============================================================================
 int V7_Etapa1_9_ClearLauncher(const char *serial, LogCallback cb) {
   if (cb)
-    cb("[F1 - Etapa 1.9] Limpando a Tela Inicial (Removendo atalhos e widgets)...");
+    cb("[F1 - Etapa 1.9] Limpando a Tela Inicial (Removendo atalhos e "
+       "widgets)...");
   char cmd[512];
 
   snprintf(cmd, sizeof(cmd),
-           "-s %s shell \"pm clear com.android.launcher3; pm clear com.sec.android.app.launcher\"",
+           "-s %s shell \"pm clear com.android.launcher3; pm clear "
+           "com.sec.android.app.launcher\"",
            serial);
   char *c1 = adb_exec(cmd);
   if (c1)
@@ -1761,7 +2178,14 @@ int V7_Etapa1_9_ClearLauncher(const char *serial, LogCallback cb) {
   return PIPELINE_SUCCESS;
 }
 
-// Etapa 2.1: Adicionar Atalho do Aplicativo Instalado
+// =============================================================================
+//  [ETAPA 2.1] CRIAÇÃO DE ATALHO DO APLICATIVO NA TELA INICIAL
+// =============================================================================
+//  O que esta etapa faz:
+//  1. Broadcast de Atalho: Emite intenção `INSTALL_SHORTCUT` direcionada à
+//     MainActivity da aplicação instalada, posicionando o ícone do sistema
+//     no centro da tela inicial do dispositivo.
+// =============================================================================
 int V7_Etapa2_1_AddShortcut(const char *serial, const char *package_name,
                             LogCallback cb) {
   if (cb)
@@ -1769,10 +2193,6 @@ int V7_Etapa2_1_AddShortcut(const char *serial, const char *package_name,
        "Inicial...");
   char cmd[1024];
 
-  // Em versÃƒÂµes mais novas do Android, esse broadcast pode nÃƒÂ£o funcionar
-  // nativamente, mas ÃƒÂ© a melhor alternativa via ADB silencioso. O Monkey na
-  // Etapa 3 tambÃƒÂ©m pode induzir o Launcher a criar o atalho se o launcher
-  // estiver recÃƒÂ©m-limpo.
   snprintf(cmd, sizeof(cmd),
            "-s %s shell am broadcast -a "
            "com.android.launcher.action.INSTALL_SHORTCUT "
@@ -1791,25 +2211,58 @@ int V7_Etapa2_1_AddShortcut(const char *serial, const char *package_name,
   return PIPELINE_SUCCESS;
 }
 
-// Etapa 1.2: Ativar Modo Noturno
+// =============================================================================
+//  [ETAPA 1.2] ATIVAÇÃO DO MODO NOTURNO (DARK THEME)
+// =============================================================================
+//  O que esta etapa faz:
+//  1. Tema Escuro do Sistema: Habilita `cmd uimode night yes` e define
+//     `ui_night_mode 2` nas configurações seguras do Android, reduzindo o
+//     consumo de energia do display e proporcionando maior conforto visual.
+// =============================================================================
 int V7_Etapa1_2_DarkMode(const char *serial, LogCallback cb) {
   if (cb)
     cb("[F1 - Etapa 1.2] Ativando Modo Escuro no dispositivo...");
   char cmd[512];
-  snprintf(cmd, sizeof(cmd), "-s %s shell \"cmd uimode night yes && settings put secure ui_night_mode 2\"", serial);
+  snprintf(cmd, sizeof(cmd),
+           "-s %s shell \"cmd uimode night yes && settings put secure "
+           "ui_night_mode 2\"",
+           serial);
   char *dm = adb_exec(cmd);
   if (dm)
     free(dm);
   return PIPELINE_SUCCESS;
 }
 
-// Orquestrador Principal do Pipeline
+// =============================================================================
+//  ORQUESTRADOR MESTRE: EXECUÇÃO SEQUENCIAL DO PIPELINE COMPLETO (F1)
+// =============================================================================
+//  Fluxo de Execução:
+//  [0] Preparação Inicial: Trava Portrait, Fonte 1.5, Brilho 70%, Antenas Off
+//  [1] Etapa 1: Smart Wakeup e Desbloqueio de Tela
+//  [1.2] Etapa 1.2: Ativação do Modo Noturno (Dark Theme)
+//  [1.5] Etapa 1.5: Debloat em Lote (Remoção e Suspensão de Apps Google)
+//  [1.6] Etapa 1.6: Purga do Armazenamento e Upload (APK + Pacote ZIP)
+//  [1.7] Etapa 1.7: Otimização de Hardware, Energia e Redes
+//  [1.9] Etapa 1.9: Limpeza do Launcher e Remoção de Atalhos Fantasmas
+//  [2] Etapa 2: Instalação Silenciosa do APK (Push + PM Install)
+//  [2.1] Etapa 2.1: Criação de Atalho na Tela Inicial
+//  [2.5] Etapa 2.5: Inicialização do Reverse Tethering Gnirehtet USB
+//  [3] Etapa 3: Liberação de Permissões de Runtime e Abertura do App
+//  [4] Etapa 4: Autenticação e Login Automático (InnoLearn Dual-Scan)
+//  [4.5] Etapa 4.5: Desligamento do Túnel Gnirehtet e Isolamento de Rede
+//  [5] Etapa 5: Navegação no Menu Lateral para 'Importar ZIP'
+//  [6] Etapa 6: Seleção do Pacote ZIP no DocumentsUI (SAF)
+//  [7a] Etapa 7a: Monitoramento da Importação e Fechamento de Aplicativos
+//  [WP] Definição de Wallpaper Municipal Customizado (F4)
+//  [7b] Etapa 7b: Limpeza da Tela de Recentes e Desligamento Remoto (reboot -p)
+// =============================================================================
 int V7_ExecutarPipelineCompleto(const char *serial, const char *apk_path,
                                 const char *pacote_path, const char *wp_path,
                                 const char *package_name, const char *login,
                                 const char *senha, const char *municipio,
                                 LogCallback cb) {
-  // Converte os caminhos para Short Path 8.3 e evita bugs de UTF-8 do ADB com caracteres especiais (ex: acentos)
+  // Converte os caminhos para Short Path 8.3 e evita bugs de UTF-8 do ADB com
+  // caracteres especiais
   char safe_apk[MAX_PATH] = {0};
   char safe_pacote[MAX_PATH] = {0};
   char safe_wp[MAX_PATH] = {0};
@@ -1820,83 +2273,93 @@ int V7_ExecutarPipelineCompleto(const char *serial, const char *apk_path,
     adb_get_safe_path(wp_path, safe_wp, MAX_PATH);
   }
 
-  // 0. PREPARACAO INICIAL BATCHED: Travar Orientação Vertical (Portrait), Fonte (1.5), Brilho (70%) e Antenas
+  // 0. PREPARACAO INICIAL BATCHED: Travar Orientação Vertical (Portrait), Fonte
+  // (1.5), Brilho (70%) e Antenas
   if (cb)
-    cb("[-] [F1 - Preparacao Inicial] Trava Vertical (Portrait), Fonte (1.5), Brilho (70%) e Antenas...");
+    cb("[-] [F1 - Preparacao Inicial] Trava Vertical (Portrait), Fonte (1.5), "
+       "Brilho (70%) e Antenas...");
   {
     char args_prep[1024];
     snprintf(args_prep, sizeof(args_prep),
-             "-s %s shell \"svc wifi disable && svc bluetooth disable && settings put secure location_mode 0 && "
-             "settings put global wifi_scan_always_enabled 0 && settings put global ble_scan_always_enabled 0 && "
-             "settings put system screen_brightness_mode 0 && settings put system screen_brightness 178 && "
-             "settings put system font_scale 1.5 && settings put system accelerometer_rotation 0 && "
+             "-s %s shell \"svc wifi disable && svc bluetooth disable && "
+             "settings put secure location_mode 0 && "
+             "settings put global wifi_scan_always_enabled 0 && settings put "
+             "global ble_scan_always_enabled 0 && "
+             "settings put system screen_brightness_mode 0 && settings put "
+             "system screen_brightness 178 && "
+             "settings put system font_scale 1.5 && settings put system "
+             "accelerometer_rotation 0 && "
              "settings put system user_rotation 0 && wm user-rotation lock 0\"",
              serial);
     char *out_prep = adb_exec(args_prep);
-    if (out_prep) free(out_prep);
+    if (out_prep)
+      free(out_prep);
   }
 
   // Etapa 1: Desbloqueio
-  if (!V7_Etapa1(serial, cb))
+  // CORREÇÃO: PIPELINE_SUCCESS == 1, então a checagem correta é !=
+  // PIPELINE_SUCCESS (o operador ! transformava !1 em 0/false, nunca abortando
+  // o pipeline)
+  if (V7_Etapa1(serial, cb) != PIPELINE_SUCCESS)
     return PIPELINE_ERROR;
 
   // Etapa 1.2: Modo Noturno (ativado logo no inicio)
-  if (!V7_Etapa1_2_DarkMode(serial, cb))
+  if (V7_Etapa1_2_DarkMode(serial, cb) != PIPELINE_SUCCESS)
     return PIPELINE_ERROR;
 
   // Etapa 1.5: Isolamento de Apps
-  if (!V7_Etapa1_5(serial, cb))
+  if (V7_Etapa1_5(serial, cb) != PIPELINE_SUCCESS)
     return PIPELINE_ERROR;
 
-  // Etapa 1.6: Limpeza de armazenamento e CÃƒÂ³pia (Novo requisito)
-  if (!V7_Etapa1_6(serial, safe_apk, safe_pacote, cb))
+  // Etapa 1.6: Limpeza de armazenamento e Copia de Arquivos
+  if (V7_Etapa1_6(serial, safe_apk, safe_pacote, cb) != PIPELINE_SUCCESS)
     return PIPELINE_ERROR;
 
   // Etapa 1.7: Otimizacao de Energia e Redes
-  if (!V7_Etapa1_7(serial, cb))
+  if (V7_Etapa1_7(serial, cb) != PIPELINE_SUCCESS)
     return PIPELINE_ERROR;
 
   // Etapa 1.9: Limpar Launcher e Atalhos
-  if (!V7_Etapa1_9_ClearLauncher(serial, cb))
+  if (V7_Etapa1_9_ClearLauncher(serial, cb) != PIPELINE_SUCCESS)
     return PIPELINE_ERROR;
 
-  // Etapa 2: InstalaÃƒÂ§ÃƒÂ£o
-  if (!V7_Etapa2(serial, safe_apk, package_name, cb))
+  // Etapa 2: Instalacao Silenciosa do APK
+  if (V7_Etapa2(serial, safe_apk, package_name, cb) != PIPELINE_SUCCESS)
     return PIPELINE_ERROR;
 
   // Etapa 2.1: Criar Atalho na Tela Inicial
-  if (!V7_Etapa2_1_AddShortcut(serial, package_name, cb))
+  if (V7_Etapa2_1_AddShortcut(serial, package_name, cb) != PIPELINE_SUCCESS)
     return PIPELINE_ERROR;
 
-  // Etapa 2.5: Reverse Tethering
-  if (!V7_Etapa2_5(serial, cb))
+  // Etapa 2.5: Reverse Tethering (Internet via USB)
+  if (V7_Etapa2_5(serial, cb) != PIPELINE_SUCCESS)
     return PIPELINE_ERROR;
 
-  // Etapa 3: PermissÃƒÂµes e Abertura
-  if (!V7_Etapa3(serial, package_name, cb))
+  // Etapa 3: Permissoes de Runtime e Abertura
+  if (V7_Etapa3(serial, package_name, cb) != PIPELINE_SUCCESS)
     return PIPELINE_ERROR;
 
-  // Etapa 4: Login AutomÃƒÂ¡tico
-  if (!V7_Etapa4(serial, login, senha, municipio, cb))
+  // Etapa 4: Login Automatico
+  if (V7_Etapa4(serial, login, senha, municipio, cb) != PIPELINE_SUCCESS)
     return PIPELINE_ERROR;
 
   // Etapa 4.5: Desligar Gnirehtet
-  if (!V7_Etapa4_5_StopGnirehtet(serial, cb))
+  if (V7_Etapa4_5_StopGnirehtet(serial, cb) != PIPELINE_SUCCESS)
     return PIPELINE_ERROR;
 
-  // Etapa 5: ImportaÃƒÂ§ÃƒÂ£o do Pacote ZIP
-  if (!V7_Etapa5(serial, cb))
+  // Etapa 5: Importacao do Pacote ZIP
+  if (V7_Etapa5(serial, cb) != PIPELINE_SUCCESS)
     return PIPELINE_ERROR;
 
-  // Etapa 6: SeleÃƒÂ§ÃƒÂ£o do ZIP no File Picker
-  if (!V7_Etapa6(serial, cb))
+  // Etapa 6: Selecao do ZIP no File Picker
+  if (V7_Etapa6(serial, cb) != PIPELINE_SUCCESS)
     return PIPELINE_ERROR;
 
   // Etapa 7a: Aguarda a importacao finalizar e fecha todos os apps
-  if (!F1_Etapa7_CloseApps(serial, package_name, cb))
+  if (F1_Etapa7_CloseApps(serial, package_name, cb) != PIPELINE_SUCCESS)
     return PIPELINE_ERROR;
 
-  // DefiniÃƒÂ§ÃƒÂ£o do Wallpaper via mÃƒÂ³dulo F3 (apos fechar apps da importacao e
+  // Definicao do Wallpaper via modulo F4 (apos fechar apps da importacao e
   // antes de desligar)
   if (safe_wp[0] != '\0') {
     if (cb)
@@ -1904,8 +2367,8 @@ int V7_ExecutarPipelineCompleto(const char *serial, const char *apk_path,
     F4_DefinirWallpaper(serial, safe_wp, cb);
   }
 
-  // Etapa 7b: Limpeza completa, Modo Escuro e Desligamento
-  if (!V7_Etapa7_PowerOff(serial, cb))
+  // Etapa 7b: Limpeza completa de Recentes e Desligamento Fisico
+  if (V7_Etapa7_PowerOff(serial, cb) != PIPELINE_SUCCESS)
     return PIPELINE_ERROR;
 
   if (cb)

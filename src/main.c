@@ -1,6 +1,9 @@
-﻿#include <windows.h>
-#include "gui/gui_main.h"
+#include <windows.h>
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
-    return gui_main_init(hInstance, nCmdShow);
+    (void)hInstance;
+    (void)hPrevInstance;
+    (void)lpCmdLine;
+    (void)nCmdShow;
+    return 0;
 }

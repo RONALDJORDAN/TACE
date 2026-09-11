@@ -33,8 +33,6 @@ void adb_get_model(const char* serial, char* out_model, int max_len);
 // Busca IMEI do dispositivo
 void adb_get_imei(const char* serial, char* out_imei, int max_len);
 
-// Busca MAC address do dispositivo
-void adb_get_mac(const char* serial, char* out_mac, int max_len);
 
 // Estrutura para um Pacote (App)
 #define MAX_PACKAGES 500

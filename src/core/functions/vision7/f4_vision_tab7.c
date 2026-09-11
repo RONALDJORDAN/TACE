@@ -1,14 +1,17 @@
 #include "f4_vision_tab7.h"
 #include "../../drivers/adb.h"
 
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <windows.h>
-// ==========================================
-// MÃƒÂ³dulo: [F4] Modo Terminal Interativo Kiosk
-// ==========================================
+
+// MACRO: Injeta o sistema de resiliencia em todas as chamadas de adb_exec neste arquivo
+#define adb_exec(args) adb_exec_retry(args, 3, 2000, (AdbLogCallback)cb)
+
+// =============================================================================
+//  MÓDULO F4: TERMINAL KIOSK, GESTÃO DE HARDWARE E WALLPAPER (VISION TAB 7)
+// =============================================================================
 
 static const char *PKG_SETTINGS = "com.android.settings";
 
@@ -26,11 +29,95 @@ static const char *CAMERA_PACKAGES[] = {
 
 static const int NUM_CAMERA_PACKAGES = sizeof(CAMERA_PACKAGES) / sizeof(CAMERA_PACKAGES[0]);
 
+static const char *KIOSK_DEBLOAT_PACKAGES[] = {
+    // 1. Câmeras
+    "com.softwinner.camera2", "com.android.camera2", "com.android.camera",
+    "com.sec.android.app.camera", "com.motorola.camera2",
+    "com.motorola.camera3", "com.google.android.GoogleCamera",
+    "com.huawei.camera", "com.mediatek.camera",
+
+    // 2. Calculadora
+    "com.google.android.calculator", "com.android.calculator2",
+
+    // 3. Google Chrome
+    "com.android.chrome", "com.chrome.beta", "com.chrome.dev",
+    "com.chrome.canary",
+
+    // 4. Contatos
+    "com.google.android.contacts", "com.android.contacts",
+
+    // 5. Google Drive e Editores
+    "com.google.android.apps.docs", "com.google.android.apps.docs.editors.docs",
+    "com.google.android.apps.docs.editors.sheets",
+    "com.google.android.apps.docs.editors.slides",
+
+    // 6. Emergência / Safety Hub
+    "com.google.android.apps.safetyhub", "com.android.emergency",
+
+    // 7. Files by Google / Files Go (Preserva DocumentsUI para SAF)
+    "com.google.android.apps.nbu.files", "com.google.android.apps.nbu.filesgo",
+
+    // 8. Galeria Google Go / Fotos / Galeria AOSP
+    "com.google.android.apps.photosgo", "com.google.android.apps.photos",
+    "com.android.gallery3d", "com.android.gallery",
+
+    // 9. Google TV / Play Filmes
+    "com.google.android.videos", "com.google.android.tv",
+
+    // 10. Gravador de Som / Google Recorder
+    "com.google.android.apps.recorder", "com.android.soundrecorder",
+    "com.softwinner.soundrecorder",
+
+    // 11. Google Maps / Maps Go
+    "com.google.android.apps.maps", "com.google.android.apps.mapslite",
+
+    // 12. Google Meet / Duo
+    "com.google.android.apps.tachyon", "com.google.android.apps.meetings",
+
+    // 13. Google Play Store
+    "com.android.vending",
+
+    // 14. Relógio / DeskClock
+    "com.google.android.deskclock", "com.android.deskclock",
+
+    // 15. YouTube / YouTube Kids / YouTube Music
+    "com.google.android.youtube", "com.google.android.youtube.tv",
+    "com.google.android.apps.youtube.kids",
+    "com.google.android.apps.youtube.music",
+
+    // 16. Google Search / Gmail / Assistente
+    "com.google.android.googlequicksearchbox",
+    "com.google.android.apps.searchlite", "com.google.android.gm",
+    "com.google.android.gm.lite",
+    "com.google.android.apps.assistant",
+    "com.google.android.apps.googleassistant",
+    "com.android.hotwordenrollment.okgoogle",
+    "com.android.hotwordenrollment.xgoogle",
+
+    // 17. Google Agenda / Calendar / Calendar Go
+    "com.google.android.calendar", "com.android.calendar",
+    "com.google.android.syncadapters.calendar"
+};
+
+static const int NUM_KIOSK_DEBLOAT =
+    sizeof(KIOSK_DEBLOAT_PACKAGES) / sizeof(KIOSK_DEBLOAT_PACKAGES[0]);
+
 int F4_ExecutarFerramenta(const char *serial, int acao, LogCallback cb) {
   char args[1024];
   char msg[256];
 
-  if (acao == 1 || acao == 5) { // Inativar CÃƒÂ¢mera
+  // Guard de validação: verificar o range ANTES de qualquer processamento
+  if (acao < 1 || acao > 12) {
+    if (cb) {
+      snprintf(msg, sizeof(msg),
+               "[F4] Aparelho [%s]: Opcao (%d) invalida. Utilize numeros de 1 a 12.",
+               serial, acao);
+      cb(msg);
+    }
+    return PIPELINE_ERROR;
+  }
+
+  if (acao == 1 || acao == 5) { // Bloquear Câmeras
     for (int i = 0; i < NUM_CAMERA_PACKAGES; i++) {
         snprintf(args, sizeof(args), "-s %s shell pm suspend %s", serial, CAMERA_PACKAGES[i]);
         char *out = adb_exec(args);
@@ -38,12 +125,12 @@ int F4_ExecutarFerramenta(const char *serial, int acao, LogCallback cb) {
     }
     if (cb && acao == 1) {
       snprintf(msg, sizeof(msg),
-               "[F4] Aparelho [%s] -> Camera BLOQUEADA (Desativada).", serial);
+               "[F4] Aparelho [%s] -> Cameras BLOQUEADAS com sucesso.", serial);
       cb(msg);
     }
   }
 
-  if (acao == 2 || acao == 5) { // Inativar ConfiguraÃƒÂ§ÃƒÂµes
+  if (acao == 2 || acao == 5) { // Restringir Configurações
     snprintf(args, sizeof(args), "-s %s shell pm suspend %s",
              serial, PKG_SETTINGS);
     char *out = adb_exec(args);
@@ -51,32 +138,32 @@ int F4_ExecutarFerramenta(const char *serial, int acao, LogCallback cb) {
       free(out);
     if (cb && acao == 2) {
       snprintf(msg, sizeof(msg),
-               "[F4] Aparelho [%s] -> Configuracoes BLOQUEADAS (Desativadas).",
+               "[F4] Aparelho [%s] -> Configuracoes do sistema RESTRITAS.",
                serial);
       cb(msg);
     }
     if (cb && acao == 5) {
       snprintf(msg, sizeof(msg),
-               "[F4] Aparelho [%s] -> Camera e Configuracoes BLOQUEADAS.",
+               "[F4] Aparelho [%s] -> Modo Kiosk Estrito ATIVADO (Cameras e Configuracoes restritas).",
                serial);
       cb(msg);
     }
   }
 
-  if (acao == 3 || acao == 6) { // Ativar CÃƒÂ¢mera
+  if (acao == 3 || acao == 6) { // Desbloquear Câmeras
     for (int i = 0; i < NUM_CAMERA_PACKAGES; i++) {
         snprintf(args, sizeof(args), "-s %s shell pm unsuspend %s", serial, CAMERA_PACKAGES[i]);
         char *out = adb_exec(args);
         if (out) free(out);
     }
     if (cb && acao == 3) {
-      snprintf(msg, sizeof(msg), "[F4] Aparelho [%s] -> Camera LIBERADA.",
+      snprintf(msg, sizeof(msg), "[F4] Aparelho [%s] -> Cameras LIBERADAS.",
                serial);
       cb(msg);
     }
   }
 
-  if (acao == 4 || acao == 6) { // Ativar ConfiguraÃƒÂ§ÃƒÂµes
+  if (acao == 4 || acao == 6) { // Liberar Configurações
     snprintf(args, sizeof(args), "-s %s shell pm unsuspend %s", serial,
              PKG_SETTINGS);
     char *out = adb_exec(args);
@@ -84,12 +171,12 @@ int F4_ExecutarFerramenta(const char *serial, int acao, LogCallback cb) {
       free(out);
     if (cb && acao == 4) {
       snprintf(msg, sizeof(msg),
-               "[F4] Aparelho [%s] -> Configuracoes LIBERADAS.", serial);
+               "[F4] Aparelho [%s] -> Configuracoes do sistema LIBERADAS.", serial);
       cb(msg);
     }
     if (cb && acao == 6) {
       snprintf(msg, sizeof(msg),
-               "[F4] Aparelho [%s] -> Camera e Configuracoes LIBERADAS.",
+               "[F4] Aparelho [%s] -> Modo Kiosk DESATIVADO (Acesso total liberado).",
                serial);
       cb(msg);
     }
@@ -108,11 +195,11 @@ int F4_ExecutarFerramenta(const char *serial, int acao, LogCallback cb) {
     char gnirehtet_apk[MAX_PATH];
     char gnirehtet_dir[MAX_PATH];
 
-    // Tenta achar no diretÃƒÂ³rio Release
+    // Tenta achar no diretório Release
     snprintf(gnirehtet_dir, sizeof(gnirehtet_dir),
              "%s\\tools\\reverse_tethering", exe_path);
     if (GetFileAttributesA(gnirehtet_dir) == INVALID_FILE_ATTRIBUTES) {
-      // Se nÃƒÂ£o achou, fallback para diretÃƒÂ³rio de Dev
+      // Se não achou, fallback para diretório de Dev
       snprintf(gnirehtet_dir, sizeof(gnirehtet_dir),
                "%s\\..\\..\\tools\\reverse_tethering", exe_path);
     }
@@ -144,7 +231,6 @@ int F4_ExecutarFerramenta(const char *serial, int acao, LogCallback cb) {
       char *out_apk = adb_exec(args_apk);
       if (out_apk) free(out_apk);
     }
-
 
     if (cb)
       cb("  -> Autorizando VPN silenciosamente (AppOps Bypass)...");
@@ -315,171 +401,114 @@ int F4_ExecutarFerramenta(const char *serial, int acao, LogCallback cb) {
       if (cb)
         cb("[ERROR] Falha ao ler a tela (UI Automator).");
     }
-  if (acao == 11) {
-    if (cb)
-      cb("[F4] Ferramenta 11: Leitura Visual do Endereço MAC do Wi-Fi...");
-
-    char args_mac[1024];
-
-    // 1. Acordar e desbloquear tela
-    if (cb) cb("  -> [Passo 1] Acordando o dispositivo e desbloqueando a tela...");
-    snprintf(args_mac, sizeof(args_mac), "-s %s shell \"dumpsys power | grep mWakefulness=\"", serial);
-    char *w_stat = adb_exec(args_mac);
-    if (w_stat) {
-      if (strstr(w_stat, "mWakefulness=Awake") == NULL) {
-        snprintf(args_mac, sizeof(args_mac), "-s %s shell input keyevent 26", serial);
-        char *pwr = adb_exec(args_mac);
-        if (pwr) free(pwr);
-        Sleep(800);
-      }
-      free(w_stat);
-    }
-    snprintf(args_mac, sizeof(args_mac), "-s %s shell input swipe 300 1000 300 300 300", serial);
-    char *swp = adb_exec(args_mac);
-    if (swp) free(swp);
-
-    // 2. Ligar o Wi-Fi para que a interface wlan0 inicialize o MAC
-    if (cb) cb("  -> [Passo 2] Ativando a antena Wi-Fi para inicializar a interface de rede...");
-    snprintf(args_mac, sizeof(args_mac), "-s %s shell \"svc wifi enable && settings put global wifi_on 1 && cmd wifi set-wifi-enabled enabled\"", serial);
-    char *w_en = adb_exec(args_mac);
-    if (w_en) free(w_en);
-    Sleep(2000); // Aguarda a placa de rede subir
-
-    // 3. Liberar e abrir as Configurações na tela 'Sobre o tablet'
-    if (cb) cb("  -> [Passo 3] Liberando e abrindo 'Configurações > Sobre o tablet'...");
-    snprintf(args_mac, sizeof(args_mac), "-s %s shell pm unsuspend com.android.settings", serial);
-    char *uns = adb_exec(args_mac);
-    if (uns) free(uns);
-
-    // Tenta abrir direto em 'Sobre o tablet' (DEVICE_INFO_SETTINGS)
-    snprintf(args_mac, sizeof(args_mac), "-s %s shell am start -a android.settings.DEVICE_INFO_SETTINGS", serial);
-    char *st_info = adb_exec(args_mac);
-    if (st_info) free(st_info);
-    Sleep(2000);
-
-    // 4. Mapeamento visual via UIAutomator
-    if (cb) cb("  -> [Passo 4] Mapeando elementos visuais da tela via UIAutomator...");
-    char mac_encontrado[64] = {0};
-
-    for (int attempt = 0; attempt < 3; attempt++) {
-      snprintf(args_mac, sizeof(args_mac), "-s %s shell uiautomator dump /sdcard/dump_mac.xml", serial);
-      char *dm = adb_exec(args_mac);
-      if (dm) free(dm);
-
-      snprintf(args_mac, sizeof(args_mac), "-s %s shell cat /sdcard/dump_mac.xml", serial);
-      char *xml = adb_exec(args_mac);
-
-      if (xml) {
-        // Procura por padrão de MAC ou textos de Endereço MAC
-        char *p_mac = strstr(xml, "Endereço MAC");
-        if (!p_mac) p_mac = strstr(xml, "Endereco MAC");
-        if (!p_mac) p_mac = strstr(xml, "MAC");
-        if (!p_mac) p_mac = strstr(xml, "Wi-Fi");
-
-        if (p_mac) {
-          // Varre ao redor procurando padrão de MAC: xx:xx:xx:xx:xx:xx
-          char *p_curr = p_mac;
-          for (int k = 0; k < 400 && *p_curr; k++, p_curr++) {
-            if ((isxdigit((unsigned char)p_curr[0]) && isxdigit((unsigned char)p_curr[1]) && p_curr[2] == ':' &&
-                 isxdigit((unsigned char)p_curr[3]) && isxdigit((unsigned char)p_curr[4]) && p_curr[5] == ':' &&
-                 isxdigit((unsigned char)p_curr[6]) && isxdigit((unsigned char)p_curr[7]) && p_curr[8] == ':')) {
-              strncpy(mac_encontrado, p_curr, 17);
-              mac_encontrado[17] = '\0';
-              break;
-            }
-          }
-        }
-
-        // Se não achou na busca direcionada, faz regex/scan no XML inteiro por xx:xx:xx:xx:xx:xx
-        if (strlen(mac_encontrado) == 0) {
-          char *p_scan = xml;
-          while (*p_scan) {
-            if ((isxdigit((unsigned char)p_scan[0]) && isxdigit((unsigned char)p_scan[1]) && p_scan[2] == ':' &&
-                 isxdigit((unsigned char)p_scan[3]) && isxdigit((unsigned char)p_scan[4]) && p_scan[5] == ':' &&
-                 isxdigit((unsigned char)p_scan[6]) && isxdigit((unsigned char)p_scan[7]) && p_scan[8] == ':' &&
-                 isxdigit((unsigned char)p_scan[9]) && isxdigit((unsigned char)p_scan[10]) && p_scan[11] == ':' &&
-                 isxdigit((unsigned char)p_scan[12]) && isxdigit((unsigned char)p_scan[13]) && p_scan[14] == ':' &&
-                 isxdigit((unsigned char)p_scan[15]) && isxdigit((unsigned char)p_scan[16]))) {
-              // Verifica se não é 02:00:00:00:00:00 (MAC dummy do Android)
-              if (strncmp(p_scan, "02:00:00:00:00:00", 17) != 0) {
-                strncpy(mac_encontrado, p_scan, 17);
-                mac_encontrado[17] = '\0';
-                break;
-              }
-            }
-            p_scan++;
-          }
-        }
-
-        free(xml);
-      }
-
-      if (strlen(mac_encontrado) > 0) break;
-
-      // Desliza um pouco para baixo caso o campo de MAC esteja mais abaixo na tela
-      if (attempt < 2) {
-        if (cb) cb("  -> Rolando a tela para baixo para localizar o campo de MAC...");
-        snprintf(args_mac, sizeof(args_mac), "-s %s shell input swipe 400 900 400 400 400", serial);
-        char *r_swp = adb_exec(args_mac);
-        if (r_swp) free(r_swp);
-        Sleep(1000);
-      }
-    }
-
-    // Fallback de baixo nível se o XML do Settings ocultar o resumo por restrição
-    if (strlen(mac_encontrado) == 0) {
-      if (cb) cb("  -> [Fallback] Consultando interface wlan0 do kernel...");
-      snprintf(args_mac, sizeof(args_mac), "-s %s shell \"cat /sys/class/net/wlan0/address || ip link show wlan0\"", serial);
-      char *out_k = adb_exec(args_mac);
-      if (out_k) {
-        char *p_scan = out_k;
-        while (*p_scan) {
-          if ((isxdigit((unsigned char)p_scan[0]) && isxdigit((unsigned char)p_scan[1]) && p_scan[2] == ':' &&
-               isxdigit((unsigned char)p_scan[3]) && isxdigit((unsigned char)p_scan[4]) && p_scan[5] == ':' &&
-               isxdigit((unsigned char)p_scan[6]) && isxdigit((unsigned char)p_scan[7]) && p_scan[8] == ':' &&
-               isxdigit((unsigned char)p_scan[9]) && isxdigit((unsigned char)p_scan[10]) && p_scan[11] == ':' &&
-               isxdigit((unsigned char)p_scan[12]) && isxdigit((unsigned char)p_scan[13]) && p_scan[14] == ':' &&
-               isxdigit((unsigned char)p_scan[15]) && isxdigit((unsigned char)p_scan[16]))) {
-            if (strncmp(p_scan, "02:00:00:00:00:00", 17) != 0) {
-              strncpy(mac_encontrado, p_scan, 17);
-              mac_encontrado[17] = '\0';
-              break;
-            }
-          }
-          p_scan++;
-        }
-        free(out_k);
-      }
-    }
-
-    // 5. Exibição e Retorno
-    if (strlen(mac_encontrado) > 0) {
-      char msg_suc[256];
-      snprintf(msg_suc, sizeof(msg_suc), "[+] [F4 - Ação 11] SUCESSO: Endereço MAC do Wi-Fi obtido -> [%s]", mac_encontrado);
-      if (cb) cb(msg_suc);
-    } else {
-      if (cb) cb("[WARNING] [F4 - Ação 11] Não foi possível ler o endereço MAC do dispositivo.");
-    }
-
-    // Retorna para a tela inicial
-    snprintf(args_mac, sizeof(args_mac), "-s %s shell input keyevent 3", serial);
-    char *hm = adb_exec(args_mac);
-    if (hm) free(hm);
-
-    return (strlen(mac_encontrado) > 0) ? PIPELINE_SUCCESS : PIPELINE_ERROR;
+    return PIPELINE_SUCCESS;
   }
 
-  if (acao < 1 || acao > 11) {
+
+
+  if (acao == 11) { // Blindagem Kiosk: Ocultar Aplicativos Dispensáveis
     if (cb) {
       snprintf(msg, sizeof(msg),
-               "[F4] Erro no aparelho [%s]: Comando (%d) invalido. Use numeros "
-               "de 1 a 11.",
-               serial, acao);
+               "[F4] Aparelho [%s] -> Aplicando Blindagem Kiosk (Ocultando aplicativos dispensaveis)...",
+               serial);
       cb(msg);
     }
-    return PIPELINE_ERROR;
+
+    char cmd_batch[4096];
+    int count_in_batch = 0;
+    int offset = snprintf(cmd_batch, sizeof(cmd_batch), "-s %s shell \"", serial);
+
+    for (int i = 0; i < NUM_KIOSK_DEBLOAT; i++) {
+      const char *pkg = KIOSK_DEBLOAT_PACKAGES[i];
+      offset += snprintf(cmd_batch + offset, sizeof(cmd_batch) - offset,
+                         "pm disable-user --user 0 %s 2>/dev/null; pm suspend %s 2>/dev/null; pm uninstall -k --user 0 %s 2>/dev/null; ",
+                         pkg, pkg, pkg);
+      count_in_batch++;
+
+      if (count_in_batch >= 6 || i == NUM_KIOSK_DEBLOAT - 1) {
+        if (offset < (int)sizeof(cmd_batch) - 2) {
+          cmd_batch[offset++] = '\"';
+          cmd_batch[offset] = '\0';
+        }
+        char *out_b = adb_exec(cmd_batch);
+        if (out_b) free(out_b);
+
+        offset = snprintf(cmd_batch, sizeof(cmd_batch), "-s %s shell \"", serial);
+        count_in_batch = 0;
+      }
+    }
+
+    // Limpa o cache do launcher para os icones sumirem da tela inicial imediatamente
+    snprintf(args, sizeof(args), "-s %s shell pm clear com.android.launcher3 2>/dev/null", serial);
+    char *out_cl = adb_exec(args);
+    if (out_cl) free(out_cl);
+
+    if (cb) {
+      snprintf(msg, sizeof(msg),
+               "[+] Aparelho [%s] -> Blindagem Kiosk concluida! Aplicativos ocultados com sucesso.",
+               serial);
+      cb(msg);
+    }
+    return PIPELINE_SUCCESS;
   }
 
+  if (acao == 12) { // Restauração de Fábrica: Reativar Todos os Aplicativos do Sistema
+    if (cb) {
+      snprintf(msg, sizeof(msg),
+               "[F4] Aparelho [%s] -> Restaurando aplicativos de fabrica (Reativando pacotes do sistema)...",
+               serial);
+      cb(msg);
+    }
+
+    char cmd_batch[4096];
+    int count_in_batch = 0;
+    int offset = snprintf(cmd_batch, sizeof(cmd_batch), "-s %s shell \"", serial);
+
+    for (int i = 0; i < NUM_KIOSK_DEBLOAT; i++) {
+      const char *pkg = KIOSK_DEBLOAT_PACKAGES[i];
+      offset += snprintf(cmd_batch + offset, sizeof(cmd_batch) - offset,
+                         "cmd package install-existing %s 2>/dev/null; pm enable %s 2>/dev/null; pm unsuspend %s 2>/dev/null; ",
+                         pkg, pkg, pkg);
+      count_in_batch++;
+
+      if (count_in_batch >= 6 || i == NUM_KIOSK_DEBLOAT - 1) {
+        if (offset < (int)sizeof(cmd_batch) - 2) {
+          cmd_batch[offset++] = '\"';
+          cmd_batch[offset] = '\0';
+        }
+        char *out_b = adb_exec(cmd_batch);
+        if (out_b) free(out_b);
+
+        offset = snprintf(cmd_batch, sizeof(cmd_batch), "-s %s shell \"", serial);
+        count_in_batch = 0;
+      }
+    }
+
+    // Desbloqueia Cameras e Configuracoes
+    for (int i = 0; i < NUM_CAMERA_PACKAGES; i++) {
+      snprintf(args, sizeof(args), "-s %s shell pm unsuspend %s 2>/dev/null", serial, CAMERA_PACKAGES[i]);
+      char *out_c = adb_exec(args);
+      if (out_c) free(out_c);
+    }
+    snprintf(args, sizeof(args), "-s %s shell pm unsuspend %s 2>/dev/null", serial, PKG_SETTINGS);
+    char *out_s = adb_exec(args);
+    if (out_s) free(out_s);
+
+    // Notifica o launcher para atualizar os icones restaurados
+    snprintf(args, sizeof(args), "-s %s shell am broadcast -a android.intent.action.BOOT_COMPLETED 2>/dev/null", serial);
+    char *out_bc = adb_exec(args);
+    if (out_bc) free(out_bc);
+
+    if (cb) {
+      snprintf(msg, sizeof(msg),
+               "[+] Aparelho [%s] -> Restauracao de fabrica concluida! Todos os aplicativos foram reativados com sucesso.",
+               serial);
+      cb(msg);
+    }
+    return PIPELINE_SUCCESS;
+  }
+
+  // Acao valida processada acima - retorno padrao de sucesso
   return PIPELINE_SUCCESS;
 }
 
@@ -493,6 +522,9 @@ int F4_DefinirWallpaper(const char *serial, const char *wp_path,
       cb("[F4] Erro: O municipio nao possui Wallpaper configurado.");
     return PIPELINE_ERROR;
   }
+
+  char safe_wp[MAX_PATH] = {0};
+  adb_get_safe_path(wp_path, safe_wp, MAX_PATH);
 
   if (cb)
     cb("[F4] Iniciando definicao de Wallpaper...");
@@ -516,7 +548,7 @@ int F4_DefinirWallpaper(const char *serial, const char *wp_path,
 
   snprintf(args, sizeof(args),
            "-s %s push \"%s\" /sdcard/Pictures/Screenshots/wallpaper_inno.jpg",
-           serial, wp_path);
+           serial, safe_wp);
   out = adb_exec(args);
   if (out) {
     if (cb)
@@ -540,7 +572,7 @@ int F4_DefinirWallpaper(const char *serial, const char *wp_path,
   Sleep(1500);
 
   // ----------------------------------------------------------------
-  // PASSO 1: Abre as ConfiguraÃƒÂ§ÃƒÂµes de Tela e clica em "Plano de fundo"
+  // PASSO 2: Abre as Configurações de Tela e clica em "Plano de fundo"
   // ----------------------------------------------------------------
   if (cb)
     cb("[-] Abrindo as configuracoes de tela...");
@@ -623,11 +655,11 @@ int F4_DefinirWallpaper(const char *serial, const char *wp_path,
   Sleep(2000);
 
   // ----------------------------------------------------------------
-  // PASSO 4: Dialogo "Selecionar de..." -> clica em "Planos de fundo" (2a
-  // opcao) Estrategia em cascata:
+  // PASSO 4: Dialogo "Selecionar de..." -> clica em "Planos de fundo" (2a opcao)
+  // Estrategia em cascata:
   //   [A] Busca texto "Planos de fundo" apos ancora "Plano de fundo e estilo"
-  //   [B] Posicionamento relativo: pega bounds da 1a opcao e calcula a 2a
-  //   abaixo [C] Fallback por coordenada fixa centralizada
+  //   [B] Posicionamento relativo: pega bounds da 1a opcao e calcula a 2a abaixo
+  //   [C] Fallback por coordenada fixa centralizada
   // ----------------------------------------------------------------
   if (cb)
     cb("[-] Aguardando dialogo 'Selecionar de...'...");
@@ -643,9 +675,6 @@ int F4_DefinirWallpaper(const char *serial, const char *wp_path,
   int found_fotos = 0;
   if (xml3) {
     // --- ESTRATEGIA PRINCIPAL: Posicionamento Relativo ---
-    // Para evitar clicar no titulo do dialogo (que pode ter o mesmo nome),
-    // achamos a 1a opcao ("Plano de fundo e estilo") e clicamos fisicamente na
-    // linha de baixo.
     char *p_first = strstr(xml3, "Planos de fundo");
     if (p_first) {
       char *b1 = strstr(p_first, "bounds=\"[");
@@ -654,14 +683,10 @@ int F4_DefinirWallpaper(const char *serial, const char *wp_path,
         if (sscanf(b1, "bounds=\"[%d,%d][%d,%d]\"", &x1, &y1, &x2, &y2) == 4) {
           int row_h = y2 - y1;    // altura de uma linha do dialogo
           int cx = (x1 + x2) / 2; // centro horizontal
-
-          // O card "Planos de fundo" (icone paisagem) esta exatamente abaixo.
-          // Adicionamos a altura da linha para descer uma posicao no menu.
           int cy = y2 + (row_h / 2);
 
           snprintf(msg, sizeof(msg),
-                   "[-] Opcao 1 achada em Y:%d-%d. Clicando no card abaixo em "
-                   "(%d,%d)...",
+                   "[-] Opcao 1 achada em Y:%d-%d. Clicando no card abaixo em (%d,%d)...",
                    y1, y2, cx, cy);
           if (cb)
             cb(msg);
@@ -703,8 +728,7 @@ int F4_DefinirWallpaper(const char *serial, const char *wp_path,
     free(xml3);
   }
   if (!found_fotos) {
-    // Fallback absoluto: coordenada fixa centralizada da 2a opcao (Vision Tab 7
-    // 1024x600)
+    // Fallback absoluto: coordenada fixa centralizada da 2a opcao (Vision Tab 7 1024x600)
     if (cb)
       cb("[-] [Fallback] Tocando coordenada fixa da 2a opcao (512,550)...");
     snprintf(args, sizeof(args), "-s %s shell input tap 512 550", serial);
@@ -716,7 +740,6 @@ int F4_DefinirWallpaper(const char *serial, const char *wp_path,
 
   // ----------------------------------------------------------------
   // PASSO 5: Seleciona a imagem do wallpaper (a unica disponivel - cor azul)
-  // Ignora icones da barra superior (Y < 150) e clica na primeira imagem real
   // ----------------------------------------------------------------
   if (cb)
     cb("[-] Selecionando a imagem unica do wallpaper...");
@@ -731,7 +754,6 @@ int F4_DefinirWallpaper(const char *serial, const char *wp_path,
   int found_img = 0;
   if (xml4) {
     char *p = xml4;
-    // Varre todos os ImageViews da tela
     while ((p = strstr(p, "android.widget.ImageView")) != NULL) {
       char *b = strstr(p, "bounds=\"[");
       if (b) {
@@ -739,7 +761,6 @@ int F4_DefinirWallpaper(const char *serial, const char *wp_path,
         if (sscanf(b, "bounds=\"[%d,%d][%d,%d]\"", &x1, &y1, &x2, &y2) == 4) {
           int width = x2 - x1;
           int height = y2 - y1;
-          // Ignora a action bar (y1 < 150) e icones muito pequenos ( < 100px)
           if (y1 > 150 && width > 100 && height > 100) {
             snprintf(args, sizeof(args), "-s %s shell input tap %d %d", serial,
                      (x1 + x2) / 2, (y1 + y2) / 2);
@@ -749,17 +770,15 @@ int F4_DefinirWallpaper(const char *serial, const char *wp_path,
             found_img = 1;
             if (cb)
               cb("[-] Thumbnail da imagem detectada e clicada.");
-            break; // JÃƒÂ¡ achou a imagem unica, sai do loop
+            break;
           }
         }
       }
-      p++; // AvanÃƒÂ§a para buscar o prÃƒÂ³ximo ImageView caso o atual seja rejeitado
+      p++;
     }
     free(xml4);
   }
   if (!found_img) {
-    // Fallback: a imagem deve ser a unica, aproximadamente na primeira posicao
-    // do grid
     if (cb)
       cb("[-] Fallback: tocando na posicao esperada do 1o card (200,300)...");
     snprintf(args, sizeof(args), "-s %s shell input tap 200 300", serial);
@@ -771,7 +790,6 @@ int F4_DefinirWallpaper(const char *serial, const char *wp_path,
 
   // ----------------------------------------------------------------
   // PASSO 6: Clica em "Definir plano de fundo" (botao superior esquerdo)
-  // No Vision Tab 7 fica na action bar esquerda, aproximadamente (80, 30)
   // ----------------------------------------------------------------
   if (cb)
     cb("[-] Clicando em 'Definir plano de fundo'...");
@@ -809,8 +827,6 @@ int F4_DefinirWallpaper(const char *serial, const char *wp_path,
     free(xml5);
   }
   if (!found_btn) {
-    // Fallback: botao superior esquerdo (1024x600) - tipicamente dentro dos
-    // primeiros 200px
     if (cb)
       cb("[-] Fallback: botao superior esquerdo (80,30)...");
     snprintf(args, sizeof(args), "-s %s shell input tap 80 30", serial);
@@ -834,7 +850,6 @@ int F4_DefinirWallpaper(const char *serial, const char *wp_path,
   snprintf(args, sizeof(args), "-s %s shell cat /sdcard/dump_wp5.xml", serial);
   char *xml6 = adb_exec(args);
   if (xml6) {
-    // Prioridade: "Tela inicial e bloqueio" > "Ambas" > "Tela inicial"
     char *p = strstr(xml6, "Tela inicial e bloqueio");
     if (!p)
       p = strstr(xml6, "tela inicial e bloqueio");
@@ -862,8 +877,7 @@ int F4_DefinirWallpaper(const char *serial, const char *wp_path,
       }
     } else {
       if (cb)
-        cb("[WARNING] Dialogo de destino nao encontrado. Tentando pressionar "
-           "Enter...");
+        cb("[WARNING] Dialogo de destino nao encontrado. Tentando pressionar Enter...");
       snprintf(args, sizeof(args), "-s %s shell input keyevent 66", serial);
       char *tp = adb_exec(args);
       if (tp)

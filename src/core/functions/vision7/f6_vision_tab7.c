@@ -13,7 +13,12 @@
 #define MAX_POLLING_ITERATIONS 30
 #define POLLING_INTERVAL_MS 2000
 
+// Dump da hierarquia de tela com prioridade em memória (Fast-Path ~100ms)
 static char *v7_dump_and_read_xml(const char *serial, LogCallback cb) {
+  char *mem_xml = adb_dump_stdout(serial);
+  if (mem_xml && strlen(mem_xml) > 100) return mem_xml;
+  if (mem_xml) free(mem_xml);
+
   char args[512];
   snprintf(args, sizeof(args), "-s %s shell uiautomator dump /sdcard/window_dump.xml 2>/dev/null", serial);
   char *out = adb_exec(args);
@@ -187,8 +192,11 @@ static int v7_start_gnirehtet(const char *serial, LogCallback cb) {
   return 1;
 }
 
+// =============================================================================
+//  MÓDULO F6: SINCRONIZAÇÃO DIRETA AVANÇADA (VISION TAB 7)
+// =============================================================================
 int F6_ExecutarSincronizacao(const char *serial, LogCallback cb) {
-  if (cb) cb("[F6 Vision7] 🔄 INICIANDO ROTINA DE SINCRONIZACAO DIRETA AVANCADA (VISION TAB)...");
+  if (cb) cb("[F6 Vision7] INICIANDO ROTINA DE SINCRONIZACAO DIRETA AVANCADA (VISION TAB)...");
 
   char args[512];
   char *out;
@@ -308,39 +316,48 @@ int F6_ExecutarSincronizacao(const char *serial, LogCallback cb) {
   // Etapa 4: Leitura de Avaliações Pendentes na Tela 'SINCRONIZAR'
   // -------------------------------------------------------------
   if (cb) cb("[F6 - Etapa 4] Lendo a quantidade abaixo de 'Avaliações Pendentes' na tela SINCRONIZAR...");
-  char *xml_sync_screen = v7_dump_and_read_xml(serial, cb);
-
+  
+  char *xml_sync_screen = NULL;
+  int pending_count = -1;
   int btn_big_cx = 0, btn_big_cy = 0;
   int btn_big_found = 0;
 
-  if (xml_sync_screen) {
-    if (v7_get_centroid(xml_sync_screen, "SINCRONIZAR AGORA", &btn_big_cx, &btn_big_cy) ||
-        v7_get_centroid(xml_sync_screen, "Sincronizar Agora", &btn_big_cx, &btn_big_cy)) {
-      btn_big_found = 1;
+  // Tenta ler com até 2 tentativas caso a tela esteja animando
+  for (int retry = 0; retry < 2; retry++) {
+    xml_sync_screen = v7_dump_and_read_xml(serial, cb);
+    if (xml_sync_screen) {
+      if (v7_get_centroid(xml_sync_screen, "SINCRONIZAR AGORA", &btn_big_cx, &btn_big_cy) ||
+          v7_get_centroid(xml_sync_screen, "Sincronizar Agora", &btn_big_cx, &btn_big_cy)) {
+        btn_big_found = 1;
+      }
+      pending_count = v7_parse_pending_count(xml_sync_screen);
+      if (pending_count >= 0) break;
+      free(xml_sync_screen);
+      xml_sync_screen = NULL;
+      Sleep(1000);
     }
   }
 
-  int pending_count = v7_parse_pending_count(xml_sync_screen);
   if (xml_sync_screen) free(xml_sync_screen);
 
   char log_pending[256];
   if (pending_count >= 0) {
-    snprintf(log_pending, sizeof(log_pending), "[F6 Vision7] 📊 Número lido abaixo de Avaliações Pendentes: %d", pending_count);
+    snprintf(log_pending, sizeof(log_pending), "[F6 Vision7] Número lido abaixo de Avaliações Pendentes: %d", pending_count);
     if (cb) cb(log_pending);
   } else {
-    if (cb) cb("[F6 Vision7] 📊 Rótulo de pendências não lido no centro da tela. Assumindo padrão seguro (>= 1).");
+    if (cb) cb("[F6 Vision7] Rótulo de pendências não lido no centro da tela. Assumindo padrão seguro (>= 1).");
   }
 
   // -------------------------------------------------------------
   // Etapa 5: Avaliação Condicional (Pendentes 0 vs Pendentes >= 1)
   // -------------------------------------------------------------
   if (pending_count == 0) {
-    if (cb) cb("[F6 Vision7] ℹ️ Número de Avaliações Pendentes e igual a 0.");
+    if (cb) cb("[F6 Vision7] Número de Avaliações Pendentes e igual a 0.");
     if (cb) cb("[-] O sistema NAO precisa sincronizar. NAO clicando no botao grande 'SINCRONIZAR AGORA'.");
     if (cb) cb("[-] Desativando a rede/tunel e avancando para o encerramento seguro...");
     v7_stop_gnirehtet(serial, cb);
   } else {
-    if (cb) cb("[F6 Vision7] 🔄 Número de Avaliações Pendentes e maior ou igual a 1. Sincronização necessária!");
+    if (cb) cb("[F6 Vision7] Número de Avaliações Pendentes e maior ou igual a 1. Sincronização necessária!");
 
     // Clica no botão grande 'SINCRONIZAR AGORA'
     if (btn_big_found) {
@@ -376,7 +393,7 @@ int F6_ExecutarSincronizacao(const char *serial, LogCallback cb) {
     }
 
     if (confirmed) {
-      if (cb) cb("[F6 Vision7] ✔️ Confirmação de sincronização detectada com sucesso!");
+      if (cb) cb("[F6 Vision7] Confirmação de sincronização detectada com sucesso!");
     } else {
       if (cb) cb("[WARNING] Tempo limite de aguarde de sincronização atingido. Prosseguindo...");
     }
@@ -415,11 +432,7 @@ int F6_ExecutarSincronizacao(const char *serial, LogCallback cb) {
   Sleep(500);
 
   int recents_cleared = 0;
-  snprintf(args, sizeof(args), "-s %s shell uiautomator dump /sdcard/dump_recents_f6.xml 2>/dev/null", serial);
-  out = adb_exec(args); if (out) free(out);
-
-  snprintf(args, sizeof(args), "-s %s shell cat /sdcard/dump_recents_f6.xml", serial);
-  char *xml_recents = adb_exec(args);
+  char *xml_recents = v7_dump_and_read_xml(serial, cb);
   if (xml_recents) {
     char *p = strstr(xml_recents, "Limpar tudo");
     if (!p) p = strstr(xml_recents, "LIMPAR TUDO");
@@ -442,7 +455,7 @@ int F6_ExecutarSincronizacao(const char *serial, LogCallback cb) {
   }
 
   if (!recents_cleared) {
-    snprintf(args, sizeof(args), "-s %s shell input tap 300 1100", serial);
+    snprintf(args, sizeof(args), "-s %s shell input tap 300 950", serial);
     out = adb_exec(args); if (out) free(out);
   }
   Sleep(800);
@@ -465,8 +478,6 @@ int F6_ExecutarSincronizacao(const char *serial, LogCallback cb) {
   snprintf(args, sizeof(args), "-s %s shell reboot -p", serial);
   out = adb_exec(args); if (out) free(out);
 
-  if (cb) cb("[F6 Vision7] ✔️ PROCESSO F6 CONCLUIDO COM SUCESSO!");
+  if (cb) cb("[F6 Vision7] PROCESSO F6 CONCLUIDO COM SUCESSO!");
   return PIPELINE_SUCCESS;
 }
-
-

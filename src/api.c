@@ -10,7 +10,9 @@
 
 
 // Permite compilar como DLL sem quebrar exports
+#ifndef DllExport
 #define DllExport __declspec(dllexport)
+#endif
 
 // Controle global de pausa e cancelamento
 volatile int g_engine_canceled = 0;
@@ -28,8 +30,8 @@ static LONG WINAPI InnoUnhandledExceptionFilter(EXCEPTION_POINTERS *pExceptionIn
 
     FILE *f = fopen(log_path, "a");
     if (f) {
-        fprintf(f, "[ENGINE ANTI-CRASH] Excecao bruta isolada. Code: 0x%08X | Address: 0x%p\n",
-                pExceptionInfo->ExceptionRecord->ExceptionCode,
+        fprintf(f, "[ENGINE ANTI-CRASH] Excecao bruta isolada. Code: 0x%08lX | Address: 0x%p\n",
+                (unsigned long)pExceptionInfo->ExceptionRecord->ExceptionCode,
                 pExceptionInfo->ExceptionRecord->ExceptionAddress);
         fclose(f);
     }
@@ -37,6 +39,8 @@ static LONG WINAPI InnoUnhandledExceptionFilter(EXCEPTION_POINTERS *pExceptionIn
 }
 
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved) {
+    (void)hinstDLL;
+    (void)lpvReserved;
     switch (fdwReason) {
     case DLL_PROCESS_ATTACH:
         SetUnhandledExceptionFilter(InnoUnhandledExceptionFilter);
@@ -104,6 +108,7 @@ DllExport void Engine_GetDevice(int index, AdbDevice* out_device) {
     }
 }
 
+
 DllExport int Engine_GetRegisteredTotal() {
     DispositivoRegistro db[MAX_REGISTROS];
     return dispositivos_carregar(db, MAX_REGISTROS);
@@ -134,11 +139,6 @@ DllExport int Engine_UninstallApp(const char* serial, const char* package_name) 
 #include "core/functions/nokia_t20/f1_nokia_t20.h"
 #include "core/functions/nokia_t20/f2_nokia_t20.h"
 #include "core/functions/nokia_t20/f3_nokia_t20.h"
-
-
-
-#define DllExport __declspec(dllexport)
-
 // --- MÃ‰TODOS DE EXPORTAÃ‡ÃƒO PARA C# (DllImport) ---
 
 // [Automação] F1: Instalação Vision 7
@@ -176,6 +176,12 @@ __declspec(dllexport) int Engine_ExecuteF3_UpdatePackage(const char* serial, con
 }
 
 // [Automação] F4: Ferramentas e Gestão Kiosk (Vision 7)
+DllExport int Engine_ExecuteF4_Terminal(const char* serial, LogCallback cb) {
+    if (!serial) return PIPELINE_ERROR;
+    if (cb) cb("[API] Solicitacao F4 Terminal / Kiosk recebida. Ativando Modo Kiosk...");
+    return F4_ExecutarFerramenta(serial, 5, cb);
+}
+
 DllExport int Engine_ExecuteF4_Ferramenta(const char* serial, int acao, LogCallback cb) {
     return F4_ExecutarFerramenta(serial, acao, cb);
 }

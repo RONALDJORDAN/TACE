@@ -11,6 +11,7 @@
 #define adb_exec(args) adb_exec_retry(args, 3, 2000, (AdbLogCallback)cb)
 
 int M7_ExecutarPipelineF3_AtualizarPacote(const char *serial, const char *apk_path, const char *pacote_path, const char *package_name, LogCallback cb) {
+    (void)package_name;
     return M7_AtualizarPacote(serial, apk_path, pacote_path, cb);
 }
 

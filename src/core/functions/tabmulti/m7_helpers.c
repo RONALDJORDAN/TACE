@@ -96,9 +96,9 @@ int M7_StartGnirehtet(const char *serial, LogCallback cb) {
   char *last_slash = strrchr(exe_path, '\\');
   if (last_slash) *last_slash = '\0';
 
-  char gnirehtet_path[MAX_PATH];
-  char gnirehtet_apk[MAX_PATH];
-  char gnirehtet_dir[MAX_PATH];
+  char gnirehtet_path[512];
+  char gnirehtet_apk[512];
+  char gnirehtet_dir[512];
 
   snprintf(gnirehtet_dir, sizeof(gnirehtet_dir), "%s\\tools\\reverse_tethering", exe_path);
   if (GetFileAttributesA(gnirehtet_dir) == INVALID_FILE_ATTRIBUTES) {
@@ -106,8 +106,8 @@ int M7_StartGnirehtet(const char *serial, LogCallback cb) {
              "%s\\..\\..\\tools\\reverse_tethering", exe_path);
   }
 
-  char full_gnirehtet_dir[MAX_PATH];
-  GetFullPathNameA(gnirehtet_dir, MAX_PATH, full_gnirehtet_dir, NULL);
+  char full_gnirehtet_dir[512];
+  GetFullPathNameA(gnirehtet_dir, sizeof(full_gnirehtet_dir), full_gnirehtet_dir, NULL);
   strncpy(gnirehtet_dir, full_gnirehtet_dir, sizeof(gnirehtet_dir) - 1);
 
   snprintf(gnirehtet_path, sizeof(gnirehtet_path), "%s\\gnirehtet.exe", gnirehtet_dir);
@@ -234,15 +234,15 @@ int M7_StopGnirehtet(const char *serial, LogCallback cb) {
   char *last_slash = strrchr(exe_path, '\\');
   if (last_slash) *last_slash = '\0';
 
-  char gnirehtet_path[MAX_PATH];
-  char gnirehtet_dir[MAX_PATH];
+  char gnirehtet_path[512];
+  char gnirehtet_dir[512];
   snprintf(gnirehtet_dir, sizeof(gnirehtet_dir), "%s\\tools\\reverse_tethering", exe_path);
   if (GetFileAttributesA(gnirehtet_dir) == INVALID_FILE_ATTRIBUTES) {
     snprintf(gnirehtet_dir, sizeof(gnirehtet_dir),
              "%s\\..\\..\\tools\\reverse_tethering", exe_path);
   }
-  char full_dir[MAX_PATH];
-  GetFullPathNameA(gnirehtet_dir, MAX_PATH, full_dir, NULL);
+  char full_dir[512];
+  GetFullPathNameA(gnirehtet_dir, sizeof(full_dir), full_dir, NULL);
   snprintf(gnirehtet_path, sizeof(gnirehtet_path), "%s\\gnirehtet.exe", full_dir);
 
   char cmd_stop[1024];

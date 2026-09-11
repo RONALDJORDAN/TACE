@@ -1,5 +1,6 @@
 using System;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
@@ -285,6 +286,43 @@ namespace InnovPlayUI.Views
             ListBackups.ItemsSource = backups;
         }
 
+        private string _searchTerm = "";
+
+        public void TxtSearchStrategy_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (sender is TextBox tb)
+            {
+                _searchTerm = tb.Text.Trim();
+                AplicarFiltroEAgrupamento();
+            }
+        }
+
+        public void ComboSimulador_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (ComboSimulador != null && ComboSimulador.SelectedItem is string selectedFriendly)
+            {
+                AtualizarSimulador(selectedFriendly);
+            }
+        }
+
+        private void AtualizarSimulador(string friendlyName)
+        {
+            if (TxtSimTargetId == null || TxtSimPrimary == null || TxtSimFallback1 == null || TxtSimConfidence == null)
+                return;
+
+            var items = _allStrategies.Where(s => s.ElementoId == friendlyName).OrderByDescending(s => s.Score).ToList();
+            if (items.Count > 0)
+            {
+                var best = items[0];
+                TxtSimTargetId.Text = $"ALVO: {best.RawTargetId} ({friendlyName})";
+                TxtSimPrimary.Text = best.Query;
+                TxtSimFallback1.Text = items.Count > 1 ? items[1].Query : "Heurística de Centróide Estático / Relativo (X, Y)";
+
+                double conf = Math.Max(88.0, Math.Min(99.9, 88.0 + (best.Score * 0.12)));
+                TxtSimConfidence.Text = $"{conf:F1}% Confiabilidade Heurística (Score: {best.Score})";
+            }
+        }
+
         private void FilterModel_Click(object sender, RoutedEventArgs e)
         {
             if (sender is RadioButton btn && btn.Tag is string filterTag)
@@ -335,6 +373,17 @@ namespace InnovPlayUI.Views
                 }
 
                 AplicarFiltroEAgrupamento();
+
+                // Atualizar seletor do simulador InnoAI 2.0
+                if (ComboSimulador != null)
+                {
+                    var distinctElements = _allStrategies.Select(s => s.ElementoId).Distinct().OrderBy(x => x).ToList();
+                    ComboSimulador.ItemsSource = distinctElements;
+                    if (distinctElements.Count > 0 && ComboSimulador.SelectedIndex < 0)
+                    {
+                        ComboSimulador.SelectedIndex = 0;
+                    }
+                }
             }
             catch (Exception ex)
             {
@@ -380,6 +429,15 @@ namespace InnovPlayUI.Views
                     "F1"  => item.Categoria.Contains("Geral") || item.RawTargetId.StartsWith("f1_") || (!item.RawTargetId.StartsWith("f7_") && !item.RawTargetId.StartsWith("v7_") && !item.RawTargetId.StartsWith("t20_")),
                     _     => true // ALL
                 };
+
+                if (!string.IsNullOrEmpty(_searchTerm))
+                {
+                    bool searchMatches = item.ElementoId.IndexOf(_searchTerm, StringComparison.OrdinalIgnoreCase) >= 0
+                        || item.Query.IndexOf(_searchTerm, StringComparison.OrdinalIgnoreCase) >= 0
+                        || item.RawTargetId.IndexOf(_searchTerm, StringComparison.OrdinalIgnoreCase) >= 0
+                        || item.Categoria.IndexOf(_searchTerm, StringComparison.OrdinalIgnoreCase) >= 0;
+                    if (!searchMatches) matches = false;
+                }
 
                 if (matches) filtered.Add(item);
             }

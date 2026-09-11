@@ -30,6 +30,7 @@ static int t20_get_centroid(const char *xml, const char *search_str, int *out_cx
 
 
 int T20_ExecutarPipelineF2(const char* serial, const char* apk_path, const char* pacote_path, const char* wp_path, const char* package_name, const char* login, const char* senha, const char* municipio, LogCallback cb) {
+  (void)wp_path;
   if (!serial || strlen(serial) == 0) {
     if (cb) cb("[ERROR] Serial do dispositivo Nokia T20 não informado!");
     return PIPELINE_ERROR;
