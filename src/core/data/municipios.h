@@ -6,8 +6,8 @@
 
 typedef struct {
     char nome[128];
-    char login[128];
-    char senha[128];
+    char login[512];  // 512: comporta credencial cifrada DPAPI (Base64)
+    char senha[512];  // 512: comporta credencial cifrada DPAPI (Base64)
     char wallpaper_path[MAX_STR];
 } Municipio;
 

@@ -1,4 +1,5 @@
 #include "municipios.h"
+#include "cofre.h"
 #include <stdio.h>
 #include <string.h>
 #include <windows.h>
@@ -72,6 +73,22 @@ int municipios_carregar(Municipio* lista, int max, const char* csv_path) {
         if (fi > 2) strncpy(m->senha, fields[2], sizeof(m->senha) - 1);
         if (fi > 3) convert_utf8_to_ansi(fields[3], m->wallpaper_path, sizeof(m->wallpaper_path));
 
+        // Cofre DPAPI: revela credenciais cifradas (legado em texto puro segue intacto)
+        if (cofre_eh_protegido(m->login)) {
+            char claro[sizeof(m->login)] = {0};
+            if (cofre_revelar(m->login, claro, sizeof(claro))) {
+                strncpy(m->login, claro, sizeof(m->login) - 1);
+                SecureZeroMemory(claro, sizeof(claro));
+            }
+        }
+        if (cofre_eh_protegido(m->senha)) {
+            char claro[sizeof(m->senha)] = {0};
+            if (cofre_revelar(m->senha, claro, sizeof(claro))) {
+                strncpy(m->senha, claro, sizeof(m->senha) - 1);
+                SecureZeroMemory(claro, sizeof(claro));
+            }
+        }
+
         count++;
     }
 
@@ -86,14 +103,28 @@ int municipios_salvar(const Municipio* lista, int count, const char* csv_path) {
     for (int i = 0; i < count; i++) {
         char utf8_nome[256] = {0};
         char utf8_wp[512] = {0};
-        
+        char cofre_login[1024] = {0};
+        char cofre_senha[1024] = {0};
+
         convert_ansi_to_utf8(lista[i].nome, utf8_nome, sizeof(utf8_nome));
         convert_ansi_to_utf8(lista[i].wallpaper_path, utf8_wp, sizeof(utf8_wp));
-        
+
+        // Cofre DPAPI: cifra login/senha em texto puro (idempotente; falha cifra -> preserva original)
+        const char *out_login = lista[i].login;
+        const char *out_senha = lista[i].senha;
+        if (out_login[0] && !cofre_eh_protegido(out_login) &&
+            cofre_proteger(out_login, cofre_login, sizeof(cofre_login))) {
+            out_login = cofre_login;
+        }
+        if (out_senha[0] && !cofre_eh_protegido(out_senha) &&
+            cofre_proteger(out_senha, cofre_senha, sizeof(cofre_senha))) {
+            out_senha = cofre_senha;
+        }
+
         fprintf(f, "%s;%s;%s;%s\n",
             utf8_nome[0] ? utf8_nome : lista[i].nome,
-            lista[i].login,
-            lista[i].senha,
+            out_login,
+            out_senha,
             utf8_wp[0] ? utf8_wp : lista[i].wallpaper_path);
     }
     fclose(f);

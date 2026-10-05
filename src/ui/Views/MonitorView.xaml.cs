@@ -85,9 +85,9 @@ namespace BotRpaUI.Views
     {
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)]
         public string Nome;
-        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)]
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 512)]
         public string Login;
-        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)]
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 512)]
         public string Senha;
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 512)]
         public string WallpaperPath;

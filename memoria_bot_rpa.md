@@ -1354,6 +1354,17 @@ O **InnoAI** é o motor de inteligência e automação visual da Plataforma Inno
 - **Ganho estimado:** ~25–35s por aparelho. Etapas V7 compartilhadas repassam o ganho ao F2/F3 do Vision 7 (efeito positivo, mesmo modelo).
 - **Validação:** com ordem explícita do usuário (`buil pro favor`), executado `scripts/build.bat` (TESTE, ícone Azul): compilação `05.10.2026.1534` com **zero warnings / zero errors** (`BotEngine.dll` + `BotRPAui.exe` em `data/output/`). Auditoria `registros/2026-10-05/15-34_Plataforma_BotRPA_DESKTOP_BUILD`.
 
+### [2026-10-05] - Cofre DPAPI: login/senha de municípios criptografados (Fase 1)
+- **Pedido:** implementar o ponto 1 (cofre de senhas) para testar.
+- **Arquitetura:** todo acesso ao CSV passa pelo motor C (`Engine_Get/SaveMunicipios`), então o cofre vive num só lugar, valendo para UI e pipelines sem duplicar.
+- **Alterações:**
+  - Novos `src/core/data/cofre.h/.c`: DPAPI `CryptProtectData` (escopo CURRENT_USER, sem senha mestra) + entropia fixa da app + Base64 próprio, prefixo `DPAPIv1:`, idempotente, `SecureZeroMemory` no material sensível, falhas nunca destroem dados.
+  - `municipios.h`: `login/senha` 128→512 (cabe o blob); `municipios.c`: revela ao carregar, cifra ao salvar (legado em claro segue legível e migra no próximo save).
+  - `MonitorView.xaml.cs`: `MunicipioModel.Login/Senha` SizeConst 128→512 (struct único compartilhado).
+  - `scripts/build.bat`: `cofre.c` no `SRCS_CORE` + `-lcrypt32`.
+- **Validação:** teste round-trip dedicado (14/14 OK: proteger/revelar, CSV-safe sem `;`, idempotência, legado intacto) + `-Wall -Wextra` limpo; build `05.10.2026.1752` **zero warnings / zero errors**, auditoria `registros/2026-10-05/17-52_Plataforma_BotRPA_DESKTOP_BUILD`.
+- **Limites conhecidos (Fase 1):** o arquivo só abre no mesmo usuário/máquina (DPAPI user-scope) — release para outro PC exige recadastrar; seed `config/municipios.csv` segue em claro até a Fase 2 (seed público sem credenciais + cofre local). Para testar: abrir Gerenciar Municípios, salvar → `municipios.csv` passa a exibir `DPAPIv1:...`.
+
 ### [2026-10-05] - UI: terminal Kiosk simplificado (perfis 1-clique + cards compactos)
 - **Pedido:** a interface do terminal Kiosk estava conturbada; melhorar e simplificar.
 - **Alterações (`MonitorView.xaml` + handler em `MonitorView.xaml.cs`, sem mudar o motor F4):**
