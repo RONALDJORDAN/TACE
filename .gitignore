@@ -66,8 +66,8 @@ compile_commands.json
 # Scratch e testes temporários
 scratch/
 
-# Dados locais e relatórios dinâmicos
-data/
+# Dados locais e relatórios dinâmicos (raiz; src/core/data tem fontes C versionadas)
+/data/
 /municipios.csv
 /version.txt
 *.db
