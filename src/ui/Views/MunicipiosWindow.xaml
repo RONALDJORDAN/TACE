@@ -1,4 +1,4 @@
-<Window x:Class="InnovPlayUI.Views.MunicipiosWindow"
+<Window x:Class="BotRpaUI.Views.MunicipiosWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Gerenciar Municípios" Height="580" Width="700"

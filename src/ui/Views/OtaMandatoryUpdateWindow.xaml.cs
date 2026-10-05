@@ -1,9 +1,9 @@
 using System;
 using System.Threading.Tasks;
 using System.Windows;
-using InnovPlayUI.Core;
+using BotRpaUI.Core;
 
-namespace InnovPlayUI.Views
+namespace BotRpaUI.Views
 {
     public partial class OtaMandatoryUpdateWindow : Window
     {

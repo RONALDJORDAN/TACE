@@ -1,5 +1,5 @@
 @echo off
-echo [*] Instalador de Dependencias Inno RPA
+echo [*] Instalador de Dependencias Bot_RPA
 echo [*] Verificando estrutura de diretorios...
 
 cd /d "%~dp0\.."

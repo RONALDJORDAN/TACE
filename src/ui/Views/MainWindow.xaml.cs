@@ -1,7 +1,7 @@
 using System.Windows;
-using InnovPlayUI.Views;
+using BotRpaUI.Views;
 
-namespace InnovPlayUI
+namespace BotRpaUI
 {
     public partial class MainWindow : Window
     {
@@ -9,10 +9,10 @@ namespace InnovPlayUI
         private MonitorProView _monitorProView;
         private RelatoriosView _relatoriosView;
         private ConfigView _configView;
-        private InnoLearnView _learnView;
+        private BotLearnView _learnView;
         private AboutView _aboutView;
 
-        [System.Runtime.InteropServices.DllImport("InnoEngine.dll", CallingConvention = System.Runtime.InteropServices.CallingConvention.Cdecl)]
+        [System.Runtime.InteropServices.DllImport("BotEngine.dll", CallingConvention = System.Runtime.InteropServices.CallingConvention.Cdecl)]
         public static extern int Engine_GetDeviceCount();
 
         private System.Windows.Threading.DispatcherTimer? _headerTelemetryTimer;
@@ -21,8 +21,8 @@ namespace InnovPlayUI
         {
             InitializeComponent();
             
-            string versionStr = InnovPlayUI.Core.OtaUpdateManager.CurrentVersion;
-            Title = $"Inno RPA (Plataforma InnovTech) - v{versionStr}";
+            string versionStr = BotRpaUI.Core.OtaUpdateManager.CurrentVersion;
+            Title = $"Bot_RPA - v{versionStr}";
             TxtHeaderVersion.Text = versionStr;
 
             // Timer para telemetria contínua de dispositivos conectados no cabeçalho
@@ -47,7 +47,7 @@ namespace InnovPlayUI
             _monitorProView = new MonitorProView();
             _relatoriosView = new RelatoriosView();
             _configView = new ConfigView();
-            _learnView = new InnoLearnView();
+            _learnView = new BotLearnView();
             _aboutView = new AboutView();
             
             // Atualiza a visibilidade da barra de navegação para exibir apenas a interface de monitor escolhida
@@ -57,16 +57,16 @@ namespace InnovPlayUI
             NavigateToDefaultMonitor();
 
             // Escuta mudanças de configuração em tempo de execução
-            InnovPlayUI.Core.SettingsManager.OnSettingsChanged += () =>
+            BotRpaUI.Core.SettingsManager.OnSettingsChanged += () =>
             {
                 Dispatcher.Invoke(() =>
                 {
                     UpdateMonitorNavigationVisibility();
-                    if (MainContent.Content is MonitorView && InnovPlayUI.Core.SettingsManager.UsbMonitorInterface.Equals("Pro", StringComparison.OrdinalIgnoreCase))
+                    if (MainContent.Content is MonitorView && BotRpaUI.Core.SettingsManager.UsbMonitorInterface.Equals("Pro", StringComparison.OrdinalIgnoreCase))
                     {
                         NavigateToMonitorPro();
                     }
-                    else if (MainContent.Content is MonitorProView && !InnovPlayUI.Core.SettingsManager.UsbMonitorInterface.Equals("Pro", StringComparison.OrdinalIgnoreCase))
+                    else if (MainContent.Content is MonitorProView && !BotRpaUI.Core.SettingsManager.UsbMonitorInterface.Equals("Pro", StringComparison.OrdinalIgnoreCase))
                     {
                         NavigateToMonitor();
                     }
@@ -85,11 +85,14 @@ namespace InnovPlayUI
         {
             try
             {
-                var otaManager = new InnovPlayUI.Core.OtaUpdateManager();
+                var otaManager = new BotRpaUI.Core.OtaUpdateManager();
                 var manifest = await otaManager.CheckForUpdatesAsync();
 
                 if (manifest != null && otaManager.IsUpdateAvailable(manifest))
                 {
+                    // Somente atualizações marcadas como obrigatórias interrompem o boot.
+                    // Opcionais aparecem apenas em Configurações → OTA.
+                    if (!manifest.Mandatory) return;
                     // OBRIGATÓRIO: Nova versão encontrada na nuvem! Abre a janela modal de atualização obrigatória.
                     var mandatoryWindow = new OtaMandatoryUpdateWindow(manifest);
                     mandatoryWindow.Owner = this;
@@ -104,7 +107,7 @@ namespace InnovPlayUI
 
         public void UpdateMonitorNavigationVisibility()
         {
-            bool isPro = InnovPlayUI.Core.SettingsManager.UsbMonitorInterface.Equals("Pro", StringComparison.OrdinalIgnoreCase);
+            bool isPro = BotRpaUI.Core.SettingsManager.UsbMonitorInterface.Equals("Pro", StringComparison.OrdinalIgnoreCase);
             if (isPro)
             {
                 BtnMenuMonitor.Visibility = Visibility.Collapsed;
@@ -120,7 +123,7 @@ namespace InnovPlayUI
         public void NavigateToDefaultMonitor()
         {
             UpdateMonitorNavigationVisibility();
-            if (InnovPlayUI.Core.SettingsManager.UsbMonitorInterface.Equals("Pro", StringComparison.OrdinalIgnoreCase))
+            if (BotRpaUI.Core.SettingsManager.UsbMonitorInterface.Equals("Pro", StringComparison.OrdinalIgnoreCase))
             {
                 NavigateToMonitorPro();
             }
@@ -159,7 +162,7 @@ namespace InnovPlayUI
 
         public void NavigateToLearn()
         {
-            _learnView = new InnoLearnView(); // Recarrega dados ao navegar
+            _learnView = new BotLearnView(); // Recarrega dados ao navegar
             MainContent.Content = _learnView;
             UpdateMenuStyles(BtnMenuLearn);
         }

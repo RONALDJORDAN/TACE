@@ -2,10 +2,10 @@
 #define LEARN_ENGINE_H
 
 // ============================================================
-// InnoLearn — Motor de Decisão (Score Engine)
+// BotLearn — Motor de Decisão (Score Engine)
 // Interface pública para os motores F1/F2 consultarem e
 // retroalimentarem o sistema de aprendizado.
-// Autor: Jordan Araujo | InnovPlay
+// Autor: Jordan Araujo | BotRpa
 // ============================================================
 
 #include "learn_db.h"

@@ -1,10 +1,10 @@
-<Window x:Class="InnovPlayUI.WelcomeWindow"
+<Window x:Class="BotRpaUI.WelcomeWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="InnoBot - Robotic Process Automation" Height="500" Width="800"
+        Title="Bot_RPA - Robotic Process Automation" Height="500" Width="800"
         Background="#0B0B13" WindowStartupLocation="CenterScreen"
         FontFamily="Segoe UI" WindowStyle="None" AllowsTransparency="True"
-        Icon="pack://application:,,,/Assets/Icons/InnoRPAui.ico">
+        Icon="pack://application:,,,/Assets/Icons/BotRPAui.ico">
     
     <Window.Resources>
         <!-- Estilo dos Cards (Hover e Transformação) -->
@@ -95,7 +95,7 @@
             <!-- Barra de Título Customizada -->
             <Grid Grid.Row="0" Background="#151525" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
                 <Border CornerRadius="15,15,0,0" />
-                <TextBlock Text="InnoBot - Robotic Process Automation" Foreground="#E3E0F2" FontWeight="SemiBold" VerticalAlignment="Center" Margin="15,10"/>
+                <TextBlock Text="Bot_RPA - Robotic Process Automation" Foreground="#E3E0F2" FontWeight="SemiBold" VerticalAlignment="Center" Margin="15,10"/>
                 <Button Content="✕" HorizontalAlignment="Right" VerticalAlignment="Top" Width="40" Height="30" 
                         Background="Transparent" Foreground="#E3E0F2" BorderThickness="0" Cursor="Hand" Click="BtnClose_Click">
                     <Button.Style>

@@ -1,6 +1,6 @@
 # =============================================================================
-# Inno RPA - Gravador de Fluxo Manual via ADB
-# Desenvolvedor: Jordan Araujo | InnovTech
+# Bot_RPA - Gravador de Fluxo Manual via ADB
+# Desenvolvedor: Jordan Araujo | Bot_RPA
 # Descricao: Captura o estado da tela do tablet (XML + foco da janela) a cada
 #            passo executado manualmente, gerando um log para mapeamento da
 #            automacao real.
@@ -33,8 +33,8 @@ New-Item -ItemType Directory -Force -Path $OutputDir | Out-Null
 
 Write-Host ""
 Write-Host "============================================================" -ForegroundColor Cyan
-Write-Host "  GRAVADOR DE FLUXO MANUAL - Inno RPA" -ForegroundColor Cyan
-Write-Host "  InnovTech | Desenvolvido por Jordan Araujo" -ForegroundColor DarkCyan
+Write-Host "  GRAVADOR DE FLUXO MANUAL - Bot_RPA" -ForegroundColor Cyan
+Write-Host "  Bot_RPA | Desenvolvido por Jordan Araujo" -ForegroundColor DarkCyan
 Write-Host "============================================================" -ForegroundColor Cyan
 Write-Host ""
 
@@ -199,7 +199,7 @@ foreach ($entry in $Log) {
 
 $reportLines += "---"
 $reportLines += ""
-$reportLines += "> Relatorio gerado automaticamente pelo Gravador de Fluxo Manual do Inno RPA - InnovTech"
+$reportLines += "> Relatorio gerado automaticamente pelo Gravador de Fluxo Manual do Bot_RPA - Bot_RPA"
 
 $reportLines | Out-File $reportPath -Encoding UTF8
 Write-Host ""

@@ -1,0 +1,172 @@
+================================================================================
+ AUDITORIA COMPLETA - Bot_RPA (Plataforma InnovTech)
+ Data da auditoria: 25/09/2026 | Escopo: C:\Projetos\Bot_RPA integral
+ (codigo, configuracao, scripts, documentacao, git)
+================================================================================
+
+PARTE 1 - AUDITORIA TECNICA
+--------------------------------------------------------------------------------
+
+1. IDENTIFICACAO E PORTE
+  Nome oficial .....: Bot_RPA - Plataforma InnovTech (antes: inno_botRpa / BotRpa)
+  Tipo .............: Aplicativo desktop Windows (automacao robotica - RPA)
+  Stack ............: C nativo (motor) + C# WPF .NET 8 (interface) + SQLite + Firebase RTDB
+  Tamanho do src/ ..: 27 arquivos .c + 28 .h + 22 .cs + 12 .xaml
+  Maiores arquivos .: f1_vision_tab7.c (2.378 linhas), MonitorView.xaml.cs (2.274),
+                     MonitorProView.xaml.cs (1.685)
+  Git ..............: 4 commits (16/08 a 11/09/2026); ha ~20 arquivos modificados
+                     + 7 novos ainda nao commitados (ver item 9).
+
+2. ARQUITETURA - HIBRIDA EM 2 CAMADAS ISOLADAS
+
+  [UI - C# WPF .NET 8 (BotRPAui.exe)]
+   Monitor Classic/Pro, Relatorios, BotLearn, Config, Mapa Neural
+   Tema Glassmorphism Cyber-Industrial
+              |
+        [DllImport] - 36 funcoes exportadas
+              |
+  [MOTOR - C puro (BotEngine.dll, linking estatico)]
+   drivers/adb, data/municipios+dispositivos, learn/IA,
+   functions/{vision7, tabmulti, nokia_t20} (F1-F8)
+              |
+        ADB / UIAutomator -> tablets
+
+  Politicas declaradas e verificadas no codigo: Zero-Leak (memoria manual
+  no C), Zero Warnings (build de 25/09 passou limpo), efeito colateral zero
+  entre modelos (cada funcao vive no seu .c por fabricante).
+
+3. MOTOR C - INVENTARIO VERIFICADO
+  - Drivers: core/drivers/adb.c (659 linhas) - refresh de dispositivos,
+    shell, dumps XML com fast-path em RAM (exec-out via stdout, ~100 ms)
+    + fallback em disco; dumps isolados por serial
+    (window_dump_<serial>.xml) permitindo paralelismo real.
+  - Dados: core/data/dispositivos.c, municipios.c (CSV seed + conversao
+    UTF-8/ANSI transparente para acentos como "Pao de Acucar").
+  - IA embarcada: core/learn/learn_db.c + learn_engine.c - seletores
+    v7_*/f7_* com score -100...+100 (modo deterministico; aprendizado
+    dinamico desativado via stubs).
+  - Funcoes por modelo: Vision 7 (F1-F6, F8; F1 com 2.378 linhas, pipeline
+    canonico Etapa 0->7b com batching ADB, Gnirehtet, fuzzy-matching de
+    municipio); TabMulti M7 (F1-F5); Nokia T20 (F1-F3). src/api.c expoe
+    36 funcoes a UI.
+  - Resiliencia: filtro SEH top-level na DLL, Sleep semantico com polling
+    cancelavel (ESC pausa/cancela), adb_ensure_app_running, kill-server
+    do ADB ao encerrar.
+
+4. INTERFACE C# - INVENTARIO VERIFICADO
+  12 telas: MonitorView (Classic, timer 5 s), MonitorProView (cockpit,
+  timer 4 s + telemetria 1 s, cards/lista), RelatoriosView (metricas,
+  banco de dados, exportacao PDF/CSV, etiquetas QR), BotLearnView,
+  BrainVisualizerWindow (mapa neural com filtros por hardware),
+  ConfigView, MunicipiosWindow, AboutView, MainWindow, WelcomeWindow.
+  Nucleo em Core/: SQLiteDatabaseManager (880 linhas), OtaUpdateManager,
+  CloudAutoSyncService, FirebaseAuthService (novo, ver item 6),
+  SettingsManager, AntiCrashGuard, PathHelper.
+
+5. DADOS - 3 NIVEIS
+  1) Local: data/bot_database.db (SQLite, Serial UNIQUE), CSVs espelho
+     (dispositivos_registrados.csv, relatorio_serial_mac.csv).
+  2) Nuvem: Firebase projeto matematica-em-foco -> nos /rpa_devices
+     (frota), /ota/manifest|history|devices (atualizacoes), /rpa_ota/*
+     (legado ouvido pelo Innobot no InnovStock).
+  3) Dedup multi-operador (implementado em 25/09): chave = serial
+     sanitizado (PUT idempotente) + merge por MAC valido + INSERT OR
+     IGNORE + push de faltantes offline.
+
+6. INTEGRACAO CLOUD - ACHADO CRITICO E CORRECAO
+  Achado: todo o REST ia anonimo contra um RTDB com default deny
+  (negacao total sem login + auth obrigatorio em /rpa_devices; teste
+  anonimo retorna 401 Permission denied). Sync de subida/descida e o
+  OTA/telemetria falhavam silenciosamente. O innobot.html funcionava
+  porque o usuario esta logado no navegador.
+  Correcao aplicada em 25/09: FirebaseAuthService (login Identity
+  Toolkit + refresh, token somente em memoria RAM) + campos
+  firebase_email/password nas Configuracoes com botao Testar conexao.
+  PENDENTE: cadastrar a conta de servico (perfil operacional ou
+  superior) - sem ela o sync segue desativado por seguranca.
+
+7. BUILD & DEVOPS
+  scripts/build.bat (TESTE, icone azul) e scripts/build_release.bat
+  (RELEASE, icone roxo, portatil PnP) + pasta controle/ (Build, Terminal,
+  Atualizacao OTA). Versao por timestamp em config/version.txt, trilha
+  em registros/YYYY-MM-DD/... Achado corrigido em 25/09: a Release
+  embarcava o banco de teste da bancada (2 aparelhos) - removido; a
+  Release sai limpa e puxa a frota da nuvem.
+
+8. GOVERNANCA
+  AGENTS.md define 4 Regras de Ouro (isolamento por modelo,
+  rastreabilidade em memoria_inno_rpa.md, pastas limpas, build
+  obrigatorio). Conformidade da sessao: nenhum .c de modelo tocado,
+  memoria atualizada a cada entrega, builds registrados.
+
+9. RISCOS E PENDENCIAS (para o responsavel)
+  1) 20 arquivos modificados + 7 novos nunca commitados (inclui toda a
+     integracao Firebase e o sync bidirecional) - commit convencional
+     urgente; hoje ha so 4 commits no historico.
+  2) config/settings.json e config/municipios.csv aparecem modificados e
+     rastreados - settings carrega dados de maquina/conta; avaliar
+     separar segredo do versionado.
+  3) Conta de servico Firebase ainda nao cadastrada - sync parado ate
+     o cadastro.
+  4) memoria_inno_rpa.md teve reescrita grande no diff - conferir
+     formatacao antes do commit.
+
+================================================================================
+PARTE 2 - RESUMO EXECUTIVO
+================================================================================
+
+O QUE ELE E
+  O Bot_RPA e o robo de bancada da InnovTech: um programa de Windows que
+  configura, instala e gerencia tablets Android em lote, via cabo USB,
+  com supervisao visual em tempo real.
+
+PARA QUE FOI CRIADO
+  Eliminar o trabalho manual e repetitivo de preparar dezenas de tablets
+  para as avaliacoes educacionais nas escolas municipais - instalar APK,
+  importar pacote de provas, fazer login de aplicador, selecionar
+  municipio, ajustar o sistema, extrair numero de serie e MAC - reduzindo
+  de minutos por aparelho (com erro humano) para segundos, com um clique
+  ou de forma automatica ao conectar.
+
+QUANDO E POR QUEM
+  Iniciado antes de junho/2026 na InnovTech, com o codigo atual nascido
+  em 16/08/2026 (commit inicial de Jordan Araujo, conta RONALDJORDAN) a
+  partir do projeto antecessor inno_botRpa/BotRpa; evoluido em sprints
+  ate setembro/2026 (OTA em 21/08, algoritmos e Monitor Pro em 26/08,
+  sync cloud e autenticacao em 25/09).
+
+FINALIDADE
+  Ser a esteira industrial de provisionamento: padronizar 3 modelos de
+  tablet (Positivo Vision 7, Multilaser TabMulti M7, Nokia T20), garantir
+  que cada aparelho saia da bancada identico, rastreado (serial + MAC no
+  banco compartilhado e no InnovStock) e programa da bancada auto-atualizavel (OTA; tablets exigem cabo USB).
+
+EM QUE ELE AJUDOU
+  Transformou a operacao de campo: a deduplicacao serial+MAC acabou com
+  cadastros duplos entre operadoras; o banco compartilhado na nuvem
+  sincroniza todas as bancadas; o pull automatico alimenta Relatorios e
+  Banco de Dados; a telemetria e o OTA permitem acompanhar e atualizar a
+  programa sempre atualizado via OTA; e a auditoria de builds da
+  rastreabilidade total do que foi instalado em cada lote.
+
+COMO FOI CRIADO
+  Em arquitetura hibrida: o MOTOR em C (BotEngine.dll, ~27 fontes)
+  cuida da velocidade bruta - ADB, UIAutomator, cliques por centroides,
+  batching de comandos e IA de seletores; a INTERFACE em C# WPF
+  (BotRPAui.exe, 22 fontes + 12 telas) cuida da experiencia - monitores
+  Classic/Pro, relatorios, mapa neural da IA, Central OTA e paineis de
+  configuracao - conversando via [DllImport] (36 funcoes). Build em um
+  comando (build.bat/build_release.bat), versionamento por data/hora e
+  pacotes portateis PnP.
+
+PRINCIPAIS FUNCIONALIDADES
+  F1 instalacao completa zero-touch; F2 limpeza/instalacao com internet
+  reversa; F3 atualizacao de pacote; F4/F5 desligamento e ferramentas
+  Kiosk; F6 sincronizacao; F8 conexao ativa; auto-roteamento por modelo
+  com paralelismo multi-dispositivo; extracao e pareamento S/N+MAC com
+  dedup; sync bidirecional com o InnovStock; OTA mandatorio com SHA-256
+  e rollback; relatorios, etiquetas QR e trilha de auditoria.
+
+================================================================================
+Fim da auditoria. Gerado em 25/09/2026.
+================================================================================

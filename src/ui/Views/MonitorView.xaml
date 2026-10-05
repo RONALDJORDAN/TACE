@@ -1,4 +1,4 @@
-<UserControl x:Class="InnovPlayUI.Views.MonitorView"
+<UserControl x:Class="BotRpaUI.Views.MonitorView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              Background="#0B0B14"
@@ -338,7 +338,7 @@
                                         <StackPanel x:Name="GlobalProgressPanel" Grid.Row="0" Margin="4"/>
                                         <TextBox x:Name="TxtLogGlobal" Grid.Row="1" Background="#080810" Foreground="#4EDEA3" BorderBrush="Transparent" BorderThickness="0" 
                                                  FontFamily="Consolas" FontSize="14" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" IsReadOnly="True"
-                                                 Padding="8" Text="[00:00:00] Inno RPA - Motor Robótico C/C# inicializado. Aguardando conexão ADB...&#x0a;"/>
+                                                 Padding="8" Text="[00:00:00] Bot_RPA - Motor Robótico C/C# inicializado. Aguardando conexão ADB...&#x0a;"/>
                                     </Grid>
                                 </TabItem>
                             </TabControl>
@@ -395,89 +395,39 @@
                             <StackPanel Margin="0,0,4,0">
                                 
                                 <!-- ============================================================== -->
-                                <!-- BLOCO 1: BLINDAGEM E RESTAURAÇÃO DE APLICATIVOS (DESTAQUE HERO) -->
+                                <!-- PERFIS 1-CLIQUE: sequência automática, sem decorar números    -->
                                 <!-- ============================================================== -->
-                                <TextBlock Text="🚀 AÇÕES DE BLINDAGEM E RESTAURAÇÃO DE APLICATIVOS" Foreground="#00E5FF" FontSize="12" FontWeight="Bold" Margin="2,0,0,8"/>
-                                
-                                <Grid Margin="0,0,0,12">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-
-                                    <!-- Card: Blindagem Kiosk (Ocultar Bloatwares) -->
-                                    <Border Grid.Column="0" Background="#141126" CornerRadius="10" Padding="12" Margin="0,0,6,0" BorderBrush="#513BA6" BorderThickness="1.5">
-                                        <Grid>
-                                            <Grid.RowDefinitions>
-                                                <RowDefinition Height="Auto"/>
-                                                <RowDefinition Height="*"/>
-                                                <RowDefinition Height="Auto"/>
-                                            </Grid.RowDefinitions>
-
-                                            <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,6">
-                                                <TextBlock Text="🛡️" FontSize="18" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                <Border Background="#141126" CornerRadius="10" Padding="10" Margin="0,0,0,12" BorderBrush="#513BA6" BorderThickness="1.5">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Button Grid.Column="0" Tag="11,1,2,5,10" Click="BtnKioskProfile_Click" Height="42" Margin="0,0,5,0" Background="#281A54" BorderBrush="#00E5FF" BorderThickness="1.5" Cursor="Hand" ToolTip="Blindagem + câmera + config + kiosk + barra, em sequência">
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                                <TextBlock Text="🛡️" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
                                                 <StackPanel VerticalAlignment="Center">
-                                                    <TextBlock Text="Blindagem Kiosk" Foreground="#FFFFFF" FontWeight="Bold" FontSize="13"/>
-                                                    <TextBlock Text="Ocultação de Bloatwares" Foreground="#00E5FF" FontWeight="SemiBold" FontSize="10"/>
+                                                    <TextBlock Text="Blindar Tudo" Foreground="#FFFFFF" FontWeight="Bold" FontSize="12"/>
+                                                    <TextBlock Text="perfil Kiosk em 1 clique" Foreground="#00E5FF" FontSize="9"/>
                                                 </StackPanel>
                                             </StackPanel>
-
-                                            <TextBlock Grid.Row="1" Text="Desativa, suspende e desinstala em lote todos os apps dispensáveis (Google, YouTube, Chrome, Play Store, Drive, Agenda, Assistente, etc.), limpando a área de trabalho." Foreground="#A3A3C2" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,10"/>
-
-                                            <Button Grid.Row="2" Tag="11" Click="BtnKioskAction_Click" Height="36" Background="#281A54" BorderBrush="#00E5FF" BorderThickness="1.5" Cursor="Hand">
-                                                <Button.Resources>
-                                                    <Style TargetType="Border">
-                                                        <Setter Property="CornerRadius" Value="6"/>
-                                                    </Style>
-                                                </Button.Resources>
-                                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                    <TextBlock Text="⚡" Foreground="#00E5FF" FontWeight="Bold" Margin="0,0,6,0"/>
-                                                    <TextBlock Text="[11] Aplicar Blindagem Kiosk" Foreground="#FFFFFF" FontWeight="Bold" FontSize="12"/>
-                                                </StackPanel>
-                                            </Button>
-                                        </Grid>
-                                    </Border>
-
-                                    <!-- Card: Restauração de Fábrica (Reativar Todos os Apps) -->
-                                    <Border Grid.Column="1" Background="#0E1E19" CornerRadius="10" Padding="12" Margin="6,0,0,0" BorderBrush="#276749" BorderThickness="1.5">
-                                        <Grid>
-                                            <Grid.RowDefinitions>
-                                                <RowDefinition Height="Auto"/>
-                                                <RowDefinition Height="*"/>
-                                                <RowDefinition Height="Auto"/>
-                                            </Grid.RowDefinitions>
-
-                                            <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,6">
-                                                <TextBlock Text="🔄" FontSize="18" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                        </Button>
+                                        <Button Grid.Column="1" Tag="12,3,4,6" Click="BtnKioskProfile_Click" Height="42" Margin="5,0,0,0" Background="#143024" BorderBrush="#4EDEA3" BorderThickness="1.5" Cursor="Hand" ToolTip="Reativa apps + libera câmera, config e kiosk, em sequência">
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                                <TextBlock Text="🔄" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
                                                 <StackPanel VerticalAlignment="Center">
-                                                    <TextBlock Text="Restauração de Fábrica" Foreground="#FFFFFF" FontWeight="Bold" FontSize="13"/>
-                                                    <TextBlock Text="Reativação Completa de Sistema" Foreground="#4EDEA3" FontWeight="SemiBold" FontSize="10"/>
+                                                    <TextBlock Text="Restaurar Tudo" Foreground="#FFFFFF" FontWeight="Bold" FontSize="12"/>
+                                                    <TextBlock Text="desfaz o Kiosk em 1 clique" Foreground="#4EDEA3" FontSize="9"/>
                                                 </StackPanel>
                                             </StackPanel>
+                                        </Button>
+                                    </Grid>
+                                </Border>
 
-                                            <TextBlock Grid.Row="1" Text="Reinstala e reabilita instantaneamente todos os pacotes inativados via ADB reverso (install-existing + pm enable), restaurando todos os ícones originais no Launcher." Foreground="#A3A3C2" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,10"/>
+                                <!-- BLOCO: Hardware (compacto) -->
+                                <TextBlock Text="🔒 Câmera e Configurações" Foreground="#D2BBFF" FontSize="11" FontWeight="Bold" Margin="2,0,0,6"/>
 
-                                            <Button Grid.Row="2" Tag="12" Click="BtnKioskAction_Click" Height="36" Background="#143024" BorderBrush="#4EDEA3" BorderThickness="1.5" Cursor="Hand">
-                                                <Button.Resources>
-                                                    <Style TargetType="Border">
-                                                        <Setter Property="CornerRadius" Value="6"/>
-                                                    </Style>
-                                                </Button.Resources>
-                                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                    <TextBlock Text="✔" Foreground="#4EDEA3" FontWeight="Bold" Margin="0,0,6,0"/>
-                                                    <TextBlock Text="[12] Reativar Apps de Fábrica" Foreground="#FFFFFF" FontWeight="Bold" FontSize="12"/>
-                                                </StackPanel>
-                                            </Button>
-                                        </Grid>
-                                    </Border>
-                                </Grid>
-
-                                <!-- ============================================================== -->
-                                <!-- BLOCO 2: CONTROLE DE ACESSO A HARDWARE E AJUSTES DO ANDROID    -->
-                                <!-- ============================================================== -->
-                                <TextBlock Text="🔒 CONTROLE DE ACESSO A HARDWARE E AJUSTES DO ANDROID" Foreground="#D2BBFF" FontSize="12" FontWeight="Bold" Margin="2,0,0,8"/>
-
-                                <Grid Margin="0,0,0,12">
+                                <Grid Margin="0,0,0,10">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="*"/>
@@ -485,69 +435,81 @@
                                     </Grid.ColumnDefinitions>
 
                                     <!-- Card Câmeras -->
-                                    <Border Grid.Column="0" Background="#121222" CornerRadius="8" Padding="10" Margin="0,0,5,0" BorderBrush="#25253E" BorderThickness="1">
+                                    <Border Grid.Column="0" Background="#121222" CornerRadius="8" Padding="10,8" Margin="0,0,5,0" BorderBrush="#25253E" BorderThickness="1" ToolTip="Suspende ou libera aplicativos de foto e vídeo.">
                                         <StackPanel>
-                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
-                                                <TextBlock Text="📷" FontSize="13" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                                                <TextBlock Text="Módulos de Câmera" Foreground="#FFFFFF" FontWeight="Bold" FontSize="11" VerticalAlignment="Center"/>
-                                            </StackPanel>
-                                            <TextBlock Text="Suspende ou libera aplicativos de foto e vídeo." Foreground="#8A8A9E" FontSize="10" Margin="0,0,0,8" TextWrapping="Wrap"/>
+                                            <TextBlock Text="📷 Câmera" Foreground="#FFFFFF" FontWeight="Bold" FontSize="11" Margin="0,0,0,6"/>
                                             <Grid>
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="*"/>
                                                     <ColumnDefinition Width="*"/>
                                                 </Grid.ColumnDefinitions>
-                                                <Button Grid.Column="0" Tag="1" Click="BtnKioskAction_Click" Content="[1] Bloquear" Height="28" Background="#241217" Foreground="#FFA3A3" BorderBrush="#FF4D4D" BorderThickness="1" Margin="0,0,2,0" Cursor="Hand" FontWeight="Bold" FontSize="10"/>
-                                                <Button Grid.Column="1" Tag="3" Click="BtnKioskAction_Click" Content="[3] Liberar" Height="28" Background="#10251C" Foreground="#4EDEA3" BorderBrush="#276749" BorderThickness="1" Margin="2,0,0,0" Cursor="Hand" FontWeight="Bold" FontSize="10"/>
+                                                <Button Grid.Column="0" Tag="1" Click="BtnKioskAction_Click" Content="Bloquear" Height="28" Background="#241217" Foreground="#FFA3A3" BorderBrush="#FF4D4D" BorderThickness="1" Margin="0,0,2,0" Cursor="Hand" FontWeight="Bold" FontSize="10"/>
+                                                <Button Grid.Column="1" Tag="3" Click="BtnKioskAction_Click" Content="Liberar" Height="28" Background="#10251C" Foreground="#4EDEA3" BorderBrush="#276749" BorderThickness="1" Margin="2,0,0,0" Cursor="Hand" FontWeight="Bold" FontSize="10"/>
                                             </Grid>
                                         </StackPanel>
                                     </Border>
 
                                     <!-- Card Configurações -->
-                                    <Border Grid.Column="1" Background="#121222" CornerRadius="8" Padding="10" Margin="2.5,0,2.5,0" BorderBrush="#25253E" BorderThickness="1">
+                                    <Border Grid.Column="1" Background="#121222" CornerRadius="8" Padding="10,8" Margin="2.5,0,2.5,0" BorderBrush="#25253E" BorderThickness="1" ToolTip="Impede o acesso ao menu Configurações.">
                                         <StackPanel>
-                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
-                                                <TextBlock Text="⚙️" FontSize="13" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                                                <TextBlock Text="Ajustes do Sistema" Foreground="#FFFFFF" FontWeight="Bold" FontSize="11" VerticalAlignment="Center"/>
-                                            </StackPanel>
-                                            <TextBlock Text="Impede o acesso ao menu Configurações." Foreground="#8A8A9E" FontSize="10" Margin="0,0,0,8" TextWrapping="Wrap"/>
+                                            <TextBlock Text="⚙️ Configurações" Foreground="#FFFFFF" FontWeight="Bold" FontSize="11" Margin="0,0,0,6"/>
                                             <Grid>
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="*"/>
                                                     <ColumnDefinition Width="*"/>
                                                 </Grid.ColumnDefinitions>
-                                                <Button Grid.Column="0" Tag="2" Click="BtnKioskAction_Click" Content="[2] Restringir" Height="28" Background="#2A2412" Foreground="#FFE699" BorderBrush="#FFD666" BorderThickness="1" Margin="0,0,2,0" Cursor="Hand" FontWeight="Bold" FontSize="10"/>
-                                                <Button Grid.Column="1" Tag="4" Click="BtnKioskAction_Click" Content="[4] Liberar" Height="28" Background="#10251C" Foreground="#4EDEA3" BorderBrush="#276749" BorderThickness="1" Margin="2,0,0,0" Cursor="Hand" FontWeight="Bold" FontSize="10"/>
+                                                <Button Grid.Column="0" Tag="2" Click="BtnKioskAction_Click" Content="Restringir" Height="28" Background="#2A2412" Foreground="#FFE699" BorderBrush="#FFD666" BorderThickness="1" Margin="0,0,2,0" Cursor="Hand" FontWeight="Bold" FontSize="10"/>
+                                                <Button Grid.Column="1" Tag="4" Click="BtnKioskAction_Click" Content="Liberar" Height="28" Background="#10251C" Foreground="#4EDEA3" BorderBrush="#276749" BorderThickness="1" Margin="2,0,0,0" Cursor="Hand" FontWeight="Bold" FontSize="10"/>
                                             </Grid>
                                         </StackPanel>
                                     </Border>
 
                                     <!-- Card Modo Kiosk Total -->
-                                    <Border Grid.Column="2" Background="#121222" CornerRadius="8" Padding="10" Margin="5,0,0,0" BorderBrush="#25253E" BorderThickness="1">
+                                    <Border Grid.Column="2" Background="#121222" CornerRadius="8" Padding="10,8" Margin="5,0,0,0" BorderBrush="#25253E" BorderThickness="1" ToolTip="Trava conjunta em Câmera + Configurações.">
                                         <StackPanel>
-                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
-                                                <TextBlock Text="🛑" FontSize="13" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                                                <TextBlock Text="Kiosk Estrito (Duplo)" Foreground="#FFFFFF" FontWeight="Bold" FontSize="11" VerticalAlignment="Center"/>
-                                            </StackPanel>
-                                            <TextBlock Text="Aplica trava conjunta em Câmera + Configurações." Foreground="#8A8A9E" FontSize="10" Margin="0,0,0,8" TextWrapping="Wrap"/>
+                                            <TextBlock Text="🛑 Kiosk Estrito" Foreground="#FFFFFF" FontWeight="Bold" FontSize="11" Margin="0,0,0,6"/>
                                             <Grid>
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="*"/>
                                                     <ColumnDefinition Width="*"/>
                                                 </Grid.ColumnDefinitions>
-                                                <Button Grid.Column="0" Tag="5" Click="BtnKioskAction_Click" Content="[5] Ativar" Height="28" Background="#2D1720" Foreground="#FF8080" BorderBrush="#FF4D4D" BorderThickness="1" Margin="0,0,2,0" Cursor="Hand" FontWeight="Bold" FontSize="10"/>
-                                                <Button Grid.Column="1" Tag="6" Click="BtnKioskAction_Click" Content="[6] Desativar" Height="28" Background="#12241C" Foreground="#55EFC4" BorderBrush="#276749" BorderThickness="1" Margin="2,0,0,0" Cursor="Hand" FontWeight="Bold" FontSize="10"/>
+                                                <Button Grid.Column="0" Tag="5" Click="BtnKioskAction_Click" Content="Ativar" Height="28" Background="#2D1720" Foreground="#FF8080" BorderBrush="#FF4D4D" BorderThickness="1" Margin="0,0,2,0" Cursor="Hand" FontWeight="Bold" FontSize="10"/>
+                                                <Button Grid.Column="1" Tag="6" Click="BtnKioskAction_Click" Content="Desativar" Height="28" Background="#12241C" Foreground="#55EFC4" BorderBrush="#276749" BorderThickness="1" Margin="2,0,0,0" Cursor="Hand" FontWeight="Bold" FontSize="10"/>
                                             </Grid>
                                         </StackPanel>
                                     </Border>
                                 </Grid>
 
-                                <!-- ============================================================== -->
-                                <!-- BLOCO 3: PERSONALIZAÇÃO, REDE E ÁREA DE TRABALHO               -->
-                                <!-- ============================================================== -->
-                                <TextBlock Text="🎨 PERSONALIZAÇÃO CORPORATIVA, REDE E ÁREA DE TRABALHO" Foreground="#D2BBFF" FontSize="12" FontWeight="Bold" Margin="2,0,0,8"/>
+                                <!-- BLOCO: Apps (compacto, acesso individual) -->
+                                <TextBlock Text="📦 Aplicativos" Foreground="#D2BBFF" FontSize="11" FontWeight="Bold" Margin="2,0,0,6"/>
 
-                                <Grid Margin="0,0,0,8">
+                                <Grid Margin="0,0,0,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- Card Blindagem individual -->
+                                    <Border Grid.Column="0" Background="#141126" CornerRadius="8" Padding="10,8" Margin="0,0,5,0" BorderBrush="#513BA6" BorderThickness="1" ToolTip="Desativa e remove bloatwares (Google, YouTube, Chrome, etc.).">
+                                        <StackPanel>
+                                            <TextBlock Text="🛡️ Blindagem de Apps" Foreground="#FFFFFF" FontWeight="Bold" FontSize="11" Margin="0,0,0,6"/>
+                                            <Button Tag="11" Click="BtnKioskAction_Click" Content="Aplicar Blindagem" Height="28" Background="#281A54" Foreground="#FFFFFF" BorderBrush="#00E5FF" BorderThickness="1" Cursor="Hand" FontWeight="Bold" FontSize="10"/>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- Card Restauração individual -->
+                                    <Border Grid.Column="1" Background="#0E1E19" CornerRadius="8" Padding="10,8" Margin="5,0,0,0" BorderBrush="#276749" BorderThickness="1" ToolTip="Reativa todos os pacotes (install-existing + pm enable).">
+                                        <StackPanel>
+                                            <TextBlock Text="🔄 Restauração" Foreground="#FFFFFF" FontWeight="Bold" FontSize="11" Margin="0,0,0,6"/>
+                                            <Button Tag="12" Click="BtnKioskAction_Click" Content="Reativar Apps" Height="28" Background="#143024" Foreground="#FFFFFF" BorderBrush="#4EDEA3" BorderThickness="1" Cursor="Hand" FontWeight="Bold" FontSize="10"/>
+                                        </StackPanel>
+                                    </Border>
+                                </Grid>
+
+                                <!-- BLOCO: Personalização e rede (compacto) -->
+                                <TextBlock Text="🎨 Personalização e Rede" Foreground="#D2BBFF" FontSize="11" FontWeight="Bold" Margin="2,0,0,6"/>
+
+                                <Grid Margin="0,0,0,4">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="*"/>
@@ -555,45 +517,33 @@
                                     </Grid.ColumnDefinitions>
 
                                     <!-- Card Wallpaper -->
-                                    <Border Grid.Column="0" Background="#121222" CornerRadius="8" Padding="10" Margin="0,0,5,0" BorderBrush="#25253E" BorderThickness="1">
+                                    <Border Grid.Column="0" Background="#121222" CornerRadius="8" Padding="10,8" Margin="0,0,5,0" BorderBrush="#25253E" BorderThickness="1" ToolTip="Aplica o wallpaper configurado do município.">
                                         <StackPanel>
-                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
-                                                <TextBlock Text="🖼️" FontSize="13" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                                                <TextBlock Text="Papel de Parede" Foreground="#FFFFFF" FontWeight="Bold" FontSize="11" VerticalAlignment="Center"/>
-                                            </StackPanel>
-                                            <TextBlock Text="Aplica o wallpaper configurado do município." Foreground="#8A8A9E" FontSize="10" Margin="0,0,0,8" TextWrapping="Wrap"/>
-                                            <Button Tag="7" Click="BtnKioskAction_Click" Content="[7] Aplicar Wallpaper" Height="28" Background="#161830" Foreground="#D2BBFF" BorderBrush="#8570E6" BorderThickness="1" Cursor="Hand" FontWeight="Bold" FontSize="10"/>
+                                            <TextBlock Text="🖼️ Papel de Parede" Foreground="#FFFFFF" FontWeight="Bold" FontSize="11" Margin="0,0,0,6"/>
+                                            <Button Tag="7" Click="BtnKioskAction_Click" Content="Aplicar" Height="28" Background="#161830" Foreground="#D2BBFF" BorderBrush="#8570E6" BorderThickness="1" Cursor="Hand" FontWeight="Bold" FontSize="10"/>
                                         </StackPanel>
                                     </Border>
 
                                     <!-- Card Internet USB Gnirehtet -->
-                                    <Border Grid.Column="1" Background="#121222" CornerRadius="8" Padding="10" Margin="2.5,0,2.5,0" BorderBrush="#25253E" BorderThickness="1">
+                                    <Border Grid.Column="1" Background="#121222" CornerRadius="8" Padding="10,8" Margin="2.5,0,2.5,0" BorderBrush="#25253E" BorderThickness="1" ToolTip="Compartilha a internet do PC via cabo USB.">
                                         <StackPanel>
-                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
-                                                <TextBlock Text="🌐" FontSize="13" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                                                <TextBlock Text="Internet USB (Gnirehtet)" Foreground="#FFFFFF" FontWeight="Bold" FontSize="11" VerticalAlignment="Center"/>
-                                            </StackPanel>
-                                            <TextBlock Text="Compartilha a internet do PC via cabo USB." Foreground="#8A8A9E" FontSize="10" Margin="0,0,0,8" TextWrapping="Wrap"/>
+                                            <TextBlock Text="🌐 Internet USB" Foreground="#FFFFFF" FontWeight="Bold" FontSize="11" Margin="0,0,0,6"/>
                                             <Grid>
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="*"/>
                                                     <ColumnDefinition Width="*"/>
                                                 </Grid.ColumnDefinitions>
-                                                <Button Grid.Column="0" Tag="8" Click="BtnKioskAction_Click" Content="[8] Ligar" Height="28" Background="#0E222A" Foreground="#00E5FF" BorderBrush="#00BCD4" BorderThickness="1" Margin="0,0,2,0" Cursor="Hand" FontWeight="Bold" FontSize="10"/>
-                                                <Button Grid.Column="1" Tag="9" Click="BtnKioskAction_Click" Content="[9] Desligar" Height="28" Background="#241217" Foreground="#FFA3A3" BorderBrush="#FF4D4D" BorderThickness="1" Margin="2,0,0,0" Cursor="Hand" FontWeight="Bold" FontSize="10"/>
+                                                <Button Grid.Column="0" Tag="8" Click="BtnKioskAction_Click" Content="Ligar" Height="28" Background="#0E222A" Foreground="#00E5FF" BorderBrush="#00BCD4" BorderThickness="1" Margin="0,0,2,0" Cursor="Hand" FontWeight="Bold" FontSize="10"/>
+                                                <Button Grid.Column="1" Tag="9" Click="BtnKioskAction_Click" Content="Desligar" Height="28" Background="#241217" Foreground="#FFA3A3" BorderBrush="#FF4D4D" BorderThickness="1" Margin="2,0,0,0" Cursor="Hand" FontWeight="Bold" FontSize="10"/>
                                             </Grid>
                                         </StackPanel>
                                     </Border>
 
                                     <!-- Card Barra de Pesquisa -->
-                                    <Border Grid.Column="2" Background="#121222" CornerRadius="8" Padding="10" Margin="5,0,0,0" BorderBrush="#25253E" BorderThickness="1">
+                                    <Border Grid.Column="2" Background="#121222" CornerRadius="8" Padding="10,8" Margin="5,0,0,0" BorderBrush="#25253E" BorderThickness="1" ToolTip="Remove a barra Google da tela inicial.">
                                         <StackPanel>
-                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
-                                                <TextBlock Text="🧹" FontSize="13" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                                                <TextBlock Text="Barra de Pesquisa" Foreground="#FFFFFF" FontWeight="Bold" FontSize="11" VerticalAlignment="Center"/>
-                                            </StackPanel>
-                                            <TextBlock Text="Remove a barra Google da tela inicial." Foreground="#8A8A9E" FontSize="10" Margin="0,0,0,8" TextWrapping="Wrap"/>
-                                            <Button Tag="10" Click="BtnKioskAction_Click" Content="[10] Ocultar Barra" Height="28" Background="#1E1C12" Foreground="#FFE699" BorderBrush="#FFC107" BorderThickness="1" Cursor="Hand" FontWeight="Bold" FontSize="10"/>
+                                            <TextBlock Text="🧹 Barra de Pesquisa" Foreground="#FFFFFF" FontWeight="Bold" FontSize="11" Margin="0,0,0,6"/>
+                                            <Button Tag="10" Click="BtnKioskAction_Click" Content="Ocultar Barra" Height="28" Background="#1E1C12" Foreground="#FFE699" BorderBrush="#FFC107" BorderThickness="1" Cursor="Hand" FontWeight="Bold" FontSize="10"/>
                                         </StackPanel>
                                     </Border>
                                 </Grid>
@@ -719,7 +669,7 @@
                 <!-- Linha 1: Grid de Cards de Ação (4 Colunas x 2 Linhas) -->
                 <!-- Ações Positivo (Positivo Tab Vision 7) -->
                 <UniformGrid x:Name="GridPositivoActions" Grid.Row="1" Columns="4" Rows="2" Visibility="Visible">
-                    <Button Content="[F1] Sincronização + Instalação" Style="{StaticResource F1Style}" Click="BtnF1_Click"/>
+                    <Button Content="[F1] Conf. Geral" Style="{StaticResource F1Style}" Click="BtnF1_Click"/>
                     <Button Content="[F2] Limpeza e Instalação" Style="{StaticResource F2Style}" Click="BtnF2_Click"/>
                     <Button Content="[F3] Atualizar Pacote" Style="{StaticResource F3Style}" Click="BtnF3_Click"/>
                     <Button Content="[F4] Gestão Kiosk (Hardware &amp; Apps)" Style="{StaticResource F4Style}" Click="BtnF4_Click"/>

@@ -18,7 +18,7 @@ int check_adb_availability() {
     char* last_slash = strrchr(exe_path, '\\');
     if (last_slash) *last_slash = '\0';
     
-    // Resolve o caminho subindo duas pastas: data\output -> Inno_RPA -> tools\platform-tools
+    // Resolve o caminho subindo duas pastas: data\output -> Bot_RPA -> tools\platform-tools
     sprintf(adb_local_path, "%s\\..\\..\\tools\\platform-tools\\adb.exe", exe_path);
     sprintf(adb_local_cmd, "\"%s\" version > NUL 2>&1", adb_local_path);
     

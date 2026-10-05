@@ -18,7 +18,7 @@
 volatile int g_engine_canceled = 0;
 volatile int g_engine_paused = 0;
 
-// --- Filtro Anti-Crash Top-Level SEH para a DLL InnoEngine ---
+// --- Filtro Anti-Crash Top-Level SEH para a DLL BotEngine ---
 static LONG WINAPI InnoUnhandledExceptionFilter(EXCEPTION_POINTERS *pExceptionInfo) {
     char exe_path[MAX_PATH];
     GetModuleFileNameA(NULL, exe_path, sizeof(exe_path));
@@ -315,10 +315,10 @@ DllExport int Engine_SaveMunicipios(const Municipio* lista, int count) {
 }
 
 // ============================================================
-// [InnoLearn] Consulta de Estatísticas para o C#
+// [BotLearn] Consulta de Estatísticas para o C#
 // ============================================================
 
-// Retorna o número de alvos registrados no banco InnoLearn
+// Retorna o número de alvos registrados no banco BotLearn
 DllExport int Engine_Learn_GetTargetCount() {
     return g_learn_db.target_count;
 }
@@ -372,14 +372,27 @@ DllExport int Engine_Learn_GetStrategyCount() {
     return total;
 }
 
-// Reseta completamente o banco InnoLearn (scores, coords, devices)
+// Reseta completamente o banco BotLearn (scores, coords, devices)
 // e persiste o estado inicial em disco imediatamente
 DllExport int Engine_Learn_ResetDB() {
     memset(&g_learn_db, 0, sizeof(g_learn_db));
     g_learn_db.dirty = 1;
-    learn_db_save();   // Salva o JSON vazio primeiro
+    learn_db_save();   // Salva o JSON vazio primeiro (no-op se Estático)
     learn_db_load();   // Recarrega os defaults (seed inicial)
     return 1;
+}
+
+// Define o modo da IA: 0 = Estático/Determinístico, 1 = Ativo/Aprendiz
+// Retorna o modo efetivo após a troca (recarrega overlay se Ativo)
+DllExport int Engine_Learn_SetActiveMode(int active) {
+    learn_set_active_mode(active);
+    learn_db_load();
+    return learn_get_active_mode();
+}
+
+// Retorna o modo atual da IA: 0 = Estático, 1 = Ativo
+DllExport int Engine_Learn_GetActiveMode() {
+    return learn_get_active_mode();
 }
 
 

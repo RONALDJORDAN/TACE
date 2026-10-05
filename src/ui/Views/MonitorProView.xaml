@@ -1,4 +1,4 @@
-<UserControl x:Class="InnovPlayUI.Views.MonitorProView"
+<UserControl x:Class="BotRpaUI.Views.MonitorProView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              Background="#0B0B13"
@@ -268,10 +268,17 @@
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Text="META DO LOTE" Foreground="#D2BBFF" FontSize="9" FontWeight="Bold"/>
+                                <TextBlock Text="META DO LOTE" Foreground="#D2BBFF" FontSize="9" FontWeight="Bold" ToolTip="Meta de produção da bancada. Clique em + / − ou digite o valor."/>
                                 <TextBlock x:Name="TxtMetaLabel" Grid.Column="1" Text="0 / 100 (0%)" Foreground="#00E5FF" FontSize="9" FontWeight="Bold" FontFamily="Consolas"/>
                             </Grid>
                             <ProgressBar x:Name="ProgressMetaLote" Height="5" Value="0" Maximum="100" Style="{StaticResource ProProgressBar}"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,4,0,0" VerticalAlignment="Center">
+                                <Button x:Name="BtnMetaMinus" Content="−" Width="22" Height="18" FontSize="11" FontWeight="Bold" Background="#0A0A0F" Foreground="#D2BBFF" BorderBrush="#23233A" BorderThickness="1" Cursor="Hand" Click="BtnMetaMinus_Click" ToolTip="Diminuir meta (-10, Shift = -1)"/>
+                                <TextBox x:Name="TxtMetaEdit" Width="52" Height="18" Margin="4,0,4,0" Background="#0A0A0F" Foreground="#00E5FF" BorderBrush="#23233A" BorderThickness="1" FontSize="10" FontWeight="Bold" FontFamily="Consolas" TextAlignment="Center" VerticalContentAlignment="Center" Text="100" LostFocus="TxtMetaEdit_LostFocus" KeyDown="TxtMetaEdit_KeyDown" ToolTip="Digite a nova meta e pressione Enter. Salva em config/settings.json"/>
+                                <Button x:Name="BtnMetaPlus" Content="+" Width="22" Height="18" FontSize="11" FontWeight="Bold" Background="#0A0A0F" Foreground="#D2BBFF" BorderBrush="#23233A" BorderThickness="1" Cursor="Hand" Click="BtnMetaPlus_Click" ToolTip="Aumentar meta (+10, Shift = +1)"/>
+                                <Button x:Name="BtnMetaReset" Content="↺" Width="26" Height="18" Margin="4,0,0,0" FontSize="11" FontWeight="Bold" Background="#0A0A0F" Foreground="#FFD666" BorderBrush="#FFD666" BorderThickness="1" Cursor="Hand" Click="BtnMetaReset_Click" ToolTip="Zerar contadores da sessão (concluídos/falhas/tempo). Mantém a meta."/>
+                                <TextBlock x:Name="TxtMetaRestante" Text="faltam 100" Foreground="#8A8A9E" FontSize="9" FontWeight="SemiBold" VerticalAlignment="Center" Margin="6,0,0,0" ToolTip="Quanto falta para bater a meta"/>
+                            </StackPanel>
                         </StackPanel>
                     </Grid>
                 </Border>
@@ -327,6 +334,7 @@
                                 <StackPanel Orientation="Horizontal">
                                     <Button x:Name="BtnViewList" Content="📑 Lista" Style="{StaticResource ViewModeToggleStyle}" Click="BtnViewList_Click"/>
                                     <Button x:Name="BtnViewGrid" Content="🔲 Cards" Style="{StaticResource ViewModeToggleStyle}" Click="BtnViewGrid_Click"/>
+                                    <Button x:Name="BtnPullCloudPro" Content="⬇ Puxar Nuvem" Style="{StaticResource ViewModeToggleStyle}" Click="BtnPullCloudPro_Click" ToolTip="Baixa /rpa_devices da nuvem e atualiza a lista local (só adiciona/preenche, nunca apaga)"/>
                                 </StackPanel>
                             </Border>
                         </StackPanel>
@@ -806,7 +814,7 @@
                     <TabItem Header="Global (Sistema)">
                         <TextBox x:Name="TxtLogGlobalPro" Background="#0A0A0F" Foreground="#4EDEA3" BorderBrush="Transparent" BorderThickness="0" 
                                  FontFamily="Consolas, Cascadia Code, Courier New" FontSize="11.5" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" IsReadOnly="True"
-                                 Padding="8,8,8,8" Margin="0,2,0,0" Text="[00:00:00] InnoBot RPA Studio (Layout Pro) inicializado. Monitorando portas ADB...&#x0a;"/>
+                                 Padding="8,8,8,8" Margin="0,2,0,0" Text="[00:00:00] Bot_RPA RPA Studio (Layout Pro) inicializado. Monitorando portas ADB...&#x0a;"/>
                     </TabItem>
                 </TabControl>
             </Grid>

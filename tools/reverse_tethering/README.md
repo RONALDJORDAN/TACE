@@ -18,7 +18,7 @@ Com um aparelho Android conectado via ADB:
 3. Aceite no tablet. Pronto! O tablet agora tem internet do seu PC.
 
 ## Integração no Motor C (Para o Futuro)
-Se no futuro quisermos integrar isso em um botão `[F3 - Ativar Internet USB]` na plataforma InnovPlay, bastará adicionar no Motor C:
+Se no futuro quisermos integrar isso em um botão `[F3 - Ativar Internet USB]` na plataforma BotRpa, bastará adicionar no Motor C:
 ```c
 // Comando ADB para injetar a internet no aparelho:
 adb_exec("-s SERIAL shell am start -a android.intent.action.MAIN -n com.genymobile.gnirehtet/.GnirehtetActivity");

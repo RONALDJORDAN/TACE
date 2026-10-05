@@ -1,4 +1,4 @@
-<UserControl x:Class="InnovPlayUI.Views.ConfigView"
+<UserControl x:Class="BotRpaUI.Views.ConfigView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -136,7 +136,7 @@
                 <!-- Rodapé informativo do Menu -->
                 <Border Grid.Row="2" Background="#0A0A0F" CornerRadius="8" Padding="10" BorderBrush="#202035" BorderThickness="1">
                     <StackPanel>
-                        <TextBlock Text="Inno RPA Engine: Ativo" Foreground="#4EDEA3" FontSize="11" FontWeight="Bold"/>
+                        <TextBlock Text="Bot_RPA Engine: Ativo" Foreground="#4EDEA3" FontSize="11" FontWeight="Bold"/>
                         <TextBlock Text="MinGW64 GCC Nativo C" Foreground="#85859E" FontSize="10" Margin="0,2,0,0"/>
                     </StackPanel>
                 </Border>
@@ -227,10 +227,30 @@
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
                                 <StackPanel VerticalAlignment="Center" Margin="0,0,20,0">
-                                    <TextBlock Text="Motor C Nativo (InnoEngine.dll)" Foreground="#FFFFFF" FontSize="15" FontWeight="Bold"/>
+                                    <TextBlock Text="Motor C Nativo (BotEngine.dll)" Foreground="#FFFFFF" FontSize="15" FontWeight="Bold"/>
                                     <TextBlock Text="Módulo de alta velocidade que controla a comunicação direta com os tablets via protocolo Fast-Track ADB." Foreground="#85859E" FontSize="12" Margin="0,4,0,0" TextWrapping="Wrap"/>
                                 </StackPanel>
                                 <CheckBox Grid.Column="1" x:Name="ToggleMotor" Content="Ativo" Style="{StaticResource ToggleSwitchStyle}" IsChecked="True" Checked="ToggleMotor_Checked" Unchecked="ToggleMotor_Unchecked" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- Motor IA: Estático vs Ativo -->
+                        <Border Style="{StaticResource CardStyle}" BorderBrush="#513BA6">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel VerticalAlignment="Center" Margin="0,0,20,0">
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="Motor IA BotLearn (InnoAI)" Foreground="#FFFFFF" FontSize="15" FontWeight="Bold"/>
+                                        <Border x:Name="BadgeAiMode" Background="#12251B" BorderBrush="#4EDEA3" BorderThickness="1" CornerRadius="4" Padding="6,2" Margin="10,0,0,0" VerticalAlignment="Center">
+                                            <TextBlock x:Name="TxtAiMode" Text="ESTÁTICO" Foreground="#4EDEA3" FontSize="10" FontWeight="Black"/>
+                                        </Border>
+                                    </StackPanel>
+                                    <TextBlock Text="ESTÁTICO = seed determinístico fixo, zero drift, sem persistência (recomendado produção). ATIVO = aprende scores/hits em bot_learn.json, cresce via auto-discovery (requer validação)." Foreground="#85859E" FontSize="12" Margin="0,4,0,0" TextWrapping="Wrap"/>
+                                </StackPanel>
+                                <CheckBox Grid.Column="1" x:Name="ToggleAiLearn" Content="Ativo" Style="{StaticResource ToggleSwitchStyle}" IsChecked="False" Checked="ToggleAiLearn_Checked" Unchecked="ToggleAiLearn_Unchecked" VerticalAlignment="Center"/>
                             </Grid>
                         </Border>
 
@@ -247,6 +267,59 @@
                                 </StackPanel>
                                 <CheckBox Grid.Column="1" x:Name="ToggleShowDisconnected" Content="Exibir" Style="{StaticResource ToggleSwitchStyle}" IsChecked="False" Checked="ToggleShowDisconnected_Checked" Unchecked="ToggleShowDisconnected_Unchecked" VerticalAlignment="Center"/>
                             </Grid>
+                        </Border>
+
+                        <!-- Nuvem InnovStock: Download automático -->
+                        <Border Style="{StaticResource CardStyle}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel VerticalAlignment="Center" Margin="0,0,20,0">
+                                    <TextBlock Text="Nuvem InnovStock: Baixar Aparelhos ao Iniciar" Foreground="#FFFFFF" FontSize="15" FontWeight="Bold"/>
+                                    <TextBlock Text="Quando ativado, o sistema baixa automaticamente os dispositivos registrados na nuvem ao abrir (só adiciona/atualiza, nunca apaga o banco local)." Foreground="#85859E" FontSize="12" Margin="0,4,0,0" TextWrapping="Wrap"/>
+                                    <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                        <TextBlock Text="Intervalo do sync automático:" Foreground="#85859E" FontSize="12" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                        <ComboBox x:Name="CmbCloudInterval" Width="100" SelectionChanged="CmbCloudInterval_SelectionChanged" VerticalAlignment="Center">
+                                            <ComboBoxItem Content="5 min" Tag="5"/>
+                                            <ComboBoxItem Content="10 min" Tag="10"/>
+                                            <ComboBoxItem Content="15 min" Tag="15"/>
+                                            <ComboBoxItem Content="30 min" Tag="30"/>
+                                            <ComboBoxItem Content="60 min" Tag="60"/>
+                                        </ComboBox>
+                                    </StackPanel>
+                                </StackPanel>
+                                <CheckBox Grid.Column="1" x:Name="ToggleCloudPull" Content="Ativo" Style="{StaticResource ToggleSwitchStyle}" IsChecked="True" Checked="ToggleCloudPull_Checked" Unchecked="ToggleCloudPull_Unchecked" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- Conta InnovStock: autenticação do sync de nuvem -->
+                        <Border Style="{StaticResource CardStyle}">
+                            <StackPanel>
+                                <TextBlock Text="Conta InnovStock (sync de nuvem)" Foreground="#FFFFFF" FontSize="15" FontWeight="Bold"/>
+                                <TextBlock Text="O banco da nuvem exige login. Informe uma conta do InnovStock com perfil operacional ou superior para enviar e baixar aparelhos. Sem conta, o sync fica desativado." Foreground="#85859E" FontSize="12" Margin="0,4,0,10" TextWrapping="Wrap"/>
+                                <Grid Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="90"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="E-mail:" Foreground="#E3E0F2" FontSize="12" VerticalAlignment="Center"/>
+                                    <TextBox x:Name="TxtFirebaseEmail" Grid.Column="1" Height="28" Background="#0A0A0F" Foreground="#E3E0F2" BorderBrush="#2A2A40" FontSize="12" Padding="8,4" TextChanged="TxtFirebaseAccount_Changed"/>
+                                </Grid>
+                                <Grid Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="90"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="Senha:" Foreground="#E3E0F2" FontSize="12" VerticalAlignment="Center"/>
+                                    <PasswordBox x:Name="TxtFirebasePassword" Grid.Column="1" Height="28" Background="#0A0A0F" Foreground="#E3E0F2" BorderBrush="#2A2A40" FontSize="12" Padding="8,4" PasswordChanged="TxtFirebaseAccount_Changed"/>
+                                </Grid>
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Button x:Name="BtnTestarFirebase" Content="🔌 Testar conexão" Padding="14,6" Cursor="Hand" Click="BtnTestarFirebase_Click" Background="#0E7490" Foreground="#FFFFFF" FontWeight="Bold" FontSize="12" BorderThickness="0"/>
+                                    <TextBlock x:Name="TxtFirebaseStatus" Text="Não configurado." Foreground="#85859E" FontSize="12" VerticalAlignment="Center" Margin="12,0,0,0" TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </StackPanel>
                         </Border>
                     </StackPanel>
                 </ScrollViewer>
@@ -420,6 +493,7 @@
                                         <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                                             <TextBlock Text="🚀 Nova Versão Disponível: " Foreground="#00E5FF" FontSize="14" FontWeight="Bold"/>
                                             <TextBlock x:Name="TxtNewVersion" Text="v1.1.0" Foreground="#00E5FF" FontSize="14" FontWeight="Bold" FontFamily="Consolas"/>
+                                            <TextBlock x:Name="TxtOtaMandatory" Text="" Foreground="#FFB020" FontSize="12" FontWeight="Bold" Margin="10,0,0,0" VerticalAlignment="Center"/>
                                         </StackPanel>
                                         <TextBlock x:Name="TxtChangelog" Text="Melhorias de desempenho e estabilidade..." Foreground="#E3E0F2" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,12"/>
                                         <Button x:Name="BtnInstallOta" Content="⚡ Instalar Atualização Agora" Background="#513BA6" Foreground="#FFFFFF" BorderThickness="0" Padding="18,8" Cursor="Hand" FontWeight="Bold" FontSize="13" Click="BtnInstallOta_Click"/>
@@ -472,7 +546,7 @@
                                 </Grid.ColumnDefinitions>
                                 <StackPanel VerticalAlignment="Center" Margin="0,0,20,0">
                                     <TextBlock Text="Exportar Pacote (Backup Completo)" Foreground="#4EDEA3" FontSize="15" FontWeight="Bold"/>
-                                    <TextBlock Text="Comprime todo o ambiente (inno_database.db, configurações e logs) em um único arquivo .zip." Foreground="#85859E" FontSize="12" Margin="0,4,0,0" TextWrapping="Wrap"/>
+                                    <TextBlock Text="Comprime todo o ambiente (bot_database.db, configurações e logs) em um único arquivo .zip." Foreground="#85859E" FontSize="12" Margin="0,4,0,0" TextWrapping="Wrap"/>
                                 </StackPanel>
                                 <Button Grid.Column="1" x:Name="BtnExportar" Content="⬇ Exportar" Background="#2A2A40" Foreground="#4EDEA3" BorderThickness="1" BorderBrush="#4EDEA3" Padding="18,8" Cursor="Hand" FontWeight="Bold" FontSize="13" Click="BtnExportar_Click" VerticalAlignment="Center"/>
                             </Grid>
@@ -511,7 +585,7 @@
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel>
                         <TextBlock Text="Tecnologias &amp; Bibliotecas Open-Source" Style="{StaticResource CategoryTitle}"/>
-                        <TextBlock Text="Componentes nativos e bibliotecas de alta performance integradas à Plataforma InnovTech." Style="{StaticResource CategoryDesc}"/>
+                        <TextBlock Text="Componentes nativos e bibliotecas de alta performance integradas à Plataforma Bot_RPA." Style="{StaticResource CategoryDesc}"/>
 
                         <Border Style="{StaticResource CardStyle}">
                             <StackPanel>
@@ -539,7 +613,7 @@
                                         <TextBlock Text="Compilação Nativa em C Puro (Win64 Fast-Track)" Foreground="#85859E" FontSize="11"/>
                                     </StackPanel>
                                 </StackPanel>
-                                <TextBlock Text="Compilador C embarcado utilizado para compilar a InnoEngine.dll com zero dependências externas e execução em tempo real na bancada de automação." Foreground="#E3E0F2" FontSize="12" TextWrapping="Wrap"/>
+                                <TextBlock Text="Compilador C embarcado utilizado para compilar a BotEngine.dll com zero dependências externas e execução em tempo real na bancada de automação." Foreground="#E3E0F2" FontSize="12" TextWrapping="Wrap"/>
                             </StackPanel>
                         </Border>
                     </StackPanel>

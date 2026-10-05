@@ -1,8 +1,8 @@
 @echo off
 :: =============================================================================
-:: Inno RPA - Monitor Continuo de Tela via ADB
+:: Bot_RPA - Monitor Continuo de Tela via ADB
 :: Captura XML + Screenshot a cada 2 segundos automaticamente
-:: Desenvolvedor: Jordan Araujo | InnovTech
+:: Desenvolvedor: Jordan Araujo | Bot_RPA
 :: =============================================================================
 
 set ADB=tools\platform-tools\adb.exe
@@ -15,7 +15,7 @@ mkdir "%OUTDIR%" 2>nul
 
 echo.
 echo ============================================================
-echo   MONITOR CONTINUO DE TELA - Inno RPA
+echo   MONITOR CONTINUO DE TELA - Bot_RPA
 echo   Dispositivo: %SERIAL%
 echo   Capturas em: %OUTDIR%
 echo ============================================================

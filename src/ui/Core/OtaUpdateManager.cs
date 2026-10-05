@@ -11,7 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 
-namespace InnovPlayUI.Core
+namespace BotRpaUI.Core
 {
     public class OtaManifest
     {
@@ -101,7 +101,10 @@ namespace InnovPlayUI.Core
                     }
                 }
                 catch { }
-                return DateTime.Now.ToString("dd.MM.yyyy.HHmm");
+                // Fallback seguro: nunca usar a data atual (ela suprimiria updates
+                // reais ao parecer "mais nova" que o manifesto). "0.0.0" força
+                // a detecção de qualquer versão publicada.
+                return "0.0.0";
             }
         }
 
@@ -122,7 +125,10 @@ namespace InnovPlayUI.Core
         }
 
         /// <summary>
-        /// Envia o sinal de telemetria da máquina para o Firebase Realtime Database
+        /// Envia o sinal de telemetria da máquina para o Firebase Realtime Database.
+        /// Best-effort e sem login obrigatório: tenta PUT anônimo (caminho público)
+        /// e, só se houver credenciais configuradas, tenta fallback autenticado.
+        /// Falha silenciosa nunca bloqueia a checagem de atualização.
         /// </summary>
         public async Task<bool> SendTelemetryPingAsync(string? currentVersion = null, string status = "ONLINE")
         {
@@ -141,8 +147,25 @@ namespace InnovPlayUI.Core
                 string json = JsonSerializer.Serialize(telemetry);
                 string url = $"{FirebaseDatabaseUrl}/ota/devices/{MachineId}.json";
 
-                var response = await HttpClient.PutAsync(url, new StringContent(json, Encoding.UTF8, "application/json"));
-                return response.IsSuccessStatusCode;
+                // 1. Tentativa anônima (sem login). Funciona se a regra do nó permitir escrita pública.
+                try
+                {
+                    using var content = new StringContent(json, Encoding.UTF8, "application/json");
+                    using var response = await HttpClient.PutAsync(url, content);
+                    if (response.IsSuccessStatusCode) return true;
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"[OTA Telemetry Public Error] {ex.Message}");
+                }
+
+                // 2. Fallback autenticado apenas se houver credenciais (compat com DB privado).
+                if (FirebaseAuthService.HasCredentials)
+                {
+                    return await FirebaseAuthService.PutJsonAsync(url, json, HttpClient);
+                }
+
+                return false;
             }
             catch (Exception ex)
             {
@@ -152,21 +175,48 @@ namespace InnovPlayUI.Core
         }
 
         /// <summary>
-        /// Consulta a versão mais recente publicada na nuvem
+        /// Consulta a versão mais recente publicada na nuvem.
+        /// Caminho único público de APENAS LEITURA: GET anônimo, sem login, sem token.
+        /// Requer regra Firebase: "ota": { "manifest": { ".read": true } }.
+        /// Mantém fallback autenticado só para compat com DB ainda privado.
         /// </summary>
         public async Task<OtaManifest?> CheckForUpdatesAsync()
         {
             try
             {
                 string url = $"{FirebaseDatabaseUrl}/ota/manifest.json";
-                var response = await HttpClient.GetAsync(url);
-                if (!response.IsSuccessStatusCode) return null;
 
-                string json = await response.Content.ReadAsStringAsync();
-                if (string.IsNullOrWhiteSpace(json) || json == "null") return null;
+                // 1. Leitura pública anônima (sem login).
+                try
+                {
+                    using var response = await HttpClient.GetAsync(url);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        string publicJson = await response.Content.ReadAsStringAsync();
+                        if (!string.IsNullOrWhiteSpace(publicJson) && publicJson != "null")
+                        {
+                            return JsonSerializer.Deserialize<OtaManifest>(publicJson);
+                        }
+                        return null;
+                    }
+                    Debug.WriteLine($"[OTA Check Public] HTTP {(int)response.StatusCode} — tentando fallback.");
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"[OTA Check Public Error] {ex.Message}");
+                }
 
-                var manifest = JsonSerializer.Deserialize<OtaManifest>(json);
-                return manifest;
+                // 2. Fallback autenticado apenas se houver credenciais (compat com DB privado).
+                if (FirebaseAuthService.HasCredentials)
+                {
+                    string? json = await FirebaseAuthService.GetStringAsync(url, HttpClient);
+                    if (string.IsNullOrWhiteSpace(json) || json == "null") return null;
+
+                    var manifest = JsonSerializer.Deserialize<OtaManifest>(json);
+                    return manifest;
+                }
+
+                return null;
             }
             catch (Exception ex)
             {
@@ -347,7 +397,7 @@ namespace InnovPlayUI.Core
                 string tempDir = Path.Combine(PathHelper.GetRootDirectory(), "data", "temp_ota");
                 if (!Directory.Exists(tempDir)) Directory.CreateDirectory(tempDir);
 
-                string zipPath = Path.Combine(tempDir, "InnoRPA_Update.zip");
+                string zipPath = Path.Combine(tempDir, "BotRPA_Update.zip");
                 if (File.Exists(zipPath)) File.Delete(zipPath);
 
                 using var response = await HttpClient.GetAsync(manifest.DownloadUrl, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
@@ -395,27 +445,25 @@ namespace InnovPlayUI.Core
         }
 
         /// <summary>
-        /// Aplica a atualização executando o script auxiliar de extração e reinicialização
+        /// Aplica a atualização executando o script auxiliar de extração e reinicialização.
+        /// O ZIP OTA contém a estrutura com pastas (config/version.txt na raiz do
+        /// pacote), então a extração é feita sobre a raiz do app (tools+config).
         /// </summary>
         public bool ApplyUpdate(string zipFilePath)
         {
             try
             {
-                string scriptPath = Path.Combine(PathHelper.GetRootDirectory(), "scripts", "desenvolvimento", "apply_ota_update.bat");
-                if (!File.Exists(scriptPath))
-                {
-                    scriptPath = Path.Combine(PathHelper.GetRootDirectory(), "scripts", "apply_ota_update.bat");
-                }
+                string root = PathHelper.GetRootDirectory();
+                string scriptPath = Path.Combine(root, "scripts", "apply_ota_update.bat");
                 if (!File.Exists(scriptPath))
                 {
                     CreateApplyUpdateScript(scriptPath);
                 }
 
-                string targetDir = PathHelper.GetRootDirectory();
                 ProcessStartInfo psi = new ProcessStartInfo
                 {
                     FileName = scriptPath,
-                    Arguments = $"\"{zipFilePath}\" \"{targetDir}\"",
+                    Arguments = "\"" + zipFilePath + "\" \"" + root + "\"",
                     UseShellExecute = true,
                     CreateNoWindow = false,
                     WindowStyle = ProcessWindowStyle.Normal
@@ -437,34 +485,50 @@ namespace InnovPlayUI.Core
             string? dir = Path.GetDirectoryName(scriptPath);
             if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir)) Directory.CreateDirectory(dir);
 
-            string content = @"@echo off
-title InnovTech OTA Updater
-echo ========================================================
-echo   Plataforma InnovTech - Aplicando Atualizacao OTA...
-echo ========================================================
-echo.
-echo Aguardando o encerramento do InnoRPAui.exe...
-timeout /t 3 /nobreak >nul
-
-set ZIP_PATH=%~1
-set TARGET_DIR=%~2
-
-if not exist ""%ZIP_PATH%"" (
-    echo [ERRO] Arquivo de atualizacao nao encontrado: %ZIP_PATH%
-    pause
-    exit /b 1
-)
-
-echo Extraindo pacote de atualizacao...
-powershell -Command ""Expand-Archive -Path '%ZIP_PATH%' -DestinationPath '%TARGET_DIR%' -Force""
-
-echo Atualizacao concluida com sucesso!
-echo Reiniciando o Inno RPA...
-timeout /t 2 /nobreak >nul
-
-start """" ""%TARGET_DIR%\InnoRPAui.exe""
-exit /b 0
-";
+            string content = "@echo off\r\n"
+                + "title Bot_RPA OTA Updater\r\n"
+                + "echo ========================================================\r\n"
+                + "echo   Plataforma Bot_RPA - Aplicando Atualizacao OTA...\r\n"
+                + "echo ========================================================\r\n"
+                + "echo.\r\n"
+                + "echo Aguardando o encerramento do BotRPAui.exe...\r\n"
+                + "timeout /t 3 /nobreak >nul\r\n"
+                + "taskkill /F /IM BotRPAui.exe /T 2>nul\r\n"
+                + "timeout /t 2 /nobreak >nul\r\n"
+                + "\r\n"
+                + "set \"ZIP_PATH=%~1\"\r\n"
+                + "set \"TARGET_DIR=%~2\"\r\n"
+                + "if \"%TARGET_DIR%\"==\"\" set \"TARGET_DIR=%~dp0..\"\r\n"
+                + "set \"LOG_FILE=%TARGET_DIR%\\logs\\ota_update_%date:~6,4%-%date:~3,2%-%date:~0,2%.log\"\r\n"
+                + "if not exist \"%TARGET_DIR%\\logs\" mkdir \"%TARGET_DIR%\\logs\" 2>nul\r\n"
+                + "\r\n"
+                + "if not exist \"%ZIP_PATH%\" (\r\n"
+                + "    echo [ERRO] Arquivo de atualizacao nao encontrado: %ZIP_PATH%>> \"%LOG_FILE%\" 2>&1\r\n"
+                + "    echo [ERRO] Arquivo de atualizacao nao encontrado: %ZIP_PATH%\r\n"
+                + "    pause\r\n"
+                + "    exit /b 1\r\n"
+                + ")\r\n"
+                + "\r\n"
+                + "echo Extraindo pacote de atualizacao...>> \"%LOG_FILE%\" 2>&1\r\n"
+                + "echo Extraindo pacote de atualizacao...\r\n"
+                + "powershell -NoProfile -Command \"Expand-Archive -LiteralPath $env:ZIP_PATH -DestinationPath $env:TARGET_DIR -Force\">> \"%LOG_FILE%\" 2>&1\r\n"
+                + "if errorlevel 1 (\r\n"
+                + "    echo [ERRO] Falha ao extrair o pacote. Veja o log: %LOG_FILE%\r\n"
+                + "    pause\r\n"
+                + "    exit /b 1\r\n"
+                + ")\r\n"
+                + "\r\n"
+                + "echo Atualizacao concluida com sucesso!>> \"%LOG_FILE%\" 2>&1\r\n"
+                + "echo Atualizacao concluida com sucesso!\r\n"
+                + "echo Reiniciando o Bot_RPA...\r\n"
+                + "timeout /t 2 /nobreak >nul\r\n"
+                + "\r\n"
+                + "if exist \"%TARGET_DIR%\\BotRPAui.exe\" (\r\n"
+                + "    start \"\" \"%TARGET_DIR%\\BotRPAui.exe\"\r\n"
+                + ") else if exist \"%TARGET_DIR%\\data\\output\\BotRPAui.exe\" (\r\n"
+                + "    start \"\" \"%TARGET_DIR%\\data\\output\\BotRPAui.exe\"\r\n"
+                + ")\r\n"
+                + "exit /b 0\r\n";
             File.WriteAllText(scriptPath, content, Encoding.UTF8);
         }
 

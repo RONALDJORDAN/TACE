@@ -1,4 +1,4 @@
-# Diretrizes Globais e Regras de Desenvolvimento - Inno RPA (Plataforma InnovTech)
+# Diretrizes Globais e Regras de Desenvolvimento - Bot_RPA
 
 Este documento estabelece as regras obrigatórias que qualquer desenvolvedor ou agente de Inteligência Artificial DEVE seguir rigorosamente ao trabalhar no código-fonte e na estrutura de pastas deste repositório.
 
@@ -6,8 +6,8 @@ Este documento estabelece as regras obrigatórias que qualquer desenvolvedor ou 
 
 ## 📌 1. Checklist Inicial Obrigatório
 Antes de realizar qualquer modificação no repositório:
-1. **Leitura de Memória:** Ler o arquivo [memoria_inno_rpa.md](file:///c:/PROJETOS/InnoBotRpa/memoria_inno_rpa.md) localizado na raiz para compreender o histórico, arquitetura e estado atual do sistema.
-2. **Confirmação de Contexto:** Confirmar o nome do projeto (**Inno RPA / Plataforma InnovTech**) e a data/hora exata do início do trabalho.
+1. **Leitura de Memória:** Ler o arquivo [memoria_bot_rpa.md](file:///c:/PROJETOS/Bot_RPA/memoria_bot_rpa.md) localizado na raiz para compreender o histórico, arquitetura e estado atual do sistema.
+2. **Confirmação de Contexto:** Confirmar o nome do projeto (**Bot_RPA**) e a data/hora exata do início do trabalho.
 
 ---
 
@@ -21,8 +21,8 @@ Antes de realizar qualquer modificação no repositório:
 ---
 
 ## 📝 3. Regra de Ouro #2 - Rastreabilidade e Histórico Obrigatório de Ajustes
-- **Registro de Memória:** Toda e qualquer alteração de código, refatoração, ajuste técnico ou nova funcionalidade DEVE ser registrada e detalhada em ordem cronológica no arquivo [memoria_inno_rpa.md](file:///c:/PROJETOS/InnoBotRpa/memoria_inno_rpa.md).
-- **Logs de Auditoria de Build:** Todas as compilações realizadas devem registrar um histórico no padrão `registros/YYYY-MM-DD/HH-MM_Plataforma_InnovTech_DESKTOP_BUILD`.
+- **Registro de Memória:** Toda e qualquer alteração de código, refatoração, ajuste técnico ou nova funcionalidade DEVE ser registrada e detalhada em ordem cronológica no arquivo [memoria_bot_rpa.md](file:///c:/PROJETOS/Bot_RPA/memoria_bot_rpa.md).
+- **Logs de Auditoria de Build:** Todas as compilações realizadas devem registrar um histórico no padrão `registros/YYYY-MM-DD/HH-MM_Plataforma_BotRPA_DESKTOP_BUILD`.
 - **Versionamento Git:** commits devem seguir o padrão Conventional Commits (`feat:`, `fix:`, `refactor:`, `docs:`, `style:`).
 
 ---
@@ -30,7 +30,15 @@ Antes de realizar qualquer modificação no repositório:
 ## 📂 4. Regra de Ouro #3 - Organização Limpa de Pastas
 - **Ferramentas (`tools/`):** Concentra 100% dos executáveis e utilitários externos (`tools/platform-tools/`, `tools/reverse_tethering/`, `tools/mac_address_finder.apk`).
 - **Configurações (`config/`):** Contém estritamente arquivos de configuração JSON (`settings.json`, `first_run.json`).
-- **Zero Poluição:** Não criar arquivos soltos na raiz ou pastas físicas de backup local. O Git e o `memoria_inno_rpa.md` cuidam da versão histórica.
+- **Zero Poluição:** Não criar arquivos soltos na raiz ou pastas físicas de backup local. O Git e o `memoria_bot_rpa.md` cuidam da versão histórica.
+- **Mapa oficial de arquivos:**
+  - Raiz: apenas `.gitignore`, `README.md`, `AGENTS.md`, `memoria_bot_rpa.md`, pastas do projeto e dot-configs locais (`compile_commands.json`, `.clangd` — ignorados pelo Git). **Nunca** binários (`*.dll`, `*.exe`) nem CSVs/TXTs soltos na raiz.
+  - Binários de dev/teste: `data/output/` (`BotEngine.dll`, `BotRPAui.exe`).
+  - Release portátil PnP: `BotRPA_Release/`.
+  - Ferramentas de administração (somente dev, fora da Release): `controle/` (`Build.ps1` + `Build.bat` = painel Teste/Final, `Terminal.ps1` + `Terminal.bat` = REPL admin, `Atualizacao.*` = pacote OTA).
+  - Documentação viva: `docs/plano_melhorias.md` (fases e checkboxes) + `memoria_bot_rpa.md` (histórico cronológico).
+  - `municipios.csv`: seed versionado em `config/municipios.csv`; em runtime o motor C lê o CSV ao lado do executável (`exe_dir\municipios.csv`, ex: `data/output/municipios.csv`).
+  - Versão oficial: `config/version.txt` (lida pelo OTA via `OtaUpdateManager`).
 
 ---
 

@@ -1,9 +1,9 @@
 using System.Configuration;
 using System.Data;
 using System.Windows;
-using InnovPlayUI.Views;
+using BotRpaUI.Views;
 
-namespace InnovPlayUI;
+namespace BotRpaUI;
 
 
 /// <summary>
@@ -16,19 +16,28 @@ public partial class App : Application
         base.OnStartup(e);
 
         // Inicializa o Sistema Anti-Crash Guard (Triplo Handler + Watchdog)
-        InnovPlayUI.Core.AntiCrashGuard.Initialize();
+        BotRpaUI.Core.AntiCrashGuard.Initialize();
 
         // Envia o ping de telemetria OTA para inventário no Firebase
-        _ = new InnovPlayUI.Core.OtaUpdateManager().SendTelemetryPingAsync();
+        // (respeita o opt-out em Configurações → Telemetria Automática).
+        BotRpaUI.Core.SettingsManager.Load();
+        if (BotRpaUI.Core.SettingsManager.TelemetryEnabled)
+        {
+            _ = new BotRpaUI.Core.OtaUpdateManager().SendTelemetryPingAsync();
+        }
 
         // Roda a varredura offline antes de abrir a interface
-        InnovPlayUI.Core.PreflightChecker.CheckAndRepair();
+        BotRpaUI.Core.PreflightChecker.CheckAndRepair();
+
+        // Sincronizacao automatica com a nuvem (pull no startup + periodico + ao reconectar)
+        BotRpaUI.Core.SettingsManager.Load();
+        BotRpaUI.Core.CloudAutoSyncService.Start();
 
         // Modernização: Forçar execução apenas no Windows 11 ou superior
         if (!OperatingSystem.IsWindowsVersionAtLeast(10, 0, 22000))
         {
             MessageBox.Show(
-                "O InnovPlay RPA foi modernizado e agora requer o Windows 11 ou superior para rodar com toda a sua performance e recursos nativos.", 
+                "O BotRpa RPA foi modernizado e agora requer o Windows 11 ou superior para rodar com toda a sua performance e recursos nativos.", 
                 "Requisito de Sistema Incompatível", 
                 MessageBoxButton.OK, 
                 MessageBoxImage.Error);
@@ -38,7 +47,7 @@ public partial class App : Application
         }
 
         // Verifica se é a primeira execução
-        string baseDir = InnovPlayUI.Core.PathHelper.GetRootDirectory();
+        string baseDir = BotRpaUI.Core.PathHelper.GetRootDirectory();
         string configDir = System.IO.Path.Combine(baseDir, "config");
         if (!System.IO.Directory.Exists(configDir))
         {
@@ -71,7 +80,7 @@ public partial class App : Application
     {
         try
         {
-            string baseDir = InnovPlayUI.Core.PathHelper.GetRootDirectory();
+            string baseDir = BotRpaUI.Core.PathHelper.GetRootDirectory();
             string adbExe = System.IO.Path.Combine(baseDir, "tools", "platform-tools", "adb.exe");
             
             if (System.IO.File.Exists(adbExe))

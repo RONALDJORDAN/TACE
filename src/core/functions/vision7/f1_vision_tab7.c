@@ -59,7 +59,7 @@ static DWORD WINAPI V7_GnirehtetProgressBarThread(LPVOID lpParam) {
 // =============================================================================
 //  MÓDULO F1: SINCRONIZAÇÃO E PIPELINE COMPLETO DE PREPARAÇÃO
 //  Dispositivo Alvo: Positivo Tab Vision 7 (AllWinner / Android 14)
-//  Arquitetura: Motor C Nativo (Inno RPA Engine)
+//  Arquitetura: Motor C Nativo (Bot_RPA Engine)
 //  Isolamento Estrito: src/core/functions/vision7/ (Regra de Ouro #1)
 // =============================================================================
 
@@ -244,10 +244,13 @@ int V7_Etapa1_5(const char *serial, LogCallback cb) {
     return PIPELINE_ERROR;
 
   for (int i = 0; i < V7_NUM_DEBLOAT_PACKAGES; i++) {
+    // Uninstall-first: tenta remover direto; se falhar, desativa+suspende.
+    // Economiza ~1/3 dos comandos pm por pacote.
     const char *pkg = V7_DEBLOAT_PACKAGES[i];
     offset += snprintf(cmd_batch + offset, sizeof(cmd_batch) - offset,
-                       "pm disable-user --user 0 %s 2>/dev/null; pm suspend %s "
-                       "2>/dev/null; pm uninstall -k --user 0 %s 2>/dev/null; ",
+                       "pm uninstall -k --user 0 %s 2>/dev/null || pm "
+                       "disable-user --user 0 %s 2>/dev/null; pm suspend %s "
+                       "2>/dev/null; ",
                        pkg, pkg, pkg);
     count_in_batch++;
 
@@ -719,7 +722,7 @@ int V7_Etapa2_5(const char *serial, LogCallback cb) {
     CloseHandle(pi_kill.hThread);
   }
 
-  Sleep(1000);
+  Sleep(500); // Pos-taskkill: 1000 -> 500ms
 
   // SetEnvironmentVariableA ja foi chamado acima com ADB=<caminho absoluto>.
   // Ao usar lpEnvironment=NULL, o processo filho herda TODO o ambiente do pai,
@@ -744,7 +747,7 @@ int V7_Etapa2_5(const char *serial, LogCallback cb) {
       cb("[WARNING] Falha ao criar processo do Relay.");
   }
 
-  Sleep(3000); // Aguarda o relay subir na porta 31416
+  Sleep(1500); // Relay: 3000 -> 1500ms (start valida na sequencia)
 
   char cmdline[1024];
   snprintf(cmdline, sizeof(cmdline), "\"%s\" start %s", gnirehtet_path, serial);
@@ -759,7 +762,9 @@ int V7_Etapa2_5(const char *serial, LogCallback cb) {
     cb("  -> Ativando VPN no dispositivo...");
   if (CreateProcessA(NULL, cmdline, NULL, NULL, FALSE, CREATE_NO_WINDOW, NULL,
                      gnirehtet_dir, &si, &pi)) {
-    WaitForSingleObject(pi.hProcess, 10000); // Aguarda start concluir
+    // O processo `start` fica preso mantendo o tunel: esperar 10s era custo
+    // fixo. 3000ms bastam; a conectividade e revalidada adiante pelo motor.
+    WaitForSingleObject(pi.hProcess, 3000);
     CloseHandle(pi.hProcess);
     CloseHandle(pi.hThread);
     if (cb)
@@ -770,7 +775,7 @@ int V7_Etapa2_5(const char *serial, LogCallback cb) {
          "tools/reverse_tethering.");
   }
 
-  Sleep(2000); // Aguarda VPN estabilizar no tablet
+  Sleep(1000); // VPN: 2000 -> 1000ms
   return PIPELINE_SUCCESS;
 }
 
@@ -1015,14 +1020,14 @@ static int ensure_device_internet(const char *serial, LogCallback cb) {
 }
 
 // =============================================================================
-//  [ETAPA 4] AUTENTICAÇÃO E LOGIN AUTOMÁTICO (INNOLEARN / SCAN DUAL EM TEMPO
+//  [ETAPA 4] AUTENTICAÇÃO E LOGIN AUTOMÁTICO (BOTLEARN / SCAN DUAL EM TEMPO
 //  REAL)
 // =============================================================================
 //  O que esta etapa faz:
 //  1. Validação de Lockscreen: Envia evento KEYCODE_MENU (82) e swipe de
 //  segurança
 //     para garantir que a tela de bloqueio não cubra o aplicativo.
-//  2. Seleção Inteligente de Município: Utiliza o InnoLearn para localizar a
+//  2. Seleção Inteligente de Município: Utiliza o BotLearn para localizar a
 //  gaveta/spinner
 //     de municípios no layout XML. Se o município já estiver selecionado, pula
 //     a etapa; caso contrário, abre a gaveta, localiza o nome do município (com
@@ -1034,7 +1039,7 @@ static int ensure_device_internet(const char *serial, LogCallback cb) {
 //     a visão.
 //  4. Injeção de Senha: Tira uma nova "foto" (dump XML) da tela, localiza o
 //  campo
-//     de senha via InnoLearn, toca, digita a senha mascarada e esconde o
+//     de senha via BotLearn, toca, digita a senha mascarada e esconde o
 //     teclado.
 //  5. Validação Prévia e Clique em Entrar: Verifica se o município correto
 //  permanece
@@ -1042,8 +1047,8 @@ static int ensure_device_internet(const char *serial, LogCallback cb) {
 //     clique centróide, autenticando a aplicação com o backend via túnel
 //     Gnirehtet.
 // =============================================================================
-int V7_Etapa4(const char *serial, const char *login, const char *senha,
-              const char *municipio, LogCallback cb) {
+static int V7_Etapa4_Internal(const char *serial, const char *login, const char *senha,
+               const char *municipio, LogCallback cb, int skip_municipio_recheck) {
   if (cb)
     cb("[F1 - Etapa 4] Lendo a tela e calculando pixels (UIAutomator) "
        "Dual-Scan...");
@@ -1072,11 +1077,23 @@ int V7_Etapa4(const char *serial, const char *login, const char *senha,
     free(unlock2);
   Sleep(800);
 
-  // Aguarda o app terminar de abrir a tela inicial (Splash screen)
-  Sleep(4000);
+  // Aguarda o app abrir a tela inicial: polling do foco (teto 4s) em vez de
+  // espera fixa. Se o foco nao confirmar, segue após o teto (como antes).
+  {
+    int waited_ms = 0;
+    char focus_buf[256] = {0};
+    while (waited_ms < 4000) {
+      if (adb_get_current_focus(serial, focus_buf, sizeof(focus_buf)) &&
+          strstr(focus_buf, "innovava")) {
+        break;
+      }
+      Sleep(200);
+      waited_ms += 200;
+    }
+  }
 
   if (cb)
-    cb("[-] [InnoLearn] SCAN 1: Procurando gaveta de Municipio...");
+    cb("[-] [BotLearn] SCAN 1: Procurando gaveta de Municipio...");
   char *xml1 = dump_and_read_xml(serial, cb);
 
   if (xml1) {
@@ -1129,14 +1146,14 @@ int V7_Etapa4(const char *serial, const char *login, const char *senha,
         cb("[-] Municipio alvo ja esta selecionado! Pulando interacao de "
            "gaveta.");
     } else {
-      // --- InnoLearn: busca o spinner com estratégias aprendidas V7 ---
+      // --- BotLearn: busca o spinner com estratégias aprendidas V7 ---
       LearnFindResult res_mun =
           learn_find_element("v7_spinner_municipio", xml1, 0, cb);
 
       if (res_mun.found) {
         learn_record_hit("v7_spinner_municipio", res_mun.winning_strategy);
         if (cb)
-          cb("[-] Gaveta encontrada (InnoLearn V7). Abrindo lista de "
+          cb("[-] Gaveta encontrada (BotLearn V7). Abrindo lista de "
              "municipios...");
         snprintf(args, sizeof(args), "-s %s shell input tap %d %d", serial,
                  res_mun.cx, res_mun.cy);
@@ -1144,10 +1161,10 @@ int V7_Etapa4(const char *serial, const char *login, const char *senha,
         if (t1)
           free(t1);
 
-        Sleep(1500); // Aguarda lista subir
+        Sleep(1000); // Lista subir: 1500 -> 1000ms
 
         if (cb)
-          cb("[-] [InnoLearn V7] SCAN 2: Cacando o municipio na lista...");
+          cb("[-] [BotLearn V7] SCAN 2: Cacando o municipio na lista...");
         char *xml2 = dump_and_read_xml(serial, cb);
         if (xml2) {
           if (get_centroid_from_xml_fuzzy(xml2, utf8_municipio, &cx, &cy, 0)) {
@@ -1195,9 +1212,9 @@ int V7_Etapa4(const char *serial, const char *login, const char *senha,
   CreateDirectoryA(logs_dir,
                    NULL); // Cria se nao existir (nao falha se ja existir)
 
-  // --- PASSO 1: Injecao do E-mail (InnoLearn V7) ---
+  // --- PASSO 1: Injecao do E-mail (BotLearn V7) ---
   if (cb)
-    cb("[-] [InnoLearn V7] Procurando campo de Email...");
+    cb("[-] [BotLearn V7] Procurando campo de Email...");
   {
     int max_attempts = 15;
     int attempt = 1;
@@ -1223,7 +1240,7 @@ int V7_Etapa4(const char *serial, const char *login, const char *senha,
           cx = res_email.cx;
           cy = res_email.cy;
           if (cb)
-            cb("[-] Campo Email encontrado (InnoLearn V7). Clicando e "
+            cb("[-] Campo Email encontrado (BotLearn V7). Clicando e "
                "digitando...");
           found_email = 1;
         } else {
@@ -1266,7 +1283,7 @@ int V7_Etapa4(const char *serial, const char *login, const char *senha,
       free(t1);
     char escaped_login[256];
     escape_adb_text(login, escaped_login);
-    Sleep(1200);
+    Sleep(800); // Foco do teclado: 1200 -> 800ms
     snprintf(args_local, sizeof(args_local), "-s %s shell input text '%s'",
              serial, escaped_login);
     char *t2 = adb_exec(args_local);
@@ -1283,9 +1300,9 @@ int V7_Etapa4(const char *serial, const char *login, const char *senha,
     Sleep(1000);
   }
 
-  // --- PASSO 2: Injecao da Senha (InnoLearn V7) ---
+  // --- PASSO 2: Injecao da Senha (BotLearn V7) ---
   if (cb)
-    cb("[-] [InnoLearn V7] Procurando campo de Senha...");
+    cb("[-] [BotLearn V7] Procurando campo de Senha...");
   {
     int max_attempts = 15;
     int attempt = 1;
@@ -1311,7 +1328,7 @@ int V7_Etapa4(const char *serial, const char *login, const char *senha,
           cx = res_senha.cx;
           cy = res_senha.cy;
           if (cb)
-            cb("[-] Campo Senha encontrado (InnoLearn V7). Clicando e "
+            cb("[-] Campo Senha encontrado (BotLearn V7). Clicando e "
                "digitando...");
           found_senha = 1;
         } else {
@@ -1371,9 +1388,9 @@ int V7_Etapa4(const char *serial, const char *login, const char *senha,
     Sleep(1800);
   }
 
-  // --- PASSO 3: Botao Entrar (InnoLearn V7) ---
+  // --- PASSO 3: Botao Entrar (BotLearn V7) ---
   if (cb)
-    cb("[-] [InnoLearn V7] Procurando botao Entrar...");
+    cb("[-] [BotLearn V7] Procurando botao Entrar...");
   {
     int max_attempts = 15;
     int attempt = 1;
@@ -1391,8 +1408,8 @@ int V7_Etapa4(const char *serial, const char *login, const char *senha,
         }
 
         // === VALIDAÇÃO PRÉVIA VIA XML: Confirma se o município alvo está
-        // visível no seletor ===
-        if (municipio && strlen(municipio) > 0) {
+        // visível no seletor (PULADA no F2 via skip_municipio_recheck) ===
+        if (!skip_municipio_recheck && municipio && strlen(municipio) > 0) {
           if (get_centroid_from_xml_fuzzy(xml_btn, municipio, NULL, NULL, 0)) {
             if (cb) {
               char log_msg[256];
@@ -1459,7 +1476,7 @@ int V7_Etapa4(const char *serial, const char *login, const char *senha,
           cx = res_btn.cx;
           cy = res_btn.cy;
           if (cb)
-            cb("[-] Botao Entrar encontrado (InnoLearn V7). Clicando...");
+            cb("[-] Botao Entrar encontrado (BotLearn V7). Clicando...");
           found_btn = 1;
         } else {
           if (attempt == max_attempts) {
@@ -1520,6 +1537,19 @@ int V7_Etapa4(const char *serial, const char *login, const char *senha,
   return PIPELINE_SUCCESS;
 }
 
+// Wrapper F1: mantém revalidação de município (skip = 0).
+int V7_Etapa4(const char *serial, const char *login, const char *senha,
+              const char *municipio, LogCallback cb) {
+  return V7_Etapa4_Internal(serial, login, senha, municipio, cb, 0);
+}
+
+// Variante F2: pula revalidação de município pós-senha (skip = 1).
+int V7_Etapa4_SkipMunicipioRecheck(const char *serial, const char *login, const char *senha,
+              const char *municipio, LogCallback cb) {
+  if (cb) cb("[-] [BotLearn V7-F2] Pulando revalidacao de municipio (modo F2)...");
+  return V7_Etapa4_Internal(serial, login, senha, municipio, cb, 1);
+}
+
 // =============================================================================
 //  [ETAPA 5] NAVEGAÇÃO PARA IMPORTAÇÃO DO PACOTE AVALIATIVO (MENU LATERAL)
 // =============================================================================
@@ -1544,8 +1574,8 @@ int V7_Etapa5(const char *serial, LogCallback cb) {
   V7_Etapa1(serial, cb);
   char args[512];
 
-  // Aguarda o login processar e a tela principal carregar
-  Sleep(4000);
+  // Aguarda o login processar e a tela principal carregar (4000 -> 2500ms)
+  Sleep(2500);
 
   if (cb)
     cb("[-] Abrindo menu lateral (Swipe da esquerda para direita)...");
@@ -1554,7 +1584,7 @@ int V7_Etapa5(const char *serial, LogCallback cb) {
   char *swp = adb_exec(args);
   if (swp)
     free(swp);
-  Sleep(2000); // Aguarda a animacao do menu lateral
+  Sleep(1200); // Animacao do menu lateral: 2000 -> 1200ms
 
   if (cb)
     cb("[-] Procurando a opcao 'Importar ZIP' no menu lateral...");
@@ -1572,7 +1602,7 @@ int V7_Etapa5(const char *serial, LogCallback cb) {
       char *tp = adb_exec(args);
       if (tp)
         free(tp);
-      Sleep(1500);
+      Sleep(1000); // Pos-clique Importar ZIP: 1500 -> 1000ms
 
       // Desligar Gnirehtet e Wi-Fi imediatamente ao chegar em Importar ZIP
       if (cb)
@@ -1624,8 +1654,8 @@ int V7_Etapa6(const char *serial, LogCallback cb) {
   int btn_found = 0;
 
   // 1. Clicar no botão 'Procurar arquivo .zip' com busca precisa (sem clique
-  // cego em Exportar)
-  Sleep(2000); // Aguarda tela de importaçao
+  // cego em Exportar). O loop de retry abaixo ja cobre telas lentas.
+  Sleep(1000); // Tela de importacao: 2000 -> 1000ms
   for (int retry = 0; retry < 3; retry++) {
     char *xml_import = dump_and_read_xml(serial, cb);
     if (xml_import) {
@@ -1649,7 +1679,7 @@ int V7_Etapa6(const char *serial, LogCallback cb) {
       }
       free(xml_import);
     }
-    Sleep(1500);
+    Sleep(1000); // Retry Procurar-arquivo: 1500 -> 1000ms
   }
 
   if (!btn_found) {
@@ -1659,7 +1689,7 @@ int V7_Etapa6(const char *serial, LogCallback cb) {
     V7_Etapa1(serial, cb);
   }
 
-  Sleep(3000); // Aguarda o gerenciador de arquivos nativo abrir
+  Sleep(1500); // Gerenciador de arquivos: 3000 -> 1500ms (fast-path valida)
 
   // [FAST-PATH RESTAURADO E MELHORADO A PEDIDO]
   // O sistema verifica primeiro se ja esta na pasta avaliacoes e o arquivo zip
@@ -1708,7 +1738,7 @@ int V7_Etapa6(const char *serial, LogCallback cb) {
   char *tswipe = adb_exec(args);
   if (tswipe)
     free(tswipe);
-  Sleep(2000); // Aguarda o menu deslizar
+  Sleep(1200); // Menu deslizar: 2000 -> 1200ms
 
   // 2. Procura "T307G" ou "Armazenamento interno" no menu lateral
   if (cb)
@@ -1729,7 +1759,7 @@ int V7_Etapa6(const char *serial, LogCallback cb) {
     }
     free(xml_nav);
   }
-  Sleep(2000); // Aguarda carregar a raiz do T307G
+  Sleep(1200); // Raiz do T307G: 2000 -> 1200ms
 
   // 3. Procura pasta "avaliacoes"
   if (cb)
@@ -1750,7 +1780,7 @@ int V7_Etapa6(const char *serial, LogCallback cb) {
       char *tswp = adb_exec(args);
       if (tswp)
         free(tswp);
-      Sleep(1500);
+      Sleep(1000); // Pos-scroll avaliacoes: 1500 -> 1000ms
 
       free(xml_folder);
       xml_folder = dump_and_read_xml(serial, cb);
@@ -1767,7 +1797,7 @@ int V7_Etapa6(const char *serial, LogCallback cb) {
     if (xml_folder)
       free(xml_folder);
   }
-  Sleep(2000);
+  Sleep(1200); // Pos-pasta avaliacoes: 2000 -> 1200ms
 
   // 4. Finalmente, procura o .zip na pasta avaliacoes e seleciona
   if (cb)
@@ -1834,8 +1864,7 @@ int F1_Etapa7_CloseApps(const char *serial, const char *package_name,
     cb("[F1 - Etapa 7] Pacote selecionado. Aguardando 5 segundos para inicio "
        "do processamento de importacao...");
 
-  Sleep(5000); // 5 segundos obrigatorios solicitados pelo usuario para
-               // descompactar/processar
+  Sleep(2500); // Pre-monitoramento: 5000 -> 2500ms (polling de 25s valida)
 
   if (cb)
     cb("[-] Monitorando o reaparecimento do botao 'PROCURAR ARQUIVO .ZIP' "
@@ -1943,7 +1972,6 @@ int F1_Etapa7_CloseApps(const char *serial, const char *package_name,
 // =============================================================================
 int V7_Etapa7_PowerOff(const char *serial, LogCallback cb) {
   char cmd[512];
-  char msg[128];
 
   // 1. Fecha visualmente todos os apps (limpa recentes via HOME + RECENTS)
   if (cb)
@@ -1952,13 +1980,13 @@ int V7_Etapa7_PowerOff(const char *serial, LogCallback cb) {
   char *h1 = adb_exec(cmd);
   if (h1)
     free(h1);
-  Sleep(600);
+  Sleep(500);
   snprintf(cmd, sizeof(cmd), "-s %s shell input keyevent 187",
            serial); // RECENTES
   char *r1 = adb_exec(cmd);
   if (r1)
     free(r1);
-  Sleep(1000);
+  Sleep(800);
 
   // Desliza a tela para a direita duas vezes para garantir que o botao 'Limpar
   // tudo' fique visivel
@@ -1969,11 +1997,11 @@ int V7_Etapa7_PowerOff(const char *serial, LogCallback cb) {
   char *sw1 = adb_exec(cmd);
   if (sw1)
     free(sw1);
-  Sleep(400);
+  Sleep(300);
   char *sw2 = adb_exec(cmd);
   if (sw2)
     free(sw2);
-  Sleep(800);
+  Sleep(600);
 
   // Tenta clicar em "Limpar tudo" / "Clear all" na tela de recentes
   snprintf(cmd, sizeof(cmd),
@@ -2008,13 +2036,13 @@ int V7_Etapa7_PowerOff(const char *serial, LogCallback cb) {
     }
     free(xr);
   }
-  Sleep(800);
+  Sleep(600);
   // Volta para HOME
   snprintf(cmd, sizeof(cmd), "-s %s shell input keyevent 3", serial);
   char *h2 = adb_exec(cmd);
   if (h2)
     free(h2);
-  Sleep(1000);
+  Sleep(800);
 
   // 2. Forca parada de todos os aplicativos principais e processos em
   // background
@@ -2029,17 +2057,7 @@ int V7_Etapa7_PowerOff(const char *serial, LogCallback cb) {
   if (ka)
     free(ka);
 
-  // 3. Contagem regressiva e desligamento
-  if (cb)
-    cb("[-] Preparacao finalizada. Iniciando contagem para desligar...");
-  for (int i = 5; i >= 1; i--) {
-    snprintf(msg, sizeof(msg), "[-] Desligando em %d segundo%s...", i,
-             i == 1 ? "" : "s");
-    if (cb)
-      cb(msg);
-    Sleep(1000);
-  }
-
+  // 3. Desligamento direto (contagem de 5s removida na otimizacao)
   if (cb)
     cb("[F1 - Etapa 7] Enviando comando de desligamento ao dispositivo...");
   snprintf(cmd, sizeof(cmd), "-s %s shell reboot -p", serial);
@@ -2092,7 +2110,7 @@ int V7_Etapa1_7(const char *serial, LogCallback cb) {
 //  [ETAPA 4.5] ENCERRAMENTO DO REVERSE TETHERING GNIREHTET
 // =============================================================================
 //  O que esta etapa faz:
-//  1. Delay de Conclusão: Aguarda 2 segundos após a autenticação para permitir
+//  1. Delay de Conclusão: Aguarda 1 segundo após a autenticação para permitir
 //  a
 //     troca de pacotes de token e autorização na rede.
 //  2. Finalização do Túnel: Dispara `gnirehtet stop <serial>`, desativando a
@@ -2101,11 +2119,11 @@ int V7_Etapa1_7(const char *serial, LogCallback cb) {
 // =============================================================================
 int V7_Etapa4_5_StopGnirehtet(const char *serial, LogCallback cb) {
   if (cb)
-    cb("[F1 - Etapa 4.5] Aguardando 2s para concluir login e Desligando "
+    cb("[F1 - Etapa 4.5] Aguardando 1s para concluir login e Desligando "
        "Gnirehtet...");
 
-  // Aguardar 2 segundos apos o clique no botao Entrar
-  Sleep(2000);
+  // Aguardar 1 segundo apos o clique no botao Entrar (2000 -> 1000ms)
+  Sleep(1000);
 
   char cmd_stop[1024];
   char exe_path2[MAX_PATH];
@@ -2200,14 +2218,14 @@ int V7_Etapa2_1_AddShortcut(const char *serial, const char *package_name,
            "'intent:#Intent;action=android.intent.action.MAIN;"
            "category=android.intent.category.LAUNCHER;component=%s/"
            ".MainActivity;end' "
-           "-e Intent.EXTRA_SHORTCUT_NAME 'InnovPlay'",
+           "-e Intent.EXTRA_SHORTCUT_NAME 'BotRpa'",
            serial, package_name);
 
   char *out = adb_exec(cmd);
   if (out)
     free(out);
 
-  Sleep(1000);
+  Sleep(600); // Pos-broadcast atalho: 1000 -> 600ms
   return PIPELINE_SUCCESS;
 }
 
@@ -2248,7 +2266,7 @@ int V7_Etapa1_2_DarkMode(const char *serial, LogCallback cb) {
 //  [2.1] Etapa 2.1: Criação de Atalho na Tela Inicial
 //  [2.5] Etapa 2.5: Inicialização do Reverse Tethering Gnirehtet USB
 //  [3] Etapa 3: Liberação de Permissões de Runtime e Abertura do App
-//  [4] Etapa 4: Autenticação e Login Automático (InnoLearn Dual-Scan)
+//  [4] Etapa 4: Autenticação e Login Automático (BotLearn Dual-Scan)
 //  [4.5] Etapa 4.5: Desligamento do Túnel Gnirehtet e Isolamento de Rede
 //  [5] Etapa 5: Navegação no Menu Lateral para 'Importar ZIP'
 //  [6] Etapa 6: Seleção do Pacote ZIP no DocumentsUI (SAF)

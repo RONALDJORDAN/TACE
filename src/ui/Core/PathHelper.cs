@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 
-namespace InnovPlayUI.Core
+namespace BotRpaUI.Core
 {
     public static class PathHelper
     {

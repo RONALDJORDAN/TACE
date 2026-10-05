@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace InnovPlayUI.Core
+namespace BotRpaUI.Core
 {
-    public class InnoLearnBackup
+    public class BotLearnBackup
     {
         public string FileName { get; set; } = string.Empty;
         public string FullPath { get; set; } = string.Empty;
@@ -13,14 +13,14 @@ namespace InnovPlayUI.Core
         public string TamanhoStr { get; set; } = string.Empty;
     }
 
-    public static class InnoLearnBackupManager
+    public static class BotLearnBackupManager
     {
         private const int MAX_BACKUPS = 3;
 
         public static string GetDataDirectory()
         {
             string basePath = AppDomain.CurrentDomain.BaseDirectory;
-            // O binário C (InnoEngine) e o C# procuram pela pasta 'data' relativa ao executável.
+            // O binário C (BotEngine) e o C# procuram pela pasta 'data' relativa ao executável.
             string dataDir = Path.Combine(basePath, "data");
             
             if (!Directory.Exists(dataDir))
@@ -36,6 +36,15 @@ namespace InnovPlayUI.Core
                     Directory.CreateDirectory(dataDir);
                 }
             }
+            // Migracao automatica do legado Inno_RPA (uma unica vez por maquina).
+            try
+            {
+                string legacy = Path.Combine(dataDir, "inno_learn.json");
+                string current = Path.Combine(dataDir, "bot_learn.json");
+                if (!File.Exists(current) && File.Exists(legacy))
+                    File.Move(legacy, current);
+            }
+            catch { }
             return dataDir;
         }
 
@@ -54,12 +63,12 @@ namespace InnovPlayUI.Core
             try
             {
                 string dataDir = GetDataDirectory();
-                string sourceFile = Path.Combine(dataDir, "inno_learn.json");
+                string sourceFile = Path.Combine(dataDir, "bot_learn.json");
                 if (!File.Exists(sourceFile)) return; // Sem DB original, sem backup
 
                 string bkpDir = GetBackupDirectory();
                 string dateStr = DateTime.Now.ToString("yyyyMMdd");
-                string destFile = Path.Combine(bkpDir, $"inno_learn_bkp_{dateStr}.json");
+                string destFile = Path.Combine(bkpDir, $"bot_learn_bkp_{dateStr}.json");
 
                 // Só faz cópia se não houver um backup para o dia atual
                 if (!File.Exists(destFile))
@@ -78,7 +87,7 @@ namespace InnovPlayUI.Core
 
         private static void PruneOldBackups(string bkpDir)
         {
-            var files = new DirectoryInfo(bkpDir).GetFiles("inno_learn_bkp_*.json");
+            var files = new DirectoryInfo(bkpDir).GetFiles("bot_learn_bkp_*.json");
             if (files.Length > MAX_BACKUPS)
             {
                 // Ordenação decrescente: índice 0, 1 e 2 são os mais novos
@@ -96,18 +105,18 @@ namespace InnovPlayUI.Core
             }
         }
 
-        public static List<InnoLearnBackup> ObterBackupsDisponiveis()
+        public static List<BotLearnBackup> ObterBackupsDisponiveis()
         {
-            var result = new List<InnoLearnBackup>();
+            var result = new List<BotLearnBackup>();
             try
             {
                 string bkpDir = GetBackupDirectory();
-                var files = new DirectoryInfo(bkpDir).GetFiles("inno_learn_bkp_*.json");
+                var files = new DirectoryInfo(bkpDir).GetFiles("bot_learn_bkp_*.json");
                 
                 foreach (var f in files.OrderByDescending(x => x.CreationTime))
                 {
                     double kb = f.Length / 1024.0;
-                    result.Add(new InnoLearnBackup
+                    result.Add(new BotLearnBackup
                     {
                         FileName = f.Name,
                         FullPath = f.FullName,
@@ -125,7 +134,7 @@ namespace InnovPlayUI.Core
             try
             {
                 if (!File.Exists(bkpFullPath)) return false;
-                string destFile = Path.Combine(GetDataDirectory(), "inno_learn.json");
+                string destFile = Path.Combine(GetDataDirectory(), "bot_learn.json");
                 File.Copy(bkpFullPath, destFile, true);
                 return true;
             }

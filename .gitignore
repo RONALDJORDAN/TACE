@@ -36,18 +36,27 @@ registros/
 data/output/
 *.wpftmp.csproj
 
-# Pastas específicas de release e saída
+# Pastas específicas de release e saída (nunca versionar: contêm exe/dll/db e settings com credenciais)
 InnoRPA_Release/
+BotRPA_Release/
+*.rar
 output/
 output_teste/
 
-# Compiladores e ferramentas pesadas locais
+# Compiladores e ferramentas pesadas locais (binários provisionados via PreflightChecker/setup_adb)
 tools/mingw64/
-tools/
+tools/platform-tools/
+tools/*.apk
+tools/reverse_tethering/*.exe
+tools/reverse_tethering/*.apk
+src/ui/Resources/temp/
 *.o
 *.obj
 *.exe
 *.dll
+*.apk
+*.pdb
+*.bak
 
 # IDEs e configurações locais
 .vscode/
@@ -64,3 +73,10 @@ data/
 *.db
 *.sqlite
 *.sqlite3
+
+# Config local com credenciais (e-mail/senha Firebase) — nunca versionar
+config/settings.json
+
+# Cache local e manifestos OTA gerados
+.cache/
+controle/ota_manifest_*.json

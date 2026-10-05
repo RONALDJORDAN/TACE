@@ -2,10 +2,10 @@
 #define LEARN_DB_H
 
 // ============================================================
-// InnoLearn — Motor de Persistência de Conhecimento de UI
+// BotLearn — Motor de Persistência de Conhecimento de UI
 // Armazena estratégias de localização de elementos, scores e
 // coordenadas fallback aprendidas em execuções anteriores.
-// Autor: Jordan Araujo | InnovPlay
+// Autor: Jordan Araujo | BotRpa
 // ============================================================
 
 #define LEARN_MAX_STRATEGIES     16
@@ -25,10 +25,10 @@
 // --- Uma única estratégia de busca para um elemento ---
 typedef struct {
     char   query[LEARN_MAX_QUERY_LEN]; // String buscada no XML do UIAutomator
-    int    score;                      // Confiança atual (1–200)
+    int    score;                      // Confiança atual (-100 a +100, legenda neural)
     int    hits;                       // Quantidade de vezes que funcionou
     int    misses;                     // Quantidade de vezes que falhou
-    char   history[16];                // Últimos 10 resultados ('1' hit, '0' miss)
+    char   history[16];                // Últimos 10 resultados ('1' hit, '0' miss) - UI espera '1'/'0'
 } LearnStrategy;
 
 // --- Um alvo de UI com N estratégias ordenadas por score ---
@@ -71,13 +71,20 @@ typedef struct {
 // --- Variável Global do Banco (acesso direto pelos motores) ---
 extern LearnDB g_learn_db;
 
+// --- Modo de operação da IA ---
+// 0 = Estático/Determinístico (seed fixo, sem persistência - padrão seguro)
+// 1 = Ativo (aprende scores/hits e persiste bot_learn.json)
+extern int g_learn_active_mode;
+int learn_get_active_mode(void);
+void learn_set_active_mode(int active);
+
 // --- Interface de Persistência ---
 
-// Carrega o banco de knowledge de data/inno_learn.json
+// Carrega o banco de knowledge de data/bot_learn.json
 // Retorna 1 se carregou com sucesso, 0 se criou banco novo
 int learn_db_load(void);
 
-// Salva o banco em data/inno_learn.json
+// Salva o banco em data/bot_learn.json
 // Retorna 1 se salvou com sucesso, 0 se falhou
 int learn_db_save(void);
 

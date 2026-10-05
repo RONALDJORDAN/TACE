@@ -13,9 +13,9 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
-using InnovPlayUI.Core;
+using BotRpaUI.Core;
 
-namespace InnovPlayUI.Views
+namespace BotRpaUI.Views
 {
     public class DeviceProModel : INotifyPropertyChanged
     {
@@ -80,9 +80,9 @@ namespace InnovPlayUI.Views
         public delegate void LogCallback([MarshalAs(UnmanagedType.LPUTF8Str)] string message);
 
         // =========================================================================
-        // DLL IMPORTS (InnoEngine.dll)
+        // DLL IMPORTS (BotEngine.dll)
         // =========================================================================
-        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("BotEngine.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern int Engine_ExecuteF1_Positivo(
             [MarshalAs(UnmanagedType.LPUTF8Str)] string serial, 
             [MarshalAs(UnmanagedType.LPUTF8Str)] string apk_path, 
@@ -94,7 +94,7 @@ namespace InnovPlayUI.Views
             [MarshalAs(UnmanagedType.LPUTF8Str)] string municipio, 
             LogCallback cb);
 
-        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("BotEngine.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern int Engine_ExecuteF1_NokiaT20(
             [MarshalAs(UnmanagedType.LPUTF8Str)] string serial, 
             [MarshalAs(UnmanagedType.LPUTF8Str)] string apk_path, 
@@ -106,7 +106,7 @@ namespace InnovPlayUI.Views
             [MarshalAs(UnmanagedType.LPUTF8Str)] string municipio, 
             LogCallback cb);
 
-        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("BotEngine.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern int Engine_ExecuteF2_NokiaT20(
             [MarshalAs(UnmanagedType.LPUTF8Str)] string serial, 
             [MarshalAs(UnmanagedType.LPUTF8Str)] string apk_path, 
@@ -118,7 +118,7 @@ namespace InnovPlayUI.Views
             [MarshalAs(UnmanagedType.LPUTF8Str)] string municipio, 
             LogCallback cb);
 
-        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("BotEngine.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern int Engine_ExecuteF3_NokiaT20(
             [MarshalAs(UnmanagedType.LPUTF8Str)] string serial, 
             [MarshalAs(UnmanagedType.LPUTF8Str)] string apk_path, 
@@ -126,7 +126,7 @@ namespace InnovPlayUI.Views
             [MarshalAs(UnmanagedType.LPUTF8Str)] string package_name, 
             LogCallback cb);
 
-        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("BotEngine.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern int Engine_ExecuteF2_Reinstall(
             [MarshalAs(UnmanagedType.LPUTF8Str)] string serial, 
             [MarshalAs(UnmanagedType.LPUTF8Str)] string apk_path, 
@@ -137,7 +137,7 @@ namespace InnovPlayUI.Views
             [MarshalAs(UnmanagedType.LPUTF8Str)] string municipio, 
             LogCallback cb);
 
-        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("BotEngine.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern int Engine_ExecuteF3_UpdatePackage(
             [MarshalAs(UnmanagedType.LPUTF8Str)] string serial, 
             [MarshalAs(UnmanagedType.LPUTF8Str)] string apk_path, 
@@ -145,28 +145,28 @@ namespace InnovPlayUI.Views
             [MarshalAs(UnmanagedType.LPUTF8Str)] string package_name, 
             LogCallback cb);
 
-        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("BotEngine.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern int Engine_ExecuteF4_Terminal(
             [MarshalAs(UnmanagedType.LPUTF8Str)] string serial, 
             LogCallback cb);
 
-        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("BotEngine.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern int Engine_ExecuteF4_Ferramenta(
             [MarshalAs(UnmanagedType.LPUTF8Str)] string serial, 
             int acao, 
             LogCallback cb);
 
-        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("BotEngine.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern int Engine_ExecuteF5_Shutdown(
             [MarshalAs(UnmanagedType.LPUTF8Str)] string serial, 
             LogCallback cb);
 
-        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("BotEngine.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern int Engine_ExecuteF6_Sincronizacao(
             [MarshalAs(UnmanagedType.LPUTF8Str)] string serial, 
             LogCallback cb);
 
-        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("BotEngine.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern int Engine_ExecuteF7_TabMulti(
             [MarshalAs(UnmanagedType.LPUTF8Str)] string serial, 
             [MarshalAs(UnmanagedType.LPUTF8Str)] string apk_path, 
@@ -176,19 +176,19 @@ namespace InnovPlayUI.Views
             [MarshalAs(UnmanagedType.LPUTF8Str)] string municipio, 
             LogCallback cb);
 
-        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("BotEngine.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern int Engine_ExecuteF8_ActiveConnection(
             [MarshalAs(UnmanagedType.LPUTF8Str)] string serial, 
             LogCallback cb);
 
-        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("BotEngine.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern int Engine_ExecuteF2_TabMulti_Atualizar(
             [MarshalAs(UnmanagedType.LPUTF8Str)] string serial, 
             [MarshalAs(UnmanagedType.LPUTF8Str)] string apk_path, 
             [MarshalAs(UnmanagedType.LPUTF8Str)] string pacote_path, 
             LogCallback cb);
 
-        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("BotEngine.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern int Engine_ExecuteF3_TabMulti_Atualizar(
             [MarshalAs(UnmanagedType.LPUTF8Str)] string serial, 
             [MarshalAs(UnmanagedType.LPUTF8Str)] string apk_path, 
@@ -196,35 +196,35 @@ namespace InnovPlayUI.Views
             [MarshalAs(UnmanagedType.LPUTF8Str)] string package_name, 
             LogCallback cb);
 
-        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("BotEngine.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern int Engine_ExecuteF3_TabMulti_Terminal(
             [MarshalAs(UnmanagedType.LPUTF8Str)] string serial, 
             LogCallback cb);
 
-        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("BotEngine.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern int Engine_ExecuteF4_TabMulti_Desligar(
             [MarshalAs(UnmanagedType.LPUTF8Str)] string serial, 
             LogCallback cb);
 
-        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("BotEngine.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern int Engine_GetDeviceCount();
 
-        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("BotEngine.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern void Engine_CancelAll();
 
-        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("BotEngine.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern void Engine_ResetCancel();
 
-        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("BotEngine.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern void Engine_GetDevice(int index, ref MonitorView.AdbDevice out_device);
 
-        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("BotEngine.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern int Engine_RefreshDevices();
 
-        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("BotEngine.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern int Engine_GetMunicipios([Out, MarshalAs(UnmanagedType.LPArray, SizeParamIndex = 1)] MunicipioModel[] out_lista, int max_items);
 
-        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
+        [DllImport("BotEngine.dll", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
         public static extern void Engine_RunAdbShell(string serial, string command, StringBuilder out_log, int max_len);
 
         // =========================================================================
@@ -236,6 +236,7 @@ namespace InnovPlayUI.Views
         private bool _isRefreshing = false;
         private int _metaTotal = 100;
         private int _currentGridColumns = 2;
+        private bool _syncingMetaEdit = false;
 
         private ObservableCollection<DeviceProModel> _devicesList;
         public ObservableCollection<string> _comboList;
@@ -274,18 +275,35 @@ namespace InnovPlayUI.Views
             UpdateCategoryVisibility();
             UpdateFilterVisuals("Todos");
 
-            LogMessage("[PRO] Inno RPA Studio inicializado. Cockpit e Telemetria em tempo real ativados.");
+            try
+            {
+                int savedMeta = BotRpaUI.Core.SettingsManager.MetaLoteTotal;
+                _metaTotal = savedMeta < 1 ? 1 : (savedMeta > 10000 ? 10000 : savedMeta);
+            }
+            catch { _metaTotal = 100; }
+            SyncMetaEditBox();
+            UpdateKpiMetrics();
+
+            LogMessage("[PRO] Bot_RPA Studio inicializado. Cockpit e Telemetria em tempo real ativados.");
 
             // Subscrição para reagir imediatamente a mudanças em Configurações
-            InnovPlayUI.Core.SettingsManager.OnSettingsChanged += () =>
+            BotRpaUI.Core.SettingsManager.OnSettingsChanged += () =>
             {
                 Dispatcher.Invoke(() =>
                 {
                     UpdateCategoryVisibility();
+                    try
+                    {
+                        int saved = BotRpaUI.Core.SettingsManager.MetaLoteTotal;
+                        if (saved >= 1 && saved <= 10000 && saved != _metaTotal)
+                            _metaTotal = saved;
+                    }
+                    catch { }
+                    SyncMetaEditBox();
                     for (int i = _devicesList.Count - 1; i >= 0; i--)
                     {
                         var d = _devicesList[i];
-                        if (!InnovPlayUI.Core.DeviceFilterHelper.IsDeviceModelAllowed(d.Serial, d.Model, ""))
+                        if (!BotRpaUI.Core.DeviceFilterHelper.IsDeviceModelAllowed(d.Serial, d.Model, ""))
                         {
                             _devicesList.RemoveAt(i);
                         }
@@ -316,6 +334,63 @@ namespace InnovPlayUI.Views
                 }
             };
             _realtimeTimer.Start();
+
+            BotRpaUI.Core.SQLiteDatabaseManager.OnCloudPullCompleted += OnCloudPullCompleted_Pro;
+        }
+
+        private void OnCloudPullCompleted_Pro(int importados, int atualizados)
+        {
+            try
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    try
+                    {
+                        LogMessage($"[INFO] Nuvem InnovStock: {importados} novo(s), {atualizados} atualizado(s) — lista local atualizada.");
+                        Timer_Tick(null, EventArgs.Empty);
+                    }
+                    catch { }
+                });
+            }
+            catch { }
+        }
+
+        private async void BtnPullCloudPro_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (sender is System.Windows.Controls.Button btn)
+                {
+                    btn.IsEnabled = false;
+                    string original = btn.Content?.ToString() ?? "⬇ Puxar Nuvem";
+                    btn.Content = "⏳...";
+                    try
+                    {
+                        var (importados, atualizados, _) = await BotRpaUI.Core.SQLiteDatabaseManager.BaixarDoInnovStockAsync();
+                        if (importados == 0 && atualizados == 0)
+                        {
+                            LogMessage("[AVISO] Nuvem InnovStock: nada novo ou sem conexão. Lista local mantida.");
+                        }
+                    }
+                    finally
+                    {
+                        btn.IsEnabled = true;
+                        btn.Content = original;
+                    }
+                }
+                else
+                {
+                    var (importados, atualizados, _) = await BotRpaUI.Core.SQLiteDatabaseManager.BaixarDoInnovStockAsync();
+                    if (importados == 0 && atualizados == 0)
+                    {
+                        LogMessage("[AVISO] Nuvem InnovStock: nada novo ou sem conexão. Lista local mantida.");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                LogMessage($"[ERRO] Falha ao puxar nuvem InnovStock: {ex.Message}");
+            }
         }
 
         private static SolidColorBrush HexBrush(string hex)
@@ -555,9 +630,9 @@ namespace InnovPlayUI.Views
 
         public void UpdateCategoryVisibility()
         {
-            bool v7 = InnovPlayUI.Core.SettingsManager.EnableDeviceVision7;
-            bool m7 = InnovPlayUI.Core.SettingsManager.EnableDeviceTabMulti;
-            bool t20 = InnovPlayUI.Core.SettingsManager.EnableDeviceNokiaT20;
+            bool v7 = BotRpaUI.Core.SettingsManager.EnableDeviceVision7;
+            bool m7 = BotRpaUI.Core.SettingsManager.EnableDeviceTabMulti;
+            bool t20 = BotRpaUI.Core.SettingsManager.EnableDeviceNokiaT20;
 
             if (BtnCategoryPositivoPro != null) BtnCategoryPositivoPro.Visibility = v7 ? Visibility.Visible : Visibility.Collapsed;
             if (BtnCategoryMultilaserPro != null) BtnCategoryMultilaserPro.Visibility = m7 ? Visibility.Visible : Visibility.Collapsed;
@@ -670,7 +745,7 @@ namespace InnovPlayUI.Views
                             string macPro = dev.mac ?? "";
                             if ((macPro == "N/A" || macPro == "---" || string.IsNullOrEmpty(macPro)) && !string.IsNullOrEmpty(dev.serial))
                             {
-                                var existing = InnovPlayUI.Core.SQLiteDatabaseManager.BuscarPorSerial(dev.serial);
+                                var existing = BotRpaUI.Core.SQLiteDatabaseManager.BuscarPorSerial(dev.serial);
                                 if (existing != null && !string.IsNullOrEmpty(existing.MAC) && existing.MAC != "N/A" && existing.MAC != "---")
                                 {
                                     macPro = existing.MAC;
@@ -678,12 +753,12 @@ namespace InnovPlayUI.Views
                             }
 
                             // Registra no banco SQLite para histórico contínuo
-                            InnovPlayUI.Core.SQLiteDatabaseManager.RegistrarSeNovo(dev.serial, dev.manufacturer, dev.model, macPro);
+                            BotRpaUI.Core.SQLiteDatabaseManager.RegistrarSeNovo(dev.serial, dev.manufacturer, dev.model, macPro);
 
 
 
                             // Se o modelo deste aparelho estiver DESATIVADO em Configurações, oculta do monitor ADB
-                            if (!InnovPlayUI.Core.DeviceFilterHelper.IsDeviceModelAllowed(dev.serial, dev.model, dev.manufacturer))
+                            if (!BotRpaUI.Core.DeviceFilterHelper.IsDeviceModelAllowed(dev.serial, dev.model, dev.manufacturer))
                             {
                                 continue;
                             }
@@ -708,18 +783,18 @@ namespace InnovPlayUI.Views
                     }
 
                     // Se a opção de exibir dispositivos desconectados / histórico estiver ATIVA:
-                    if (InnovPlayUI.Core.SettingsManager.ShowDisconnectedDevices)
+                    if (BotRpaUI.Core.SettingsManager.ShowDisconnectedDevices)
                     {
                         var connectedSerials = new System.Collections.Generic.HashSet<string>();
                         foreach (var d in tempList) connectedSerials.Add(d.Serial);
 
-                        var historico = InnovPlayUI.Core.SQLiteDatabaseManager.LerTodos();
+                        var historico = BotRpaUI.Core.SQLiteDatabaseManager.LerTodos();
                         int slotCount = tempList.Count;
                         foreach (var h in historico)
                         {
                             if (!string.IsNullOrEmpty(h.Serial) && !connectedSerials.Contains(h.Serial))
                             {
-                                if (!InnovPlayUI.Core.DeviceFilterHelper.IsDeviceModelAllowed(h.Serial, h.Modelo, h.Fabricante))
+                                if (!BotRpaUI.Core.DeviceFilterHelper.IsDeviceModelAllowed(h.Serial, h.Modelo, h.Fabricante))
                                 {
                                     continue;
                                 }
@@ -783,7 +858,7 @@ namespace InnovPlayUI.Views
                         for (int i = _devicesList.Count - 1; i >= 0; i--)
                         {
                             var currentItem = _devicesList[i];
-                            if (!tempList.Exists(d => d.Serial == currentItem.Serial) || !InnovPlayUI.Core.DeviceFilterHelper.IsDeviceModelAllowed(currentItem.Serial, currentItem.Model, ""))
+                            if (!tempList.Exists(d => d.Serial == currentItem.Serial) || !BotRpaUI.Core.DeviceFilterHelper.IsDeviceModelAllowed(currentItem.Serial, currentItem.Model, ""))
                             {
                                 _devicesList.RemoveAt(i);
                             }
@@ -831,37 +906,49 @@ namespace InnovPlayUI.Views
 
         private void UpdateKpiMetrics()
         {
-            int count = _devicesList.Count;
-            TxtKpiActiveDevices.Text = count.ToString();
-            TxtDeviceCountBadge.Text = $"[{count}]";
+            int totalList = _devicesList.Count;
+            int activeParallel = 0;
+            foreach (var d in _devicesList)
+            {
+                if (d.Status != "Desconectado (Histórico)")
+                    activeParallel++;
+            }
 
-            if (_completedExecutionTimes.Count > 0)
+            TxtKpiActiveDevices.Text = activeParallel.ToString();
+            TxtDeviceCountBadge.Text = $"[{totalList}]";
+
+            double avg = 0;
+            int amostras = _completedExecutionTimes.Count;
+            if (amostras > 0)
             {
                 double sum = 0;
                 foreach (var t in _completedExecutionTimes) sum += t;
-                double avg = sum / _completedExecutionTimes.Count;
-                
-                if (avg < 60)
-                {
-                    TxtKpiAvgTime.Text = $"{avg:F0}s";
-                }
-                else
-                {
-                    int mins = (int)(avg / 60);
-                    int secs = (int)(avg % 60);
-                    TxtKpiAvgTime.Text = $"{mins}m {secs:D2}s";
-                }
+                avg = sum / amostras;
+                if (avg < 0) avg = 0;
+            }
 
-                if (avg > 0)
-                {
-                    double throughput = (3600.0 / avg) * Math.Max(1, count);
-                    TxtKpiThroughput.Text = $"{throughput:F0}";
-                }
+            if (amostras > 0 && avg > 0)
+            {
+                TxtKpiAvgTime.Text = FormatCycleTime(avg);
+                TxtKpiAvgTime.ToolTip = $"Média de {amostras} ciclo(s) concluído(s). 1 tab = {FormatCycleTime(avg)}.";
             }
             else
             {
                 TxtKpiAvgTime.Text = "--s";
+                try { TxtKpiAvgTime.ToolTip = "Sem conclusões ainda. O tempo médio aparece após o 1º tablet concluir."; } catch { }
+            }
+
+            double throughput = 0;
+            if (avg > 0 && activeParallel > 0)
+            {
+                throughput = (3600.0 / avg) * activeParallel;
+                TxtKpiThroughput.Text = $"{throughput:F0}";
+                try { TxtKpiThroughput.ToolTip = $"({3600.0 / avg:F1}/h por tab) x {activeParallel} em paralelo."; } catch { }
+            }
+            else
+            {
                 TxtKpiThroughput.Text = "0";
+                try { TxtKpiThroughput.ToolTip = "Ritmo calculado após conclusões e com tablets conectados."; } catch { }
             }
 
             TxtKpiCompletedCount.Text = _totalSuccessCount.ToString();
@@ -876,10 +963,178 @@ namespace InnovPlayUI.Views
                 TxtKpiSuccessRate.Text = " (100% OK)";
             }
 
-            // Meta de Produção
-            double metaPct = Math.Min(100.0, (_totalSuccessCount / (double)_metaTotal) * 100.0);
+            // Meta de Produção + ETA real
+            if (_metaTotal < 1) _metaTotal = 1;
+            if (_metaTotal > 10000) _metaTotal = 10000;
+            double metaPct = _metaTotal > 0 ? Math.Min(100.0, (_totalSuccessCount / (double)_metaTotal) * 100.0) : 0;
             ProgressMetaLote.Value = metaPct;
             TxtMetaLabel.Text = $"{_totalSuccessCount} / {_metaTotal} ({metaPct:F0}%)";
+
+            int faltam = Math.Max(0, _metaTotal - _totalSuccessCount);
+            if (faltam <= 0)
+            {
+                TxtMetaRestante.Text = "meta batida ✔";
+                try { TxtMetaRestante.ToolTip = "Meta do lote concluída."; } catch { }
+            }
+            else if (throughput > 0)
+            {
+                double etaSec = (faltam / throughput) * 3600.0;
+                TxtMetaRestante.Text = $"faltam {faltam} • ~{FormatEta(etaSec)}";
+                try { TxtMetaRestante.ToolTip = $"Faltam {faltam} tabs. Ritmo {throughput:F0}/h com {activeParallel} em paralelo. ETA {FormatEtaLong(etaSec)}."; } catch { }
+            }
+            else
+            {
+                TxtMetaRestante.Text = $"faltam {faltam} • --";
+                try { TxtMetaRestante.ToolTip = "ETA disponível após 1 conclusão com tablets conectados."; } catch { }
+            }
+
+            SyncMetaEditBox();
+        }
+
+        private static string FormatCycleTime(double seconds)
+        {
+            if (seconds < 60) return $"{seconds:F0}s";
+            int mins = (int)(seconds / 60);
+            int secs = (int)(seconds % 60);
+            if (mins < 60) return $"{mins}m {secs:D2}s";
+            int hours = mins / 60;
+            mins = mins % 60;
+            return $"{hours}h {mins:D2}m";
+        }
+
+        private static string FormatEta(double seconds)
+        {
+            if (seconds < 60) return $"{Math.Ceiling(seconds):F0}s";
+            if (seconds < 3600)
+            {
+                int m = (int)Math.Ceiling(seconds / 60.0);
+                return $"{m}min";
+            }
+            int h = (int)(seconds / 3600);
+            int remM = (int)Math.Ceiling((seconds - h * 3600) / 60.0);
+            if (remM >= 60) { h++; remM = 0; }
+            return remM > 0 ? $"{h}h {remM:D2}min" : $"{h}h";
+        }
+
+        private static string FormatEtaLong(double seconds)
+        {
+            int total = (int)Math.Ceiling(seconds);
+            int h = total / 3600;
+            int m = (total % 3600) / 60;
+            int s = total % 60;
+            if (h > 0) return $"{h}h {m:D2}min {s:D2}s";
+            if (m > 0) return $"{m}min {s:D2}s";
+            return $"{s}s";
+        }
+
+        private void SyncMetaEditBox()
+        {
+            try
+            {
+                if (TxtMetaEdit == null) return;
+                if (TxtMetaEdit.IsFocused) return;
+                _syncingMetaEdit = true;
+                string want = _metaTotal.ToString();
+                if (TxtMetaEdit.Text != want)
+                    TxtMetaEdit.Text = want;
+            }
+            catch { }
+            finally { _syncingMetaEdit = false; }
+        }
+
+        private void SetMetaTotal(int novo)
+        {
+            if (novo < 1) novo = 1;
+            if (novo > 10000) novo = 10000;
+            _metaTotal = novo;
+            try { BotRpaUI.Core.SettingsManager.MetaLoteTotal = novo; } catch { }
+            SyncMetaEditBox();
+            UpdateKpiMetrics();
+        }
+
+        private void BtnMetaMinus_Click(object sender, RoutedEventArgs e)
+        {
+            int step = (Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift)) ? 1 : 10;
+            SetMetaTotal(_metaTotal - step);
+        }
+
+        private void BtnMetaPlus_Click(object sender, RoutedEventArgs e)
+        {
+            int step = (Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift)) ? 1 : 10;
+            SetMetaTotal(_metaTotal + step);
+        }
+
+        private void CommitMetaEdit()
+        {
+            if (_syncingMetaEdit) return;
+            try
+            {
+                string raw = TxtMetaEdit.Text?.Trim() ?? "";
+                if (int.TryParse(raw, out int v))
+                {
+                    if (v < 1) v = 1;
+                    if (v > 10000) v = 10000;
+                    SetMetaTotal(v);
+                    LogMessage($"[PRO] Meta do lote ajustada para {v} tablets.");
+                }
+                else
+                {
+                    SyncMetaEditBox();
+                }
+            }
+            catch { SyncMetaEditBox(); }
+        }
+
+        private void TxtMetaEdit_LostFocus(object sender, RoutedEventArgs e)
+        {
+            CommitMetaEdit();
+        }
+
+        private void TxtMetaEdit_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                CommitMetaEdit();
+                try { Keyboard.ClearFocus(); } catch { }
+                e.Handled = true;
+            }
+            else if (e.Key == Key.Escape)
+            {
+                SyncMetaEditBox();
+                try { Keyboard.ClearFocus(); } catch { }
+                e.Handled = true;
+            }
+        }
+
+        private void BtnMetaReset_Click(object sender, RoutedEventArgs e)
+        {
+            _completedExecutionTimes.Clear();
+            _totalSuccessCount = 0;
+            _totalFailCount = 0;
+            try
+            {
+                foreach (var kv in _deviceStopwatches)
+                {
+                    try { kv.Value.Stop(); } catch { }
+                }
+                _deviceStopwatches.Clear();
+                foreach (var d in _devicesList)
+                {
+                    d.ProgressValue = 0;
+                    d.ElapsedTimeStr = "--:--";
+                    if (d.Status == "Concluído" || d.Status == "Erro" || d.Status == "Executando")
+                    {
+                        d.Status = "Pronto";
+                        d.StatusColor = "#4EDEA3";
+                        d.CurrentStep = "Pronto";
+                    }
+                }
+                ExecutionProgressPro.Value = 0;
+                LblProgressPro.Text = "0%";
+            }
+            catch { }
+            UpdateKpiMetrics();
+            LogMessage("[PRO] Sessão zerada (concluídos/falhas/tempos). Meta mantida.");
         }
 
         // =========================================================================
@@ -905,7 +1160,12 @@ namespace InnovPlayUI.Views
                     if (!candidate.Equals("PRO", StringComparison.OrdinalIgnoreCase) &&
                         !candidate.Equals("INFO", StringComparison.OrdinalIgnoreCase) &&
                         !candidate.Equals("ALERTA", StringComparison.OrdinalIgnoreCase) &&
-                        !candidate.Equals("AVISO", StringComparison.OrdinalIgnoreCase))
+                        !candidate.Equals("AVISO", StringComparison.OrdinalIgnoreCase) &&
+                        !candidate.Equals("PARADO", StringComparison.OrdinalIgnoreCase) &&
+                        !candidate.Equals("LIMPEZA", StringComparison.OrdinalIgnoreCase) &&
+                        !candidate.Equals("ERRO", StringComparison.OrdinalIgnoreCase) &&
+                        !candidate.Equals("ERROR", StringComparison.OrdinalIgnoreCase) &&
+                        !candidate.Equals("BATCH", StringComparison.OrdinalIgnoreCase))
                     {
                         targetSerial = candidate;
                     }
@@ -1115,7 +1375,7 @@ namespace InnovPlayUI.Views
                 string logsDir = Path.Combine(baseDir, "logs");
                 Directory.CreateDirectory(logsDir);
 
-                string fileName = $"InnoRPA_Studio_Session_{DateTime.Now:yyyyMMdd_HHmmss}.txt";
+                string fileName = $"BotRPA_Studio_Session_{DateTime.Now:yyyyMMdd_HHmmss}.txt";
                 string fullPath = Path.Combine(logsDir, fileName);
 
                 File.WriteAllLines(fullPath, _allGlobalLogs);
@@ -1129,12 +1389,53 @@ namespace InnovPlayUI.Views
 
         private void BtnClearLogPro_Click(object sender, RoutedEventArgs e)
         {
+            int removidos = 0;
+            var seriais = new List<string>(_deviceLogBoxes.Keys);
+            foreach (var s in seriais)
+            {
+                var dev = FindDevice(s);
+                foreach (var item in LogTabsPro.Items)
+                {
+                    if (item is TabItem tab && (tab.Header?.ToString() ?? string.Empty).Contains(s))
+                    {
+                        LogTabsPro.Items.Remove(tab);
+                        break;
+                    }
+                }
+                _deviceLogBoxes.Remove(s);
+                if (dev != null)
+                {
+                    dev.ProgressValue = 0;
+                    dev.CurrentStep = "Pronto";
+                    dev.Status = "Pronto";
+                    dev.StatusColor = "#4EDEA3";
+                }
+                removidos++;
+            }
+            // Varredura final: fecha qualquer aba órfã restante (ex: [LIMPEZA], [PARADO]
+            // ou dispositivo desconectado) preservando apenas a aba Global.
+            for (int i = LogTabsPro.Items.Count - 1; i >= 0; i--)
+            {
+                if (LogTabsPro.Items[i] is TabItem resto)
+                {
+                    string hdr = resto.Header?.ToString() ?? string.Empty;
+                    if (!hdr.Contains("Global"))
+                    {
+                        LogTabsPro.Items.RemoveAt(i);
+                        removidos++;
+                    }
+                }
+            }
             _allGlobalLogs.Clear();
-            TxtLogGlobalPro.Clear();
-            foreach (var box in _deviceLogBoxes.Values) box.Clear();
-            ExecutionProgressPro.Value = 0;
-            LblProgressPro.Text = "0%";
-            LogMessage("[PRO] Logs reinicializados.");
+            if (TxtLogGlobalPro != null)
+                TxtLogGlobalPro.Clear();
+            if (TxtLogFilterPro != null)
+                TxtLogFilterPro.Clear();
+            if (ExecutionProgressPro != null)
+                ExecutionProgressPro.Value = 0;
+            if (LblProgressPro != null)
+                LblProgressPro.Text = "0%";
+            LogMessage($"[PRO] {removidos} log(s) removidos. Limpeza total (geral + todos dispositivos).");
         }
 
         // =========================================================================
@@ -1559,8 +1860,26 @@ namespace InnovPlayUI.Views
 
         public void BtnStop_Click(object sender, RoutedEventArgs e)
         {
-            Engine_CancelAll();
-            LogMessage("[ALERTA] PARADA GERAL ACIONADA (Botão Parar).");
+            try { Engine_CancelAll(); } catch { }
+            LogMessage("[ALERTA] PARADA GERAL ACIONADA (Botão Parar) — encerrando processos em todos os aparelhos...");
+            foreach (var d in _devicesList)
+            {
+                string s2 = d.Serial;
+                if (string.IsNullOrEmpty(s2)) continue;
+                d.Status = "Parado";
+                d.StatusColor = "#FF4D4D";
+                d.CurrentStep = "Parado pelo usuário";
+                Task.Run(() =>
+                {
+                    try
+                    {
+                        StringBuilder sb = new StringBuilder(512);
+                        Engine_RunAdbShell(s2, "am force-stop br.com.yantec.innovava && am force-stop com.google.android.documentsui && am force-stop com.android.documentsui && am kill-all", sb, 512);
+                    }
+                    catch { }
+                    Dispatcher.Invoke(() => LogMessage($"[{s2}] Processos encerrados (Parar geral)."));
+                });
+            }
         }
 
         private void RunAutoInstallForDevice(DeviceProModel dev)

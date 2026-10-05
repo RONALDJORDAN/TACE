@@ -6,7 +6,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Threading;
 
-namespace InnovPlayUI.Views
+namespace BotRpaUI.Views
 {
     public class DeviceModel : System.ComponentModel.INotifyPropertyChanged
     {
@@ -107,7 +107,7 @@ namespace InnovPlayUI.Views
 
 
 
-        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("BotEngine.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern int Engine_ExecuteF1_Positivo(
             [MarshalAs(UnmanagedType.LPUTF8Str)] string serial, 
             [MarshalAs(UnmanagedType.LPUTF8Str)] string apk_path, 
@@ -119,7 +119,7 @@ namespace InnovPlayUI.Views
             [MarshalAs(UnmanagedType.LPUTF8Str)] string municipio, 
             LogCallback cb);
 
-        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("BotEngine.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern int Engine_ExecuteF1_NokiaT20(
             [MarshalAs(UnmanagedType.LPUTF8Str)] string serial, 
             [MarshalAs(UnmanagedType.LPUTF8Str)] string apk_path, 
@@ -131,7 +131,7 @@ namespace InnovPlayUI.Views
             [MarshalAs(UnmanagedType.LPUTF8Str)] string municipio, 
             LogCallback cb);
 
-        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("BotEngine.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern int Engine_ExecuteF2_NokiaT20(
             [MarshalAs(UnmanagedType.LPUTF8Str)] string serial, 
             [MarshalAs(UnmanagedType.LPUTF8Str)] string apk_path, 
@@ -143,7 +143,7 @@ namespace InnovPlayUI.Views
             [MarshalAs(UnmanagedType.LPUTF8Str)] string municipio, 
             LogCallback cb);
 
-        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("BotEngine.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern int Engine_ExecuteF3_NokiaT20(
             [MarshalAs(UnmanagedType.LPUTF8Str)] string serial, 
             [MarshalAs(UnmanagedType.LPUTF8Str)] string apk_path, 
@@ -174,7 +174,7 @@ namespace InnovPlayUI.Views
                     var m = _municipiosArray[idx];
                     
                     // O executável roda em data/output/, mas os caminhos do CSV são data/input/
-                    string baseDir = InnovPlayUI.Core.PathHelper.GetRootDirectory();
+                    string baseDir = BotRpaUI.Core.PathHelper.GetRootDirectory();
                     
                     apkPath = GetDynamicApkPath(m.Nome);
                     if (!string.IsNullOrEmpty(apkPath) && !System.IO.Path.IsPathRooted(apkPath))
@@ -266,7 +266,7 @@ namespace InnovPlayUI.Views
                 if (idx >= 0 && idx < _comboList.Count)
                 {
                     var m = _municipiosArray[idx];
-                    string baseDir = InnovPlayUI.Core.PathHelper.GetRootDirectory();
+                    string baseDir = BotRpaUI.Core.PathHelper.GetRootDirectory();
                     
                     apkPath = GetDynamicApkPath(m.Nome);
                     if (!string.IsNullOrEmpty(apkPath) && !System.IO.Path.IsPathRooted(apkPath))
@@ -346,7 +346,7 @@ namespace InnovPlayUI.Views
                 if (idx >= 0 && idx < _comboList.Count)
                 {
                     var m = _municipiosArray[idx];
-                    string baseDir = InnovPlayUI.Core.PathHelper.GetRootDirectory();
+                    string baseDir = BotRpaUI.Core.PathHelper.GetRootDirectory();
                     
                     apkPath = GetDynamicApkPath(m.Nome);
                     if (!string.IsNullOrEmpty(apkPath) && !System.IO.Path.IsPathRooted(apkPath))
@@ -404,7 +404,7 @@ namespace InnovPlayUI.Views
             if (idx >= 0 && idx < _comboList.Count)
             {
                 var m = _municipiosArray[idx];
-                string baseDir = InnovPlayUI.Core.PathHelper.GetRootDirectory();
+                string baseDir = BotRpaUI.Core.PathHelper.GetRootDirectory();
                 
                 apkPath = GetDynamicApkPath(m.Nome);
                 if (!string.IsNullOrEmpty(apkPath) && !System.IO.Path.IsPathRooted(apkPath))
@@ -611,7 +611,7 @@ namespace InnovPlayUI.Views
             public int authorized;
         }
 
-        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("BotEngine.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern int Engine_ExecuteF2_Reinstall(
             [MarshalAs(UnmanagedType.LPUTF8Str)] string serial, 
             [MarshalAs(UnmanagedType.LPUTF8Str)] string apk_path, 
@@ -622,7 +622,7 @@ namespace InnovPlayUI.Views
             [MarshalAs(UnmanagedType.LPUTF8Str)] string municipio, 
             LogCallback cb);
 
-        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("BotEngine.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern int Engine_ExecuteF7_TabMulti(
             [MarshalAs(UnmanagedType.LPUTF8Str)] string serial, 
             [MarshalAs(UnmanagedType.LPUTF8Str)] string apk_path, 
@@ -632,31 +632,31 @@ namespace InnovPlayUI.Views
             [MarshalAs(UnmanagedType.LPUTF8Str)] string municipio, 
             LogCallback cb);
 
-        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("BotEngine.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern void Engine_RunAdbShell(
             [MarshalAs(UnmanagedType.LPUTF8Str)] string serial, 
             [MarshalAs(UnmanagedType.LPUTF8Str)] string command, 
             StringBuilder out_log, 
             int max_len);
 
-        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("BotEngine.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern int Engine_ExecuteF2_TabMulti_Atualizar(
             [MarshalAs(UnmanagedType.LPUTF8Str)] string serial, 
             [MarshalAs(UnmanagedType.LPUTF8Str)] string apk_path, 
             [MarshalAs(UnmanagedType.LPUTF8Str)] string pacote_path, 
             LogCallback cb);
 
-        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("BotEngine.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern int Engine_ExecuteF3_TabMulti_Terminal(
             [MarshalAs(UnmanagedType.LPUTF8Str)] string serial, 
             LogCallback cb);
 
-        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("BotEngine.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern int Engine_ExecuteF4_TabMulti_Desligar(
             [MarshalAs(UnmanagedType.LPUTF8Str)] string serial, 
             LogCallback cb);
 
-        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("BotEngine.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern int Engine_ExecuteF5_TabMulti(
             [MarshalAs(UnmanagedType.LPUTF8Str)] string serial, 
             [MarshalAs(UnmanagedType.LPUTF8Str)] string apk_path, 
@@ -666,25 +666,25 @@ namespace InnovPlayUI.Views
             [MarshalAs(UnmanagedType.LPUTF8Str)] string municipio, 
             LogCallback cb);
 
-        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("BotEngine.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern int Engine_GetDeviceCount();
 
-        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("BotEngine.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern void Engine_CancelAll();
 
-        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("BotEngine.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern void Engine_SetPaused(int paused);
 
-        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("BotEngine.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern void Engine_ResetCancel();
 
-        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("BotEngine.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern void Engine_GetDevice(int index, ref AdbDevice out_device);
 
-        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("BotEngine.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern int Engine_RefreshDevices();
 
-        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("BotEngine.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern int Engine_GetMunicipios([Out, MarshalAs(UnmanagedType.LPArray, SizeParamIndex = 1)] MunicipioModel[] out_lista, int max_items);
 
         private DispatcherTimer _timer;
@@ -730,11 +730,11 @@ namespace InnovPlayUI.Views
 
             LoadMunicipios();
 
-            LogMessage("Motor Inno RPA inicializado. Aguardando conexão de aparelhos ADB...");
+            LogMessage("Motor Bot_RPA inicializado. Aguardando conexão de aparelhos ADB...");
             UpdateCategoryVisibility();
             
             // Subscrição para reagir imediatamente quando o usuário altera chaves em Configurações
-            InnovPlayUI.Core.SettingsManager.OnSettingsChanged += () =>
+            BotRpaUI.Core.SettingsManager.OnSettingsChanged += () =>
             {
                 Dispatcher.BeginInvoke(() =>
                 {
@@ -742,7 +742,7 @@ namespace InnovPlayUI.Views
                     for (int i = _devicesList.Count - 1; i >= 0; i--)
                     {
                         var d = _devicesList[i];
-                        if (!InnovPlayUI.Core.DeviceFilterHelper.IsDeviceModelAllowed(d.Serial, d.Model, ""))
+                        if (!BotRpaUI.Core.DeviceFilterHelper.IsDeviceModelAllowed(d.Serial, d.Model, ""))
                         {
                             _devicesList.RemoveAt(i);
                             _knownSerials.Remove(d.Serial);
@@ -755,6 +755,28 @@ namespace InnovPlayUI.Views
             _timer.Interval = TimeSpan.FromSeconds(5); // aumentado de 2s para 5s
             _timer.Tick += Timer_Tick;
             _timer.Start();
+
+            BotRpaUI.Core.SQLiteDatabaseManager.OnCloudPullCompleted += OnCloudPullCompleted_Monitor;
+        }
+
+        private void OnCloudPullCompleted_Monitor(int importados, int atualizados)
+        {
+            try
+            {
+                Dispatcher.BeginInvoke(() =>
+                {
+                    try
+                    {
+                        LogMessage($"[INFO] Nuvem InnovStock: {importados} novo(s), {atualizados} atualizado(s) — lista local atualizada.");
+                        if (!_isRefreshing)
+                        {
+                            Timer_Tick(null, EventArgs.Empty);
+                        }
+                    }
+                    catch { }
+                });
+            }
+            catch { }
         }
 
         public void LoadMunicipios()
@@ -835,7 +857,7 @@ namespace InnovPlayUI.Views
                 }
 
                 // Wallpaper File
-                string baseDir = InnovPlayUI.Core.PathHelper.GetRootDirectory();
+                string baseDir = BotRpaUI.Core.PathHelper.GetRootDirectory();
                 string wpRaw = m.WallpaperPath;
                 string fullWp = "";
                 if (!string.IsNullOrEmpty(wpRaw))
@@ -894,7 +916,7 @@ namespace InnovPlayUI.Views
                             string mac = dev.authorized == 1 ? dev.mac : "N/A";
                             if ((mac == "N/A" || mac == "---" || string.IsNullOrEmpty(mac)) && !string.IsNullOrEmpty(serial))
                             {
-                                var existing = InnovPlayUI.Core.SQLiteDatabaseManager.BuscarPorSerial(serial);
+                                var existing = BotRpaUI.Core.SQLiteDatabaseManager.BuscarPorSerial(serial);
                                 if (existing != null && !string.IsNullOrEmpty(existing.MAC) && existing.MAC != "N/A" && existing.MAC != "---")
                                 {
                                     mac = existing.MAC;
@@ -905,12 +927,12 @@ namespace InnovPlayUI.Views
                             // Registra no banco SQLite para manter permanentemente para o futuro
                             if (dev.authorized == 1)
                             {
-                                InnovPlayUI.Core.SQLiteDatabaseManager.RegistrarSeNovo(serial, dev.manufacturer, model, mac);
+                                BotRpaUI.Core.SQLiteDatabaseManager.RegistrarSeNovo(serial, dev.manufacturer, model, mac);
 
                             }
 
                             // Se o modelo deste aparelho estiver DESATIVADO em Configurações, oculta do monitor ADB
-                            if (!InnovPlayUI.Core.DeviceFilterHelper.IsDeviceModelAllowed(serial, model, dev.manufacturer))
+                            if (!BotRpaUI.Core.DeviceFilterHelper.IsDeviceModelAllowed(serial, model, dev.manufacturer))
                             {
                                 continue;
                             }
@@ -929,17 +951,17 @@ namespace InnovPlayUI.Views
                     }
 
                     // Se a opção de exibir dispositivos desconectados / histórico estiver ATIVA:
-                    if (InnovPlayUI.Core.SettingsManager.ShowDisconnectedDevices)
+                    if (BotRpaUI.Core.SettingsManager.ShowDisconnectedDevices)
                     {
                         var connectedSerials = new System.Collections.Generic.HashSet<string>();
                         foreach (var d in newDevices) connectedSerials.Add(d.Serial);
 
-                        var historico = InnovPlayUI.Core.SQLiteDatabaseManager.LerTodos();
+                        var historico = BotRpaUI.Core.SQLiteDatabaseManager.LerTodos();
                         foreach (var h in historico)
                         {
                             if (!string.IsNullOrEmpty(h.Serial) && !connectedSerials.Contains(h.Serial))
                             {
-                                if (!InnovPlayUI.Core.DeviceFilterHelper.IsDeviceModelAllowed(h.Serial, h.Modelo, h.Fabricante))
+                                if (!BotRpaUI.Core.DeviceFilterHelper.IsDeviceModelAllowed(h.Serial, h.Modelo, h.Fabricante))
                                 {
                                     continue;
                                 }
@@ -972,7 +994,7 @@ namespace InnovPlayUI.Views
                         for (int i = _devicesList.Count - 1; i >= 0; i--)
                         {
                             var currentItem = _devicesList[i];
-                            if (!currentSerials.Contains(currentItem.Serial) || !InnovPlayUI.Core.DeviceFilterHelper.IsDeviceModelAllowed(currentItem.Serial, currentItem.Model, ""))
+                            if (!currentSerials.Contains(currentItem.Serial) || !BotRpaUI.Core.DeviceFilterHelper.IsDeviceModelAllowed(currentItem.Serial, currentItem.Model, ""))
                             {
                                 _devicesList.RemoveAt(i);
                                 _knownSerials.Remove(currentItem.Serial);
@@ -1168,15 +1190,21 @@ namespace InnovPlayUI.Views
         private void UpdateProgress(string msg, string? serial)
         {
             double targetValue = -1;
-            if (msg.Contains("Iniciando processo") || msg.Contains("[F5] Iniciando") || msg.Contains("INICIANDO ROTINA TAB-MULTI") || msg.Contains("[M7] INICIANDO")) { targetValue = 5; }
+            if (msg.Contains("Iniciando processo") || msg.Contains("[F5] Iniciando") || msg.Contains("INICIANDO ROTINA TAB-MULTI") || msg.Contains("[M7] INICIANDO") || msg.Contains("INICIANDO FLUXO OBJETIVO F2")) { targetValue = 5; }
             else if (msg.Contains("[F1 - Etapa 1]") || msg.Contains("Instalando e ativando tunel de internet")) { targetValue = 10; }
+            else if (msg.Contains("[F1 - Etapa 1.2]")) { targetValue = 15; }
             else if (msg.Contains("[F1 - Etapa 1.5]")) { targetValue = 20; }
             else if (msg.Contains("[F1 - Etapa 1.6]")) { targetValue = 30; }
+            else if (msg.Contains("[F1 - Etapa 1.7]")) { targetValue = 35; }
             else if (msg.Contains("[F1 - Etapa 2]") || msg.Contains("Lendo a tela e inserindo credenciais")) { targetValue = 45; }
+            else if (msg.Contains("[F1 - Etapa 2.1]")) { targetValue = 48; }
+            else if (msg.Contains("[F1 - Etapa 2.5]")) { targetValue = 51; }
             else if (msg.Contains("[F1 - Etapa 3]") || msg.Contains("Formatando [") || msg.Contains("Criando pasta 'InnovAva'")) { targetValue = 55; }
             else if (msg.Contains("[F1 - Etapa 4]") || msg.Contains("Enviando APK") || msg.Contains("Transmitindo e instalando APK")) { targetValue = 65; }
+            else if (msg.Contains("[F1 - Etapa 4.5]")) { targetValue = 70; }
             else if (msg.Contains("[F1 - Etapa 5]") || msg.Contains("Executando o aplicativo instalado") || msg.Contains("Procurando a opcao 'Importar ZIP' no menu")) { targetValue = 75; }
             else if (msg.Contains("[F1 - Etapa 6]") || msg.Contains("Sistema chegou na tela de selecao de arquivo")) { targetValue = 85; }
+            else if (msg.Contains("[F2 - Etapa 7]")) { targetValue = 92; }
             else if (msg.Contains("Módulo F3") || msg.Contains("[F1 - Etapa 7]") || msg.Contains("Desligando tunelamento Gnirehtet")) { targetValue = 95; }
             else if (msg.Contains("[F3 - Etapa 1]")) { targetValue = 20; }
             else if (msg.Contains("[F3 - Etapa 2]")) { targetValue = 60; }
@@ -1260,14 +1288,32 @@ namespace InnovPlayUI.Views
             TextBox targetBox = TxtLogGlobal;
             string displayMsg = msg;
 
-            // Extrai o serial (ex: [12345ABC] ou [080274112345])
+            // Extrai o serial (ex: [12345ABC] ou [080274112345]).
+            // Palavras reservadas de sistema NUNCA viram aba (evita abas [PARADO]/[LIMPEZA]).
             var match = System.Text.RegularExpressions.Regex.Match(msg, @"^\[([a-zA-Z0-9]+)\]\s*(.*)");
             if (match.Success)
             {
-                targetSerial = match.Groups[1].Value;
-                // Exibe só a mensagem sem o prefixo repetitivo, pois a aba já é do aparelho
-                displayMsg = match.Groups[2].Value; 
-                targetBox = GetOrCreateDeviceTab(targetSerial);
+                string cand = match.Groups[1].Value;
+                if (cand.Equals("PRO", StringComparison.OrdinalIgnoreCase)
+                    || cand.Equals("INFO", StringComparison.OrdinalIgnoreCase)
+                    || cand.Equals("ALERTA", StringComparison.OrdinalIgnoreCase)
+                    || cand.Equals("AVISO", StringComparison.OrdinalIgnoreCase)
+                    || cand.Equals("PARADO", StringComparison.OrdinalIgnoreCase)
+                    || cand.Equals("LIMPEZA", StringComparison.OrdinalIgnoreCase)
+                    || cand.Equals("ERRO", StringComparison.OrdinalIgnoreCase)
+                    || cand.Equals("ERROR", StringComparison.OrdinalIgnoreCase))
+                {
+                    targetSerial = null;
+                    targetBox = TxtLogGlobal;
+                    displayMsg = msg;
+                }
+                else
+                {
+                    targetSerial = cand;
+                    // Exibe só a mensagem sem o prefixo repetitivo, pois a aba já é do aparelho
+                    displayMsg = match.Groups[2].Value;
+                    targetBox = GetOrCreateDeviceTab(targetSerial);
+                }
             }
 
             if (targetBox == null) targetBox = TxtLogGlobal;
@@ -1321,7 +1367,7 @@ namespace InnovPlayUI.Views
             {
                 if (targetSerial != null)
                 {
-                    string dir = System.IO.Path.Combine(InnovPlayUI.Core.PathHelper.GetRootDirectory(), "registros", DateTime.Now.ToString("yyyy-MM-dd"));
+                    string dir = System.IO.Path.Combine(BotRpaUI.Core.PathHelper.GetRootDirectory(), "registros", DateTime.Now.ToString("yyyy-MM-dd"));
                     if (!System.IO.Directory.Exists(dir)) System.IO.Directory.CreateDirectory(dir);
                     string logFile = System.IO.Path.Combine(dir, $"{targetSerial}_execucao.log");
                     System.IO.File.AppendAllText(logFile, $"[{DateTime.Now:HH:mm:ss}] {displayMsg}\n");
@@ -1366,7 +1412,7 @@ namespace InnovPlayUI.Views
                 if (idx >= 0 && idx < _comboList.Count)
                 {
                     var m = _municipiosArray[idx];
-                    string baseDir = InnovPlayUI.Core.PathHelper.GetRootDirectory();
+                    string baseDir = BotRpaUI.Core.PathHelper.GetRootDirectory();
                     
                     apkPath = GetDynamicApkPath(m.Nome);
                     if (!string.IsNullOrEmpty(apkPath) && !System.IO.Path.IsPathRooted(apkPath))
@@ -1436,7 +1482,7 @@ namespace InnovPlayUI.Views
                             result = Engine_ExecuteF2_Reinstall(finalSerial, finalApkPath, finalPacotePath, finalPackageName, finalLogin, finalSenha, finalMunicipio, callback);
                         }
                         
-                        if (result != 0)
+                        if (result == 0)
                         {
                              Dispatcher.Invoke(() => LogMessage($"[{finalSerial}] [ERRO] Reinstalação interrompida ou falhou."));
                         }
@@ -1451,7 +1497,7 @@ namespace InnovPlayUI.Views
         }
 
 
-        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("BotEngine.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern int Engine_ExecuteF3_UpdatePackage(
             [MarshalAs(UnmanagedType.LPUTF8Str)] string serial, 
             [MarshalAs(UnmanagedType.LPUTF8Str)] string apk_path, 
@@ -1475,7 +1521,7 @@ namespace InnovPlayUI.Views
                 if (idx >= 0 && idx < _comboList.Count)
                 {
                     var m = _municipiosArray[idx];
-                    string baseDir = InnovPlayUI.Core.PathHelper.GetRootDirectory();
+                    string baseDir = BotRpaUI.Core.PathHelper.GetRootDirectory();
                     
                     apkPath = GetDynamicApkPath(m.Nome);
                     if (!string.IsNullOrEmpty(apkPath) && !System.IO.Path.IsPathRooted(apkPath))
@@ -1573,6 +1619,16 @@ namespace InnovPlayUI.Views
             }
         }
 
+        private void BtnKioskProfile_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button btn && btn.Tag is string seq && !string.IsNullOrWhiteSpace(seq))
+            {
+                if (TxtKioskStatus != null)
+                    TxtKioskStatus.Text = $"⚡ Aplicando perfil [{seq}]...";
+                ExecuteF4Command(seq);
+            }
+        }
+
         private void TxtInput_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
             if (e.Key == System.Windows.Input.Key.Enter)
@@ -1591,29 +1647,29 @@ namespace InnovPlayUI.Views
             }
         }
         
-        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("BotEngine.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern int Engine_ExecuteF4_Ferramenta(
             [MarshalAs(UnmanagedType.LPUTF8Str)] string serial, 
             int acao, 
             LogCallback cb);
 
-        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("BotEngine.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern int Engine_ExecuteF4_Wallpaper(
             [MarshalAs(UnmanagedType.LPUTF8Str)] string serial, 
             [MarshalAs(UnmanagedType.LPUTF8Str)] string wp_path, 
             LogCallback cb);
 
-        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("BotEngine.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern int Engine_ExecuteF5_Shutdown(
             [MarshalAs(UnmanagedType.LPUTF8Str)] string serial, 
             LogCallback cb);
 
-        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("BotEngine.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern int Engine_ExecuteF6_Sincronizacao(
             [MarshalAs(UnmanagedType.LPUTF8Str)] string serial, 
             LogCallback cb);
 
-        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("BotEngine.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern int Engine_ExecuteF8_ActiveConnection(
             [MarshalAs(UnmanagedType.LPUTF8Str)] string serial, 
             LogCallback cb);
@@ -1657,7 +1713,7 @@ namespace InnovPlayUI.Views
                     }
                     
                     // Converte para caminho absoluto
-                    string baseDir = InnovPlayUI.Core.PathHelper.GetRootDirectory();
+                    string baseDir = BotRpaUI.Core.PathHelper.GetRootDirectory();
                     if (!System.IO.Path.IsPathRooted(wpPath))
                     {
                         wpPath = System.IO.Path.GetFullPath(System.IO.Path.Combine(baseDir, wpPath));
@@ -1818,7 +1874,7 @@ namespace InnovPlayUI.Views
                 if (idx >= 0 && idx < _comboList.Count)
                 {
                     var m = _municipiosArray[idx];
-                    string baseDir = InnovPlayUI.Core.PathHelper.GetRootDirectory();
+                    string baseDir = BotRpaUI.Core.PathHelper.GetRootDirectory();
                     
                     apkPath = GetDynamicApkPath(m.Nome);
                     if (!string.IsNullOrEmpty(apkPath) && !System.IO.Path.IsPathRooted(apkPath))
@@ -1862,18 +1918,86 @@ namespace InnovPlayUI.Views
 
         private void BtnStop_Click(object sender, RoutedEventArgs e)
         {
-            LogMessage("[PARADO] Automação interrompida pelo usuário.");
-            LblStatus.Text = "Status: Parado.";
+            try { Engine_CancelAll(); } catch { }
+            try { Engine_SetPaused(0); } catch { }
+            _isPaused = false;
+            LblStatus.Text = "Status: Parado pelo usuário — encerrando processos...";
+            LogMessage("[PARADO] Parada geral acionada — sinal de cancelamento enviado ao motor; encerrando apps nos aparelhos...");
+            var serials = new System.Collections.Generic.List<string>();
+            foreach (var dev in _devicesList)
+            {
+                if (!string.IsNullOrEmpty(dev.Serial) && !serials.Contains(dev.Serial))
+                    serials.Add(dev.Serial);
+            }
+            foreach (var k in _deviceProgressBars.Keys)
+            {
+                if (!serials.Contains(k))
+                    serials.Add(k);
+            }
+            if (serials.Count == 0)
+            {
+                LogMessage("[PARADO] Automação interrompida pelo usuário.");
+                return;
+            }
+            foreach (var serial in serials)
+            {
+                string s2 = serial;
+                UpdateDeviceStatus(s2, "Parado", "#FF4D4D");
+                System.Threading.Tasks.Task.Run(() =>
+                {
+                    try
+                    {
+                        StringBuilder sb = new StringBuilder(512);
+                        Engine_RunAdbShell(s2, "am force-stop br.com.yantec.innovava && am force-stop com.google.android.documentsui && am force-stop com.android.documentsui && am kill-all", sb, 512);
+                    }
+                    catch { }
+                    Dispatcher.Invoke(() => LogMessage($"[{s2}] Processos encerrados (Parar)."));
+                });
+            }
         }
 
         private void BtnClearLog_Click(object sender, RoutedEventArgs e)
         {
-            TxtLogGlobal.Clear();
-            _deviceLogCounts.Clear();
-            foreach (var kvp in _deviceLogBoxes)
+            int removidos = 0;
+            var seriais = new System.Collections.Generic.List<string>(_deviceLogBoxes.Keys);
+            foreach (var s in seriais)
             {
-                kvp.Value.Clear();
+                var tb = _deviceLogBoxes[s];
+                if (tb.Parent is TabItem tab)
+                {
+                    LogTabs.Items.Remove(tab);
+                }
+                removidos++;
             }
+            _deviceLogBoxes.Clear();
+            _deviceLogCounts.Clear();
+            _deviceLogCounts["GLOBAL"] = 0;
+            GlobalProgressPanel.Children.Clear();
+            _deviceProgressContainers.Clear();
+            _deviceProgressBars.Clear();
+            _deviceProgressLabels.Clear();
+            _deviceProgressSerialLabels.Clear();
+            if (TxtLogGlobal != null)
+                TxtLogGlobal.Clear();
+            if (ExecutionProgress != null)
+                ExecutionProgress.Value = 0;
+            if (LblProgress != null)
+                LblProgress.Text = "0%";
+            // Varredura final: fecha qualquer aba órfã restante (ex: [LIMPEZA], [PARADO]
+            // ou dispositivo desconectado) preservando apenas a aba Global (Sistema).
+            for (int i = LogTabs.Items.Count - 1; i >= 0; i--)
+            {
+                if (LogTabs.Items[i] is TabItem resto)
+                {
+                    string hdr = resto.Header?.ToString() ?? string.Empty;
+                    if (!hdr.Contains("Global"))
+                    {
+                        LogTabs.Items.RemoveAt(i);
+                        removidos++;
+                    }
+                }
+            }
+            LogMessage($"[LIMPEZA] {removidos} histórico(s) removido(s). Limpeza total (geral + todos dispositivos).");
         }
 
         private void BtnUpdate_Click(object sender, RoutedEventArgs e)
@@ -1898,7 +2022,7 @@ namespace InnovPlayUI.Views
                 if (idx >= 0 && idx < _comboList.Count)
                 {
                     var m = _municipiosArray[idx];
-                    string baseDir = InnovPlayUI.Core.PathHelper.GetRootDirectory();
+                    string baseDir = BotRpaUI.Core.PathHelper.GetRootDirectory();
                     apkPath = GetDynamicApkPath(m.Nome);
                     if (!string.IsNullOrEmpty(apkPath) && !System.IO.Path.IsPathRooted(apkPath))
                         apkPath = System.IO.Path.GetFullPath(System.IO.Path.Combine(baseDir, apkPath));
@@ -2004,7 +2128,7 @@ namespace InnovPlayUI.Views
                 if (idx >= 0 && idx < _comboList.Count)
                 {
                     var m = _municipiosArray[idx];
-                    string baseDir = InnovPlayUI.Core.PathHelper.GetRootDirectory();
+                    string baseDir = BotRpaUI.Core.PathHelper.GetRootDirectory();
                     
                     apkPath = GetDynamicApkPath(m.Nome);
                     if (!string.IsNullOrEmpty(apkPath) && !System.IO.Path.IsPathRooted(apkPath))
@@ -2136,9 +2260,9 @@ namespace InnovPlayUI.Views
 
         public void UpdateCategoryVisibility()
         {
-            bool v7 = InnovPlayUI.Core.SettingsManager.EnableDeviceVision7;
-            bool m7 = InnovPlayUI.Core.SettingsManager.EnableDeviceTabMulti;
-            bool t20 = InnovPlayUI.Core.SettingsManager.EnableDeviceNokiaT20;
+            bool v7 = BotRpaUI.Core.SettingsManager.EnableDeviceVision7;
+            bool m7 = BotRpaUI.Core.SettingsManager.EnableDeviceTabMulti;
+            bool t20 = BotRpaUI.Core.SettingsManager.EnableDeviceNokiaT20;
 
             if (BtnCategoryPositivo != null) BtnCategoryPositivo.Visibility = v7 ? Visibility.Visible : Visibility.Collapsed;
             if (BtnCategoryMultilaser != null) BtnCategoryMultilaser.Visibility = m7 ? Visibility.Visible : Visibility.Collapsed;
@@ -2204,12 +2328,12 @@ namespace InnovPlayUI.Views
     
         private string GetDynamicApkPath(string municipio)
         {
-            return InnovPlayUI.Core.PathHelper.GetDynamicApkPath(municipio);
+            return BotRpaUI.Core.PathHelper.GetDynamicApkPath(municipio);
         }
 
         private string GetDynamicPacotePath(string municipio)
         {
-            return InnovPlayUI.Core.PathHelper.GetDynamicPacotePath(municipio);
+            return BotRpaUI.Core.PathHelper.GetDynamicPacotePath(municipio);
         }
 
         private void Window_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)

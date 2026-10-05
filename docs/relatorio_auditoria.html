@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Relatório de Auditoria — Bot_RPA (Plataforma InnovTech)</title>
+<style>
+  :root { --bg:#0B0B13; --card:#151525; --line:#2A2A40; --txt:#E3E0F2; --mut:#85859E; --acc:#513BA6; --ok:#4EDEA3; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--txt); font-family:"Segoe UI",Arial,sans-serif; }
+  .toolbar { position:sticky; top:0; z-index:10; display:flex; gap:10px; align-items:center; padding:12px 20px;
+    background:#121220; border-bottom:1px solid var(--line); flex-wrap:wrap; }
+  .toolbar h1 { font-size:15px; margin:0 12px 0 0; color:#D2BBFF; }
+  .btn { border:0; border-radius:8px; padding:10px 18px; font-weight:bold; font-size:13px; cursor:pointer; color:#fff; }
+  .btn.pdf { background:#1D4ED8; } .btn.docx { background:#0E7490; } .btn:hover { filter:brightness(1.15); }
+  .toolbar .hint { font-size:12px; color:var(--mut); }
+  .page { max-width:900px; margin:24px auto 60px; background:#fff; color:#1a1a1a; border-radius:10px; overflow:hidden;
+    font-family:"Times New Roman",Times,serif; font-size:12pt; }
+  .cover { background:#fff; color:#1a1a1a; padding:90px 60px 50px; text-align:center; border-bottom:1px solid #ccc; }
+  .cover h1 { margin:0 0 8px; font-size:20pt; }
+  .cover .csub { margin:0 0 24px; font-size:12pt; color:#444; }
+  .cover .crule { width:80px; height:2px; background:#333; margin:0 auto 24px; }
+  .cover p { margin:5px 0; font-size:11.5pt; color:#333; }
+  .sec { padding:22px 60px 22px 70px; border-top:1px solid #e5e5ef; }
+  .sec h2 { color:#1a1a1a; font-size:12pt; margin:0 0 12px; border-left:none; padding-left:0; text-transform:uppercase; }
+  .sec h3 { color:#1a1a1a; font-size:12pt; margin:18px 0 8px; }
+  .sec p, .sec li { font-size:12pt; line-height:1.5; color:#1a1a1a; text-align:justify; }
+  table { width:100%; border-collapse:collapse; margin:10px 0 16px; font-size:10.5pt; }
+  th, td { border:1px solid #555; padding:6px 8px; text-align:left; }
+  th { background:#e8e8e8; color:#1a1a1a; }
+  tr:nth-child(even) td { background:#f4f4f4; }
+  ul { margin:6px 0 12px; padding-left:22px; }
+  code { background:#eee; padding:1px 6px; border-radius:4px; font-size:11pt; }
+  .foot { padding:20px 60px 30px 70px; font-size:10pt; color:#333; border-top:1px solid #e5e5ef; text-align:center; }
+  .arch { background:#f2f2f2; color:#1a1a1a; font-family:Consolas,monospace; font-size:10pt;
+    padding:14px 16px; border:1px solid #999; white-space:pre; overflow-x:auto; text-align:left; }
+  .sec p { text-indent:1.5cm; }
+  @media print {
+    @page { size:A4; margin:3cm 2cm 2cm 3cm; @top-right { content:counter(page); font-family:"Times New Roman",serif; font-size:12pt; } }
+    .toolbar { display:none; }
+    body { background:#fff; }
+    .page { max-width:100%; margin:0; border-radius:0; padding:0; }
+    .cover { padding:36px 0 20px; }
+    .sec { padding:10px 0; border-top:none; }
+    .foot { padding:12px 0; }
+    table { font-size:10pt; }
+    tr { break-inside:avoid; }
+    h2, h3 { break-after:avoid; }
+  }
+</style>
+</head>
+<body>
+<div class="toolbar">
+  <h1>📋 Relatório de Auditoria — Bot_RPA</h1>
+  <button class="btn pdf" onclick="window.print()">🖨️ Imprimir / Salvar PDF</button>
+  <button class="btn docx" id="btnDocx">📄 Baixar DOCX</button>
+  <span class="hint">PDF: na janela de impressão escolha “Salvar como PDF” · DOCX: 100% offline</span>
+</div>
+<div class="page" id="report"></div>
+
+<script>
+/* Fonte única do relatório: renderiza o HTML e gera o DOCX */
+const DOC = [
+ {t:"cover", title:"Relatório de Auditoria Completa — Bot_RPA",
+  lines:["Automação Robótica (RPA) de bancada · Robotic Process Automation",
+  "Escopo: C:\\Projetos\\Bot_RPA integral (código, configuração, scripts, docs, git)",
+  "Criador: Jordan R C Araujo",
+  "Suporte operacional: Jordan R C Araujo",
+  "Auditoria: 25/09/2026 · Revisão 2 (pós-renomeação Bot_RPA)"]},
+ {t:"h2", text:"PARTE 1 — AUDITORIA TÉCNICA"},
+ {t:"h3", text:"1. Identificação e porte"},
+ {t:"table", head:["Item","Valor"], rows:[
+  ["Nome oficial","Bot_RPA (antes: Inno_RPA / InnoBotRpa / InnovPlay)"],
+  ["Tipo","Aplicativo desktop Windows (automação robótica — RPA)"],
+  ["Stack","C nativo (motor) + C# WPF .NET 8 (interface) + SQLite + Firebase RTDB"],
+  ["Porte do src/","27 .c + 28 .h + 22 .cs + 12 .xaml"],
+  ["Maiores arquivos","f1_vision_tab7.c (2.378 linhas) · MonitorView.xaml.cs (2.274) · MonitorProView.xaml.cs (1.685)"],
+  ["Git","4 commits (16/08 a 11/09/2026); ~20 modificados + 7 novos não commitados"]]},
+ {t:"h3", text:"2. Arquitetura — híbrida em 2 camadas isoladas"},
+ {t:"pre", text:"[UI C# WPF .NET 8 (BotRPAui.exe)]\n Monitor Classic/Pro, Relatórios, BotLearn, Config, Mapa Neural\n              |  [DllImport] · 36 funções exportadas\n[MOTOR C puro (BotEngine.dll, linking estático)]\n drivers/adb · data/municipios+dispositivos · learn/IA\n functions/{vision7, tabmulti, nokia_t20} (F1–F8)\n              |  ADB / UIAutomator → tablets"},
+ {t:"p", text:"Políticas verificadas no código: Zero-Leak (memória manual no C), Zero Warnings (build de 25/09 limpo) e efeito colateral zero entre modelos (cada função no seu .c por fabricante)."},
+ {t:"h3", text:"3. Motor C — inventário"},
+ {t:"ul", items:[
+  "Drivers (adb.c, 659 linhas): refresh de dispositivos, shell, dumps XML com fast-path em RAM (~100 ms) + fallback em disco; dumps isolados por serial, com paralelismo real.",
+  "Dados (dispositivos.c, municipios.c): CSV seed + conversão UTF-8/ANSI transparente para acentos.",
+  "IA embarcada (learn_db.c + learn_engine.c): seletores v7_*/f7_* com score −100…+100, modo determinístico.",
+  "Funções por modelo: Vision 7 (F1–F6, F8; pipeline canônico Etapa 0→7b, batching ADB, Gnirehtet); TabMulti M7 (F1–F5); Nokia T20 (F1–F3). api.c expõe 36 funções.",
+  "Resiliência: filtro SEH na DLL, Sleep semântico cancelável (ESC), relançamento do app no tablet, kill-server do ADB ao sair."]},
+ {t:"h3", text:"4. Interface C# — inventário"},
+ {t:"p", text:"12 telas: Monitor Classic (5 s) e Monitor Pro (cockpit 4 s + telemetria 1 s), Relatórios (métricas, banco de dados, PDF/CSV, QR), BotLearn, Mapa Neural, Config, Municípios, Sobre. Núcleo: SQLiteDatabaseManager (880 linhas), OtaUpdateManager, CloudAutoSyncService, FirebaseAuthService, AntiCrashGuard."},
+ {t:"h3", text:"5. Dados — 3 níveis"},
+ {t:"ul", items:[
+  "Local: data/bot_database.db (SQLite, Serial UNIQUE) + CSVs espelho.",
+  "Nuvem: Firebase matematica-em-foco → /rpa_devices (frota), /ota/* (atualização do próprio app da bancada), /rpa_ota/* (legado).",
+  "Dedup multi-operador: chave = serial sanitizado (PUT idempotente) + merge por MAC + INSERT OR IGNORE + push de faltantes offline."]},
+ {t:"h3", text:"6. Integração cloud — achado crítico e correção"},
+ {t:"p", text:"Achado: o REST ia anônimo contra RTDB com default-deny (401 Permission denied reproduzido); sync e OTA falhavam silenciosamente. Correção em 25/09: FirebaseAuthService (login + refresh, token só em RAM), conta de serviço nas Configurações com botão Testar. Pendente: cadastrar a conta (perfil operacional+)."},
+ {t:"h3", text:"7. Build & DevOps"},
+ {t:"p", text:"build.bat (TESTE) e build_release.bat (RELEASE PnP), controle/ (Build, Terminal, OTA), versão por timestamp, trilha em registros/. Corrigido em 25/09: a Release embarcava o banco de teste (2 aparelhos) — agora sai limpa e puxa a frota da nuvem."},
+ {t:"h3", text:"8. Governança e 9. Riscos"},
+ {t:"ul", items:[
+  "AGENTS.md (4 Regras de Ouro) cumprido: nenhum .c de modelo tocado, memória atualizada, builds registrados.",
+  "RISCOS: (1) ~20 arquivos + 7 novos sem commit — commit urgente; (2) settings.json rastreado com dados de máquina; (3) conta de serviço ainda não cadastrada; (4) revisar memoria_bot_rpa.md antes do commit."]},
+ {t:"h2", text:"PARTE 2 — RESUMO COMPLETO EM LINGUAGEM SIMPLES"},
+ {t:"p", text:"Esta parte foi escrita para qualquer pessoa entender — mesmo sem saber programar. Cada pergunta é respondida de forma completa, com exemplos do dia a dia."},
+ {t:"h3", text:"2.1. O que é o Bot_RPA?"},
+ {t:"p", text:"Imagine uma fábrica onde, em vez de pessoas repetindo a mesma tarefa o dia todo, um robô faz tudo sozinho, rápido e sem errar. O Bot_RPA é esse robô, mas em forma de programa de computador. Ele configura tablets (aqueles aparelhos usados nas provas das escolas) automaticamente: instala os aplicativos, coloca as provas dentro, faz o login, escolhe a cidade e deixa tudo pronto para uso."},
+ {t:"p", text:"Na tela, a operadora vê uma central de comando: pluga o tablet no cabo USB, aperta um botão (ou deixa no automático) e acompanha o progresso como quem acompanha um pedido de delivery — cada aparelho tem sua barrinha de andamento e seu histórico."},
+ {t:"h3", text:"2.2. Para que ele foi criado?"},
+ {t:"p", text:"Para acabar com um trabalho cansativo e cheio de erros. Antes do robô, cada tablet precisava ser preparado à mão: instalar o aplicativo de provas, copiar o pacote de avaliações, digitar usuário e senha, escolher o município, ajustar brilho, letra e internet, e ainda anotar o número de série e o endereço de rede (MAC) numa planilha. Com dezenas de tablets por escola, isso levava minutos por aparelho — e bastava um dedo errado para um tablet sair com a prova errada."},
+ {t:"p", text:"Com o Bot_RPA, a mesma rotina leva segundos por aparelho, vários tablets são preparados ao mesmo tempo e todos saem idênticos, do primeiro ao último do lote."},
+ {t:"h3", text:"2.3. Quando e por quem foi criado?"},
+ {t:"p", text:"O projeto nasceu antes de junho de 2026. A versão atual do código começou em 16 de agosto de 2026, criada por Jordan Araujo, e cresceu em etapas (como capítulos de um livro) até setembro de 2026. No dia 25 de setembro de 2026 ele ganhou o nome definitivo: Bot_RPA."},
+ {t:"table", head:["Data","O que aconteceu (em palavras simples)"], rows:[
+  ["16/08/2026","Nasce a base do programa atual"],
+  ["21/08/2026","O programa da bancada ganha atualização pela internet (OTA)"],
+  ["26/08/2026","Ganha a central profissional de monitoramento de vários aparelhos"],
+  ["11/09/2026","Motores e telas consolidados e organizados"],
+  ["25/09/2026","Banco compartilhado entre operadoras, login seguro na nuvem e nome Bot_RPA"]]},
+ {t:"h3", text:"2.4. Qual a finalidade? (os 5 objetivos)"},
+ {t:"ul", items:[
+  "Padronizar 3 modelos de tablet numa mesma linha de produção digital.",
+  "Garantir que todo aparelho saia igual: mesmo aplicativo, mesma prova, mesmas configurações.",
+  "Rastrear cada tablet pelo número de série e endereço de rede, do computador da bancada até a nuvem e os relatórios.",
+  "Manter o próprio programa da bancada atualizado pela internet (OTA). Regra de ouro: todo procedimento no tablet exige o cabo USB conectado — não existe atualização à distância nos aparelhos.",
+  "Deixar várias pessoas trabalhando juntas sem criar cadastros duplicados."]},
+ {t:"h3", text:"2.5. Em que ele ajudou? (resultados na prática)"},
+ {t:"ul", items:[
+  "Velocidade: o que levava minutos por tablet agora leva segundos, e vários de uma vez.",
+  "Fim da duplicidade: o sistema reconhece se um tablet já foi cadastrado (pelo número de série ou pelo endereço de rede) e não cria cópia.",
+  "Trabalho em equipe: o que uma operadora configura aparece para as colegas e nos relatórios.",
+  "Programa sempre novo: o Bot_RPA se atualiza sozinho pela internet, com checagem de segurança. Nos tablets, todo procedimento é via cabo USB.",
+  "Prova de tudo: cada lote deixa rastro — dá para auditar o que foi instalado, quando e por quem."]},
+ {t:"h3", text:"2.6. Tempo por tablet: antes (à mão) x agora (robô)"},
+ {t:"p", text:"Abaixo, o passo a passo real contado por quem fazia à mão, contra o que o robô faz hoje. Tempos manuais são estimativas típicas de bancada; os automatizados vêm do pipeline (polling de 500 ms, dumps de ~100 ms) e das otimizações registradas (+30 s no F1, 8–10 s no F3)."},
+ {t:"table", head:["Etapa","Antes: pessoa fazendo à mão","Agora: Bot_RPA"], rows:[
+  ["Desbloquear e achar o armazenamento","~1 min: desbloquear a tela e fuçar menus até o armazenamento interno","Automático: o robô acorda, desbloqueia e navega sozinho"],
+  ["Instalar o app via pendrive","~2–4 min: espetar pendrive com adaptador USB, achar o arquivo, instalar e confirmar telas","Automático: envia e instala pelo próprio cabo, sem pendrive"],
+  ["Abrir o app","Segundos, um a um","Abertura automática no momento certo"],
+  ["Ligar Wi-Fi e conectar na rede","~1–2 min: ligar, escolher rede e digitar a senha","Internet pelo próprio cabo (tethering reverso), sem digitar senha"],
+  ["Login, senha e espera","~1–2 min digitando + espera olhando a tela","Injeção automática com espera inteligente e validação"],
+  ["Menu lateral → importar ZIP","~1–2 min: abrir menu, entrar em importar, achar o arquivo e confirmar","Navegação e clique automáticos direto no pacote certo"],
+  ["Finalizar: Wi-Fi off, fechar app, desligar","~1 min repetindo em todo tablet","Encerramento automático: limpa tudo, fecha apps, desliga redes e o tablet"],
+  ["TOTAL: lote de 10 tablets","~30 min em ritmo (≈3 min/tablet), bem mais com falhas e interrupções","~10 min em 2 levas de 5 + trocas de cabo"]]},
+ {t:"p", text:"Na prática: um lote de 10 tablets que consumia cerca de 30 minutos de trabalho manual sem parar — um por vez e com falhas no caminho (dedo errado, arquivo errado, esquecimento de etapa) — sai em cerca de 10 minutos com a ferramenta: 2 levas de 5 tablets, cada um com verificação robótica e correção de erros, com a operadora basicamente trocando os cabos. Ou seja: cerca de 3 vezes mais rápido no relógio, com 5 aparelhos simultâneos, zero erro de digitação e tudo rastreado."},
+ {t:"h3", text:"2.7. Como ele foi criado? (a receita)"},
+ {t:"p", text:"Como um carro com motor e carroceria separados. O MOTOR, feito numa linguagem chamada C, é a força bruta: conversa com o tablet, enxerga a tela, clica nos botões e instala tudo — rapidíssimo. A INTERFACE, feita em C# (tela bonita do Windows), é o painel do carro: botões, gráficos, relatórios e o mapa da inteligência. Os dois conversam por 36 comandos combinados. Para fabricar o programa final, basta rodar um único comando, que gera o pacote instalável com data e hora da versão."},
+ {t:"p", text:"Três regras de ouro sustentam a obra: cada modelo de tablet tem seu código separado (mexer num não quebra o outro), toda mudança é anotada na memória técnica e o programa só é liberado com zero erros e zero avisos."},
+ {t:"h3", text:"2.8. E a rede neural BotAI? (explicando sem mistério)"},
+ {t:"p", text:"Não é um cérebro de filme de ficção: é um caderninho de estratégias com placar, como uma tabela de campeonato. Para cada botão da tela do tablet (ex: o campo de e-mail), o sistema guarda várias formas de encontrá-lo e dá pontos para as que funcionam — igual a um placar de futebol, de −100 a +100. O mapa 3D colorido mostra esse placar em forma de galáxia: o núcleo no centro, os botões orbitando e as linhas ligando cada botão às suas estratégias. Hoje ele usa estratégias fixas e testadas (modo seguro), e a precisão mostrada é simplesmente a conta de acertos sobre tentativas."},
+ {t:"h3", text:"2.9. Principais funcionalidades (o cardápio)"},
+ {t:"table", head:["Botão","O que faz (em palavras simples)"], rows:[
+  ["F1","Prepara o tablet do zero sozinho: aplicativo + provas + login + cidade"],
+  ["F2","Limpa e reinstala, levando internet pelo próprio cabo USB"],
+  ["F3","Atualiza só o pacote de provas, sem refazer tudo"],
+  ["F4/F5","Trava o tablet para uso de prova e desliga pelo cabo USB"],
+  ["F6/F8","Sincroniza dados e mantém conexão ativa"],
+  ["Modo automático","Detecta o modelo do tablet e escolhe a rotina certa sozinho"],
+  ["Rastreio","Anota série + endereço de rede e manda para a nuvem sem duplicar"],
+  ["Atualização (OTA)","Atualiza o programa da bancada pela internet; tablets exigem cabo USB"],
+  ["Gestão","Relatórios, etiquetas com QR code, auditoria e o mapa da inteligência"]]},
+ {t:"h3", text:"2.10. Números do sistema (o tamanho da obra)"},
+ {t:"table", head:["Medida","Valor"], rows:[
+  ["Código escrito","27 arquivos de motor + 22 de interface + 12 telas"],
+  ["Comandos do motor","36, incluindo as funções F1 a F8 para 3 modelos de tablet"],
+  ["Maior rotina","F1 do Vision 7: 2.378 linhas seguindo um passo a passo fixo"],
+  ["Cadastro local","Banco que não aceita número de série repetido"],
+  ["Nuvem","Banco online com login e proteção contra duplicadas"],
+  ["Entrega","Pacote pronto com 1 comando, com data e hora da versão"]]},
+ {t:"h2", text:"CONCLUSÃO"},
+ {t:"p", text:"O Bot_RPA cumpriu o que prometeu: transformou um trabalho manual, lento e sujeito a erros numa linha de produção confiável. Um lote de 10 tablets que tomava cerca de 30 minutos de uma pessoa — um aparelho por vez, com falhas — sai em cerca de 10 minutos: 2 levas de 5, cada tablet com verificação robótica e correção de erros. Cerca de 3 vezes mais rápido, com todos os aparelhos idênticos, rastreados por número de série e endereço de rede, registrados no banco local, na nuvem e nos relatórios."},
+ {t:"p", text:"Somado à atualização automática do próprio programa, ao banco compartilhado entre operadoras e à trilha de auditoria de cada lote, o sistema deixou de ser uma ajuda e virou a base da operação: mais tablets prontos, menos retrabalho e prova documentada de tudo o que foi feito."},
+];
+
+/* ---- render HTML ---- */
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+const R = document.getElementById("report");
+let html = "";
+DOC.forEach(b=>{
+  if(b.t==="cover"){html+=`<div class="cover"><h1>${esc(b.title)}</h1><div class="csub">Relatório de auditoria técnica</div><div class="crule"></div>`+b.lines.map(l=>`<p>${esc(l)}</p>`).join("")+"</div>";}
+  else if(b.t==="h2"){html+=`<div class="sec"><h2>${esc(b.text)}</h2>`;}
+  else if(b.t==="h3"){html+=`<h3>${esc(b.text)}</h3>`;}
+  else if(b.t==="p"){html+=`<p>${esc(b.text)}</p>`;}
+  else if(b.t==="pre"){html+=`<div class="arch">${esc(b.text)}</div>`;}
+  else if(b.t==="ul"){html+=`<ul>`+b.items.map(i=>`<li>${esc(i)}</li>`).join("")+"</ul>";}
+  else if(b.t==="table"){html+=`<table><tr>`+b.head.map(h=>`<th>${esc(h)}</th>`).join("")+"</tr>"+
+    b.rows.map(r=>`<tr>`+r.map(c=>`<td>${esc(c)}</td>`).join("")+"</tr>").join("")+"</table>";}
+});
+html+=`<div class="foot">Fim da auditoria · Gerado em 25/09/2026 · Bot_RPA — Plataforma InnovTech</div>`;
+R.innerHTML = html;
+
+/* ---- DOCX offline: ZIP "stored" + OpenXML mínimo ---- */
+function crc32(buf){let t=crc32.t;if(!t){t=crc32.t=[];for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c;}}
+  let c=0xFFFFFFFF;for(let i=0;i<buf.length;i++)c=t[(c^buf[i])&255]^(c>>>8);return (c^0xFFFFFFFF)>>>0;}
+function u16(n){return [n&255,(n>>8)&255];} function u32(n){return [n&255,(n>>8)&255,(n>>16)&255,(n>>24)&255];}
+function strBytes(s){const e=new TextEncoder().encode(s);return Array.from(e);}
+function zipStored(files){ // files: [{name, data:number[]}]
+  let out=[], central=[], off=0; const FIX=[80,75,5,6];
+  files.forEach(f=>{
+    const name=strBytes(f.name), crc=crc32(f.data), sz=f.data.length;
+    const lh=[80,75,3,4, 20,0, 0,0, 0,0, 0,0,0,0].concat(u32(crc),u32(sz),u32(sz),u16(name.length),u16(0)).concat(name);
+    out=out.concat(lh,f.data);
+    central.push({h:[80,75,1,2, 20,0, 20,0, 0,0, 0,0, 0,0, 0,0].concat(u32(crc),u32(sz),u32(sz),u16(name.length),u16(0),u16(0),u16(0),u16(0),u32(0),u32(off)).concat(name), off:off});
+    off+=lh.length+sz;
+  });
+  let cd=[], cdSize=0;
+  central.forEach(c=>{cd=cd.concat(c.h);cdSize+=c.h.length;});
+  const cdOff=off;
+  out=out.concat(cd, FIX, u16(0),u16(0),u16(files.length),u16(files.length),u32(cdSize),u32(cdOff),u16(0));
+  return new Uint8Array(out);
+}
+function xesc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+/* ABNT: Times 12, 1.5, justificado, recuo 1.5cm; títulos 12 negrito à esquerda */
+const RFONT='<w:rFonts w:ascii="Times New Roman" w:hAnsi="Times New Roman"/>';
+function wp(text,o){o=o||{};const bold=o.bold,size=o.size||24,color=o.color,shd=o.shd,align=o.align||"both",ind=o.indent?'<w:ind w:firstLine="850"/>':"",font=o.font||RFONT;
+  return `<w:p><w:pPr><w:jc w:val="${align}"/><w:spacing w:line="360" w:lineRule="auto"/>${ind}</w:pPr>${shd?`<w:pPr><w:shd w:fill="${shd}" w:val="clear"/></w:pPr>`:""}<w:r><w:rPr>${font}${bold?"<w:b/>":""}<w:sz w:val="${size}"/>${color?`<w:color w:val="${color}"/>`:""}</w:rPr><w:t xml:space="preserve">${xesc(text)}</w:t></w:r></w:p>`;}
+function wcell(text,bold,shd){return `<w:tc><w:tcPr><w:tcW w:w="0" w:type="auto"/>${shd?`<w:shd w:fill="${shd}" w:val="clear"/>`:""}<w:tcBorders><w:top w:val="single" w:sz="6"/><w:left w:val="single" w:sz="6"/><w:bottom w:val="single" w:sz="6"/><w:right w:val="single" w:sz="6"/></w:tcBorders></w:tcPr><w:p><w:r><w:rPr>${RFONT}${bold?"<w:b/>":""}<w:sz w:val="20"/></w:rPr><w:t xml:space="preserve">${xesc(text)}</w:t></w:r></w:p></w:tc>`;}
+function wtable(head,rows){let s=`<w:p><w:r><w:rPr>${RFONT}<w:sz w:val="20"/></w:rPr><w:t xml:space="preserve"> </w:t></w:r></w:p><w:tbl><w:tblPr><w:tblW w:w="0" w:type="auto"/></w:tblPr><w:tblGrid>${head.map(()=>`<w:gridCol w:w="3000"/>`).join("")}</w:tblGrid><w:tr>${head.map(h=>wcell(h,true,"D9D9D9")).join("")}</w:tr>`;
+  rows.forEach(r=>{s+=`<w:tr>${r.map(c=>wcell(c,false,null)).join("")}</w:tr>`;});return s+"</w:tbl>";}
+function buildDocx(){
+  let body="";
+  DOC.forEach(b=>{
+    if(b.t==="cover"){body+=wp(b.title,{bold:true,size:32,align:"center"});b.lines.forEach(l=>{body+=wp(l,{align:"center"});});}
+    else if(b.t==="h2"){body+=wp(b.text,{bold:true,size:24,align:"left"});}
+    else if(b.t==="h3"){body+=wp(b.text,{bold:true,size:24,align:"left"});}
+    else if(b.t==="p"){body+=wp(b.text,{indent:true});}
+    else if(b.t==="pre"){b.text.split("\n").forEach(l=>{body+=wp(l,{size:20,align:"left",font:'<w:rFonts w:ascii="Consolas" w:hAnsi="Consolas"/>'});});}
+    else if(b.t==="ul"){b.items.forEach(i=>{body+=wp("•  "+i,{align:"left"});});}
+    else if(b.t==="table"){body+=wtable(b.head,b.rows);}
+  });
+  body+=wp("Fim da auditoria · Gerado em 25/09/2026 · Bot_RPA · Robotic Process Automation",{size:20,color:"777777",align:"center"});
+  const doc=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><w:body>${body}<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1701" w:bottom="1134" w:left="1701" w:right="1134" w:header="720" w:footer="720"/><w:footerReference w:type="default" r:id="rFooter"/></w:sectPr></w:body></w:document>`;
+  const ct=`<?xml version="1.0" encoding="UTF-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/footer1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.footer+xml"/></Types>`;
+  const rels=`<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>`;
+  const docRels=`<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rFooter" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/footer" Target="footer1.xml"/></Relationships>`;
+  const footer=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:ftr xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:p><w:pPr><w:jc w:val="right"/></w:pPr><w:r><w:rPr>${RFONT}<w:sz w:val="24"/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:rPr>${RFONT}<w:sz w:val="24"/></w:rPr><w:instrText xml:space="preserve">PAGE</w:instrText></w:r><w:r><w:rPr>${RFONT}<w:sz w:val="24"/></w:rPr><w:fldChar w:fldCharType="end"/></w:r></w:p></w:ftr>`;
+  return zipStored([
+    {name:"[Content_Types].xml",data:strBytes(ct)},
+    {name:"_rels/.rels",data:strBytes(rels)},
+    {name:"word/_rels/document.xml.rels",data:strBytes(docRels)},
+    {name:"word/footer1.xml",data:strBytes(footer)},
+    {name:"word/document.xml",data:strBytes(doc)}
+  ]);
+}
+document.getElementById("btnDocx").addEventListener("click",()=>{
+  try{
+    const blob=new Blob([buildDocx()],{type:"application/vnd.openxmlformats-officedocument.wordprocessingml.document"});
+    const a=document.createElement("a");a.href=URL.createObjectURL(blob);
+    a.download="auditoria_bot_rpa_20260925.docx";document.body.appendChild(a);a.click();
+    setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},500);
+  }catch(e){alert("Falha ao gerar DOCX: "+e.message);}
+});
+</script>
+</body>
+</html>

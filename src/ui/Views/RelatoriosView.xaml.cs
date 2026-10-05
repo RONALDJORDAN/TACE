@@ -6,7 +6,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 
-namespace InnovPlayUI.Views
+namespace BotRpaUI.Views
 {
     public class RegistroModel
     {
@@ -31,7 +31,7 @@ namespace InnovPlayUI.Views
                 }
             } 
         }
-        public InnovPlayUI.Core.DispositivoDB Dispositivo { get; set; } = new InnovPlayUI.Core.DispositivoDB();
+        public BotRpaUI.Core.DispositivoDB Dispositivo { get; set; } = new BotRpaUI.Core.DispositivoDB();
 
         public event System.ComponentModel.PropertyChangedEventHandler? PropertyChanged;
         protected void OnPropertyChanged(string name) => PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(name));
@@ -40,14 +40,14 @@ namespace InnovPlayUI.Views
     public partial class RelatoriosView : UserControl
     {
         private ObservableCollection<RegistroModel> _registrosList;
-        private System.Collections.Generic.List<InnovPlayUI.Core.DispositivoDB> _fullDbList;
+        private System.Collections.Generic.List<BotRpaUI.Core.DispositivoDB> _fullDbList;
         
         // Seleção Múltipla de Dispositivos para Relatório
         private ObservableCollection<DispositivoSelecionavel> _listaCompletaSelecionaveis;
         private ObservableCollection<DispositivoSelecionavel> _listaSelecionados;
 
         // Cache e Filtros do Banco de Dados
-        private System.Collections.Generic.List<InnovPlayUI.Core.DispositivoDB> _bancoDadosCache = new System.Collections.Generic.List<InnovPlayUI.Core.DispositivoDB>();
+        private System.Collections.Generic.List<BotRpaUI.Core.DispositivoDB> _bancoDadosCache = new System.Collections.Generic.List<BotRpaUI.Core.DispositivoDB>();
         private string _filtroModeloAtivo = "Todos";
         private int _editingDeviceId = 0;
         private string _currentSelectedLogPath = string.Empty;
@@ -60,7 +60,7 @@ namespace InnovPlayUI.Views
         {
             InitializeComponent();
             _registrosList = new ObservableCollection<RegistroModel>();
-            _fullDbList = new System.Collections.Generic.List<InnovPlayUI.Core.DispositivoDB>();
+            _fullDbList = new System.Collections.Generic.List<BotRpaUI.Core.DispositivoDB>();
             
             _listaCompletaSelecionaveis = new ObservableCollection<DispositivoSelecionavel>();
             _listaSelecionados = new ObservableCollection<DispositivoSelecionavel>();
@@ -70,10 +70,35 @@ namespace InnovPlayUI.Views
             ListSelecionados.ItemsSource = _listaSelecionados;
 
             ConfigurarObservadorDB();
+            BotRpaUI.Core.SQLiteDatabaseManager.OnCloudPullCompleted += OnCloudPull_BancoDados;
             AtualizarDashboardMetrics();
             LoadBancoDadosDedicado();
             LoadRegistrosLocais();
             LoadRelatorioDados();
+        }
+
+        private void OnCloudPull_BancoDados(int importados, int atualizados)
+        {
+            try
+            {
+                Dispatcher.BeginInvoke(() =>
+                {
+                    try
+                    {
+                        AtualizarDashboardMetrics();
+                        if (PanelBancoDados != null && PanelBancoDados.Visibility == Visibility.Visible)
+                        {
+                            LoadBancoDadosDedicado();
+                        }
+                        else if (PanelExportacao != null && PanelExportacao.Visibility == Visibility.Visible)
+                        {
+                            LoadRelatorioDados();
+                        }
+                    }
+                    catch { }
+                });
+            }
+            catch { }
         }
 
         // =========================================================================
@@ -116,7 +141,20 @@ namespace InnovPlayUI.Views
         private void BtnSubBancoDados_Click(object sender, RoutedEventArgs e)
         {
             SetActiveSubMenu(BtnSubBancoDados, PanelBancoDados);
+            try
+            {
+                _filtroModeloAtivo = "Todos";
+                if (TxtBuscaBD != null) TxtBuscaBD.Text = string.Empty;
+                if (BtnFiltroTodos != null) SetActiveFilterPill(BtnFiltroTodos, "Todos");
+                else AplicarFiltroBD();
+            }
+            catch { }
             LoadBancoDadosDedicado();
+            _ = System.Threading.Tasks.Task.Run(async () =>
+            {
+                try { await BotRpaUI.Core.SQLiteDatabaseManager.BaixarDoInnovStockAsync(); }
+                catch { }
+            });
         }
 
         private void BtnSubRegistros_Click(object sender, RoutedEventArgs e)
@@ -138,7 +176,7 @@ namespace InnovPlayUI.Views
         {
             try
             {
-                var todosDispositivos = InnovPlayUI.Core.SQLiteDatabaseManager.LerTodos();
+                var todosDispositivos = BotRpaUI.Core.SQLiteDatabaseManager.LerTodos();
                 int total = todosDispositivos.Count;
 
                 int totalV7 = todosDispositivos.Count(d =>
@@ -183,7 +221,7 @@ namespace InnovPlayUI.Views
                 if (TxtIntegridadeMac != null) TxtIntegridadeMac.Text = $"{comMac}/{total} ({percMac:F1}%)";
 
                 // Contagem de Registros de Auditoria
-                string rootPath = Path.Combine(InnovPlayUI.Core.PathHelper.GetRootDirectory(), "registros");
+                string rootPath = Path.Combine(BotRpaUI.Core.PathHelper.GetRootDirectory(), "registros");
                 int totalLogs = 0;
                 if (Directory.Exists(rootPath))
                 {
@@ -227,7 +265,7 @@ namespace InnovPlayUI.Views
         {
             try
             {
-                _bancoDadosCache = InnovPlayUI.Core.SQLiteDatabaseManager.LerTodos();
+                _bancoDadosCache = BotRpaUI.Core.SQLiteDatabaseManager.LerTodos();
                 AplicarFiltroBD();
                 AtualizarDashboardMetrics();
             }
@@ -236,7 +274,7 @@ namespace InnovPlayUI.Views
 
         private void AplicarFiltroBD()
         {
-            var resultado = new System.Collections.Generic.List<InnovPlayUI.Core.DispositivoDB>();
+            var resultado = new System.Collections.Generic.List<BotRpaUI.Core.DispositivoDB>();
             string busca = (TxtBuscaBD?.Text ?? string.Empty).Trim().ToLower();
 
             foreach (var d in _bancoDadosCache)
@@ -304,7 +342,7 @@ namespace InnovPlayUI.Views
 
         private void GridBancoDados_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            var item = GridBancoDados.SelectedItem as InnovPlayUI.Core.DispositivoDB;
+            var item = GridBancoDados.SelectedItem as BotRpaUI.Core.DispositivoDB;
             if (item == null)
             {
                 TxtInfoSelecionado.Text = "Nenhum registro selecionado";
@@ -326,7 +364,7 @@ namespace InnovPlayUI.Views
 
         private void BtnEditarDispositivo_Click(object sender, RoutedEventArgs e)
         {
-            var selectedItem = GridBancoDados.SelectedItem as InnovPlayUI.Core.DispositivoDB;
+            var selectedItem = GridBancoDados.SelectedItem as BotRpaUI.Core.DispositivoDB;
             if (selectedItem == null)
             {
                 MessageBox.Show("Selecione um dispositivo na lista para editar.", "Aviso", MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -364,11 +402,11 @@ namespace InnovPlayUI.Views
 
                 if (_editingDeviceId == 0)
                 {
-                    InnovPlayUI.Core.SQLiteDatabaseManager.RegistrarSeNovo(serial, fabricante, modelo, mac);
+                    BotRpaUI.Core.SQLiteDatabaseManager.RegistrarSeNovo(serial, fabricante, modelo, mac);
                 }
                 else
                 {
-                    var todos = InnovPlayUI.Core.SQLiteDatabaseManager.LerTodos();
+                    var todos = BotRpaUI.Core.SQLiteDatabaseManager.LerTodos();
                     var item = todos.Find(d => d.ID == _editingDeviceId);
                     if (item != null)
                     {
@@ -376,11 +414,11 @@ namespace InnovPlayUI.Views
                         item.Fabricante = fabricante;
                         item.Modelo = modelo;
                         item.MAC = mac;
-                        InnovPlayUI.Core.SQLiteDatabaseManager.SalvarTodos(todos);
+                        BotRpaUI.Core.SQLiteDatabaseManager.SalvarTodos(todos);
                     }
                 }
 
-                InnovPlayUI.Core.SQLiteDatabaseManager.InvalidarCache();
+                BotRpaUI.Core.SQLiteDatabaseManager.InvalidarCache();
                 PanelModalEditDevice.Visibility = Visibility.Collapsed;
                 LoadBancoDadosDedicado();
                 MessageBox.Show("Dispositivo salvo com sucesso no banco de dados!", "Sucesso", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -410,18 +448,18 @@ namespace InnovPlayUI.Views
             {
                 try
                 {
-                    var listToDelete = new System.Collections.Generic.List<InnovPlayUI.Core.DispositivoDB>();
-                    foreach (InnovPlayUI.Core.DispositivoDB d in selectedItems)
+                    var listToDelete = new System.Collections.Generic.List<BotRpaUI.Core.DispositivoDB>();
+                    foreach (BotRpaUI.Core.DispositivoDB d in selectedItems)
                     {
                         listToDelete.Add(d);
                     }
 
                     foreach (var item in listToDelete)
                     {
-                        InnovPlayUI.Core.SQLiteDatabaseManager.Excluir(item.ID);
+                        BotRpaUI.Core.SQLiteDatabaseManager.Excluir(item.ID);
                     }
 
-                    InnovPlayUI.Core.SQLiteDatabaseManager.InvalidarCache();
+                    BotRpaUI.Core.SQLiteDatabaseManager.InvalidarCache();
                     LoadBancoDadosDedicado();
                     MessageBox.Show($"{count} dispositivo(s) excluído(s) com sucesso.", "Exclusão Concluída", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
@@ -440,7 +478,7 @@ namespace InnovPlayUI.Views
             try
             {
                 _registrosList.Clear();
-                string rootPath = Path.Combine(InnovPlayUI.Core.PathHelper.GetRootDirectory(), "registros");
+                string rootPath = Path.Combine(BotRpaUI.Core.PathHelper.GetRootDirectory(), "registros");
 
                 if (!Directory.Exists(rootPath))
                 {
@@ -455,7 +493,7 @@ namespace InnovPlayUI.Views
                 {
                     var info = new DirectoryInfo(d);
                     
-                    // Procura subpastas de auditoria (ex: HH-MM_Plataforma_InnovTech_DESKTOP_BUILD)
+                    // Procura subpastas de auditoria (ex: HH-MM_Plataforma_BotRPA_DESKTOP_BUILD)
                     var subDirs = Directory.GetDirectories(d);
                     if (subDirs.Length > 0)
                     {
@@ -571,7 +609,7 @@ namespace InnovPlayUI.Views
 
         private void BtnAbrirPastaRegistros_Click(object sender, RoutedEventArgs e)
         {
-            string rootPath = Path.Combine(InnovPlayUI.Core.PathHelper.GetRootDirectory(), "registros");
+            string rootPath = Path.Combine(BotRpaUI.Core.PathHelper.GetRootDirectory(), "registros");
             if (!Directory.Exists(rootPath)) Directory.CreateDirectory(rootPath);
             System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("explorer.exe", rootPath) { UseShellExecute = true });
         }
@@ -611,7 +649,7 @@ namespace InnovPlayUI.Views
         {
             try
             {
-                _fullDbList = InnovPlayUI.Core.SQLiteDatabaseManager.LerTodos();
+                _fullDbList = BotRpaUI.Core.SQLiteDatabaseManager.LerTodos();
                 _listaCompletaSelecionaveis.Clear();
                 _listaSelecionados.Clear();
 
@@ -738,7 +776,7 @@ namespace InnovPlayUI.Views
         {
             try
             {
-                var lista = new System.Collections.Generic.List<InnovPlayUI.Core.DispositivoDB>();
+                var lista = new System.Collections.Generic.List<BotRpaUI.Core.DispositivoDB>();
                 
                 if (_listaSelecionados.Count > 0)
                 {
@@ -748,7 +786,7 @@ namespace InnovPlayUI.Views
                 {
                     var res = MessageBox.Show("Nenhum aparelho selecionado na lista. Deseja emitir o relatório contendo toda a base de dados?", "Emissão Completa", MessageBoxButton.YesNo, MessageBoxImage.Question);
                     if (res != MessageBoxResult.Yes) return;
-                    lista = InnovPlayUI.Core.SQLiteDatabaseManager.LerTodos();
+                    lista = BotRpaUI.Core.SQLiteDatabaseManager.LerTodos();
                 }
 
                 if (lista.Count == 0)
@@ -766,7 +804,7 @@ namespace InnovPlayUI.Views
                 doc.FontFamily = new FontFamily("Segoe UI");
 
                 // Cabeçalho / Título
-                var title = new System.Windows.Documents.Paragraph(new System.Windows.Documents.Run("Relatório de Equipamentos — Plataforma InnovTech"))
+                var title = new System.Windows.Documents.Paragraph(new System.Windows.Documents.Run("Relatório de Equipamentos — Plataforma Bot_RPA"))
                 {
                     FontSize = 18,
                     FontWeight = FontWeights.Bold,
@@ -829,7 +867,7 @@ namespace InnovPlayUI.Views
                 doc.Blocks.Add(table);
 
                 // Rodapé
-                var footer = new System.Windows.Documents.Paragraph(new System.Windows.Documents.Run($"InnovTech Inno RPA — Gerado automaticamente em {DateTime.Now:dd/MM/yyyy HH:mm:ss}"))
+                var footer = new System.Windows.Documents.Paragraph(new System.Windows.Documents.Run($"Bot_RPA Bot_RPA — Gerado automaticamente em {DateTime.Now:dd/MM/yyyy HH:mm:ss}"))
                 {
                     FontSize = 8.5,
                     Foreground = Brushes.Gray,
@@ -838,7 +876,7 @@ namespace InnovPlayUI.Views
                 };
                 doc.Blocks.Add(footer);
 
-                pd.PrintDocument(((System.Windows.Documents.IDocumentPaginatorSource)doc).DocumentPaginator, "Relatorio de Dispositivos - InnovTech");
+                pd.PrintDocument(((System.Windows.Documents.IDocumentPaginatorSource)doc).DocumentPaginator, "Relatorio de Dispositivos - Bot_RPA");
             }
             catch (Exception ex)
             {
@@ -853,14 +891,14 @@ namespace InnovPlayUI.Views
         {
             try
             {
-                var lista = new System.Collections.Generic.List<InnovPlayUI.Core.DispositivoDB>();
+                var lista = new System.Collections.Generic.List<BotRpaUI.Core.DispositivoDB>();
                 if (_listaSelecionados.Count > 0)
                 {
                     foreach (var s in _listaSelecionados) lista.Add(s.Dispositivo);
                 }
                 else
                 {
-                    lista = InnovPlayUI.Core.SQLiteDatabaseManager.LerTodos();
+                    lista = BotRpaUI.Core.SQLiteDatabaseManager.LerTodos();
                 }
 
                 if (lista.Count == 0)
@@ -901,7 +939,7 @@ namespace InnovPlayUI.Views
         {
             try
             {
-                var lista = InnovPlayUI.Core.SQLiteDatabaseManager.LerTodos();
+                var lista = BotRpaUI.Core.SQLiteDatabaseManager.LerTodos();
                 if (lista.Count == 0)
                 {
                     MessageBox.Show("Nenhum aparelho cadastrado para gerar etiquetas.", "Aviso", MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -909,7 +947,7 @@ namespace InnovPlayUI.Views
                 }
 
                 // Cria pasta de saída
-                string outDir = Path.Combine(InnovPlayUI.Core.PathHelper.GetRootDirectory(), "data", "output", "etiquetas");
+                string outDir = Path.Combine(BotRpaUI.Core.PathHelper.GetRootDirectory(), "data", "output", "etiquetas");
                 if (!Directory.Exists(outDir)) Directory.CreateDirectory(outDir);
 
                 string pdfFile = Path.Combine(outDir, $"Etiquetas_QR_{DateTime.Now:yyyyMMdd_HHmm}.pdf");
@@ -936,7 +974,7 @@ namespace InnovPlayUI.Views
         {
             try
             {
-                string dbPath = InnovPlayUI.Core.SQLiteDatabaseManager.GetDatabasePath();
+                string dbPath = BotRpaUI.Core.SQLiteDatabaseManager.GetDatabasePath();
                 string? dbDir = Path.GetDirectoryName(dbPath);
                 string dbFile = Path.GetFileName(dbPath);
 
@@ -978,13 +1016,18 @@ namespace InnovPlayUI.Views
         {
             try
             {
+                if (!BotRpaUI.Core.FirebaseAuthService.HasCredentials)
+                {
+                    MessageBox.Show("Sync desativado: configure a conta do InnovStock em Configurações → Geral → “Conta InnovStock (sync de nuvem)” e tente de novo.", "Conta não configurada", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
                 if (BtnSyncInnovStock != null)
                 {
                     BtnSyncInnovStock.IsEnabled = false;
                     BtnSyncInnovStock.Content = "⏳ Sincronizando...";
                 }
 
-                int count = await InnovPlayUI.Core.SQLiteDatabaseManager.SincronizarTodosComInnovStockAsync();
+                int count = await BotRpaUI.Core.SQLiteDatabaseManager.SincronizarTodosComInnovStockAsync();
                 if (count > 0)
                 {
                     MessageBox.Show($"Sucesso! {count} dispositivo(s) foram sincronizados com o banco de dados da nuvem do InnovStock.", "Sincronização InnovStock", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -1004,6 +1047,54 @@ namespace InnovPlayUI.Views
                 {
                     BtnSyncInnovStock.IsEnabled = true;
                     BtnSyncInnovStock.Content = "☁️ Sync InnovStock";
+                }
+            }
+        }
+
+        private async void BtnBaixarInnovStock_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (!BotRpaUI.Core.FirebaseAuthService.HasCredentials)
+                {
+                    MessageBox.Show("Download desativado: configure a conta do InnovStock em Configurações → Geral → “Conta InnovStock (sync de nuvem)” e tente de novo.", "Conta não configurada", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+                if (BtnBaixarInnovStock != null)
+                {
+                    BtnBaixarInnovStock.IsEnabled = false;
+                    BtnBaixarInnovStock.Content = "⏳ Baixando...";
+                }
+
+                var (importados, atualizados, _) = await BotRpaUI.Core.SQLiteDatabaseManager.BaixarDoInnovStockAsync();
+                if (importados > 0 || atualizados > 0)
+                {
+                    AtualizarDashboardMetrics();
+                    if (PanelBancoDados.Visibility == Visibility.Visible)
+                    {
+                        LoadBancoDadosDedicado();
+                    }
+                    else if (PanelExportacao.Visibility == Visibility.Visible)
+                    {
+                        LoadRelatorioDados();
+                    }
+                    MessageBox.Show($"Nuvem sincronizada: {importados} novo(s) e {atualizados} atualizado(s) neste PC.", "Download InnovStock", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                else
+                {
+                    MessageBox.Show("Nada novo na nuvem ou falha de conexão. Verifique a internet e tente novamente.", "Download InnovStock", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erro ao baixar do InnovStock: {ex.Message}", "Erro de Download", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                if (BtnBaixarInnovStock != null)
+                {
+                    BtnBaixarInnovStock.IsEnabled = true;
+                    BtnBaixarInnovStock.Content = "⬇ Baixar InnovStock";
                 }
             }
         }

@@ -8,7 +8,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
 
-namespace InnovPlayUI.Views
+namespace BotRpaUI.Views
 {
     public partial class BrainVisualizerWindow : Window
     {
@@ -26,13 +26,13 @@ namespace InnovPlayUI.Views
             public string History;
         }
 
-        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("BotEngine.dll", CallingConvention = CallingConvention.Cdecl)]
         private static extern int Engine_Learn_GetStrategyCount();
 
-        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("BotEngine.dll", CallingConvention = CallingConvention.Cdecl)]
         private static extern int Engine_Learn_GetStrategy(int index, out LearnStrategyExport outStrategy);
 
-        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("BotEngine.dll", CallingConvention = CallingConvention.Cdecl)]
         private static extern int Engine_RefreshDevices();
 
         // ============================================================
@@ -70,6 +70,7 @@ namespace InnovPlayUI.Views
         // ESTADO INTERNO DA JANELA E DA CÂMERA 3D
         // ============================================================
         private string _currentFilter = "ALL";
+        private string _searchText = "";
         private bool _isDragging = false;
         private Point _dragStartPoint;
         private double _rotX = 0.25;  // Inclinação vertical (Pitch)
@@ -88,6 +89,8 @@ namespace InnovPlayUI.Views
         private System.Diagnostics.Stopwatch? _animationStopwatch;
         private double _lastFrameSeconds;
         private bool _isRenderingSubscribed = false;
+        private System.Windows.Threading.DispatcherTimer? _liveTimer;
+        private int _lastKnownStrategyCount = -1;
 
         private readonly List<Node3D> _nodes3D = new List<Node3D>();
         private readonly List<Synapse3D> _synapses3D = new List<Synapse3D>();
@@ -111,12 +114,48 @@ namespace InnovPlayUI.Views
                 CompositionTarget.Rendering -= OnCompositionTargetRendering;
                 _isRenderingSubscribed = false;
             }
+            if (_liveTimer != null)
+            {
+                _liveTimer.Stop();
+                _liveTimer.Tick -= LiveTimer_Tick;
+                _liveTimer = null;
+            }
             base.OnClosed(e);
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             RenderBrain();
+            StartLiveTimer();
+        }
+
+        private void StartLiveTimer()
+        {
+            if (_liveTimer != null) return;
+            _liveTimer = new System.Windows.Threading.DispatcherTimer
+            {
+                Interval = TimeSpan.FromSeconds(2.0)
+            };
+            _liveTimer.Tick += LiveTimer_Tick;
+            _liveTimer.Start();
+        }
+
+        private void LiveTimer_Tick(object? sender, EventArgs e)
+        {
+            if (!IsLoaded) return;
+            try
+            {
+                int count = Engine_Learn_GetStrategyCount();
+                if (count != _lastKnownStrategyCount)
+                {
+                    _lastKnownStrategyCount = count;
+                    RenderBrain();
+                    return;
+                }
+                int active = Engine_RefreshDevices();
+                if (TxtActiveDevices != null) TxtActiveDevices.Text = active.ToString();
+            }
+            catch { }
         }
 
         private void BtnClose_Click(object sender, RoutedEventArgs e)
@@ -308,6 +347,7 @@ namespace InnovPlayUI.Views
 
             int strategyCount = 0;
             try { strategyCount = Engine_Learn_GetStrategyCount(); } catch { }
+            _lastKnownStrategyCount = strategyCount;
 
             var allStrategies = new List<LearnStrategyExport>();
             for (int i = 0; i < strategyCount; i++)
@@ -318,17 +358,27 @@ namespace InnovPlayUI.Views
                 }
             }
 
-            // Filtragem por Perfil de Hardware
+            // Filtragem por Perfil de Hardware + busca viva
             var filtered = allStrategies.Where(s =>
             {
-                if (_currentFilter == "V7") return s.TargetId != null && s.TargetId.StartsWith("v7_");
-                if (_currentFilter == "M7") return s.TargetId != null && (s.TargetId.StartsWith("f7_") || s.TargetId.StartsWith("m7_"));
-                if (_currentFilter == "T20") return s.TargetId != null && (s.TargetId.StartsWith("t20_") || s.TargetId.StartsWith("nokia_"));
-                if (_currentFilter == "F1") return s.TargetId != null && !s.TargetId.StartsWith("v7_") && !s.TargetId.StartsWith("f7_") && !s.TargetId.StartsWith("m7_") && !s.TargetId.StartsWith("t20_");
-                return true; // ALL
+                bool hw;
+                if (_currentFilter == "V7") hw = s.TargetId != null && s.TargetId.StartsWith("v7_");
+                else if (_currentFilter == "M7") hw = s.TargetId != null && (s.TargetId.StartsWith("f7_") || s.TargetId.StartsWith("m7_"));
+                else if (_currentFilter == "T20") hw = s.TargetId != null && (s.TargetId.StartsWith("t20_") || s.TargetId.StartsWith("nokia_"));
+                else if (_currentFilter == "F1") hw = s.TargetId != null && !s.TargetId.StartsWith("v7_") && !s.TargetId.StartsWith("f7_") && !s.TargetId.StartsWith("m7_") && !s.TargetId.StartsWith("t20_");
+                else hw = true;
+                if (!hw) return false;
+                if (!string.IsNullOrWhiteSpace(_searchText))
+                {
+                    string q = (_searchText ?? "").Trim().ToLowerInvariant();
+                    string tid = (s.TargetId ?? "").ToLowerInvariant();
+                    string qry = (s.Query ?? "").ToLowerInvariant();
+                    if (!tid.Contains(q) && !qry.Contains(q)) return false;
+                }
+                return true;
             }).ToList();
 
-            var targetGroups = filtered.GroupBy(s => s.TargetId).ToList();
+            var targetGroups = filtered.GroupBy(s => s.TargetId).OrderBy(g => GetEtapaOrder(g.Key)).ToList();
 
             // Atualização dos Indicadores do Cabeçalho
             int totalNodes = targetGroups.Count + filtered.Count + 1;
@@ -353,7 +403,7 @@ namespace InnovPlayUI.Views
             catch { }
 
             // ------------------------------------------------------------
-            // 1. CRIAR NÓ CENTRAL (REATOR QUÂNTICO INNOAI 2.0 - MACIÇO)
+            // 1. CRIAR NÓ CENTRAL (REATOR QUÂNTICO BOTAI 2.0 - MACIÇO)
             // ------------------------------------------------------------
             Node3D coreNode = new Node3D
             {
@@ -362,7 +412,7 @@ namespace InnovPlayUI.Views
                 OrigZ = 0,
                 BaseSize = 92,
                 Type = "CORE",
-                TargetId = "InnoAI_Core",
+                TargetId = "BotAI_Core",
                 BaseColor = (Color)ColorConverter.ConvertFromString("#00E5FF")
             };
 
@@ -387,7 +437,7 @@ namespace InnovPlayUI.Views
                 BorderThickness = new Thickness(2.8),
                 CornerRadius = new CornerRadius(46),
                 Cursor = Cursors.Hand,
-                ToolTip = "⚡ Reator Central InnoAI 2.0 (Núcleo Maciço — Clique para Inspecionar)"
+                ToolTip = "⚡ Reator Central BotAI 2.0 (Núcleo Maciço — Clique para Inspecionar)"
             };
 
             // Anel Interno de Fusão Quântica
@@ -417,7 +467,7 @@ namespace InnovPlayUI.Views
 
             TextBlock coreTitle = new TextBlock
             {
-                Text = "INNOAI",
+                Text = "BOTAI",
                 Foreground = Brushes.White,
                 FontWeight = FontWeights.Black,
                 FontSize = 10,
@@ -480,7 +530,7 @@ namespace InnovPlayUI.Views
             };
             TextBlock coreFloatingBadgeTxt = new TextBlock
             {
-                Text = "⚡ REATOR CENTRAL INNOAI 2.0",
+                Text = "⚡ REATOR CENTRAL BOTAI 2.0",
                 Foreground = Brushes.White,
                 FontWeight = FontWeights.Black,
                 FontSize = 9.5
@@ -495,7 +545,8 @@ namespace InnovPlayUI.Views
             // ------------------------------------------------------------
             // 3. CRIAR NÓS ALVOS (DISTRIBUÍDOS NA ESFERA 3D)
             // ------------------------------------------------------------
-            double sphereRadius = 270.0;
+            double baseDim = Math.Min(ActualWidth > 0 ? ActualWidth : 1200, ActualHeight > 0 ? ActualHeight : 800);
+            double sphereRadius = Math.Clamp(baseDim * 0.30, 200.0, 400.0);
             int numTargets = targetGroups.Count;
 
             var targetNodesList = new List<Node3D>();
@@ -685,7 +736,7 @@ namespace InnovPlayUI.Views
             }
 
             // ------------------------------------------------------------
-            // 5. CRIAR INTERNEURÔNIOS COGNITIVOS (CAMADA DE DECISÃO INNOAI 2.0)
+            // 5. CRIAR INTERNEURÔNIOS COGNITIVOS (CAMADA DE DECISÃO BOTAI 2.0)
             // ------------------------------------------------------------
             var cognitiveNodes = new (string Name, string Role, string Details, string Symbol)[]
             {
@@ -703,7 +754,7 @@ namespace InnovPlayUI.Views
                 ("Zero-Drift Sensor", "Sensor de Estabilidade de Tela", "Garante que elementos em movimento pararam antes da interação de clique.", "⚓")
             };
 
-            double cogRadius = 165.0;
+            double cogRadius = sphereRadius * 0.61;
             var createdCogNodes = new List<Node3D>();
             for (int k = 0; k < cognitiveNodes.Length; k++)
             {
@@ -784,11 +835,12 @@ namespace InnovPlayUI.Views
 
             // ------------------------------------------------------------
             // 6. CRIAR MALHA DE MICRO-NEURÔNIOS DE RELÉ (SYNAPTIC LATTICE)
+            // Em filtros específicos (V7/M7/T20) oculta relés para focar no modelo
             // ------------------------------------------------------------
-            int microCount = 38;
+            int microCount = (_currentFilter == "ALL") ? 38 : 0;
             for (int m = 0; m < microCount; m++)
             {
-                double mRadius = (m % 2 == 0) ? 220.0 : 310.0;
+                double mRadius = (m % 2 == 0) ? sphereRadius * 0.82 : sphereRadius * 1.15;
                 double phi = Math.Acos(1.0 - 2.0 * (m + 0.5) / microCount);
                 double theta = Math.PI * (1.0 + Math.Sqrt(5.0)) * m * 1.35;
 
@@ -954,9 +1006,11 @@ namespace InnovPlayUI.Views
         private void OnCompositionTargetRendering(object? sender, EventArgs e)
         {
             if (_animationStopwatch == null) return;
+            if (WindowState == WindowState.Minimized || !IsVisible) return;
 
             double currentSec = _animationStopwatch.Elapsed.TotalSeconds;
             double deltaTime = currentSec - _lastFrameSeconds;
+            if (deltaTime < 1.0 / 30.0) return; // Throttle 30fps para iGPU fraca
             _lastFrameSeconds = currentSec;
 
             if (deltaTime > 0.1) deltaTime = 0.033;
@@ -1016,9 +1070,35 @@ namespace InnovPlayUI.Views
                 double zNorm = Math.Clamp((z2 + 350.0) / 700.0, 0.0, 1.0);
                 n.Opacity = 0.25 + (0.75 * zNorm);
 
+                bool isTypeVisible = n.Type switch
+                {
+                    "CORE" => _showTagCore,
+                    "TARGET" => _showTagTargets,
+                    "COGNITIVE" => _showTagCognitive,
+                    "STRATEGY" => _showTagStrategies,
+                    "MICRO" => _showTagMicro,
+                    _ => true
+                };
+                // Busca viva: dim nuts não correspondentes, destaca match com opacidade cheia
+                bool isSearchMatch = true;
+                if (!string.IsNullOrWhiteSpace(_searchText))
+                {
+                    string q = _searchText.Trim().ToLowerInvariant();
+                    string tid = (n.TargetId ?? "").ToLowerInvariant();
+                    string qry = n.Type == "STRATEGY" ? (n.StrategyData.Query ?? "").ToLowerInvariant() : "";
+                    isSearchMatch = tid.Contains(q) || qry.Contains(q) || n.Type == "CORE";
+                }
+                if (!isTypeVisible)
+                {
+                    n.VisualElement.Visibility = Visibility.Collapsed;
+                    if (n.VisualBadge != null) n.VisualBadge.Visibility = Visibility.Collapsed;
+                    continue;
+                }
+                n.VisualElement.Visibility = Visibility.Visible;
+
                 n.VisualElement.Width = size;
                 n.VisualElement.Height = size;
-                n.VisualElement.Opacity = n.Opacity;
+                n.VisualElement.Opacity = isSearchMatch ? n.Opacity : 0.12;
                 Canvas.SetLeft(n.VisualElement, sx - size / 2.0);
                 Canvas.SetTop(n.VisualElement, sy - size / 2.0);
                 Panel.SetZIndex(n.VisualElement, n.ZIndex);
@@ -1026,17 +1106,7 @@ namespace InnovPlayUI.Views
                 // Atualizar Badge do Alvo / Nós com Tags
                 if (n.VisualBadge != null)
                 {
-                    bool isTagVisible = n.Type switch
-                    {
-                        "CORE" => _showTagCore,
-                        "TARGET" => _showTagTargets,
-                        "COGNITIVE" => _showTagCognitive,
-                        "STRATEGY" => _showTagStrategies,
-                        "MICRO" => _showTagMicro,
-                        _ => true
-                    };
-
-                    if (!isTagVisible || z2 < -80)
+                    if (!isSearchMatch || z2 < -80)
                     {
                         n.VisualBadge.Visibility = Visibility.Collapsed;
                     }
@@ -1051,10 +1121,16 @@ namespace InnovPlayUI.Views
                 }
             }
 
-            // 2. ATUALIZAR SINAPSES 3D
+            // 2. ATUALIZAR SINAPSES 3D (oculta se endpoint filtrado)
             for (int i = 0; i < _synapses3D.Count; i++)
             {
                 var syn = _synapses3D[i];
+                if (syn.From.VisualElement.Visibility != Visibility.Visible || syn.To.VisualElement.Visibility != Visibility.Visible)
+                {
+                    syn.VisualLine.Visibility = Visibility.Collapsed;
+                    continue;
+                }
+                syn.VisualLine.Visibility = Visibility.Visible;
                 syn.VisualLine.X1 = syn.From.ScreenX;
                 syn.VisualLine.Y1 = syn.From.ScreenY;
                 syn.VisualLine.X2 = syn.To.ScreenX;
@@ -1091,8 +1167,10 @@ namespace InnovPlayUI.Views
         private void ShowTargetInspector(string targetId, List<LearnStrategyExport> strats)
         {
             InspectorTitle.Text = FormatarTargetName(targetId);
-            InspectorSubtitle.Text = $"Grupo de Seletores: {targetId} ({strats.Count} estratégias)";
-            InspectorQueryText.Text = $"Alvo Mapeado: {targetId}\nTotal de Seletores Aprendidos: {strats.Count}";
+            InspectorSubtitle.Text = $"Grupo de Seletores: {targetId} ({strats.Count} estratégias) — {GetEtapaLabel(targetId)}";
+            var ordered = strats.OrderByDescending(s => s.Score).ToList();
+            var lines = ordered.Select(s => $"[{s.Score,4}] {s.Query} (H:{s.Hits}/M:{s.Misses})");
+            InspectorQueryText.Text = $"Alvo: {targetId}\nEtapa: {GetEtapaLabel(targetId)}\n\n" + string.Join("\n", lines);
 
             int avgScore = strats.Count > 0 ? (int)strats.Average(s => s.Score) : 0;
             int totalHits = strats.Sum(s => s.Hits);
@@ -1105,42 +1183,45 @@ namespace InnovPlayUI.Views
             InspectorHitsText.Text = totalHits.ToString();
             InspectorMissesText.Text = totalMisses.ToString();
 
-            string combinedHistory = strats.Count > 0 ? strats.First().History : "";
-            RenderHistoryDots(combinedHistory);
+            // Agrega históricos reais de todas as estratégias (até 10, priorizando hits)
+            string combined = string.Concat(ordered.Select(s => s.History ?? ""));
+            string agg = new string(combined.Where(c => c == '1' || c == '0').Take(10).ToArray());
+            if (string.IsNullOrEmpty(agg) && total == 0) agg = "";
+            RenderHistoryDots(agg);
             NodeInspectorPanel.Visibility = Visibility.Visible;
         }
 
         private void ShowCognitiveInspector(string name, string role, string details)
         {
             InspectorTitle.Text = name;
-            InspectorSubtitle.Text = $"InnoAI 2.0: {role}";
-            InspectorQueryText.Text = $"[Nó Cognitivo de Decisão Heurística]\n\n{details}\n\nTempo de Resposta: < 1.2ms\nProteção Zero-Drift: ATIVA";
-            InspectorScoreText.Text = "99";
-            InspectorAccuracyText.Text = "100%";
-            InspectorHitsText.Text = "240";
-            InspectorMissesText.Text = "0";
-            RenderHistoryDots("1111111111");
+            InspectorSubtitle.Text = $"BotAI 2.0 (SIMULADO): {role}";
+            InspectorQueryText.Text = $"[SIMULADO — Camada decorativa, sem telemetria real]\n\n{details}\n\nTempo de Resposta: —\nProteção Zero-Drift: ATIVA";
+            InspectorScoreText.Text = "—";
+            InspectorAccuracyText.Text = "—";
+            InspectorHitsText.Text = "—";
+            InspectorMissesText.Text = "—";
+            InspectorHistoryDots.Items.Clear();
             NodeInspectorPanel.Visibility = Visibility.Visible;
         }
 
         private void ShowMicroNeuronInspector(int id, string type)
         {
             InspectorTitle.Text = $"Micro-Neurônio Relé #{id:D2}";
-            InspectorSubtitle.Text = $"Canal Sináptico de Transmissão ({type})";
-            InspectorQueryText.Text = $"Canal de interconexão de alta frequência no espaço 3D.\nLatência de propagação estimada: < 0.4ms.\nStatus de Sinapse: Calibrado e estável.";
-            InspectorScoreText.Text = "95";
-            InspectorAccuracyText.Text = "98%";
-            InspectorHitsText.Text = "142";
-            InspectorMissesText.Text = "2";
-            RenderHistoryDots("1111111110");
+            InspectorSubtitle.Text = $"SIMULADO — Canal Sináptico ({type})";
+            InspectorQueryText.Text = $"[SIMULADO — Lattice visual 3D, sem dados reais]\nCanal de interconexão de alta frequência no espaço 3D.\nStatus: decorativo.";
+            InspectorScoreText.Text = "—";
+            InspectorAccuracyText.Text = "—";
+            InspectorHitsText.Text = "—";
+            InspectorMissesText.Text = "—";
+            InspectorHistoryDots.Items.Clear();
             NodeInspectorPanel.Visibility = Visibility.Visible;
         }
 
         private void ShowCoreInspector()
         {
-            InspectorTitle.Text = "REATOR CENTRAL INNOAI 2.0";
+            InspectorTitle.Text = "REATOR CENTRAL BOTAI 2.0";
             InspectorSubtitle.Text = "Núcleo Cognitivo e Motor Determinístico";
-            InspectorQueryText.Text = "[NÚCLEO MACIÇO DE DECISÃO CENTRAL]\n\nMotor Nativo: InnoEngine.dll (Win32)\nTopologia: Esfera Neural 3D Multicamadas\nProteção: Zero-Drift & Centroid Matching\nStatus Operacional: 60 FPS com Aceleração por Hardware GPU Direct3D.";
+            InspectorQueryText.Text = "[NÚCLEO MACIÇO DE DECISÃO CENTRAL]\n\nMotor Nativo: BotEngine.dll (Win32)\nTopologia: Esfera Neural 3D Multicamadas\nProteção: Zero-Drift & Centroid Matching\nStatus Operacional: 30 FPS (throttle iGPU) com Aceleração GPU.";
             InspectorScoreText.Text = "100";
             InspectorAccuracyText.Text = "100%";
             InspectorHitsText.Text = _synapses3D.Count.ToString();
@@ -1199,6 +1280,50 @@ namespace InnovPlayUI.Views
                 "f1_btn_procurar_arquivo"  => "📁 Procurar ZIP (F1)",
                 _                          => targetId
             };
+        }
+
+        private static int GetEtapaOrder(string targetId)
+        {
+            string t = (targetId ?? "").ToLowerInvariant();
+            if (t.Contains("spinner_municipio")) return 2;
+            if (t.Contains("campo_email")) return 3;
+            if (t.Contains("campo_senha")) return 4;
+            if (t.Contains("botao_entrar")) return 5;
+            if (t.Contains("importar_zip")) return 6;
+            if (t.Contains("procurar_arquivo")) return 7;
+            if (t.Contains("sincronizar")) return 8;
+            return 99;
+        }
+
+        private static string GetEtapaLabel(string targetId)
+        {
+            return GetEtapaOrder(targetId) switch
+            {
+                2 => "Etapa 2: Município",
+                3 => "Etapa 3: E-mail",
+                4 => "Etapa 4a: Senha",
+                5 => "Etapa 4b: Entrar",
+                6 => "Etapa 5: Importar ZIP",
+                7 => "Etapa 6: Procurar arquivo",
+                8 => "Etapa F6: Sincronizar",
+                _ => "Etapa —"
+            };
+        }
+
+        private void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (sender is System.Windows.Controls.TextBox tb)
+            {
+                _searchText = tb.Text ?? "";
+            }
+        }
+
+        private void TopHeaderPanel_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            if (e.ButtonState == System.Windows.Input.MouseButtonState.Pressed)
+            {
+                try { DragMove(); } catch { }
+            }
         }
     }
 }

@@ -3,7 +3,7 @@ using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace InnovPlayUI.Core
+namespace BotRpaUI.Core
 {
     public class InnoAppSettings
     {
@@ -22,6 +22,9 @@ namespace InnovPlayUI.Core
         [JsonPropertyName("reverse_tethering_enabled")]
         public bool ReverseTetheringEnabled { get; set; } = true;
 
+        [JsonPropertyName("ai_learn_active")]
+        public bool AiLearnActive { get; set; } = false;
+
         [JsonPropertyName("enable_device_vision7")]
         public bool EnableDeviceVision7 { get; set; } = true;
 
@@ -39,6 +42,30 @@ namespace InnovPlayUI.Core
 
         [JsonPropertyName("firebase_database_url")]
         public string FirebaseDatabaseUrl { get; set; } = "https://matematica-em-foco-default-rtdb.firebaseio.com";
+
+        [JsonPropertyName("firebase_api_key")]
+        public string FirebaseApiKey { get; set; } = "AIzaSyBBtEFJxzWovflMZBxVJL89n0XIPSP5n5E";
+
+        [JsonPropertyName("firebase_email")]
+        public string FirebaseEmail { get; set; } = string.Empty;
+
+        [JsonPropertyName("firebase_password")]
+        public string FirebasePassword { get; set; } = string.Empty;
+
+        [JsonPropertyName("cloud_pull_auto")]
+        public bool CloudPullAuto { get; set; } = true;
+
+        [JsonPropertyName("cloud_auto_sync")]
+        public bool CloudAutoSync { get; set; } = true;
+
+        [JsonPropertyName("cloud_sync_minutes")]
+        public int CloudSyncMinutes { get; set; } = 15;
+
+        [JsonPropertyName("telemetry_enabled")]
+        public bool TelemetryEnabled { get; set; } = true;
+
+        [JsonPropertyName("meta_lote_total")]
+        public int MetaLoteTotal { get; set; } = 100;
     }
 
     public enum DeviceHardwareType
@@ -183,6 +210,12 @@ namespace InnovPlayUI.Core
             set { _settings.ReverseTetheringEnabled = value; Save(); }
         }
 
+        public static bool AiLearnActive
+        {
+            get => _settings.AiLearnActive;
+            set { _settings.AiLearnActive = value; Save(); }
+        }
+
         public static bool EnableDeviceVision7
         {
             get => _settings.EnableDeviceVision7;
@@ -217,6 +250,54 @@ namespace InnovPlayUI.Core
         {
             get => _settings.FirebaseDatabaseUrl;
             set { _settings.FirebaseDatabaseUrl = value; Save(); }
+        }
+
+        public static string FirebaseApiKey
+        {
+            get => _settings.FirebaseApiKey ?? string.Empty;
+            set { _settings.FirebaseApiKey = value; FirebaseAuthService.Invalidate(); Save(); }
+        }
+
+        public static string FirebaseEmail
+        {
+            get => _settings.FirebaseEmail ?? string.Empty;
+            set { _settings.FirebaseEmail = value; FirebaseAuthService.Invalidate(); Save(); }
+        }
+
+        public static string FirebasePassword
+        {
+            get => _settings.FirebasePassword ?? string.Empty;
+            set { _settings.FirebasePassword = value; FirebaseAuthService.Invalidate(); Save(); }
+        }
+
+        public static bool CloudPullAuto
+        {
+            get => _settings.CloudPullAuto;
+            set { _settings.CloudPullAuto = value; Save(); }
+        }
+
+        public static bool CloudAutoSync
+        {
+            get => _settings.CloudAutoSync;
+            set { _settings.CloudAutoSync = value; Save(); }
+        }
+
+        public static int CloudSyncMinutes
+        {
+            get => _settings.CloudSyncMinutes;
+            set { _settings.CloudSyncMinutes = value < 1 ? 1 : (value > 1440 ? 1440 : value); Save(); }
+        }
+
+        public static bool TelemetryEnabled
+        {
+            get => _settings.TelemetryEnabled;
+            set { _settings.TelemetryEnabled = value; Save(); }
+        }
+
+        public static int MetaLoteTotal
+        {
+            get => _settings.MetaLoteTotal;
+            set { _settings.MetaLoteTotal = value < 1 ? 1 : (value > 10000 ? 10000 : value); Save(); }
         }
 
         public static InnoAppSettings Current => _settings;

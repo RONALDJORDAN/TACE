@@ -1,7 +1,7 @@
-<Window x:Class="InnovPlayUI.Views.BrainVisualizerWindow"
+<Window x:Class="BotRpaUI.Views.BrainVisualizerWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Rede Neural 3D — InnoAI 2.0"
+        Title="Rede Neural 3D — BotAI 2.0"
         WindowState="Maximized" WindowStyle="None"
         AllowsTransparency="False" Background="#0B0B13"
         FontFamily="Segoe UI"
@@ -242,7 +242,7 @@
         </Canvas>
         
         <!-- Header Flutuante Unificado Cyber Space (Sem Sobreposição) -->
-        <StackPanel x:Name="TopHeaderPanel" VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0,20,0,0">
+        <StackPanel x:Name="TopHeaderPanel" VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0,20,0,0" MouseLeftButtonDown="TopHeaderPanel_MouseLeftButtonDown">
             <Border Padding="18,10" Background="#151525" CornerRadius="12" BorderBrush="#513BA6" BorderThickness="1.5">
                 <Border.Effect>
                     <DropShadowEffect Color="#513BA6" BlurRadius="20" Opacity="0.4" ShadowDepth="0"/>
@@ -251,7 +251,7 @@
                     <!-- Título e Subtítulo -->
                     <TextBlock Text="🧠" FontSize="22" VerticalAlignment="Center" Margin="0,0,10,0"/>
                     <StackPanel VerticalAlignment="Center" Margin="0,0,18,0">
-                        <TextBlock Text="INNOAI 2.0 — REDE NEURAL 3D" Foreground="#FFFFFF" FontWeight="Black" FontSize="14"/>
+                        <TextBlock Text="BOTAI 2.0 — REDE NEURAL 3D" Foreground="#FFFFFF" FontWeight="Black" FontSize="14"/>
                         <TextBlock Text="Topologia Holográfica e Matriz de Heurísticas" Foreground="#00E5FF" FontSize="10" FontWeight="SemiBold"/>
                     </StackPanel>
 
@@ -275,7 +275,7 @@
                             </StackPanel>
                         </Border>
                         <Border Background="#0B0B13" CornerRadius="8" Padding="10,5" Margin="0,0,6,0" BorderBrush="#2A2A40" BorderThickness="1"
-                                ToolTip="Total de regras e seletores de tela aprendidos pelo InnoAI">
+                                ToolTip="Total de regras e seletores de tela aprendidos pelo BotAI">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="REGRAS ATIVAS: " Foreground="#A1A1AA" FontSize="10" FontWeight="Bold"/>
                                 <TextBlock x:Name="TxtTotalRules" Text="0" Foreground="#D2BBFF" FontWeight="Black" FontSize="11"/>
@@ -325,7 +325,7 @@
                 </StackPanel>
             </Border>
 
-            <!-- Barra de Filtro de Tags 3D Interativa -->
+            <!-- Barra de Filtro de Tags 3D Interativa + Busca viva -->
             <Border Margin="0,8,0,0" HorizontalAlignment="Center" Background="#151525" CornerRadius="10" BorderBrush="#2A2A40" BorderThickness="1" Padding="12,5">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                     <TextBlock Text="🏷️ FILTRO DE TAGS:" Foreground="#A1A1AA" FontSize="10" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,12,0"/>
@@ -336,6 +336,9 @@
                     <CheckBox x:Name="ChkTagMicro" Content="🔹 Relés" IsChecked="False" Click="TagFilter_Click" Style="{StaticResource CyberTagCheckStyle}" Margin="0,0,12,0"/>
                     <Rectangle Width="1" Height="14" Fill="#2A2A40" Margin="0,0,10,0"/>
                     <Button x:Name="BtnToggleAllTags" Content="TODAS ON/OFF" Click="BtnToggleAllTags_Click" Style="{StaticResource MiniTagBtnStyle}"/>
+                    <Rectangle Width="1" Height="14" Fill="#2A2A40" Margin="10,0,10,0"/>
+                    <TextBlock Text="🔍" FontSize="11" Foreground="#8570E6" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                    <TextBox x:Name="SearchBox" Width="170" Background="#0B0B13" Foreground="#FFFFFF" BorderBrush="#2A2A40" FontSize="11" VerticalAlignment="Center" Padding="6,3" TextChanged="SearchBox_TextChanged" ToolTip="Buscar por alvo ou query (ex: v7_, email, Entrar)"/>
                 </StackPanel>
             </Border>
         </StackPanel>

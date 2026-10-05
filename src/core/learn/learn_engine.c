@@ -5,10 +5,10 @@
 #include <string.h>
 
 // ============================================================
-// InnoLearn — Motor de Decisão (Score Engine)
+// BotLearn — Motor de Decisão (Score Engine)
 // Implementa a busca ordenada por score, registro de hit/miss
 // e auto-discovery de novas estratégias.
-// Autor: Jordan Araujo | InnovPlay
+// Autor: Jordan Araujo | BotRpa
 // ============================================================
 
 // --- Helper Interno: Extrai centroide do XML (mesma lógica do f1_geraldata.c)
@@ -120,7 +120,7 @@ LearnFindResult learn_find_element(const char* target_id,
         if (cb) {
             char msg[256];
             snprintf(msg, sizeof(msg),
-                     "[InnoLearn] AVISO: Nenhuma estrategia para '%s'.",
+                     "[BotLearn] AVISO: Nenhuma estrategia para '%s'.",
                      target_id);
             cb(msg);
         }
@@ -133,7 +133,7 @@ LearnFindResult learn_find_element(const char* target_id,
     if (cb) {
         char msg[256];
         snprintf(msg, sizeof(msg),
-                 "[InnoLearn] Buscando '%s' (%d estrategias, melhor score: %d)...",
+                 "[BotLearn] Buscando '%s' (%d estrategias, melhor score: %d)...",
                  target_id, target->strategy_count,
                  target->strategies[0].score);
         cb(msg);
@@ -155,7 +155,7 @@ LearnFindResult learn_find_element(const char* target_id,
             if (cb) {
                 char msg[384];
                 snprintf(msg, sizeof(msg),
-                         "[InnoLearn] '%s' achado! Estrategia [%d/%d]:"
+                         "[BotLearn] '%s' achado! Estrategia [%d/%d]:"
                          " \"%s\" (score=%d) -> (%d,%d)",
                          target_id, i + 1, target->strategy_count,
                          s->query, s->score, cx, cy);
@@ -167,20 +167,20 @@ LearnFindResult learn_find_element(const char* target_id,
             if (cb) {
                 char msg[256];
                 snprintf(msg, sizeof(msg),
-                         "[InnoLearn]   -> Estrategia '%s' (score=%d): miss.",
+                         "[BotLearn]   -> Estrategia '%s' (score=%d): miss.",
                          s->query, s->score);
                 cb(msg);
             }
         }
     }
 
-    // Fallback de coordenada aprendida desativado (InnoLearn Estático)
+    // Fallback de coordenada aprendida desativado (BotLearn Estático)
 
     // Nada funcionou
     if (cb) {
         char msg[256];
         snprintf(msg, sizeof(msg),
-                 "[InnoLearn] FALHA TOTAL: '%s' nao encontrado com"
+                 "[BotLearn] FALHA TOTAL: '%s' nao encontrado com"
                  " nenhuma estrategia.", target_id);
         cb(msg);
     }
@@ -204,6 +204,7 @@ static void append_history(char* hist, char result) {
 
 // ============================================================
 // Registra SUCESSO — sobe o score da estratégia vencedora
+// Formato histórico: '1' = hit, '0' = miss (compatível com UI C#)
 // ============================================================
 void learn_record_hit(const char* target_id, const char* strategy_query) {
     if (!target_id || !strategy_query) return;
@@ -215,7 +216,7 @@ void learn_record_hit(const char* target_id, const char* strategy_query) {
             target->strategies[i].hits++;
             target->strategies[i].score += 5;
             if (target->strategies[i].score > 100) target->strategies[i].score = 100;
-            append_history(target->strategies[i].history, 'H');
+            append_history(target->strategies[i].history, '1');
             g_learn_db.dirty = 1;
             learn_db_save();
             return;
@@ -236,7 +237,7 @@ void learn_record_miss(const char* target_id, const char* strategy_query) {
             target->strategies[i].misses++;
             target->strategies[i].score -= 10;
             if (target->strategies[i].score < -100) target->strategies[i].score = -100;
-            append_history(target->strategies[i].history, 'M');
+            append_history(target->strategies[i].history, '0');
             g_learn_db.dirty = 1;
             learn_db_save();
             return;
@@ -294,7 +295,7 @@ void learn_auto_discover(const char* target_id, const char* new_query) {
         s->score = 50;
         s->hits = 1;
         s->misses = 0;
-        append_history(s->history, 'H');
+        append_history(s->history, '1');
         g_learn_db.dirty = 1;
         learn_db_save();
     }

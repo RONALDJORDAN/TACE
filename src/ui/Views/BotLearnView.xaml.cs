@@ -7,15 +7,15 @@ using System.Windows.Controls;
 using System.Windows.Threading;
 
 // ============================================================
-// InnoLearnView — Painel de Estatísticas de Aprendizado
+// BotLearnView — Painel de Estatísticas de Aprendizado
 // Exibe scores, acertos e falhas de cada estratégia de UI,
 // além do controle de reset com confirmação dupla.
-// Autor: Jordan Araujo | InnovPlay
+// Autor: Jordan Araujo | BotRpa
 // ============================================================
 
 using System.Windows.Data;
 
-namespace InnovPlayUI.Views
+namespace BotRpaUI.Views
 {
     // --- Conversores para Progresso de Grupo ---
     public class GroupProgressConverter : IValueConverter
@@ -65,6 +65,7 @@ namespace InnovPlayUI.Views
         public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture) => Binding.DoNothing;
     }
 
+    // Legenda unificada com o Mapa Neural: >50 verde, 1-50 amarelo, 0 neutro, <0 vermelho
     public class ScoreToBrushConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
@@ -72,20 +73,10 @@ namespace InnovPlayUI.Views
             if (value is double or int)
             {
                 double score = System.Convert.ToDouble(value);
-                if (score == 0) return new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(255, 255, 255)); // Branco
-                
-                if (score > 0)
-                {
-                    if (score >= 80) return new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(78, 222, 163)); // #4EDEA3 (Verde principal)
-                    if (score >= 40) return new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(100, 200, 150));
-                    return new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(150, 220, 180));
-                }
-                else
-                {
-                    if (score <= -80) return new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(255, 76, 76)); // #FF4C4C (Vermelho principal)
-                    if (score <= -40) return new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(255, 120, 76)); // Laranja
-                    return new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(255, 200, 76)); // Amarelo
-                }
+                if (score > 50) return new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#4EDEA3"));
+                if (score > 0) return new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#F5C542"));
+                if (score == 0) return new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#8E8EA0"));
+                return new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#FF6B6B"));
             }
             return System.Windows.Media.Brushes.Transparent;
         }
@@ -165,7 +156,7 @@ namespace InnovPlayUI.Views
         }
     }
 
-    public partial class InnoLearnView : UserControl
+    public partial class BotLearnView : UserControl
     {
         // ============================================================
         // P/Invoke — Estrutura espelho do LearnStrategyExport do C
@@ -189,22 +180,25 @@ namespace InnovPlayUI.Views
             public string History;
         }
 
-        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("BotEngine.dll", CallingConvention = CallingConvention.Cdecl)]
         private static extern int Engine_Learn_GetTargetCount();
 
-        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("BotEngine.dll", CallingConvention = CallingConvention.Cdecl)]
         private static extern int Engine_Learn_GetStrategyCount();
 
-        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("BotEngine.dll", CallingConvention = CallingConvention.Cdecl)]
         private static extern int Engine_Learn_GetStrategy(int index, out LearnStrategyExport outStrategy);
 
-        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("BotEngine.dll", CallingConvention = CallingConvention.Cdecl)]
         private static extern int Engine_Learn_ResetDB();
 
-        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("BotEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        private static extern int Engine_Learn_GetActiveMode();
+
+        [DllImport("BotEngine.dll", CallingConvention = CallingConvention.Cdecl)]
         private static extern int Engine_RefreshDevices();
 
-        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("BotEngine.dll", CallingConvention = CallingConvention.Cdecl)]
         private static extern int Engine_GetRegisteredTotal();
 
         // --- Estado interno de confirmação dupla ---
@@ -221,10 +215,10 @@ namespace InnovPlayUI.Views
         private System.Collections.Generic.List<LearnStrategyItem> _allStrategies = new();
         private ObservableCollection<LearnStrategyItem> _strategies = new();
 
-        public InnoLearnView()
+        public BotLearnView()
         {
             InitializeComponent();
-            InnovPlayUI.Core.InnoLearnBackupManager.ExecutarRotinaDiaria();
+            BotRpaUI.Core.BotLearnBackupManager.ExecutarRotinaDiaria();
             CarregarDados();
 
             _timer = new DispatcherTimer();
@@ -273,6 +267,7 @@ namespace InnovPlayUI.Views
                 int totalCount = Engine_GetRegisteredTotal();
                 LblTotal.Text = totalCount.ToString();
                 LblActive.Text = activeCount.ToString();
+                UpdateIaModeBadge();
             }
             catch (Exception)
             {
@@ -280,9 +275,37 @@ namespace InnovPlayUI.Views
             }
         }
 
+        private void UpdateIaModeBadge()
+        {
+            try
+            {
+                int mode = 0;
+                try { mode = Engine_Learn_GetActiveMode(); }
+                catch { mode = BotRpaUI.Core.SettingsManager.AiLearnActive ? 1 : 0; }
+                if (TxtIaMode == null || BadgeIaMode == null || DotIaMode == null) return;
+                if (mode == 1)
+                {
+                    TxtIaMode.Text = "IA ATIVA v2.0 (APRENDENDO)";
+                    TxtIaMode.Foreground = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#00E5FF"));
+                    DotIaMode.Fill = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#00E5FF"));
+                    BadgeIaMode.Background = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#0A2235"));
+                    BadgeIaMode.BorderBrush = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#00E5FF"));
+                }
+                else
+                {
+                    TxtIaMode.Text = "IA ESTÁTICA v2.0 (DETERMINÍSTICA)";
+                    TxtIaMode.Foreground = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#4EDEA3"));
+                    DotIaMode.Fill = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#4EDEA3"));
+                    BadgeIaMode.Background = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#12251B"));
+                    BadgeIaMode.BorderBrush = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#4EDEA3"));
+                }
+            }
+            catch { }
+        }
+
         private void CarregarBackups()
         {
-            var backups = InnovPlayUI.Core.InnoLearnBackupManager.ObterBackupsDisponiveis();
+            var backups = BotRpaUI.Core.BotLearnBackupManager.ObterBackupsDisponiveis();
             ListBackups.ItemsSource = backups;
         }
 
@@ -333,7 +356,7 @@ namespace InnovPlayUI.Views
         }
 
         // ============================================================
-        // Carrega os dados do banco InnoLearn via DLL e atualiza a UI
+        // Carrega os dados do banco BotLearn via DLL e atualiza a UI
         // ============================================================
         private void CarregarDados()
         {
@@ -374,7 +397,7 @@ namespace InnovPlayUI.Views
 
                 AplicarFiltroEAgrupamento();
 
-                // Atualizar seletor do simulador InnoAI 2.0
+                // Atualizar seletor do simulador BotAI 2.0
                 if (ComboSimulador != null)
                 {
                     var distinctElements = _allStrategies.Select(s => s.ElementoId).Distinct().OrderBy(x => x).ToList();
@@ -387,8 +410,8 @@ namespace InnovPlayUI.Views
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erro ao ler banco InnoLearn:\n{ex.Message}",
-                    "InnoLearn — Erro", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show($"Erro ao ler banco BotLearn:\n{ex.Message}",
+                    "BotLearn — Erro", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
 
             // Atualiza os cards de resumo
@@ -409,7 +432,7 @@ namespace InnovPlayUI.Views
 
             // Cancela qualquer confirmação dupla pendente ao recarregar
             _resetPrimarioConfirmado = false;
-            BtnResetDB.Content = "🗑  RESETAR BANCO InnoLearn";
+            BtnResetDB.Content = "🗑  RESETAR BANCO BotLearn";
 
             // Atualiza também a lista de backups
             CarregarBackups();
@@ -586,7 +609,7 @@ namespace InnovPlayUI.Views
                     if (_resetPrimarioConfirmado)
                     {
                         _resetPrimarioConfirmado = false;
-                        BtnResetDB.Content = "🗑  RESETAR BANCO InnoLearn";
+                        BtnResetDB.Content = "🗑  RESETAR BANCO BotLearn";
                     }
                 };
                 timer.Start();
@@ -600,7 +623,7 @@ namespace InnovPlayUI.Views
                     "coordenadas aprendidas) será apagado permanentemente.\n\n" +
                     "O sistema voltará ao estado inicial (seed).\n\n" +
                     "Deseja realmente continuar?",
-                    "InnoLearn — Confirmação Final de Reset",
+                    "BotLearn — Confirmação Final de Reset",
                     MessageBoxButton.YesNo,
                     MessageBoxImage.Warning,
                     MessageBoxResult.No);
@@ -612,16 +635,16 @@ namespace InnovPlayUI.Views
                         Engine_Learn_ResetDB();
                         CarregarDados();
                         MessageBox.Show(
-                            "Banco InnoLearn resetado com sucesso.\n" +
+                            "Banco BotLearn resetado com sucesso.\n" +
                             "O sistema voltou ao estado inicial (seed).",
-                            "InnoLearn — Reset Concluído",
+                            "BotLearn — Reset Concluído",
                             MessageBoxButton.OK,
                             MessageBoxImage.Information);
                     }
                     catch (Exception ex)
                     {
                         MessageBox.Show($"Erro ao resetar o banco:\n{ex.Message}",
-                            "InnoLearn — Erro Crítico",
+                            "BotLearn — Erro Crítico",
                             MessageBoxButton.OK,
                             MessageBoxImage.Error);
                     }
@@ -630,7 +653,7 @@ namespace InnovPlayUI.Views
                 {
                     // Cancelou na segunda confirmação
                     _resetPrimarioConfirmado = false;
-                    BtnResetDB.Content = "🗑  RESETAR BANCO InnoLearn";
+                    BtnResetDB.Content = "🗑  RESETAR BANCO BotLearn";
                 }
             }
         }
@@ -645,16 +668,16 @@ namespace InnovPlayUI.Views
                 var result = MessageBox.Show(
                     "ATENÇÃO: Tem certeza que deseja restaurar este backup?\n" +
                     "O estado atual do aprendizado será permanentemente sobrescrito pelas configurações dessa data.",
-                    "Restaurar Backup InnoLearn", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+                    "Restaurar Backup BotLearn", MessageBoxButton.YesNo, MessageBoxImage.Warning);
                 
                 if (result == MessageBoxResult.Yes)
                 {
-                    bool sucesso = InnovPlayUI.Core.InnoLearnBackupManager.RestaurarBackup(bkpPath);
+                    bool sucesso = BotRpaUI.Core.BotLearnBackupManager.RestaurarBackup(bkpPath);
                     if (sucesso)
                     {
                         MessageBox.Show(
                             "Backup restaurado com sucesso na pasta de dados.\n\n" +
-                            "⚠ IMPORTANTE: Para que o motor nativo (InnoEngine.dll) recarregue " +
+                            "⚠ IMPORTANTE: Para que o motor nativo (BotEngine.dll) recarregue " +
                             "as informações na memória, por favor, REINICIE o aplicativo.",
                             "Restauração Concluída", MessageBoxButton.OK, MessageBoxImage.Information);
                     }

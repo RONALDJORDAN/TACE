@@ -28,6 +28,7 @@ void config_load(AppConfig* cfg) {
     cfg->font_mono_size = 13;
     cfg->motor_c_enabled = 1;
     cfg->reverse_tethering_enabled = 1;
+    cfg->ai_learn_active = 0; // Padrão seguro: Estático/Determinístico
 
     char path[MAX_PATH];
     get_config_path(path, sizeof(path));
@@ -51,6 +52,10 @@ void config_load(AppConfig* cfg) {
             int val = 1;
             if (strstr(line, "false") || strstr(line, "0")) val = 0;
             cfg->reverse_tethering_enabled = val;
+        } else if (strstr(line, "\"ai_learn_active\"") || strstr(line, "\"ai_engine_active\"") || strstr(line, "\"botlearn_active\"")) {
+            int val = 0;
+            if (strstr(line, "true") || strstr(line, ": 1") || strstr(line, ":1")) val = 1;
+            cfg->ai_learn_active = val;
         }
     }
     fclose(f);
@@ -70,7 +75,8 @@ void config_save(const AppConfig* cfg) {
     fprintf(f, "  \"font_title_size\": %d,\n", cfg->font_title_size);
     fprintf(f, "  \"font_mono_size\": %d,\n", cfg->font_mono_size);
     fprintf(f, "  \"motor_c_enabled\": %s,\n", cfg->motor_c_enabled ? "true" : "false");
-    fprintf(f, "  \"reverse_tethering_enabled\": %s\n", cfg->reverse_tethering_enabled ? "true" : "false");
+    fprintf(f, "  \"reverse_tethering_enabled\": %s,\n", cfg->reverse_tethering_enabled ? "true" : "false");
+    fprintf(f, "  \"ai_learn_active\": %s\n", cfg->ai_learn_active ? "true" : "false");
     fprintf(f, "}\n");
     fclose(f);
 }

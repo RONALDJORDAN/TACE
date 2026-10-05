@@ -5,14 +5,50 @@
 #include <windows.h>
 
 // ============================================================
-// InnoLearn — Motor de Persistência (Parser/Writer JSON)
+// BotLearn — Motor de Persistência (Parser/Writer JSON)
 // Parser JSON minimalista sem dependência externa.
-// Formato alvo: data/inno_learn.json
-// Autor: Jordan Araujo | InnovPlay
+// Formato alvo: data/bot_learn.json
+// Autor: Jordan Araujo | BotRpa
 // ============================================================
 
 // Instância global do banco de conhecimento
 LearnDB g_learn_db = {0};
+
+// Modo de operação: 0 = Estático (padrão seguro), 1 = Ativo (persistente)
+int g_learn_active_mode = 0;
+
+int learn_get_active_mode(void) {
+    return g_learn_active_mode;
+}
+
+void learn_set_active_mode(int active) {
+    g_learn_active_mode = active ? 1 : 0;
+}
+
+// Lê config/settings.json e retorna 1 se ai_learn_active=true, 0 caso contrário
+static int learn_read_config_active(void) {
+    char exe_dir[MAX_PATH];
+    GetModuleFileNameA(NULL, exe_dir, MAX_PATH);
+    char* last = strrchr(exe_dir, '\\');
+    if (last) *last = '\0';
+    char candidate[MAX_PATH];
+    snprintf(candidate, sizeof(candidate), "%s\\config\\settings.json", exe_dir);
+    if (GetFileAttributesA(candidate) == INVALID_FILE_ATTRIBUTES) {
+        snprintf(candidate, sizeof(candidate), "%s\\..\\..\\config\\settings.json", exe_dir);
+    }
+    FILE* f = fopen(candidate, "r");
+    if (!f) return 0;
+    char line[512];
+    int active = 0;
+    while (fgets(line, sizeof(line), f)) {
+        if (strstr(line, "\"ai_learn_active\"") || strstr(line, "\"ai_engine_active\"") || strstr(line, "\"botlearn_active\"")) {
+            if (strstr(line, "true") || strstr(line, ": 1") || strstr(line, ":1")) active = 1;
+            break;
+        }
+    }
+    fclose(f);
+    return active;
+}
 
 // --- Helpers Internos ---
 
@@ -25,7 +61,7 @@ static void get_db_path(char* out_path, int max_len) {
 
     // Tenta caminho Release primeiro, depois fallback para desenvolvimento
     char candidate[MAX_PATH];
-    snprintf(candidate, sizeof(candidate), "%s\\data\\inno_learn.json", exe_dir);
+    snprintf(candidate, sizeof(candidate), "%s\\data\\bot_learn.json", exe_dir);
     if (GetFileAttributesA(candidate) == INVALID_FILE_ATTRIBUTES) {
         // Verifica se o diretório data existe no Release
         char data_dir[MAX_PATH];
@@ -33,7 +69,7 @@ static void get_db_path(char* out_path, int max_len) {
         if (GetFileAttributesA(data_dir) == INVALID_FILE_ATTRIBUTES) {
             // Fallback para raiz do projeto em desenvolvimento
             snprintf(candidate, sizeof(candidate),
-                     "%s\\..\\..\\data\\inno_learn.json", exe_dir);
+                     "%s\\..\\..\\data\\bot_learn.json", exe_dir);
         }
     }
     strncpy(out_path, candidate, max_len - 1);
@@ -430,20 +466,169 @@ static void learn_db_init_defaults(void) {
     g_learn_db.dirty = 1; // Força save inicial com o seed completo
 }
 
+// Escapa aspas/barra para JSON
+static void json_escape_write(FILE* f, const char* s) {
+    for (; s && *s; s++) {
+        if (*s == '"' || *s == '\\') fputc('\\', f);
+        fputc(*s, f);
+    }
+}
+
+// Overlay: aplica scores persistidos sobre os seeds (modo Ativo)
+static void learn_db_apply_overlay(const char* json) {
+    if (!json) return;
+    const char* p = json;
+    char cur_id[LEARN_MAX_ID_LEN] = {0};
+    while ((p = strstr(p, "\"id\"")) != NULL) {
+        char id[LEARN_MAX_ID_LEN] = {0};
+        const char* c = strchr(p, ':');
+        if (!c) break;
+        c++;
+        while (*c == ' ' || *c == '\t' || *c == '"') c++;
+        int i = 0;
+        while (*c && *c != '"' && i < LEARN_MAX_ID_LEN - 1) {
+            if (*c == '\\' && *(c+1)) c++;
+            id[i++] = *c++;
+        }
+        if (id[0]) strncpy(cur_id, id, sizeof(cur_id)-1);
+        p = c;
+        // Procura query/score/hits/misses/history após este id
+        const char* qpos = strstr(p, "\"query\"");
+        const char* next_id = strstr(p + 4, "\"id\"");
+        if (qpos && (!next_id || qpos < next_id)) {
+            char query[LEARN_MAX_QUERY_LEN] = {0};
+            const char* qc = strchr(qpos, ':');
+            if (qc) {
+                qc++;
+                while (*qc == ' ' || *qc == '\t' || *qc == '"') qc++;
+                int j = 0;
+                while (*qc && *qc != '"' && j < LEARN_MAX_QUERY_LEN - 1) {
+                    if (*qc == '\\' && *(qc+1)) qc++;
+                    query[j++] = *qc++;
+                }
+            }
+            int score = 0, hits = 0, misses = 0;
+            char history[16] = {0};
+            const char* spos = strstr(qpos, "\"score\"");
+            if (spos && (!next_id || spos < next_id)) {
+                const char* sc = strchr(spos, ':');
+                if (sc) score = atoi(sc + 1);
+            }
+            const char* hpos = strstr(qpos, "\"hits\"");
+            if (hpos && (!next_id || hpos < next_id)) {
+                const char* hc = strchr(hpos, ':');
+                if (hc) hits = atoi(hc + 1);
+            }
+            const char* mpos = strstr(qpos, "\"misses\"");
+            if (mpos && (!next_id || mpos < next_id)) {
+                const char* mc = strchr(mpos, ':');
+                if (mc) misses = atoi(mc + 1);
+            }
+            const char* ypos = strstr(qpos, "\"history\"");
+            if (ypos && (!next_id || ypos < next_id)) {
+                const char* yc = strchr(ypos, ':');
+                if (yc) {
+                    yc++;
+                    while (*yc == ' ' || *yc == '\t' || *yc == '"') yc++;
+                    int k = 0;
+                    while (*yc && *yc != '"' && k < 15) {
+                        if (*yc == '1' || *yc == '0') history[k++] = *yc;
+                        yc++;
+                    }
+                }
+            }
+            if (cur_id[0] && query[0]) {
+                LearnTarget* t = learn_db_get_or_create_target(cur_id);
+                if (t) {
+                    int found = 0;
+                    for (int k = 0; k < t->strategy_count; k++) {
+                        if (strcmp(t->strategies[k].query, query) == 0) {
+                            if (score > 100) score = 100;
+                            if (score < -100) score = -100;
+                            t->strategies[k].score = score;
+                            t->strategies[k].hits = hits;
+                            t->strategies[k].misses = misses;
+                            if (history[0]) strncpy(t->strategies[k].history, history, sizeof(t->strategies[k].history)-1);
+                            found = 1;
+                            break;
+                        }
+                    }
+                    if (!found && t->strategy_count < LEARN_MAX_STRATEGIES) {
+                        LearnStrategy* s = &t->strategies[t->strategy_count++];
+                        memset(s, 0, sizeof(LearnStrategy));
+                        strncpy(s->query, query, LEARN_MAX_QUERY_LEN - 1);
+                        if (score > 100) score = 100;
+                        if (score < -100) score = -100;
+                        s->score = score;
+                        s->hits = hits;
+                        s->misses = misses;
+                        if (history[0]) strncpy(s->history, history, sizeof(s->history)-1);
+                    }
+                }
+            }
+            p = qpos + 7;
+        } else {
+            p += 4;
+        }
+    }
+}
+
 // ============================================================
 // LOAD — Carrega o banco do JSON
+// Estático: seed fixo. Ativo: seed + overlay bot_learn.json
 // ============================================================
 int learn_db_load(void) {
-    // Inicializa sempre com os valores padrão de seed (InnoLearn Estático)
     learn_db_init_defaults();
+    int want_active = g_learn_active_mode || learn_read_config_active();
+    g_learn_active_mode = want_active ? 1 : 0;
+    if (!g_learn_active_mode) return 1;
+    char path[MAX_PATH];
+    get_db_path(path, sizeof(path));
+    FILE* f = fopen(path, "rb");
+    if (!f) return 1;
+    fseek(f, 0, SEEK_END);
+    long sz = ftell(f);
+    fseek(f, 0, SEEK_SET);
+    if (sz <= 0 || sz > 1024*1024) { fclose(f); return 1; }
+    char* buf = (char*)malloc((size_t)sz + 1);
+    if (!buf) { fclose(f); return 1; }
+    size_t rd = fread(buf, 1, (size_t)sz, f);
+    fclose(f);
+    buf[rd] = '\0';
+    learn_db_apply_overlay(buf);
+    free(buf);
+    g_learn_db.dirty = 0;
     return 1;
 }
 
 // ============================================================
 // SAVE — Persiste o banco em JSON
+// Estático: no-op. Ativo: escreve bot_learn.json
 // ============================================================
 int learn_db_save(void) {
-    // No-op (InnoLearn Estático)
+    if (!g_learn_active_mode) return 1;
+    char path[MAX_PATH];
+    get_db_path(path, sizeof(path));
+    ensure_data_dir(path);
+    FILE* f = fopen(path, "w");
+    if (!f) return 0;
+    fprintf(f, "{\n  \"version\": %d,\n  \"mode\": \"active\",\n  \"targets\": [\n", g_learn_db.version);
+    for (int i = 0; i < g_learn_db.target_count; i++) {
+        LearnTarget* t = &g_learn_db.targets[i];
+        for (int j = 0; j < t->strategy_count; j++) {
+            LearnStrategy* s = &t->strategies[j];
+            fprintf(f, "    {\"id\": \"");
+            json_escape_write(f, t->id);
+            fprintf(f, "\", \"query\": \"");
+            json_escape_write(f, s->query);
+            fprintf(f, "\", \"score\": %d, \"hits\": %d, \"misses\": %d, \"history\": \"%s\"}%s\n",
+                s->score, s->hits, s->misses, s->history,
+                (i == g_learn_db.target_count-1 && j == t->strategy_count-1) ? "" : ",");
+        }
+    }
+    fprintf(f, "  ]\n}\n");
+    fclose(f);
+    g_learn_db.dirty = 0;
     return 1;
 }
 

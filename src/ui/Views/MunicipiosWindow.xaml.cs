@@ -8,14 +8,14 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 
-namespace InnovPlayUI.Views
+namespace BotRpaUI.Views
 {
     public partial class MunicipiosWindow : Window
     {
-        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("BotEngine.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern int Engine_GetMunicipios([Out, MarshalAs(UnmanagedType.LPArray, SizeParamIndex = 1)] MunicipioModel[] out_lista, int max_items);
 
-        [DllImport("InnoEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        [DllImport("BotEngine.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern int Engine_SaveMunicipios([In, MarshalAs(UnmanagedType.LPArray, SizeParamIndex = 1)] MunicipioModel[] lista, int count);
 
         private ObservableCollection<MunicipioModel> _lista;
@@ -82,14 +82,14 @@ namespace InnovPlayUI.Views
                 TxtWallpaper.Text = System.IO.Path.GetFileName(m.WallpaperPath);
                 TxtWallpaper.Tag = m.WallpaperPath;
                 
-                string safeName = InnovPlayUI.Core.PathHelper.SanitizeFolderName(m.Nome);
-                string safeNameAscii = InnovPlayUI.Core.PathHelper.SanitizeFolderNameAscii(m.Nome);
-                string root = InnovPlayUI.Core.PathHelper.GetRootDirectory();
+                string safeName = BotRpaUI.Core.PathHelper.SanitizeFolderName(m.Nome);
+                string safeNameAscii = BotRpaUI.Core.PathHelper.SanitizeFolderNameAscii(m.Nome);
+                string root = BotRpaUI.Core.PathHelper.GetRootDirectory();
                 
-                string fullApk = InnovPlayUI.Core.PathHelper.GetDynamicApkPath(m.Nome);
+                string fullApk = BotRpaUI.Core.PathHelper.GetDynamicApkPath(m.Nome);
                 TxtApk.Text = !string.IsNullOrEmpty(fullApk) ? System.IO.Path.GetFileName(fullApk) : "";
 
-                string fullPacote = InnovPlayUI.Core.PathHelper.GetDynamicPacotePath(m.Nome);
+                string fullPacote = BotRpaUI.Core.PathHelper.GetDynamicPacotePath(m.Nome);
                 TxtPacote.Text = !string.IsNullOrEmpty(fullPacote) ? System.IO.Path.GetFileName(fullPacote) : "";
             }
             else
@@ -156,11 +156,11 @@ namespace InnovPlayUI.Views
                 return;
             }
 
-            string safeName = InnovPlayUI.Core.PathHelper.SanitizeFolderNameAscii(TxtNome.Text);
+            string safeName = BotRpaUI.Core.PathHelper.SanitizeFolderNameAscii(TxtNome.Text);
             
             // Diretório padronizado externo baseando-se no tipo de arquivo
             string tipoPasta = filter.Contains(".apk") ? "apks" : "pacotes";
-            string externalBaseDir = System.IO.Path.Combine(InnovPlayUI.Core.PathHelper.GetRootDirectory(), "data", "output", "arquivos", tipoPasta);
+            string externalBaseDir = System.IO.Path.Combine(BotRpaUI.Core.PathHelper.GetRootDirectory(), "data", "output", "arquivos", tipoPasta);
             string externalMunicipioDir = System.IO.Path.Combine(externalBaseDir, safeName);
             
             try
@@ -195,9 +195,9 @@ namespace InnovPlayUI.Views
                     });
 
                     // 1. Limpa arquivos antigos de TODAS as pastas candidatas do município para não deixar resíduos fantasma
-                    string root = InnovPlayUI.Core.PathHelper.GetRootDirectory();
+                    string root = BotRpaUI.Core.PathHelper.GetRootDirectory();
                     string rawName = TxtNome.Text.Trim();
-                    string cleanName = InnovPlayUI.Core.PathHelper.SanitizeFolderName(rawName);
+                    string cleanName = BotRpaUI.Core.PathHelper.SanitizeFolderName(rawName);
                     string extPattern = filter.Contains(".apk") ? "*.apk" : "*.zip";
 
                     string[] candidatePurgeDirs = new string[] {
@@ -256,7 +256,7 @@ namespace InnovPlayUI.Views
 
             try
             {
-                string root = InnovPlayUI.Core.PathHelper.GetRootDirectory();
+                string root = BotRpaUI.Core.PathHelper.GetRootDirectory();
                 string fullPath = System.IO.Path.Combine(root, relativePath.Replace('/', '\\'));
                 string fileName = System.IO.Path.GetFileName(relativePath);
                 string safeName = string.Join("_", TxtNome.Text.Split(System.IO.Path.GetInvalidFileNameChars()));
@@ -341,10 +341,10 @@ namespace InnovPlayUI.Views
                 var result = MessageBox.Show($"Tem certeza que deseja excluir o município '{municipioNome}' e TODOS os seus arquivos e pastas locais?", "Confirmar Exclusão", MessageBoxButton.YesNo, MessageBoxImage.Warning);
                 if (result == MessageBoxResult.Yes)
                 {
-                    InnovPlayUI.Core.PathHelper.DeleteMunicipioFolders(municipioNome);
+                    BotRpaUI.Core.PathHelper.DeleteMunicipioFolders(municipioNome);
                     _lista.RemoveAt(idx);
                     SalvarBanco();
-                    MessageBox.Show($"Município '{municipioNome}' e suas pastas de arquivos foram excluídos com sucesso!", "InnovTech", MessageBoxButton.OK, MessageBoxImage.Information);
+                    MessageBox.Show($"Município '{municipioNome}' e suas pastas de arquivos foram excluídos com sucesso!", "Bot_RPA", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
             }
         }
@@ -378,7 +378,7 @@ namespace InnovPlayUI.Views
             }
 
             SalvarBanco();
-            MessageBox.Show("Dados salvos com sucesso no cofre!", "InnovTech", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show("Dados salvos com sucesso no cofre!", "Bot_RPA", MessageBoxButton.OK, MessageBoxImage.Information);
         }
     }
 }

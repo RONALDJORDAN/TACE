@@ -1,4 +1,4 @@
-<UserControl x:Class="InnovPlayUI.Views.RelatoriosView"
+<UserControl x:Class="BotRpaUI.Views.RelatoriosView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -487,6 +487,7 @@
                             <Button Content="🗑️ Excluir" Background="#E63946" Foreground="#FFFFFF" FontWeight="Bold" BorderThickness="0" Padding="12,6" Width="90" Cursor="Hand" Margin="6,0,0,0" Click="BtnExcluir_Click"/>
                             <Button Content="📊 Excel" Background="#0A0A0F" Foreground="#E3E0F2" BorderBrush="#2A2A40" BorderThickness="1" Padding="12,6" Width="80" Cursor="Hand" Margin="6,0,0,0" Click="BtnExportarExcel_Click"/>
                             <Button x:Name="BtnSyncInnovStock" Content="☁️ Sync InnovStock" Background="#1D4ED8" Foreground="#FFFFFF" FontWeight="Bold" BorderThickness="0" Padding="12,6" Cursor="Hand" Margin="6,0,0,0" Click="BtnSyncInnovStock_Click" ToolTip="Sincroniza todos os dispositivos locais diretamente com a nuvem do InnovStock"/>
+                            <Button x:Name="BtnBaixarInnovStock" Content="⬇ Baixar InnovStock" Background="#0E7490" Foreground="#FFFFFF" FontWeight="Bold" BorderThickness="0" Padding="12,6" Cursor="Hand" Margin="6,0,0,0" Click="BtnBaixarInnovStock_Click" ToolTip="Baixa os dispositivos da nuvem do InnovStock para este PC (só adiciona/atualiza, nunca apaga)"/>
                         </StackPanel>
                     </Grid>
                 </Grid>
@@ -710,7 +711,7 @@
                                                         <Border Background="#1E1E30" Width="70" Height="70" CornerRadius="4">
                                                             <TextBlock Text="QR CODE" Foreground="#8570E6" FontSize="10" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                                         </Border>
-                                                        <TextBlock Text="InnovTech" Foreground="#85859E" FontSize="8" Margin="0,3,0,0" HorizontalAlignment="Center"/>
+                                                        <TextBlock Text="Bot_RPA" Foreground="#85859E" FontSize="8" Margin="0,3,0,0" HorizontalAlignment="Center"/>
                                                     </StackPanel>
                                                 </Border>
                                                 <!-- Dados Lado Direito -->
@@ -720,7 +721,7 @@
                                                         <TextBlock Text="N/S: T30764..." Foreground="#5EB1FF" FontSize="8" FontFamily="Consolas" Margin="0,2,0,0"/>
                                                         <TextBlock Text="MAC: AA:BB:CC:DD" Foreground="#4EDEA3" FontSize="8" FontFamily="Consolas" Margin="0,2,0,0"/>
                                                         <Border Background="#513BA6" CornerRadius="2" Padding="4,1" Margin="0,4,0,0" HorizontalAlignment="Left">
-                                                            <TextBlock Text="Plataforma InnovTech" Foreground="#FFFFFF" FontSize="7" FontWeight="Bold"/>
+                                                            <TextBlock Text="Plataforma Bot_RPA" Foreground="#FFFFFF" FontSize="7" FontWeight="Bold"/>
                                                         </Border>
                                                     </StackPanel>
                                                 </Border>

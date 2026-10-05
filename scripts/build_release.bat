@@ -2,7 +2,7 @@
 setlocal enabledelayedexpansion
 
 echo ========================================================
-echo [Inno RPA] Gerador de Release (Versao Portatil PnP)
+echo [Bot_RPA] Gerador de Release (Versao Portatil PnP)
 echo ========================================================
 echo.
 
@@ -17,36 +17,49 @@ set "BUILD_MODE="
 
 
 REM 2. Prepara a pasta de Release
-set RELEASE_DIR=InnoRPA_Release
+set RELEASE_DIR=BotRPA_Release
 echo [*] Criando pasta de Release: %RELEASE_DIR%
 if exist "%RELEASE_DIR%" rmdir /s /q "%RELEASE_DIR%"
 mkdir "%RELEASE_DIR%"
 
 REM 3. Copiando Executaveis e Motor DLL
 echo [*] Copiando arquivos binarios...
-copy /y "data\output\InnoRPAui.exe" "%RELEASE_DIR%\" >nul
-copy /y "data\output\InnoEngine.dll" "%RELEASE_DIR%\" >nul
+copy /y "data\output\BotRPAui.exe" "%RELEASE_DIR%\" >nul
+copy /y "data\output\BotEngine.dll" "%RELEASE_DIR%\" >nul
 
 REM 4. Copiando Dependencias Estruturais
 echo [*] Copiando pasta config e tools...
 xcopy /s /i /y "config" "%RELEASE_DIR%\config" >nul
-xcopy /s /i /y "tools" "%RELEASE_DIR%\tools" >nul
+REM Copia seletiva das tools (SEM tools\mingw64 ~= 968MB de compilador — nao vai para o usuario)
+mkdir "%RELEASE_DIR%\tools" 2>nul
+if exist "tools\platform-tools" xcopy /s /e /i /y "tools\platform-tools" "%RELEASE_DIR%\tools\platform-tools" >nul
+if exist "tools\reverse_tethering" xcopy /s /e /i /y "tools\reverse_tethering" "%RELEASE_DIR%\tools\reverse_tethering" >nul
+if exist "tools\mac_address_finder.apk" copy /y "tools\mac_address_finder.apk" "%RELEASE_DIR%\tools\" >nul
+echo [+][OK] Tools copiadas (platform-tools + reverse_tethering, sem mingw64).
 
-REM 5. Criando pastas essenciais e copiando dados existentes do desenvolvedor
-echo [*] Copiando base de dados e aprendizado da IA (inno_database.db / inno_learn.json)...
+REM 4b. Script de aplicacao OTA (usado pelo OtaUpdateManager.ApplyUpdate)
+mkdir "%RELEASE_DIR%\scripts" 2>nul
+if exist "scripts\apply_ota_update.bat" copy /y "scripts\apply_ota_update.bat" "%RELEASE_DIR%\scripts\" >nul
+
+REM 5. Banco de dados do sistema COM os registros dos aparelhos (ordem explicita
+REM do usuario em 28/09/2026): embarca data\bot_database.db (410 aparelhos) para que
+REM Relatorios > Banco de Dados abra com os registros. InitializeDatabase() usa
+REM CREATE TABLE IF NOT EXISTS, entao o banco embarcado e preservado no PC do usuario.
+echo [*] Embarcando banco de dados com os registros dos aparelhos...
 mkdir "%RELEASE_DIR%\data" 2>nul
-if exist "data\output\data\inno_database.db" (
-    copy /y "data\output\data\inno_database.db" "%RELEASE_DIR%\data\" >nul
-    echo [+][OK] Banco de dados inno_database.db copiado.
+if exist "data\bot_database.db" (
+    copy /y "data\bot_database.db" "%RELEASE_DIR%\data\bot_database.db" >nul
+    echo [+][OK] bot_database.db embarcado com os registros.
 ) else (
-    echo [!] Aviso: Banco de dados inno_database.db nao encontrado em data\output\data\.
+    echo [!] AVISO: data\bot_database.db nao encontrado — release saira sem registros.
 )
+echo [*] Criando pastas de aprendizado da IA (bot_learn.json)...
 
-if exist "data\output\data\inno_learn.json" (
-    copy /y "data\output\data\inno_learn.json" "%RELEASE_DIR%\data\" >nul
-    echo [+][OK] Aprendizado InnoLearn copiado.
-) else if exist "data\inno_learn.json" (
-    copy /y "data\inno_learn.json" "%RELEASE_DIR%\data\" >nul
+if exist "data\output\data\bot_learn.json" (
+    copy /y "data\output\data\bot_learn.json" "%RELEASE_DIR%\data\" >nul
+    echo [+][OK] Aprendizado BotLearn copiado.
+) else if exist "data\bot_learn.json" (
+    copy /y "data\bot_learn.json" "%RELEASE_DIR%\data\" >nul
 )
 
 echo [*] Criando pastas de sistema de logs e registros...

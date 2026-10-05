@@ -5,7 +5,7 @@ using System.Net.Http;
 using System.Reflection;
 using System.Windows;
 
-namespace InnovPlayUI.Core
+namespace BotRpaUI.Core
 {
     public static class PreflightChecker
     {
@@ -14,7 +14,7 @@ namespace InnovPlayUI.Core
             try
             {
                 // Caminho da raiz do sistema
-                string baseDir = InnovPlayUI.Core.PathHelper.GetRootDirectory();
+                string baseDir = BotRpaUI.Core.PathHelper.GetRootDirectory();
                 
                 string toolsDir = Path.Combine(baseDir, "tools", "reverse_tethering");
                 string gnirehtetExe = Path.Combine(toolsDir, "gnirehtet.exe");
@@ -26,7 +26,7 @@ namespace InnovPlayUI.Core
                 if (!File.Exists(adbExe))
                 {
                     MessageBox.Show(
-                        "O InnovPlay RPA detectou que o motor de comunicacao ADB nao esta instalado.\n" +
+                        "O BotRpa RPA detectou que o motor de comunicacao ADB nao esta instalado.\n" +
                         "Iniciando o download e a configuracao automatica do ADB oficial do Google. Por favor, aguarde.",
                         "Configuracao PnP do ADB",
                         MessageBoxButton.OK,
@@ -55,7 +55,7 @@ namespace InnovPlayUI.Core
 
                     // Extraindo o recurso embutido (Zip invisível compilado dentro do próprio .exe)
                     var assembly = Assembly.GetExecutingAssembly();
-                    string resourceName = "InnovPlayUI.Resources.gnirehtet.zip";
+                    string resourceName = "BotRpaUI.Resources.gnirehtet.zip";
 
                     using (Stream? stream = assembly.GetManifestResourceStream(resourceName))
                     {

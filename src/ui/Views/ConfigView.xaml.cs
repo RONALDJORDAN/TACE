@@ -7,9 +7,9 @@ using System.Windows.Controls;
 using Microsoft.Win32;
 using System.Net.NetworkInformation;
 using System.Collections.ObjectModel;
-using InnovPlayUI.Core;
+using BotRpaUI.Core;
 
-namespace InnovPlayUI.Views
+namespace BotRpaUI.Views
 {
     public partial class ConfigView : UserControl
     {
@@ -30,12 +30,29 @@ namespace InnovPlayUI.Views
                 SettingsManager.Load();
                 
                 ToggleMotor.IsChecked = SettingsManager.MotorCEnabled;
+                ToggleAiLearn.IsChecked = SettingsManager.AiLearnActive;
+                UpdateAiModeBadge(SettingsManager.AiLearnActive);
                 ToggleTethering.IsChecked = SettingsManager.ReverseTetheringEnabled;
                 ToggleShowDisconnected.IsChecked = SettingsManager.ShowDisconnectedDevices;
+                ToggleCloudPull.IsChecked = SettingsManager.CloudPullAuto;
+                foreach (var it in CmbCloudInterval.Items)
+                {
+                    if (it is System.Windows.Controls.ComboBoxItem ci && ci.Tag is string t && t == SettingsManager.CloudSyncMinutes.ToString())
+                    {
+                        CmbCloudInterval.SelectedItem = it;
+                        break;
+                    }
+                }
 
                 ToggleDeviceVision7.IsChecked = SettingsManager.EnableDeviceVision7;
                 ToggleDeviceTabMulti.IsChecked = SettingsManager.EnableDeviceTabMulti;
                 ToggleDeviceNokiaT20.IsChecked = SettingsManager.EnableDeviceNokiaT20;
+
+                ToggleTelemetry.IsChecked = SettingsManager.TelemetryEnabled;
+
+                TxtFirebaseEmail.Text = SettingsManager.FirebaseEmail;
+                TxtFirebasePassword.Password = SettingsManager.FirebasePassword;
+                AtualizarStatusFirebase();
 
                 UpdateInterfaceSelectionUI(SettingsManager.UsbMonitorInterface);
             }
@@ -56,12 +73,18 @@ namespace InnovPlayUI.Views
             try
             {
                 SettingsManager.MotorCEnabled = ToggleMotor.IsChecked == true;
+                SettingsManager.AiLearnActive = ToggleAiLearn.IsChecked == true;
+                UpdateAiModeBadge(SettingsManager.AiLearnActive);
+                try { Engine_Learn_SetActiveMode(SettingsManager.AiLearnActive ? 1 : 0); } catch { }
                 SettingsManager.ReverseTetheringEnabled = ToggleTethering.IsChecked == true;
                 SettingsManager.ShowDisconnectedDevices = ToggleShowDisconnected.IsChecked == true;
+                SettingsManager.CloudPullAuto = ToggleCloudPull.IsChecked == true;
+                SettingsManager.CloudAutoSync = ToggleCloudPull.IsChecked == true;
 
                 SettingsManager.EnableDeviceVision7 = ToggleDeviceVision7.IsChecked == true;
                 SettingsManager.EnableDeviceTabMulti = ToggleDeviceTabMulti.IsChecked == true;
                 SettingsManager.EnableDeviceNokiaT20 = ToggleDeviceNokiaT20.IsChecked == true;
+                SettingsManager.TelemetryEnabled = ToggleTelemetry.IsChecked == true;
 
                 SettingsManager.Save();
             }
@@ -144,13 +167,13 @@ namespace InnovPlayUI.Views
             SwitchSubmodule(BtnSubAparelhos, PanelAparelhos);
         }
 
-        private InnovPlayUI.Core.OtaUpdateManager _otaManager = new InnovPlayUI.Core.OtaUpdateManager();
-        private InnovPlayUI.Core.OtaManifest? _availableManifest = null;
+        private BotRpaUI.Core.OtaUpdateManager _otaManager = new BotRpaUI.Core.OtaUpdateManager();
+        private BotRpaUI.Core.OtaManifest? _availableManifest = null;
 
         private void BtnSubOta_Click(object sender, RoutedEventArgs e)
         {
             SwitchSubmodule(BtnSubOta, PanelOta);
-            TxtCurrentVersion.Text = "v" + InnovPlayUI.Core.OtaUpdateManager.CurrentVersion;
+            TxtCurrentVersion.Text = "v" + BotRpaUI.Core.OtaUpdateManager.CurrentVersion;
             _ = _otaManager.SendTelemetryPingAsync();
         }
 
@@ -201,12 +224,48 @@ namespace InnovPlayUI.Views
             activePanel.Visibility = Visibility.Visible;
         }
 
+        [System.Runtime.InteropServices.DllImport("BotEngine.dll", CallingConvention = System.Runtime.InteropServices.CallingConvention.Cdecl)]
+        private static extern int Engine_Learn_SetActiveMode(int active);
+
+        private void UpdateAiModeBadge(bool active)
+        {
+            try
+            {
+                if (TxtAiMode == null || BadgeAiMode == null) return;
+                if (active)
+                {
+                    TxtAiMode.Text = "ATIVO";
+                    TxtAiMode.Foreground = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#00E5FF"));
+                    BadgeAiMode.Background = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#0A2235"));
+                    BadgeAiMode.BorderBrush = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#00E5FF"));
+                }
+                else
+                {
+                    TxtAiMode.Text = "ESTÁTICO";
+                    TxtAiMode.Foreground = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#4EDEA3"));
+                    BadgeAiMode.Background = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#12251B"));
+                    BadgeAiMode.BorderBrush = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#4EDEA3"));
+                }
+            }
+            catch { }
+        }
+
         private void ToggleMotor_Checked(object sender, RoutedEventArgs e)
         {
             SaveSettings();
         }
 
         private void ToggleMotor_Unchecked(object sender, RoutedEventArgs e)
+        {
+            SaveSettings();
+        }
+
+        private void ToggleAiLearn_Checked(object sender, RoutedEventArgs e)
+        {
+            SaveSettings();
+        }
+
+        private void ToggleAiLearn_Unchecked(object sender, RoutedEventArgs e)
         {
             SaveSettings();
         }
@@ -231,6 +290,100 @@ namespace InnovPlayUI.Views
             SaveSettings();
         }
 
+        private void TxtFirebaseAccount_Changed(object sender, RoutedEventArgs e)
+        {
+            if (_isInitializingSettings) return;
+            try
+            {
+                SettingsManager.FirebaseEmail = TxtFirebaseEmail.Text?.Trim() ?? string.Empty;
+                SettingsManager.FirebasePassword = TxtFirebasePassword.Password ?? string.Empty;
+                AtualizarStatusFirebase();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[ConfigView] Erro ao salvar conta Firebase: {ex.Message}");
+            }
+        }
+
+        private void AtualizarStatusFirebase()
+        {
+            try
+            {
+                if (TxtFirebaseStatus == null) return;
+                if (!BotRpaUI.Core.FirebaseAuthService.HasCredentials)
+                {
+                    TxtFirebaseStatus.Text = "Não configurado — sync de nuvem desativado.";
+                }
+                else
+                {
+                    TxtFirebaseStatus.Text = "Conta configurada. Use “Testar conexão” para validar.";
+                }
+            }
+            catch { }
+        }
+
+        private async void BtnTestarFirebase_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                SettingsManager.FirebaseEmail = TxtFirebaseEmail.Text?.Trim() ?? string.Empty;
+                SettingsManager.FirebasePassword = TxtFirebasePassword.Password ?? string.Empty;
+                if (BtnTestarFirebase != null) { BtnTestarFirebase.IsEnabled = false; BtnTestarFirebase.Content = "⏳ Testando..."; }
+                if (TxtFirebaseStatus != null) TxtFirebaseStatus.Text = "Conectando ao InnovStock...";
+                BotRpaUI.Core.FirebaseAuthService.Invalidate();
+                string token = await BotRpaUI.Core.FirebaseAuthService.GetIdTokenAsync();
+                if (string.IsNullOrEmpty(token))
+                {
+                    if (TxtFirebaseStatus != null) TxtFirebaseStatus.Text = "❌ Falha no login. Confira e-mail e senha da conta.";
+                    MessageBox.Show("Não foi possível autenticar no InnovStock. Confira o e-mail e a senha.", "Teste de conexão", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+                else
+                {
+                    var (imp, atu, _) = await BotRpaUI.Core.SQLiteDatabaseManager.BaixarDoInnovStockAsync();
+                    if (TxtFirebaseStatus != null) TxtFirebaseStatus.Text = $"✅ Conectado! Nuvem: {imp} novo(s), {atu} atualizado(s).";
+                    MessageBox.Show($"Conexão OK! A nuvem retornou {imp} novo(s) e {atu} atualizado(s) para este PC.", "Teste de conexão", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                if (TxtFirebaseStatus != null) TxtFirebaseStatus.Text = "❌ Erro: " + ex.Message;
+            }
+            finally
+            {
+                if (BtnTestarFirebase != null) { BtnTestarFirebase.IsEnabled = true; BtnTestarFirebase.Content = "🔌 Testar conexão"; }
+            }
+        }
+
+        private void ToggleCloudPull_Checked(object sender, RoutedEventArgs e)
+        {
+            SaveSettings();
+            BotRpaUI.Core.CloudAutoSyncService.RestartTimer();
+        }
+
+        private void ToggleCloudPull_Unchecked(object sender, RoutedEventArgs e)
+        {
+            SaveSettings();
+            BotRpaUI.Core.CloudAutoSyncService.RestartTimer();
+        }
+
+        private void CmbCloudInterval_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (_isInitializingSettings) return;
+            try
+            {
+                if (CmbCloudInterval.SelectedItem is System.Windows.Controls.ComboBoxItem item
+                    && item.Tag is string tag && int.TryParse(tag, out int min))
+                {
+                    SettingsManager.CloudSyncMinutes = min;
+                    BotRpaUI.Core.CloudAutoSyncService.RestartTimer();
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[ConfigView] Erro ao salvar intervalo da nuvem: {ex.Message}");
+            }
+        }
+
         private void ToggleDevice_Changed(object sender, RoutedEventArgs e)
         {
             SaveSettings();
@@ -242,7 +395,7 @@ namespace InnovPlayUI.Views
             {
                 SaveFileDialog sfd = new SaveFileDialog();
                 sfd.Filter = "Inno Backup (*.zip)|*.zip";
-                sfd.FileName = "Backup_InnoRPA_" + DateTime.Now.ToString("yyyy-MM-dd");
+                sfd.FileName = "Backup_BotRPA_" + DateTime.Now.ToString("yyyy-MM-dd");
                 
                 if (sfd.ShowDialog() == true)
                 {
@@ -252,7 +405,7 @@ namespace InnovPlayUI.Views
                     TxtStatusProgresso.Text = "Aguarde, calculando arquivos...";
                     BarraProgresso.Value = 0;
                     
-                    string rootPath = InnovPlayUI.Core.PathHelper.GetRootDirectory();
+                    string rootPath = BotRpaUI.Core.PathHelper.GetRootDirectory();
                     string targetFile = sfd.FileName;
                     
                     await Task.Run(() =>
@@ -270,8 +423,8 @@ namespace InnovPlayUI.Views
                             };
                             
                             string[] filesToBackup = {
-                                @"data\inno_database.db",
-                                @"data\inno_learn.json"
+                                @"data\bot_database.db",
+                                @"data\bot_learn.json"
                             };
                             
                             // Primeiro contamos o total de arquivos nas pastas
@@ -375,7 +528,7 @@ namespace InnovPlayUI.Views
                     TxtStatusProgresso.Text = "Aguarde, lendo pacote...";
                     BarraProgresso.Value = 0;
                     
-                    string rootPath = InnovPlayUI.Core.PathHelper.GetRootDirectory();
+                    string rootPath = BotRpaUI.Core.PathHelper.GetRootDirectory();
                     string sourceFile = ofd.FileName;
                     
                     await Task.Run(() =>
@@ -541,6 +694,8 @@ namespace InnovPlayUI.Views
                 TxtStatusOta.Foreground = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#4EDEA3"));
 
                 TxtNewVersion.Text = "v" + manifest.Version;
+                TxtOtaMandatory.Text = manifest.Mandatory ? "● OBRIGATÓRIA" : "○ OPCIONAL";
+                TxtOtaMandatory.Foreground = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(manifest.Mandatory ? "#FF6B6B" : "#8A8A9E"));
                 TxtChangelog.Text = string.IsNullOrWhiteSpace(manifest.Changelog) ? "Melhorias de desempenho e estabilidade do sistema." : manifest.Changelog;
                 BorderUpdateAvailable.Visibility = Visibility.Visible;
             }
@@ -586,12 +741,17 @@ namespace InnovPlayUI.Views
 
         private async void ToggleTelemetry_Checked(object sender, RoutedEventArgs e)
         {
-            await _otaManager.SendTelemetryPingAsync(null, "ONLINE");
+            if (_isInitializingSettings) return;
+            SaveSettings();
+            if (SettingsManager.TelemetryEnabled)
+                await _otaManager.SendTelemetryPingAsync(null, "ONLINE");
         }
 
-        private async void ToggleTelemetry_Unchecked(object sender, RoutedEventArgs e)
+        private void ToggleTelemetry_Unchecked(object sender, RoutedEventArgs e)
         {
-            await _otaManager.SendTelemetryPingAsync(null, "TELEMETRY_DISABLED");
+            // Opt-out imediato: salva desligado e NÃO envia nenhum ping.
+            if (_isInitializingSettings) return;
+            SaveSettings();
         }
     }
 

@@ -6,11 +6,11 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
 
-namespace InnovPlayUI.Core
+namespace BotRpaUI.Core
 {
     /// <summary>
     /// Sistema Anti-Crash Guard — Proteção Ativa Contra Fechamentos Inesperados e Falhas de Memória
-    /// Autor: Jordan Araujo | InnovPlay
+    /// Autor: Jordan Araujo | BotRpa
     /// </summary>
     public static class AntiCrashGuard
     {

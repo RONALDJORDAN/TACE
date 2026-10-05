@@ -5,7 +5,7 @@
 
 // =============================================================================
 //  PIPELINE F1: POSITIVO TAB VISION 7 (ANDROID 14)
-//  Plataforma InnovTech - Inno RPA Engine
+//  Plataforma Bot_RPA - Bot_RPA Engine
 //  Isolamento Estrito por Equipamento (Regra de Ouro #1)
 // =============================================================================
 
@@ -113,6 +113,15 @@ int V7_Etapa3(const char *serial, const char *package_name, LogCallback cb);
  *   estratégias determinísticas com fallback em UIAutomator.
  */
 int V7_Etapa4(const char *serial, const char *login, const char *senha, const char *municipio, LogCallback cb);
+
+/**
+ * @brief [Etapa 4 - Variante F2] Autenticação sem revalidação de município.
+ * - Comportamento idêntico a V7_Etapa4, exceto que PULA o bloco de
+ *   validação/re-seleção do município após a senha (pré-clique Entrar).
+ * - Uso exclusivo do pipeline F2 Vision 7 (f2_vision_tab7.c).
+ * - F1 permanece chamando V7_Etapa4 (com recheck) — zero efeito colateral.
+ */
+int V7_Etapa4_SkipMunicipioRecheck(const char *serial, const char *login, const char *senha, const char *municipio, LogCallback cb);
 
 /**
  * @brief [Etapa 4.5] Encerramento do Reverse Tethering.

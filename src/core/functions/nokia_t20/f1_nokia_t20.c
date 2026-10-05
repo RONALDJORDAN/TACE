@@ -788,7 +788,7 @@ int T20_Etapa4(const char *serial, const char *login, const char *senha, const c
   // PASSO 0: Seleção e Validação do Município em Tempo Real
   // =========================================================================
   if (municipio && strlen(municipio) > 0) {
-    if (cb) cb("[F1 Nokia T20] [InnoLearn AI] Verificando seleção do Município em tempo real...");
+    if (cb) cb("[F1 Nokia T20] [BotLearn AI] Verificando seleção do Município em tempo real...");
 
     char safe_municipio[128];
     strncpy(safe_municipio, municipio, sizeof(safe_municipio) - 1);
@@ -856,14 +856,14 @@ int T20_Etapa4(const char *serial, const char *login, const char *senha, const c
     }
   }
 
-  // Se login e senha forem informados, executa injeção dinâmica via InnoLearn / Leitura de Tela em Tempo Real
+  // Se login e senha forem informados, executa injeção dinâmica via BotLearn / Leitura de Tela em Tempo Real
   if (login && strlen(login) > 0 && senha && strlen(senha) > 0) {
-    if (cb) cb("[F1 Nokia T20] [InnoLearn AI] Lendo a tela em tempo real para injeção de credenciais...");
+    if (cb) cb("[F1 Nokia T20] [BotLearn AI] Lendo a tela em tempo real para injeção de credenciais...");
 
     int cx = 0, cy = 0;
 
     // --- PASSO 1: Leitura em tempo real & Injeção do Login / Email ---
-    if (cb) cb("[-] [InnoLearn AI] Procurando campo de Login/Email na tela...");
+    if (cb) cb("[-] [BotLearn AI] Procurando campo de Login/Email na tela...");
     int found_login = 0;
     for (int attempt = 1; attempt <= 10 && !found_login; attempt++) {
       char *xml_login = dump_and_read_xml(serial, cb);
@@ -904,7 +904,7 @@ int T20_Etapa4(const char *serial, const char *login, const char *senha, const c
     }
 
     // --- PASSO 2: Leitura em tempo real & Injeção da Senha ---
-    if (cb) cb("[-] [InnoLearn AI] Procurando campo de Senha na tela...");
+    if (cb) cb("[-] [BotLearn AI] Procurando campo de Senha na tela...");
     int found_senha = 0;
     for (int attempt = 1; attempt <= 10 && !found_senha; attempt++) {
       char *xml_senha = dump_and_read_xml(serial, cb);
@@ -945,7 +945,7 @@ int T20_Etapa4(const char *serial, const char *login, const char *senha, const c
     }
 
     // --- PASSO 3: Leitura em tempo real & Clique no Botão Entrar (com Validação XML prévia) ---
-    if (cb) cb("[-] [InnoLearn AI] [Validação XML T20] Confirmando município e procurando botão Entrar...");
+    if (cb) cb("[-] [BotLearn AI] [Validação XML T20] Confirmando município e procurando botão Entrar...");
     int found_btn = 0;
     for (int attempt = 1; attempt <= 10 && !found_btn; attempt++) {
       char *xml_btn = dump_and_read_xml(serial, cb);
