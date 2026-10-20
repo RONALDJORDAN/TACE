@@ -14,7 +14,41 @@ namespace BotRpaUI.Views
         public string Serial { get => _serial; set { _serial = value; OnPropertyChanged(nameof(Serial)); } }
 
         private string _model = string.Empty;
-        public string Model { get => _model; set { _model = value; OnPropertyChanged(nameof(Model)); OnPropertyChanged(nameof(Marca)); } }
+        public string Model { get => _model; set { _model = value; OnPropertyChanged(nameof(Model)); OnPropertyChanged(nameof(Marca)); OnPropertyChanged(nameof(ModeloExibicao)); } }
+
+        /// <summary>
+        /// Modelo com nome comercial legivel. O ADB devolve codigos internos
+        /// ("T307G", "m7_MULTI", "Nokia T20"), traduzidos aqui para o nome
+        /// do produto. Se nao houver correspondencia, mantem o valor original.
+        /// </summary>
+        public string ModeloExibicao
+        {
+            get
+            {
+                string mdl = (_model ?? "").Trim();
+                if (string.IsNullOrEmpty(mdl) || mdl == "---" || mdl == "Desconhecido") return "---";
+                if (mdl.StartsWith("Pendente")) return "Pendente";
+
+                if (mdl.IndexOf("Vision", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    mdl.IndexOf("T307", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    mdl.IndexOf("T0307", StringComparison.OrdinalIgnoreCase) >= 0)
+                    return "Tab Vision 7";
+
+                if (mdl.IndexOf("TabMulti", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    mdl.IndexOf("Multi", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    mdl.IndexOf("M7", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    mdl.IndexOf("ML01", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    mdl.IndexOf("NB36", StringComparison.OrdinalIgnoreCase) >= 0)
+                    return "TabMulti M7";
+
+                if (mdl.IndexOf("Nokia", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    mdl.IndexOf("T20", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    mdl.IndexOf("TA-", StringComparison.OrdinalIgnoreCase) >= 0)
+                    return "Nokia T20";
+
+                return mdl;
+            }
+        }
 
         private string _manufacturer = string.Empty;
         public string Manufacturer { get => _manufacturer; set { _manufacturer = value; OnPropertyChanged(nameof(Manufacturer)); OnPropertyChanged(nameof(Marca)); } }
@@ -50,7 +84,21 @@ namespace BotRpaUI.Views
         public string AndroidVersion { get => _androidVersion; set { _androidVersion = value; OnPropertyChanged(nameof(AndroidVersion)); } }
 
         private string _mac = string.Empty;
-        public string MAC { get => _mac; set { _mac = value; OnPropertyChanged(nameof(MAC)); } }
+        public string MAC { get => _mac; set { _mac = value; OnPropertyChanged(nameof(MAC)); OnPropertyChanged(nameof(MACExibicao)); } }
+
+        /// <summary>
+        /// MAC pronto para exibicao: vazio/placeholder viram "Aguardando" e o
+        /// endereco valido aparece em maiusculas (padrao de inventario).
+        /// </summary>
+        public string MACExibicao
+        {
+            get
+            {
+                if (string.IsNullOrWhiteSpace(_mac)) return "Aguardando";
+                if (_mac == "N/A" || _mac == "---" || _mac == "02:00:00:00:00:00") return "Aguardando";
+                return _mac.ToUpperInvariant();
+            }
+        }
 
         private string _battery = string.Empty;
         public string Battery { 
@@ -388,6 +436,21 @@ namespace BotRpaUI.Views
             }
         }
 
+        /// <summary>
+        /// Indica se existe alguma automacao "ao conectar" habilitada.
+        /// Quando o painel de Gestao do Aparelho (F4) esta aberto, vale o card
+        /// "Automacao F4"; caso contrario, vale o card geral de Automacao ao Conectar.
+        /// </summary>
+        private bool AutomacaoAoConectarAtiva
+        {
+            get
+            {
+                if (CardAutoF4 != null && CardAutoF4.Visibility == Visibility.Visible)
+                    return ChkAutoF4 != null && ChkAutoF4.IsChecked == true;
+                return ChkAutoInstall != null && ChkAutoInstall.IsChecked == true;
+            }
+        }
+
         private void RunAutoInstallForDevice(DeviceModel device)
         {
             string apkPath = "";
@@ -430,7 +493,15 @@ namespace BotRpaUI.Views
             }
             
             int actionIdx = ComboAutoAction.SelectedIndex;
-            
+
+            // Se o painel de Gestao do Aparelho (F4) estiver aberto, a automacao ao
+            // conectar executa a subfuncao F4 selecionada no card "Automacao F4".
+            if (CardAutoF4 != null && CardAutoF4.Visibility == Visibility.Visible)
+            {
+                RunAutoF4ForDevice(device);
+                return;
+            }
+
             if ((actionIdx == 0 || actionIdx == 1) && string.IsNullOrEmpty(apkPath))
             {
                 MessageBox.Show("Nenhum APK configurado para este município (Automação cancelada).", "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
@@ -929,6 +1000,10 @@ namespace BotRpaUI.Views
                             {
                                 BotRpaUI.Core.SQLiteDatabaseManager.RegistrarSeNovo(serial, dev.manufacturer, model, mac);
 
+                                // Garante o MAC no cadastro: o motor C ja devolve o endereco no
+                                // refresh (batched); se faltar, o servico extrai com o ciclo
+                                // de Wi-Fi (liga -> extrai -> restaura) e grava no banco.
+                                BotRpaUI.Core.MacCaptureService.GarantirMacRegistrado(serial, model, mac);
                             }
 
                             // Se o modelo deste aparelho estiver DESATIVADO em Configurações, oculta do monitor ADB
@@ -1012,7 +1087,7 @@ namespace BotRpaUI.Views
                                 {
                                     _knownSerials.Add(nd.Serial);
 
-                                    if (nd.Status == "Pronto" && ChkAutoInstall.IsChecked == true)
+                                    if (nd.Status == "Pronto" && AutomacaoAoConectarAtiva)
                                     {
                                         RunAutoInstallForDevice(nd);
                                     }
@@ -1020,7 +1095,7 @@ namespace BotRpaUI.Views
                             }
                             else
                             {
-                                if (existing.Status == "Pendente" && nd.Status == "Pronto" && ChkAutoInstall.IsChecked == true)
+                                if (existing.Status == "Pendente" && nd.Status == "Pronto" && AutomacaoAoConectarAtiva)
                                 {
                                     RunAutoInstallForDevice(nd);
                                 }
@@ -1571,60 +1646,71 @@ namespace BotRpaUI.Views
         {
             currentTerminalMode = 4;
             PanelHistoricoLogs.Visibility = Visibility.Collapsed;
-            PanelGestaoKiosk.Visibility = Visibility.Visible;
-            if (TxtKioskStatus != null)
-                TxtKioskStatus.Text = "Pronto. Selecione uma opção acima ou informe comandos em lote.";
-            LogMessage("\n[🛡️ Submódulo de Gestão Kiosk Ativado]");
+            PanelGestaoAparelho.Visibility = Visibility.Visible;
+
+            // Enquanto o painel de Gestao do Aparelho estiver aberto, o card geral
+            // "Automacao ao Conectar" e substituido pelo card de subfuncao do F4.
+            if (CardAutoConectar != null) CardAutoConectar.Visibility = Visibility.Collapsed;
+            if (CardAutoF4 != null) CardAutoF4.Visibility = Visibility.Visible;
+
+            if (TxtGestaoStatus != null)
+                TxtGestaoStatus.Text = "Pronto. Selecione uma opção acima ou informe comandos em lote.";
+            LogMessage("\n[📱 Submódulo de Gestão do Aparelho Ativado]");
         }
 
-        private void BtnSairKiosk_Click(object sender, RoutedEventArgs e)
+        private void BtnSairGestao_Click(object sender, RoutedEventArgs e)
         {
-            PanelGestaoKiosk.Visibility = Visibility.Collapsed;
+            PanelGestaoAparelho.Visibility = Visibility.Collapsed;
             PanelHistoricoLogs.Visibility = Visibility.Visible;
             TxtInput.Visibility = Visibility.Collapsed;
             currentTerminalMode = 0;
-            LogMessage("[🛡️ Submódulo de Gestão Kiosk Fechado - Histórico restaurado]");
+
+            // Restaura o card geral de Automacao ao Conectar.
+            if (CardAutoConectar != null) CardAutoConectar.Visibility = Visibility.Visible;
+            if (CardAutoF4 != null) CardAutoF4.Visibility = Visibility.Collapsed;
+
+            LogMessage("[📱 Submódulo de Gestão do Aparelho Fechado - Histórico restaurado]");
         }
 
-        private void BtnKioskAction_Click(object sender, RoutedEventArgs e)
+        private void BtnGestaoAction_Click(object sender, RoutedEventArgs e)
         {
             if (sender is Button btn && btn.Tag != null)
             {
                 string tag = btn.Tag?.ToString()?.Trim() ?? "";
                 if (!string.IsNullOrEmpty(tag))
                 {
-                    if (TxtKioskStatus != null)
-                        TxtKioskStatus.Text = $"⚡ Disparando ação [{tag}] para os dispositivos...";
+                    if (TxtGestaoStatus != null)
+                        TxtGestaoStatus.Text = $"⚡ Disparando ação [{tag}] para os dispositivos...";
                     ExecuteF4Command(tag);
                 }
             }
         }
 
-        private void BtnKioskBatchRun_Click(object sender, RoutedEventArgs e)
+        private void BtnGestaoBatchRun_Click(object sender, RoutedEventArgs e)
         {
-            string cmd = TxtKioskBatchInput.Text.Trim();
+            string cmd = TxtGestaoBatchInput.Text.Trim();
             if (string.IsNullOrEmpty(cmd)) return;
 
-            if (TxtKioskStatus != null)
-                TxtKioskStatus.Text = $"⚡ Executando lote [{cmd}]...";
+            if (TxtGestaoStatus != null)
+                TxtGestaoStatus.Text = $"⚡ Executando lote [{cmd}]...";
             ExecuteF4Command(cmd);
-            TxtKioskBatchInput.Clear();
+            TxtGestaoBatchInput.Clear();
         }
 
-        private void TxtKioskBatchInput_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        private void TxtGestaoBatchInput_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
             if (e.Key == System.Windows.Input.Key.Enter)
             {
-                BtnKioskBatchRun_Click(sender, e);
+                BtnGestaoBatchRun_Click(sender, e);
             }
         }
 
-        private void BtnKioskProfile_Click(object sender, RoutedEventArgs e)
+        private void BtnGestaoProfile_Click(object sender, RoutedEventArgs e)
         {
             if (sender is Button btn && btn.Tag is string seq && !string.IsNullOrWhiteSpace(seq))
             {
-                if (TxtKioskStatus != null)
-                    TxtKioskStatus.Text = $"⚡ Aplicando perfil [{seq}]...";
+                if (TxtGestaoStatus != null)
+                    TxtGestaoStatus.Text = $"⚡ Aplicando perfil [{seq}]...";
                 ExecuteF4Command(seq);
             }
         }
@@ -1684,7 +1770,7 @@ namespace BotRpaUI.Views
                 if (!int.TryParse(part.Trim(), out int acao) || acao < 1 || acao > 12)
                 {
                     LogMessage($"[Erro] Comando inválido: '{part}'. Digite números de 1 a 12 (ex: 11, 12, ou 5,7).");
-                    if (TxtKioskStatus != null) TxtKioskStatus.Text = $"⚠️ Comando inválido: '{part}'. Use números de 1 a 12.";
+                    if (TxtGestaoStatus != null) TxtGestaoStatus.Text = $"⚠️ Comando inválido: '{part}'. Use números de 1 a 12.";
                     return;
                 }
                 acoes.Add(acao);
@@ -1694,48 +1780,18 @@ namespace BotRpaUI.Views
             if (targetDevices.Count == 0)
             {
                 LogMessage("[Erro] Nenhum aparelho conectado para receber o comando.");
-                if (TxtKioskStatus != null) TxtKioskStatus.Text = "⚠️ Nenhum aparelho conectado para receber o comando.";
+                if (TxtGestaoStatus != null) TxtGestaoStatus.Text = "⚠️ Nenhum aparelho conectado para receber o comando.";
                 return;
             }
 
             string wpPath = "";
             if (acoes.Contains(7))
             {
-                int idx = ComboMunicipios.SelectedIndex;
-                if (idx >= 0 && idx < _municipiosArray.Length)
-                {
-                    wpPath = _municipiosArray[idx].WallpaperPath;
-                    if (string.IsNullOrEmpty(wpPath))
-                    {
-                        LogMessage("[Erro] O município selecionado não possui um Wallpaper configurado.");
-                        if (TxtKioskStatus != null) TxtKioskStatus.Text = "⚠️ O município selecionado não possui Wallpaper configurado.";
-                        return;
-                    }
-                    
-                    // Converte para caminho absoluto
-                    string baseDir = BotRpaUI.Core.PathHelper.GetRootDirectory();
-                    if (!System.IO.Path.IsPathRooted(wpPath))
-                    {
-                        wpPath = System.IO.Path.GetFullPath(System.IO.Path.Combine(baseDir, wpPath));
-                    }
-                    
-                    if (!System.IO.File.Exists(wpPath))
-                    {
-                        LogMessage($"[Erro] Arquivo de Wallpaper não encontrado fisicamente em: {wpPath}");
-                        if (TxtKioskStatus != null) TxtKioskStatus.Text = $"⚠️ Arquivo de Wallpaper não encontrado: {wpPath}";
-                        return;
-                    }
-                }
-                else
-                {
-                    LogMessage("[Erro] Selecione um município no menu superior antes de definir o Wallpaper.");
-                    if (TxtKioskStatus != null) TxtKioskStatus.Text = "⚠️ Selecione um município no menu superior antes de definir Wallpaper.";
-                    return;
-                }
+                if (!ResolverWallpaperF4(out wpPath)) return;
             }
 
-            if (TxtKioskStatus != null)
-                TxtKioskStatus.Text = $"✔ Disparando comando [{cmd}] para {targetDevices.Count} aparelho(s)...";
+            if (TxtGestaoStatus != null)
+                TxtGestaoStatus.Text = $"✔ Disparando comando [{cmd}] para {targetDevices.Count} aparelho(s)...";
 
             foreach (var device in targetDevices)
             {
@@ -1764,6 +1820,127 @@ namespace BotRpaUI.Views
                     GC.KeepAlive(callback);
                 });
             }
+        }
+
+        /// <summary>
+        /// Resolve o caminho absoluto do wallpaper do município selecionado.
+        /// Retorna false (já registrando o erro) se o município não tiver wallpaper
+        /// configurado ou se o arquivo não existir fisicamente.
+        /// </summary>
+        private bool ResolverWallpaperF4(out string wpPath)
+        {
+            wpPath = "";
+            int idx = ComboMunicipios.SelectedIndex;
+
+            if (idx < 0 || idx >= _municipiosArray.Length)
+            {
+                LogMessage("[Erro] Selecione um município no menu superior antes de definir o Wallpaper.");
+                if (TxtGestaoStatus != null) TxtGestaoStatus.Text = "⚠️ Selecione um município no menu superior antes de definir Wallpaper.";
+                return false;
+            }
+
+            wpPath = _municipiosArray[idx].WallpaperPath ?? "";
+            if (string.IsNullOrEmpty(wpPath))
+            {
+                LogMessage("[Erro] O município selecionado não possui um Wallpaper configurado.");
+                if (TxtGestaoStatus != null) TxtGestaoStatus.Text = "⚠️ O município selecionado não possui Wallpaper configurado.";
+                return false;
+            }
+
+            string baseDir = BotRpaUI.Core.PathHelper.GetRootDirectory();
+            if (!System.IO.Path.IsPathRooted(wpPath))
+            {
+                wpPath = System.IO.Path.GetFullPath(System.IO.Path.Combine(baseDir, wpPath));
+            }
+
+            if (!System.IO.File.Exists(wpPath))
+            {
+                LogMessage($"[Erro] Arquivo de Wallpaper não encontrado fisicamente em: {wpPath}");
+                if (TxtGestaoStatus != null) TxtGestaoStatus.Text = $"⚠️ Arquivo de Wallpaper não encontrado: {wpPath}";
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Comandos F4 na MESMA ordem dos itens do ComboBox ComboAutoF4.
+        /// Usado pela automação "F4 ao conectar".
+        /// </summary>
+        private static readonly string[] F4_COMANDOS_AUTOMACAO =
+        {
+            "11,1,2,5,10", // Blindar Tudo (perfil)
+            "12,3,4,6",   // Restaurar Tudo (perfil)
+            "1",           // Bloquear Câmera
+            "3",           // Liberar Câmera
+            "2",           // Restringir Configurações
+            "4",           // Liberar Configurações
+            "5",           // Ativar Modo Restrito
+            "6",           // Desativar Modo Restrito
+            "7",           // Aplicar Papel de Parede
+            "8",           // Ligar Internet USB
+            "9",           // Desligar Internet USB
+            "10",          // Ocultar Barra de Pesquisa
+            "11",          // Aplicar Blindagem de Apps
+            "12"           // Reativar Apps (Restauração)
+        };
+
+        /// <summary>
+        /// Executa automaticamente a subfunção F4 selecionada no card
+        /// "Automação F4 ao Conectar" quando um aparelho é conectado.
+        /// </summary>
+        private void RunAutoF4ForDevice(DeviceModel device)
+        {
+            if (device == null || string.IsNullOrEmpty(device.Serial)) return;
+            if (ComboAutoF4 == null) return;
+
+            int idx = ComboAutoF4.SelectedIndex;
+            if (idx < 0 || idx >= F4_COMANDOS_AUTOMACAO.Length) return;
+
+            string cmd = F4_COMANDOS_AUTOMACAO[idx];
+
+            // Valida e converte o comando em lista de ações numéricas.
+            var acoes = new System.Collections.Generic.List<int>();
+            foreach (string part in cmd.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
+            {
+                if (int.TryParse(part.Trim(), out int a) && a >= 1 && a <= 12)
+                    acoes.Add(a);
+            }
+            if (acoes.Count == 0) return;
+
+            // A ação 7 (Papel de Parede) exige o wallpaper do município.
+            string wpPath = "";
+            if (acoes.Contains(7))
+            {
+                if (!ResolverWallpaperF4(out wpPath)) return;
+            }
+
+            string finalSerial = device.Serial;
+            LogCallback callback = new LogCallback((msg) =>
+            {
+                Dispatcher.Invoke(() => LogMessage($"[{finalSerial}] {msg}"));
+            });
+
+            LogMessage($"[{finalSerial}] Automação F4 ativada! Executando subfunção [{cmd}] automaticamente...");
+            if (TxtGestaoStatus != null)
+                TxtGestaoStatus.Text = $"✔ Automação F4 [{cmd}] disparada para {finalSerial}.";
+
+            System.Threading.Tasks.Task.Run(() =>
+            {
+                foreach (int a in acoes)
+                {
+                    if (a == 7)
+                    {
+                        Engine_ExecuteF4_Wallpaper(finalSerial, wpPath, callback);
+                    }
+                    else
+                    {
+                        Engine_ExecuteF4_Ferramenta(finalSerial, a, callback);
+                    }
+                    System.Threading.Thread.Sleep(800);
+                }
+                GC.KeepAlive(callback);
+            });
         }
 
         public void BtnF5_Click(object sender, RoutedEventArgs e)
@@ -2338,9 +2515,9 @@ namespace BotRpaUI.Views
 
         private void Window_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
-            if (e.Key == System.Windows.Input.Key.Escape && PanelGestaoKiosk != null && PanelGestaoKiosk.Visibility == Visibility.Visible)
+            if (e.Key == System.Windows.Input.Key.Escape && PanelGestaoAparelho != null && PanelGestaoAparelho.Visibility == Visibility.Visible)
             {
-                BtnSairKiosk_Click(sender, e);
+                BtnSairGestao_Click(sender, e);
                 e.Handled = true;
                 return;
             }

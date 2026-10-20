@@ -1447,3 +1447,212 @@ O **InnoAI** é o motor de inteligência e automação visual da Plataforma Inno
 - **Pendências registradas na auditoria:** (1) `config/settings.json` embarcado ainda com `firebase_api_key` em texto plano; (2) cofre DPAPI é por máquina/usuário → o operador recadastra as credenciais 1x em Gerenciar Municípios; (3) `data/bot_learn.json` ausente por Expected (`learn_db_save` é no-op no modo estático do BotLearn); (4) build executado sobre o working tree com as alterações de 09/10 ainda não commitadas.
 - **Regra de Ouro #1 preservada:** nenhum `.c` de dispositivo foi tocado (build e empacotamento apenas).
 
+### [2026-10-20] - F2 Vision 7: fechamento visual de todos os apps abertos antes do desligamento
+- **Pedido:** no F2 do Positivo Tab Vision 7, antes de desligar o aparelho, o sistema deve fechar **todos os apps abertos**.
+- **Diagnóstico (auditoria do F2):** o F1 encerra com `V7_Etapa7_PowerOff` (limpeza visual da tela de Recentes + `force-stop` do Chrome + `reboot -p`), mas o F2 encerrava apenas com Back×3 + HOME + `force-stop` do app/DocumentsUI + `am kill-all` — o overview do tablet podia ficar com cards abertos e o Chrome não era fechado (divergência de entregável F1 × F2).
+- **Alteração (só `src/core/functions/vision7/f2_vision_tab7.c`, efeito colateral zero no F1 e nos demais modelos):**
+  - Nova rotina estática `F2_Etapa7_CleanRecents` (espelhando a rotina já validada do F5, `f5_vision_tab7.c:71-162`): tela acesa/desbloqueada (`keyevent 224 && 82`) → HOME → tela de Recentes (`keyevent 187`, 1200 ms para o SO desenhar os cards) → 2 deslizes (`swipe 150 500 850 500 250`) → leitura do XML (`adb_dump_stdout` com fallback `uiautomator dump` + `cat`) → clique no centroide de `Limpar tudo` / `Fechar tudo` / `Clear all` → toque de fallback (`tap 300 950`) se o XML não localizar → espera de 1 s e retorno à HOME.
+  - `F2_Etapa7_CloseApps` passou a chamar essa rotina **antes** dos `force-stop` (para que os cards ainda existam na tela de Recentes) e recebeu `am force-stop com.android.chrome`.
+  - `char cmd[256]` → `char cmd[512]` no `F2_Etapa7_CloseApps` (evita truncar o `force-stop` com `package_name` longo).
+  - Ordem final do F2: importa o ZIP → **fecha visualmente todos os apps** → `force-stop` app principal + Chrome + DocumentsUI → `am kill-all` → Wi-Fi/BT/Localização off + brilho 70% → `reboot -p`.
+- **Validação:** compilação isolada de `f2_vision_tab7.c` com `-Wall -Wextra` → **zero warnings**; build completo `scripts/build.bat` (TESTE) → versão `20.10.2026.1035` com **zero warnings / zero errors** (`BotEngine.dll` + `BotRPAui.exe` em `data/output/`). Auditoria `registros/2026-10-20/10-36_Plataforma_BotRPA_DESKTOP_BUILD`.
+- **Pendente para a bancada:** o toque de fallback (`tap 300 950`) e os deslizes usam as coordenadas já validadas do Vision 7 no F5 — confirmar visualmente o "Limpar tudo" no display antes da entrega em lote.
+- **Backlog da auditoria do F2 (ainda não aplicado):** escape de credenciais sem limite (`f1_vision_tab7.c:10-24`), sucesso falso quando o pacote não é importado, `municipio` NULL não validado, `V7_Etapa2_5` sempre retornando sucesso, `taskkill` global do Gnirehtet atingindo aparelhos em paralelo, `Engine_ResetCancel` ausente no F2 do Monitor clássico e retorno ignorado no Monitor Pro.
+
+### [2026-10-20] - UI: botão "Limpar Logs" com bordas arredondadas (Monitor Clássico)
+- **Pedido:** deixar o botão "Limpar Logs" da tela inicial com bordas arredondadas.
+- **Alteração (só `src/ui/Views/MonitorView.xaml`, UI C# — nenhum `.c` tocado, Ouro #1 preservado):** criado o estilo reutilizável `RoundedGhostButton` nos `UserControl.Resources` (`CornerRadius="8"`, `BorderBrush #513BA6`, `Background #11111E`, `Foreground #E3E0F2`, glow `IsMouseOver` para `#1C1836`/`#8570E6`, `IsPressed` para `#0A0A12`, `FocusVisualStyle` nulo) e aplicado ao botão (`MonitorView.xaml:329`), que antes usava o template padrão do WPF (borda retangular). Alinhado ao design system já usado no arquivo (`MonitorActionButton`, `RoundedProgressBar`, cards com `CornerRadius` 6/8/10/12).
+- **Validação:** XAML validado como bem formado (parse XML) e estilo referenciado por `StaticResource` presente nos Resources; **sem build** (diretriz do usuário em 20/10/2026: build somente com ordem explícita).
+
+### [2026-10-20] - `.agents/`: agentes de assistência .NET (arquitetura e desenvolvimento)
+- **Pedido:** criar e salvar na pasta de agentes dois prompts de sistema: **.NET Architect** (Clean Architecture, DDD, CQRS) e **C# & .NET Senior Developer** (diretrizes oficiais de design da Microsoft, modernização para C# 12/13/14 e .NET 8/9/10).
+- **Arquivos criados (somente documentação, nenhuma alteração de runtime):**
+  - `.agents/dotnet-architect.md` (163 linhas): identidade, 10 princípios inegociáveis (dependências para dentro, domínio sem tecnologia, uma fronteira transacional por agregado, contratos/portas, CQRS pragmático, migrations versionadas), fluxo em 7 passos (contexto → bounded contexts → modelo de domínio → commands/queries → EF Core por contexto → apresentação/DI → testes/observabilidade/segurança), formato obrigatório de saída em 13 seções com diagramas mermaid, seção de refatoração de legado (Strangler Fig) e o contexto do Bot_RPA.
+  - `.agents/csharp-dotnet-senior-developer.md` (169 linhas): nomenclatura oficial, estilo de código, async/await (`CancellationToken`, nunca `async void`, sem `.Result`), nullable reference types, performance (alocações, deferred execution do LINQ), segurança (validação, `System.Text.Json` estrito, escape de shell), checklist de testes, tabela de recursos por versão (C# 12/13/14 e .NET 8/9/10), procedimento de modernização em etapas, formato de saída e checklist de code review ordered por severidade.
+  - `.agents/README.md` (31 linhas): índice dos agentes e como usar cada um (Custom GPT, subagente, checklist de review) + as 5 regras comuns do repositório.
+- **Validacao:** varredura de caracteres corrompidos (CJK/substituicao) = 0 em todos os arquivos.
+- **Nota:** ambos os agentes Incorporam a diretriz vigente de **build somente com ordem explícita do usuário**.
+
+### [2026-10-20] - Banco de Dispositivos: IDs contiguos (1..N) + coluna "Nº de Patrimônio" (DataRegistro removido)
+- **Pedido (usuário):** o "TOTAL BASE" do dashboard de métricas não batia com o total do banco — causa: os IDs iam de **6 a 438** para apenas 433 linhas (5 lacunas de exclusões antigas, com `sqlite_sequence` em 438). Correção: os itens no armazenamento devem **sempre iniciar no ID 1**. Em seguida: criar **nova coluna depois do ID** = **número de patrimônio** (editada manualmente para todos os tablets) e **remover a coluna "Data de Registro"** do banco.
+- **Diagnóstico:** `Dispositivos.ID` era `INTEGER PRIMARY KEY AUTOINCREMENT`; o `sqlite_sequence` nunca retrocede, então exclusões deixavam buracos permanentes e os IDs novos nasciam em 439+.
+- **Novo schema canônico (`Dispositivos`):** `ID` · **`Patrimonio`** · `Serial` (UNIQUE) · `Fabricante` · `Modelo` · `Versao_Android` · `API_Level` · `Bateria` · `IMEI` · `MAC` — **sem `DataRegistro`**.
+- **Migração automática (`SQLiteDatabaseManager.GarantirEsquemaDispositivos`):**
+  - Detecta o schema legado (tem `DataRegistro` ou não tem `Patrimonio`) via `PRAGMA table_info` e migra.
+  - Detecta lacunas de ID (`COUNT(*) != MAX(ID)`) e renumera.
+  - `RecriarTabelaDispositivos`: cria `Dispositivos__novo` → copia `ORDER BY ID ASC` **sem a coluna ID** (o SQLite atribui IDs contiguos 1..N na ordem de inserção) → `DROP TABLE` → `RENAME` → limpa `sqlite_sequence`. Tudo em transação com rollback em falha.
+  - Colunas ausentes na origem recebem `''`; `Serial` preserva `NULL` (evita violar a constraint UNIQUE).
+  - Guard `_esquemaValidado` (uma vez por processo) para não revalidar a cada `LerTodos()`.
+  - **Renumeração pós-exclusão:** `Excluir(id)` já executa `RecriarTabelaDispositivos` na mesma conexão → a sequência permanece contígua 1..N após qualquer delete.
+- **Modelo (`DispositivoDB`):** `DataRegistro` removido; `Patrimonio` adicionado (string, vazio por padrão).
+- **UI (`RelatoriosView`):**
+  - DataGrid do Banco de Dados: coluna **"Nº Patrimônio"** (logo após o `#`) **editável inline** (`IsReadOnly=False`, `EditingElementStyle` dark, cor `#FFB703`); coluna "Data de Registro" removida.
+  - `GridBancoDados_CellEditEnding`: grava a edição inline via `SQLiteDatabaseManager.AtualizarPatrimonio(id, valor)`.
+  - Modal Novo/Editar: campo **"Nº de Patrimônio"** (`TxtModalPatrimonio`, Consolas `#FFB703`) antes do Fabricante; salvar grava o patrimônio (inclusive em dispositivos recém-criados via `BuscarPorSerial` → `AtualizarPatrimonio`).
+  - "Último dispositivo registrado" e "informações do selecionado" passaram a exibir o **Patrimônio** (com `—` quando vazio).
+  - **PDF A4:** cabeçalho `# · Nº Patrimônio · Fabricante/Modelo · N/S (Serial) · MAC Address` (coluna "Data Registro" removida).
+  - **CSV exportado:** `ID;Patrimonio;Fabricante_Modelo;Serial;MAC_Address`.
+- **Nuvem (InnovStock / `rpa_devices`):** payload troca `dataRegistro` por `patrimonio`; `SincronizarComInnovStockAsync` passou de **PUT para PATCH** (merge) para preservar campos da nuvem gerenciados por outras bancadas; `BaixarDoInnovStockAsync` lê/insere/atualiza `patrimonio` com a política "só preenche vazio" já existente.
+- **CSVs locais (`data/`):** `dispositivos_registrados.csv` → `ID;Patrimonio;Serial;...;IMEI;MAC`; `relatorio_serial_mac.csv` → `Serial;Patrimonio;MAC;Fabricante;Modelo`.
+- **Validação:**
+  - Harness C# com `Microsoft.Data.Sqlite` rodando a **exata** lógica de migração sobre cópia do banco real: `6..438 / 433 linhas` → **`1..433 / 433 linhas`**, cols = `[ID, Patrimonio, Serial, Fabricante, Modelo, Versao_Android, API_Level, Bateria, IMEI, MAC]`, ordem e seriais preservados, `Patrimonio` vazio em 100% das linhas, seriais únicos preservados.
+  - Insert pós-migração → ID 434 (sequência segue corretamente); delete + renumeração → volta a `1..N` contíguo.
+  - **Bancos migrados de fato:** `data/bot_database.db` e `BotRPA_Release/data/bot_database.db` → ambos `min=1 max=433 count=433`, contíguos, 433 seriais únicos.
+  - Builds `20.10.2026.1543`, `.1546` e `.1555` (TESTE) com **zero warnings / zero errors** (`BotEngine.dll` + `BotRPAui.exe` em `data/output/`). Auditorias `registros/2026-10-20/15-44`, `15-47` e `15-55_Plataforma_BotRPA_DESKTOP_BUILD`.
+- **Isolamento:** nenhum `.c` de dispositivo tocado (só camada C# de UI/Core + banco SQLite). Ouro #1 preservado.
+- **Pendente para o operador:** preencher manualmente o **Nº de Patrimônio** dos 433 tablets (coluna vazia por padrão — a migração não inventa valores).
+
+### [2026-10-20 16:03] - Build FINAL (Release PnP) com o banco migrado + Nº de Patrimônio
+- **Pedido do usuário:** "build a nova versão".
+- **Comando:** `controle/Build.ps1 -Modo Final -Sim` (orquestrador canônico) → `scripts/build_release.bat` → `scripts/build.bat` com `BUILD_MODE=RELEASE` (ícone Roxo Oficial).
+- **Resultado:** compilação `20.10.2026.1603` com **zero warnings / zero errors** (GCC + `dotnet publish` self-contained single-file). Auditoria `registros/2026-10-20/16-03_Plataforma_BotRPA_DESKTOP_BUILD` (com `build.log` gravado: hashes SHA-256, checklist de conteúdo e schema do banco).
+- **Conteúdo em `BotRPA_Release/` (212,4 MB):** `BotRPAui.exe` (194.075.941 B) · `BotEngine.dll` (409.817 B) · `municipios.csv` (seed sanitizado) · `tools/platform-tools` (14 arquivos) · `tools/reverse_tethering` (6 arquivos) · `tools/mac_address_finder.apk` · `config/` · `scripts/apply_ota_update.bat` · `data/bot_database.db` · `data/input/{municipios,apps}` · `Arquivos/` · `logs/` · `registros/`. **Sem** `tools/mingw64`.
+- **SHA-256:** `BotRPAui.exe` = `06C50514FA744566F48019C17ECA04EC191C048AD01BBD57220E0FEDD54750DB` · `BotEngine.dll` = `4F494091E6F74454D120B821DE5A29F76DCD7C288340641AC8A161A6329CC629`.
+- **Banco embarcado validado:** schema `[ID, Patrimonio, Serial, Fabricante, Modelo, Versao_Android, API_Level, Bateria, IMEI, MAC]` · 433 dispositivos · `min=1 max=433` (contíguo 1..N) · 433 seriais únicos · `Patrimonio` vazio em todas as linhas (a preencher manualmente pelo operador).
+- **Pacote de distribuição:** `controle/BotRPA_Release_20.10.2026.1603.zip` (91.727.571 bytes, 33 entradas) — verificado: exes, DLL, banco, config, `apply_ota_update.bat`, ADB e Gnirehtet presentes.
+- **Pendências registradas na auditoria:** (1) `config/settings.json` embarcado ainda com `firebase_api_key` em texto plano; (2) cofre DPAPI é por máquina/usuário → o operador recadastra as credenciais 1x em Gerenciar Municípios; (3) `data/bot_learn.json` ausente por Expected (`learn_db_save` é no-op no modo estático); (4) working tree com alterações de 20/10 ainda não commitadas (F2 CleanRecents, bordas do botão Limpar Logs, banco/Patrimônio, `.agents/`).
+- **Regra de Ouro #1 preservada:** nenhum `.c` de dispositivo tocado nesta rodada.
+
+### [2026-10-20 17:44] - F4: "Gestão Kiosk" → "Gestão do Aparelho" + painel em 2 colunas (Monitor clássico)
+- **Pedido do usuário:** renomear o módulo F4 de "Gestão Kiosk" para **"Gestão do Aparelho"**; em seguida, o painel do F4 no Monitor clássico estava "ruim" — deveria aparecer em **dois blocos (esquerda e direita, duas colunas), cada coluna com opções**.
+- **Motor C (`src/core/functions/vision7/` — só Vision7, Ouro #1 preservado):**
+  - `f4_vision_tab7.c`: comentário do módulo, logs ("Modo Kiosk Estrito" → **"Modo Restrito"**, "Modo Kiosk DESATIVADO" → "Modo Restrito DESATIVADO", "Blindagem Kiosk" → "Blindagem") e renomeação dos símbolos internos `KIOSK_DEBLOAT_PACKAGES`/`NUM_KIOSK_DEBLOAT` → **`APPARELHO_DEBLOAT_PACKAGES`/`NUM_APPARELHO_DEBLOAT`** (mesmos 34 pacotes, mesma ordem → efeito colateral zero).
+  - `f4_vision_tab7.h`: comentário "Pipeline F4: Gestao do Aparelho (Hardware, Apps, Rede e Wallpaper)".
+  - `src/api.c`: log `[API] Solicitacao F4 Gestao do Aparelho recebida. Ativando Modo Restrito...` (função `Engine_ExecuteF4_Terminal` → `F4_ExecutarFerramenta(serial, 5, cb)`).
+  - **Não alterados (intocados por serem de outros modelos ou compartilhados):** `src/core/functions/pipeline.h` (raiz, compartilhado por V7/M7/T20), `tabmulti/pipeline.h`, `vision7/pipeline.h` e `tabmulti/pipeline.h` (orfãos — nenhum `#include` os resolve), `f3_tabmulti_m7.h` ("Terminal Kiosk Multilaser").
+- **UI (C#/XAML):**
+  - **Monitor clássico (`MonitorView.xaml` / `.xaml.cs`):** painel F4 **redesenhado em 2 colunas**:
+    - **Coluna ESQUERDA** (`CONTROLE DE ACESSO`): grupo 1 — 📷 Câmera (Bloquear/Liberar), ⚙️ Configurações (Restringir/Liberar), 🛑 Modo Restrito (Ativar/Desativar); grupo 2 (`APLICATIVOS`) — 🛡️ Blindagem de Apps (Aplicar), 🔄 Restauração (Reativar).
+    - **Coluna DIREITA** (`PERSONIZAÇÃO E REDE`): 🖼️ Papel de Parede (Aplicar), 🌐 Internet USB (Ligar/Desligar), 🧹 Barra de Pesquisa (Ocultar).
+    - Cada opção virou uma linha com ícone + título + descrição curta à esquerda e botões de ação à direita (antes: cards com grade de 3 colunas desalinhadas). Cada coluna tem `ScrollViewer` próprio; cabeçalho e rodapé (status + lote) preservados.
+    - Perfis 1-clique no topo: `Blindar Tudo` (11,1,2,5,10) e `Restaurar Tudo` (12,3,4,6).
+    - Identificadores renomeados: `PanelGestaoKiosk`→**`PanelGestaoAparelho`**, `BtnSairKiosk`→`BtnSairGestao`, `BtnKioskAction_Click`→**`BtnGestaoAction_Click`**, `BtnKioskProfile_Click`→`BtnGestaoProfile_Click`, `BtnKioskBatchRun_Click`→`BtnGestaoBatchRun_Click`, `TxtKioskStatus`→**`TxtGestaoStatus`**, `TxtKioskBatchInput`→`TxtGestaoBatchInput`, `TxtKioskBatchInput_KeyDown`→`TxtGestaoBatchInput_KeyDown`.
+    - Textos: cabeçalho "GESTÃO DO APPARELHO", subtítulo "Hardware, aplicativos, rede e personalização do tablet", botão `[F4] Gestão do Aparelho (Hardware & Apps)`, botão `[F3] Terminal (Gestão do Aparelho)`, log "\[📱 Submódulo de Gestão do Aparelho Ativado/Fechado]".
+    - Fechamento por `ESC` segue funcionando (apontando para `PanelGestaoAparelho`).
+  - **Monitor Pro:** botão `[F4] Kiosk` → **`[F4] Aparelho`** (handler e `Engine_ExecuteF4_Terminal` inalterados).
+  - **WelcomeWindow:** card "Kiosk Mode" → **"Gestão do Aparelho"**.
+  - **ConfigView:** "terminal interativo Kiosk" → "painel interativo de Gestão do Aparelho".
+- **Validação:**
+  - `MonitorView.xaml` bem formado (parse XML) após a substituição do bloco.
+  - Painel confere **2 colunas de conteúdo** (`ColumnDefinition Width="*"` / `"10"` gutter / `"*"`) com 6 cards à esquerda e 3 à direita.
+  - **Todas as 12 ações F4 presentes** (`Tag` 1..12) e **5 handlers** com binding correto (XAML + code-behind, 1 definição cada).
+  - Identificadores `x:Name` batem com as referências do code-behind (`PanelGestaoAparelho`, `BtnSairGestao`, `TxtGestaoStatus`, `TxtGestaoBatchInput`).
+  - Build `20.10.2026.1743` e `20.10.2026.1748` (TESTE) com **zero warnings / zero errors** (`BotEngine.dll` + `BotRPAui.exe` em `data/output/`). Auditorias `registros/2026-10-20/17-44` e `17-48_Plataforma_BotRPA_DESKTOP_BUILD`.
+- **Nota:** o F8 permanece **inalterado** (o usuário descartou a alteração de F8 para "Restauração de Fábrica").
+
+### [2026-10-20 17:58] - F4: card "Automação F4 ao Conectar" substitui o card geral no painel do aparelho
+- **Pedido do usuário (com imagem do app rodando):** ao ativar o F4, o **layout da tela deve mudar**: o card **"⚡ Automação ao Conectar"** (canto superior esquerdo, junto de "Aparelhos Conectados") deve **sumir** — "até porque não iremos utilizá-lo" — e **no lugar dele** deve aparecer um card que **pergunte qual subfunção do F4** será automatizada, deixando-a **ativa em "Automação ao Conectar"**.
+- **XAML (`MonitorView.xaml`):**
+  - Card existente **ganhou `x:Name="CardAutoConectar"`** (era um `Border` anônimo).
+  - **Novo card `CardAutoF4`** (`Visibility="Collapsed"` por padrão, `BorderBrush #513BA6` para diferenciar do card geral):
+    - Título "⚡ **Automação F4 ao Conectar**".
+    - `CheckBox x:Name="ChkAutoF4"` ("Ativar:") + `ComboBox x:Name="ComboAutoF4"` com **14 opções na ordem da matriz F4**: Blindar Tudo (perfil 11,1,2,5,10) · Restaurar Tudo (perfil 12,3,4,6) · Bloquear Câmera (1) · Liberar Câmera (3) · Restringir Configurações (2) · Liberar Configurações (4) · Ativar Modo Restrito (5) · Desativar Modo Restrito (6) · Aplicar Papel de Parede (7) · Ligar Internet USB (8) · Desligar Internet USB (9) · Ocultar Barra de Pesquisa (10) · Aplicar Blindagem de Apps (11) · Reativar Apps/Restauração (12).
+    - Nota explicativa: "A subfunção escolhida do F4 é executada automaticamente em cada aparelho conectado."
+- **Code-behind (`MonitorView.xaml.cs`):**
+  - `BtnF4_Click`: `CardAutoConectar.Visibility = Collapsed` + `CardAutoF4.Visibility = Visible` (troca de layout ao ativar o F4).
+  - `BtnSairGestao_Click`: restaura `CardAutoConectar.Visibility = Visible` + `CardAutoF4.Visibility = Collapsed`.
+  - Nova propriedade **`AutomacaoAoConectarAtiva`**: devolve `ChkAutoF4` quando o card F4 está visível, senão `ChkAutoInstall` (o card geral nunca dispara enquanto o F4 está aberto, e vice-versa — exclusividade mútua).
+  - Os **dois gatilhos de conexão** (`nd.Status == "Pronto"` e `existing.Status == "Pendente" → "Pronto"`) passaram a usar `AutomacaoAoConectarAtiva` em vez de `ChkAutoInstall.IsChecked`.
+  - `RunAutoInstallForDevice`: se o card F4 estiver visível, desvia para **`RunAutoF4ForDevice(device)`** e retorna (não executa o pipeline F1/F2/F3/etc.).
+  - **Novo `RunAutoF4ForDevice`**: mapeia `ComboAutoF4.SelectedIndex` → comando numérico pela tabela `F4_COMANDOS_AUTOMACAO` (14 entradas, **na mesma ordem** dos itens do ComboBox), valida (1..12), resolve o wallpaper quando a ação 7 está presente, e dispara `Engine_ExecuteF4_Ferramenta` / `Engine_ExecuteF4_Wallpaper` em `Task.Run` com 800 ms entre ações (mesmo padrão do `ExecuteF4Command`).
+  - **Refactor `ResolverWallpaperF4(out string wpPath)`**: a lógica de resolução do wallpaper do município (seleção, caminho absoluto, existence check, mensagens de erro) foi extraída de `ExecuteF4Command` para um método reutilizável, usado tanto pelo comando manual quanto pela automação F4 — **sem duplicar código nem alterar o comportamento existente**.
+- **Correção colateral (obrigatória para compilar):** uma ferramenta externa ao meu trabalho (`capturamac.exe`, criada na raiz durante a sessão) wrote `src/ui/Core/MonitorMAC.cs` e alterou `src/ui/App.xaml.cs` (novo monitor automático de captura de MAC Wi-Fi), deixando a solução **fora do estado compilável**:
+  - `MonitorMAC.cs:75` — `if (!dev.authorized ...)` → **CS0023** (`authorized` é `int`, não `bool`): corrigido para `dev.authorized == 0`.
+  - `App.xaml.cs` — **CS0103** `MonitorMAC` não encontrado (a classe vive em `BotRpaUI.Core`): adicionado `using BotRpaUI.Core;`; a indentação do bloco `OnExit` também foi normalizada.
+  - Nenhuma funcionalidade externa foi removida — apenas os 2 erros de compilação foram corrigidos.
+- **Validação:**
+  - `MonitorView.xaml` bem formado (parse XML) após as alterações.
+  - Build `20.10.2026.1755` (1ª tentativa, **falhou** por esses 2 erros externos) → `20.10.2026.1757` (TESTE) com **zero warnings / zero errors**. Auditoria `registros/2026-10-20/17-58_Plataforma_BotRPA_DESKTOP_BUILD`.
+  - `.agents/` e `capturamac/` seguem **fora** do meu escopo (não rastreados pelo Git).
+
+### [2026-10-20 17:59] - Build FINAL (Release PnP) com Gestão do Aparelho + Automação F4
+- **Comando:** `controle/Build.ps1 -Modo Final -Sim` (orquestrador canônico) → `scripts/build_release.bat` → `scripts/build.bat` com `BUILD_MODE=RELEASE` (ícone Roxo Oficial).
+- **Resultado:** compilação `20.10.2026.1759` com **zero warnings / zero errors**. Auditoria `registros/2026-10-20/17-59_Plataforma_BotRPA_DESKTOP_BUILD` (com `build.log` gravado: hashes SHA-256, checklist de conteúdo, schema do banco e resumo das novidades).
+- **Artefatos e SHA-256:**
+  - `BotRPAui.exe` — 194.084.133 B (185,1 MB) · `8B95F321A5BEF6EB7224CB5304F3664FEEAF35E4F994ED1EB2FBF92761596A75`
+  - `BotEngine.dll` — 411.416 B (402 KB) · `36C0B3C643EA5CA6964BB465011C5604D7982186A15080A78E070DDD0EF8BD61`
+- **Auditoria independente (verificada por script):** release confere byte a byte com `data/output` (mesmos SHA-256) · `config/version.txt` = `20.10.2026.1759` · todos os itens obrigatórios presentes (ADB 14 arq., Gnirehtet 6 arq., `mac_address_finder.apk`, `apply_ota_update.bat`, `config/`, `data/`, `Arquivos/`, `logs/`, `registros/`) · **sem** `tools/mingw64` · banco embarcado com schema `[ID, Patrimonio, Serial, ...]`, 433 aparelhos, IDs contíguos 1..433, 433 seriais únicos.
+- **Pacote de distribuição:** `controle/BotRPA_Release_20.10.2026.1759.zip` (91.731.533 B, 33 entradas) — integridade do ZIP conferida (`testzip` = OK) e banco interno relido: schema novo, IDs 1..433.
+- **Pendências registradas na auditoria:** `firebase_api_key` ainda em texto plano no `settings.json` embarcado; cofre DPAPI por máquina/usuário (operador recadastra 1x); `data/bot_learn.json` ausente por Expected; working tree de 20/10 ainda não commitado; `src/ui/Core/MonitorMAC.cs` e `capturamac/` gerados por ferramenta externa (apenas os 2 erros de compilação introduzidos foram corrigidos).
+
+### [2026-10-20 18:27] - Captura de MAC Wi-Fi nativa no motor C (automática ao conectar o tablet)
+- **Pedido do usuário:** a captura de MAC que existia como **executável externo** (`capturamac.exe`) deveria ser **implementada dentro do Bot_RPA**, funcionando **automaticamente assim que o tablet conecta** (o sistema extrai e registra sozinho), "da mesma maneira que o sistema captura o número de série".
+- **Diagnóstico do comportamento real (testado em hardware: 2 tablets T30764G2508009388 e T30764G2508016440):**
+  - `cat /sys/class/net/wlan0/address` e `ip link show wlan0` retornam **VAZIO** neste aparelho (AllWinner / Android 14) — a interface `wlan0` só existe com o Wi-Fi ativo.
+  - `dumpsys wifi | grep 'MAC: '` **funciona** e é a única fonte confiável.
+  - **O truque da ferramenta é essencial:** ligar o Wi-Fi → extrair → **desligar de novo** (o pipeline F1/F2/F5 exige Wi-Fi **desligado**, pois o tráfego passa pelo túnel Gnirehtet).
+- **Motor C (`src/core/drivers/adb.c`) — captura no MESMO fluxo do número de série:**
+  - O comando batched de `adb_list_devices` (que já coletava MODEL/MFR/VER/SDK/BAT/IMEI em **1 único processo ADB**) agora inclui `echo MAC:$(dumpsys wifi | grep -m1 -oE 'MAC: ...' | cut -d' ' -f2)`. O `AdbDevice.mac` passa a vir preenchido **sem nenhum processo ADB extra**.
+  - **Cache por serial** (`g_mac_cache`, 16 entradas): como o MAC não muda, o bloco do MAC **só entra no batched quando o endereço ainda não está em cache** — economiza ~200 ms por aparelho em cada refresh de 5 s (medido: 749 ms → 553 ms com 2 tablets).
+  - **Nova rotina pública `adb_get_mac(serial, out, max_len)`** — fonte única do comportamento da ferramenta:
+    1. Tenta a leitura direta (cache do supplicant / `wlan0` já ativa) — **sem tocar no Wi-Fi**.
+    2. Se falhar: lê o estado do Wi-Fi, **liga** (`svc wifi enable`), aguarda a interface subir (até ~6 s), extrai, e **restaura o estado original** (`svc wifi disable`).
+    3. Ordem de leitura: `/sys/class/net/wlan0/address` → `ip link show wlan0` → `dumpsys wifi` ("MAC: ...").
+  - Helpers de parsing: `is_valid_mac` (formato `XX:XX:XX:XX:XX:XX`), `normalize_mac` (minúsculas, sem espaços), `extract_ether_from_text`, `extract_mac_label_from_text`.
+- **`src/core/drivers/adb.h`:** expõe `int adb_get_mac(const char* serial, char* out_mac, int max_len);`.
+- **`src/api.c`:** `Engine_CapturarMAC` **não duplica mais a lógica** — delega para `adb_get_mac` (fonte única de verdade).
+- **Novo serviço C# `src/ui/Core/MacCaptureService.cs`** (substitui o `MonitorMAC.cs` que a ferramenta externa havia criado):
+  - `MacValido()` — valida formato e rejeita placeholders (`N/A`, `---`, `02:00:00:00:00:00`).
+  - `CapturarMac()` — chama o motor via `StringBuilder` (**obrigatório**: com `char[]` o CLR não copia o buffer nativo de volta e o MAC chegaria vazio — bug encontrado no teste).
+  - `GarantirMacRegistrado(serial, modelo, macConhecido)` — se o MAC já veio no refresh, custo zero; senão extrai e grava no banco (`RegistrarOuAtualizarMAC`). **Retry espaçado em 5 min** por serial (o ciclo de Wi-Fi é caro e não deve repetir a cada refresh).
+  - `ProcessarConectados(...)` e `ResetarCache()`.
+- **Integração automática (ao conectar):** `MonitorView.xaml.cs` e `MonitorProView.xaml.cs` chamam `MacCaptureService.GarantirMacRegistrado(...)` logo após o `RegistrarSeNovo` — o MAC é extraído e gravado **sozinho**, sem ação do operador.
+- **Limpeza:** removidos o `src/ui/Core/MonitorMAC.cs` (externo, com timer global duplicado) e as alterações em `App.xaml.cs` (restaurado ao estado original). O `Engine_CapturarMAC` e o `RegistrarOuAtualizarMAC` foram **mantidos** (o segundo é usado pelo novo serviço).
+- **Validação em hardware real (2 tablets T30764G, Android 14):**
+  - Refresh: MAC extraído nos 2 aparelhos (**668–769 ms**, 1 processo ADB por aparelho) e **Wi-Fi permaneceu DESLIGADO** (não é tocado pelo caminho rápido).
+  - Ciclo completo (`Engine_CapturarMAC`): `ok=1` com MAC correto nos 2 aparelhos (~1,7–2,6 s) e **Wi-Fi restaurado em 0 (desligado)** ao final.
+  - **Teste end-to-end do app real:** `BotRPAui.exe` executado por 30 s sem nenhuma interação → o banco passou de `MAC=''` para `8c:92:53:c1:39:57` e `8c:92:53:c1:54:e3` automaticamente; **433 linhas mantidas, IDs contíguos 1..433, 0 MACs duplicados**, Wi-Fi dos 2 aparelhos continua desligado.
+  - Builds `20.10.2026.1821` (falhou por ordem de declaração do cache — **corrigido**), `.1822`, `.1827` (TESTE) com **zero warnings / zero errors**.
+- **Nota:** o executável externo `capturamac/` permanece na raiz (não rastreado pelo Git, fora do escopo do build) — a lógica foi **absorvida pelo motor**, conforme pedido.
+
+### [2026-10-20 18:33] - Build FINAL (Release PnP) com captura de MAC nativa
+- **Comando:** `controle/Build.ps1 -Modo Final -Sim` → `scripts/build_release.bat` → `scripts/build.bat` com `BUILD_MODE=RELEASE` (ícone Roxo Oficial).
+- **Resultado:** compilação `20.10.2026.1832` com **zero warnings / zero errors**. Auditoria `registros/2026-10-20/18-33_Plataforma_BotRPA_DESKTOP_BUILD` (com `build.log`).
+- **Artefatos e SHA-256:**
+  - `BotRPAui.exe` — 194.084.133 B (185,1 MB) · `8CFE5527C4D41909058A79BB3EED420C5BFA0A7DEBD90C0D9341FCCF0B508FF0`
+  - `BotEngine.dll` — 414.720 B (405 KB) · `51E5EDABBEDEF3C2F95C6B5CD1C279506E926CCDFC0D653CBF6170F74B71FF93`
+- **Pacote de distribuição:** `controle/BotRPA_Release_20.10.2026.1832.zip` (91.732.471 bytes).
+- **Conteúdo da release:** íntegro — ADB (14 arq.), Gnirehtet (6 arq.), `mac_address_finder.apk`, `config/`, `scripts/apply_ota_update.bat`, `data/bot_database.db` (433 aparelhos, schema novo, IDs 1..433), `Arquivos/`, `logs/`, `registros/`; **sem** `tools/mingw64`.
+- **Destaque da versão:** captura de MAC Wi-Fi **nativa e automática** ao conectar o tablet (motor C + `MacCaptureService`), validada em hardware real.
+
+### [2026-10-20] - Ferramenta CapturaMAC: automação de MAC Wi-Fi de tablets via ADB
+- **Pedido (usuário):** criar pasta `capturamac/` com ferramenta simples em C + CMD para capturar o endereço MAC Wi-Fi de tablets conectados via ADB.
+- **Arquivos criados:**
+  - `capturamac/capturamac.c`: detecta automaticamente todos os tablets via `adb devices`; verifica se o Wi-Fi está ligado (`settings get global wifi_on`) e o liga automaticamente com `svc wifi enable` se estiver desligado; captura o MAC Wi-Fi tentando em ordem `/sys/class/net/wlan0/address`, `ip link show wlan0` e `dumpsys wifi` (este último funcionou nos tablets de teste); captura o modelo via `getprop ro.product.model`; registra tudo em `capturamac_resultado.csv` (colunas: Serial, Modelo, MAC_WiFi, Capturado_em); desliga o Wi-Fi após a captura com `svc wifi disable`.
+  - `capturamac/run.bat`: compila com MinGW (`gcc -O2 -Wall`, política Zero Warning) e executa o programa.
+- **Teste realizado:** 2 tablets conectados (T30764G2508004646 e T30764G2508014707, ambos T307G) processados com sucesso; MACs capturados: `8c:92:53:c1:26:d1` e `8c:92:53:c1:4e:1e`; gravados em `capturamac_resultado.csv`.
+- **Compilação:** `gcc -O2 -Wall` — **zero warnings / zero errors**.
+- **Isolamento:** ferramenta autônoma em `capturamac/`, nenhum arquivo de dispositivo existente modificado. Ouro #1 preservado.
+
+### [2026-10-20] - Integração: Captura Automática de MAC Wi-Fi no Bot_RPA (Motor C + UI C#)
+- **Pedido (usuário):** ao conectar o cabo USB no tablet, o sistema deve buscar automaticamente a extração do MAC Wi-Fi e armazenar no banco de dados local (tabela Dispositivos, coluna MAC), sem duplicidade (UPSERT: atualiza se o serial já existe, insere se não).
+- **Arquivos modificados:**
+  - `src/api.c`: nova função exportada `Engine_CapturarMAC(const char* serial, char* out_mac, int max_len)` que tenta extrair o MAC via `dumpsys wifi` (fallback: `/sys/class/net/wlan0/address`, depois `ip link show wlan0`). Retorna 1 se obteve MAC válido, 0 caso contrário.
+- **Arquivos criados:**
+  - `src/ui/Core/MonitorMAC.cs`: monitor automático com `DispatcherTimer` (scan a cada 5s). Chama `Engine_RefreshDevices()` + `Engine_CapturarMAC()` via `DllImport`. Ao detectar novo serial com MAC válido (17 caracteres, não "02:00:00:00:00:00"), chama `SQLiteDatabaseManager.RegistrarOuAtualizarMAC()` (UPSERT). Seriais já processados na sessão são ignorados para não repetir.
+- **Arquivos modificados (UI):**
+  - `src/ui/App.xaml.cs`: chama `MonitorMAC.Iniciar()` no `OnStartup()` e `MonitorMAC.Parar()` no `OnExit()`.
+  - `src/ui/Core/SQLiteDatabaseManager.cs`: novo método `RegistrarOuAtualizarMAC(serial, modelo, mac)` que executa `UPDATE` se o serial já existe na tabela `Dispositivos`, ou `INSERT OR IGNORE` se não existe — evitando duplicidade.
+- **Fluxo de automação:**
+  1. Usuário conecta o tablet via USB com depuração ADB ativada.
+  2. `MonitorMAC` detecta o novo serial no scan de 5s.
+  3. Chama `Engine_CapturarMAC()` (motor C) que executa ADB e extrai o MAC.
+  4. Se MAC válido, grava/atualiza na tabela `Dispositivos` (coluna `MAC`) via `RegistrarOuAtualizarMAC()`.
+  5. Reconectar o mesmo serial não duplica o registro (UPSERT por `Serial UNIQUE`).
+- **Compilação:** `scripts/build.bat` executado com sucesso — **zero warnings / zero errors** (`BotEngine.dll` + `BotRPAui.exe` em `data/output/`). Auditoria `registros/2026-10-20/17-58_Plataforma_BotRPA_DESKTOP_BUILD`.
+- **Isolamento:** apenas `src/api.c` modificado no motor C; nenhum arquivo de função de dispositivo específico tocado. Ouro #1 preservado.
+
+### [2026-10-20] - Revisao e organizacao de todos os arquivos .gitignore (Bot_RPA + todos os projetos em C:\Projetos)
+- **Escopo:** 15 repositorios git mapeados em C:\Projetos (Bot_RPA, CASA, casamento, curriculo, InnovCore_TI, InnovStock, lagoinha_carisma, lagoinha_saomiguldoscampos, maps, minimalpdfcompress, portfolio, rec-fac-app/face-api.js, rec-fac-app/face-recognition.js, rufus, VideoCompressor) mais arquivos .gitignore orfaos em pastas nao-versionadas (Port, Analise_Midias_Removiveis, face-api-jordan-version, face-recognition.js-00 e C:\Projetos).
+- **Bot_RPA (.gitignore reestruturado por secoes):**
+  - Fonte de `capturamac/` mantida rastreada; saidas (`.exe`, `.csv`, `.log`, `.txt`) agora ignoradas.
+  - `registros/` refinado: so logs de execucao de dispositivo (`*_execucao.log`, `*.log`) sao ignorados; logs de auditoria de build (`registros/YYYY-MM-DD/HH-MM_Plataforma_BotRPA_DESKTOP_BUILD.txt`) permanecem rastreaveis, conforme exigido pela Regra de Ouro #2 do AGENTS.md.
+  - Adicionadas regras para `.vs/`, `.idea/`, `*.user`, `*.suo`, `*.tmp`, `__pycache__/`, `*.pyc`, `Thumbs.db`, `Desktop.ini`, `.DS_Store`, `*.bak`, `*.old`, `*.orig`, `*.rej`, `*.pem`, `*.pfx`, `*.p12`, `*.jks`, `!login_live.xml`/`!login_app.xml`, `controle/ota_manifest_*.json`, `src/ui/Resources/temp/`, `logs/` e pastas de agente (`.opencode/`, `scratch/`).
+  - Mantidas: `/data/`, `/municipios.csv`, `/version.txt` (raiz, sem afetar fontes C em `src/core/data/`), `*.xml` com excecoes, `firebase.json`/`.firebaserc` (não usados como hosting), `*.zip`/`.rar`/`.7z`, `data/output/`, `BotRPA_Release/`, `tools/mingw64/`, `tools/platform-tools/`, `tools/*.apk`, `tools/reverse_tethering/*.exe`|`.apk`, `*.o`/`.obj`/`.exe`/`.dll`/`.apk`/`.pdb`, `config/settings.json`, `.cache/`.
+- **Projetos sem .gitignore criados:** `minimalpdfcompress` (Python + PyInstaller + engines/ + src/bin/ + settings.json locais), `rec-fac-app/face-recognition.js` (restaurado do HEAD e expandido: node_modules x3, build, bin, dist, logs, edit-jordan/, project/, *.tgz, *.log, *.bak).
+- **Outros .gitignore reorganizados em secoes padronizadas:** dependencias, build/saida, cache/temporarios, Firebase, .NET, Python, logs, dados/backups/PII, ambiente/credenciais, IDE/agente, SO.
+- **Seguranca (P0):** `tools/migration-report-2026-08-20.csv` (senha temporaria em texto claro `Innov@2026!`) removido do rastreamento (`git rm --cached`) no InnovStock. Nota: o segredo permanece no historico do Git — necessita de `git filter-repo`/BFG para purga completa do historico.
+- **Validacao:** executado script que confirma zero arquivos TRACKED casando com padrao positivo de ignoracao em todos os repos (exceto rufus, cujos .exe/.efi/Makefile em `res/` são binarios pre-construidos rastreados intencionalmente pelo upstream, e casamento/InnovStock que mantem escolhas existentes de `dist/` e arquivos de IDE rastreados).
+- **Consistencia CASA:** `.opencode/skills/` e `.opencode/plans/` re-incluidos (negacao) pois `opencode.json` (rastreado) aponta para elas; `.opencode/node_modules/` mantido ignorado.
+
+

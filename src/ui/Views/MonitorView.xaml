@@ -97,6 +97,39 @@
                 </Setter.Value>
             </Setter>
         </Style>
+        <!-- Botão fantasma com bordas arredondadas (ações de cabeçalho, ex: Limpar Logs) -->
+        <Style x:Key="RoundedGhostButton" TargetType="Button">
+            <Setter Property="Background" Value="#11111E"/>
+            <Setter Property="Foreground" Value="#E3E0F2"/>
+            <Setter Property="BorderBrush" Value="#513BA6"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="10,4"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bd" Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="8" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="#1C1836"/>
+                                <Setter TargetName="bd" Property="BorderBrush" Value="#8570E6"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="#0A0A12"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </UserControl.Resources>
 
     <Grid Margin="12">
@@ -134,18 +167,41 @@
                         <ListView x:Name="ListDevices" Height="140" Background="#0A0A12" Foreground="#E3E0F2" BorderBrush="#202034" BorderThickness="1" Margin="0,0,0,12" ScrollViewer.HorizontalScrollBarVisibility="Hidden">
                             <ListView.View>
                                 <GridView>
-                                    <GridViewColumn Header="Bateria" Width="85">
-                                        <GridViewColumn.CellTemplate>
-                                            <DataTemplate>
-                                                <Grid Width="70" Height="18" Margin="0,2">
-                                                    <ProgressBar Value="{Binding BatteryValue}" Minimum="0" Maximum="100" Style="{StaticResource RoundedProgressBar}"/>
-                                                    <TextBlock Text="{Binding Battery}" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#FFFFFF" FontWeight="Bold" FontSize="10" />
-                                                </Grid>
-                                            </DataTemplate>
-                                        </GridViewColumn.CellTemplate>
+                                    <!-- Modelo -->
+                                    <GridViewColumn Header="Modelo" Width="105" DisplayMemberBinding="{Binding ModeloExibicao}">
+                                        <GridViewColumn.CellStyle>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Foreground" Value="#E3E0F2"/>
+                                                <Setter Property="FontWeight" Value="SemiBold"/>
+                                                <Setter Property="FontSize" Value="11"/>
+                                                <Setter Property="VerticalAlignment" Value="Center"/>
+                                            </Style>
+                                        </GridViewColumn.CellStyle>
                                     </GridViewColumn>
-                                    <GridViewColumn Header="Marca" Width="120" DisplayMemberBinding="{Binding Marca}" />
-                                    <GridViewColumn Header="Número de Série" Width="175" DisplayMemberBinding="{Binding Serial}" />
+
+                                    <!-- Número de Série -->
+                                    <GridViewColumn Header="Número de Série" Width="150" DisplayMemberBinding="{Binding Serial}">
+                                        <GridViewColumn.CellStyle>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Foreground" Value="#5EB1FF"/>
+                                                <Setter Property="FontFamily" Value="Consolas"/>
+                                                <Setter Property="FontSize" Value="11"/>
+                                                <Setter Property="VerticalAlignment" Value="Center"/>
+                                            </Style>
+                                        </GridViewColumn.CellStyle>
+                                    </GridViewColumn>
+
+                                    <!-- MAC Wi-Fi -->
+                                    <GridViewColumn Header="MAC Wi-Fi" Width="130" DisplayMemberBinding="{Binding MACExibicao}">
+                                        <GridViewColumn.CellStyle>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Foreground" Value="#4EDEA3"/>
+                                                <Setter Property="FontFamily" Value="Consolas"/>
+                                                <Setter Property="FontSize" Value="11"/>
+                                                <Setter Property="VerticalAlignment" Value="Center"/>
+                                            </Style>
+                                        </GridViewColumn.CellStyle>
+                                    </GridViewColumn>
                                 </GridView>
                             </ListView.View>
                             <ListView.Resources>
@@ -174,8 +230,8 @@
                             </ListView.ItemContainerStyle>
                         </ListView>
 
-                        <!-- Automação ao Conectar -->
-                        <Border Background="#0C0C16" CornerRadius="8" Padding="10,8" Margin="0,0,0,10" BorderBrush="#222236" BorderThickness="1">
+                        <!-- Automação ao Conectar (oculto enquanto o painel F4 estiver ativo) -->
+                        <Border x:Name="CardAutoConectar" Background="#0C0C16" CornerRadius="8" Padding="10,8" Margin="0,0,0,10" BorderBrush="#222236" BorderThickness="1">
                             <StackPanel>
                                 <TextBlock Text="⚡ Automação ao Conectar" Foreground="#D2BBFF" FontSize="12" FontWeight="Bold" Margin="0,0,0,6"/>
                                 <Grid>
@@ -193,6 +249,40 @@
                                         <ComboBoxItem Content="[F8] Conexão Ativa (Gnirehtet)"/>
                                     </ComboBox>
                                 </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Automação F4 ao Conectar (visível apenas com o painel de Gestão do Aparelho aberto) -->
+                        <Border x:Name="CardAutoF4" Background="#141126" CornerRadius="8" Padding="10,8" Margin="0,0,0,10" BorderBrush="#513BA6" BorderThickness="1" Visibility="Collapsed">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                    <TextBlock Text="⚡" Foreground="#00E5FF" FontSize="12" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Automação F4 ao Conectar" Foreground="#D2BBFF" FontSize="12" FontWeight="Bold" VerticalAlignment="Center"/>
+                                </StackPanel>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <CheckBox x:Name="ChkAutoF4" Content="Ativar:" Foreground="#E3E0F2" VerticalAlignment="Center" Margin="0,0,10,0" FontWeight="SemiBold" FontSize="11"/>
+                                    <ComboBox x:Name="ComboAutoF4" Grid.Column="1" Height="28" Background="#17172A" Foreground="#FFFFFF" BorderBrush="#513BA6" SelectedIndex="0" FontSize="11" ToolTip="Subfunção do F4 executada automaticamente quando um aparelho for conectado.">
+                                        <ComboBoxItem Content="Blindar Tudo (perfil 11,1,2,5,10)"/>
+                                        <ComboBoxItem Content="Restaurar Tudo (perfil 12,3,4,6)"/>
+                                        <ComboBoxItem Content="Bloquear Câmera (1)"/>
+                                        <ComboBoxItem Content="Liberar Câmera (3)"/>
+                                        <ComboBoxItem Content="Restringir Configurações (2)"/>
+                                        <ComboBoxItem Content="Liberar Configurações (4)"/>
+                                        <ComboBoxItem Content="Ativar Modo Restrito (5)"/>
+                                        <ComboBoxItem Content="Desativar Modo Restrito (6)"/>
+                                        <ComboBoxItem Content="Aplicar Papel de Parede (7)"/>
+                                        <ComboBoxItem Content="Ligar Internet USB (8)"/>
+                                        <ComboBoxItem Content="Desligar Internet USB (9)"/>
+                                        <ComboBoxItem Content="Ocultar Barra de Pesquisa (10)"/>
+                                        <ComboBoxItem Content="Aplicar Blindagem de Apps (11)"/>
+                                        <ComboBoxItem Content="Reativar Apps - Restauração (12)"/>
+                                    </ComboBox>
+                                </Grid>
+                                <TextBlock Text="A subfunção escolhida do F4 é executada automaticamente em cada aparelho conectado." Foreground="#85859E" FontSize="9" Margin="0,6,0,0" TextWrapping="Wrap"/>
                             </StackPanel>
                         </Border>
                         
@@ -265,7 +355,7 @@
                 </ScrollViewer>
             </Border>
 
-            <!-- PAINEL DIREITO: Logs e Terminal / Painel Gestão Kiosk -->
+            <!-- PAINEL DIREITO: Logs e Terminal / Painel Gestão do Aparelho -->
             <Border Grid.Column="1" Background="#121220" CornerRadius="12" Padding="14" BorderBrush="#222236" BorderThickness="1">
                 <Grid>
                     <!-- Camada 1: Painel do Histórico de Execução (Logs normais) -->
@@ -293,7 +383,7 @@
                                 <ProgressBar x:Name="ExecutionProgress" Width="140" Height="8" Margin="0,0,10,0" 
                                              Style="{StaticResource RoundedProgressBar}" Value="0" Maximum="100"/>
                                 <TextBlock x:Name="LblProgress" Text="0%" Foreground="#4EDEA3" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,12,0" Width="38" TextAlignment="Right" FontSize="12"/>
-                                <Button Content="Limpar Logs" Background="#11111E" Foreground="#E3E0F2" BorderBrush="#513BA6" BorderThickness="1" Padding="10,4" Click="BtnClearLog_Click" Cursor="Hand" FontWeight="SemiBold" FontSize="11"/>
+                                <Button Content="Limpar Logs" Style="{StaticResource RoundedGhostButton}" Click="BtnClearLog_Click"/>
                             </StackPanel>
                         </Grid>
 
@@ -349,34 +439,35 @@
                         </Grid>
                     </Grid>
 
-                    <!-- Camada 2: Painel Visual Interativo de Gestão Kiosk (Submódulo Kiosk) -->
-                    <Grid x:Name="PanelGestaoKiosk" Visibility="Collapsed">
+                    <!-- Camada 2: Painel Visual Interativo de Gestao do Aparelho -->
+                    <Grid x:Name="PanelGestaoAparelho" Visibility="Collapsed">
                         <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="*"/>
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
 
-                        <!-- Cabeçalho Kiosk com Botão Sair -->
+                        <!-- CABECALHO: Gestao do Aparelho + Botao Sair -->
                         <Border Grid.Row="0" Background="#161628" CornerRadius="10" Padding="14,10" Margin="0,0,0,10" BorderBrush="#2C2C48" BorderThickness="1">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
-                                
+
                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                     <Border Width="38" Height="38" CornerRadius="8" Background="#281A54" BorderBrush="#513BA6" BorderThickness="1.5" Margin="0,0,12,0">
-                                        <TextBlock Text="🛡️" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        <TextBlock Text="📱" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
                                     <StackPanel VerticalAlignment="Center">
-                                        <TextBlock Text="GESTÃO KIOSK &amp; CONTROLE DE DISPOSITIVOS" Foreground="#FFFFFF" FontSize="14" FontWeight="Bold"/>
-                                        <TextBlock Text="Políticas de restrição, blindagem de bloatwares e restauração" Foreground="#9C8BE0" FontSize="11" FontWeight="SemiBold"/>
+                                        <TextBlock Text="GESTÃO DO APPARELHO" Foreground="#FFFFFF" FontSize="14" FontWeight="Bold"/>
+                                        <TextBlock Text="Hardware, aplicativos, rede e personalização do tablet" Foreground="#9C8BE0" FontSize="11" FontWeight="SemiBold"/>
                                     </StackPanel>
                                 </StackPanel>
 
-                                <!-- Botão Sair da Gestão Kiosk -->
-                                <Button x:Name="BtnSairKiosk" Grid.Column="1" Click="BtnSairKiosk_Click" Cursor="Hand" Padding="16,6" Height="36" Background="#28141C" BorderBrush="#FF4D4D" BorderThickness="1.5">
+                                <!-- Botao Sair da Gestao do Aparelho -->
+                                <Button x:Name="BtnSairGestao" Grid.Column="1" Click="BtnSairGestao_Click" Cursor="Hand" Padding="16,6" Height="36" Background="#28141C" BorderBrush="#FF4D4D" BorderThickness="1.5">
                                     <Button.Resources>
                                         <Style TargetType="Border">
                                             <Setter Property="CornerRadius" Value="8"/>
@@ -384,190 +475,248 @@
                                     </Button.Resources>
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                         <TextBlock Text="✕" Foreground="#FF4D4D" FontWeight="Black" FontSize="13" Margin="0,0,8,0"/>
-                                        <TextBlock Text="Sair da Gestão Kiosk" Foreground="#FFFFFF" FontWeight="Bold" FontSize="12"/>
+                                        <TextBlock Text="Sair da Gestão do Aparelho" Foreground="#FFFFFF" FontWeight="Bold" FontSize="12"/>
                                     </StackPanel>
                                 </Button>
                             </Grid>
                         </Border>
 
-                        <!-- Conteúdo em Cards Interativos com ScrollViewer -->
-                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Focusable="False">
-                            <StackPanel Margin="0,0,4,0">
-                                
-                                <!-- ============================================================== -->
-                                <!-- PERFIS 1-CLIQUE: sequência automática, sem decorar números    -->
-                                <!-- ============================================================== -->
-                                <Border Background="#141126" CornerRadius="10" Padding="10" Margin="0,0,0,12" BorderBrush="#513BA6" BorderThickness="1.5">
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-                                        <Button Grid.Column="0" Tag="11,1,2,5,10" Click="BtnKioskProfile_Click" Height="42" Margin="0,0,5,0" Background="#281A54" BorderBrush="#00E5FF" BorderThickness="1.5" Cursor="Hand" ToolTip="Blindagem + câmera + config + kiosk + barra, em sequência">
-                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center">
-                                                <TextBlock Text="🛡️" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                                                <StackPanel VerticalAlignment="Center">
-                                                    <TextBlock Text="Blindar Tudo" Foreground="#FFFFFF" FontWeight="Bold" FontSize="12"/>
-                                                    <TextBlock Text="perfil Kiosk em 1 clique" Foreground="#00E5FF" FontSize="9"/>
+                        <!-- PERFIS 1-CLIQUE: sequencia automatica, sem decorar numeros -->
+                        <Border Grid.Row="1" Background="#141126" CornerRadius="10" Padding="10" Margin="0,0,0,10" BorderBrush="#513BA6" BorderThickness="1.5">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Button Grid.Column="0" Tag="11,1,2,5,10" Click="BtnGestaoProfile_Click" Height="42" Margin="0,0,5,0" Background="#281A54" BorderBrush="#00E5FF" BorderThickness="1.5" Cursor="Hand" ToolTip="Blindagem + camera + config + modo restrito + barra, em sequencia">
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                        <TextBlock Text="🛡️" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                        <StackPanel VerticalAlignment="Center">
+                                            <TextBlock Text="Blindar Tudo" Foreground="#FFFFFF" FontWeight="Bold" FontSize="12"/>
+                                            <TextBlock Text="perfil completo em 1 clique" Foreground="#00E5FF" FontSize="9"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Button>
+                                <Button Grid.Column="1" Tag="12,3,4,6" Click="BtnGestaoProfile_Click" Height="42" Margin="5,0,0,0" Background="#143024" BorderBrush="#4EDEA3" BorderThickness="1.5" Cursor="Hand" ToolTip="Reativa apps + libera camera, config e modo restrito, em sequencia">
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                        <TextBlock Text="🔄" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                        <StackPanel VerticalAlignment="Center">
+                                            <TextBlock Text="Restaurar Tudo" Foreground="#FFFFFF" FontWeight="Bold" FontSize="12"/>
+                                            <TextBlock Text="desfaz tudo em 1 clique" Foreground="#4EDEA3" FontSize="9"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
+                        </Border>
+
+                        <!-- DUAS COLUNAS: esquerda (controle + apps) e direita (personalizacao + rede) -->
+                        <Grid Grid.Row="2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="10"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- ================= COLUNA ESQUERDA ================= -->
+                            <Border Grid.Column="0" Background="#101020" CornerRadius="10" Padding="10" BorderBrush="#25253E" BorderThickness="1">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
+
+                                    <Border Grid.Row="0" Background="#141126" CornerRadius="8" Padding="10,7" Margin="0,0,0,8" BorderBrush="#513BA6" BorderThickness="1">
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <TextBlock Text="🔒" FontSize="14" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                            <TextBlock Text="CONTROLE DE ACESSO" Foreground="#D2BBFF" FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Focusable="False">
+                                        <StackPanel>
+                                            <!-- Camera -->
+                                            <Border Background="#121222" CornerRadius="8" Padding="10,9" Margin="0,0,0,8" BorderBrush="#25253E" BorderThickness="1">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <StackPanel VerticalAlignment="Center">
+                                                        <TextBlock Text="📷 Câmera" Foreground="#FFFFFF" FontWeight="Bold" FontSize="11"/>
+                                                        <TextBlock Text="Bloqueia os aplicativos de foto e vídeo" Foreground="#85859E" FontSize="9" Margin="0,2,0,0"/>
+                                                    </StackPanel>
+                                                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                                        <Button Tag="1" Click="BtnGestaoAction_Click" Content="Bloquear" Width="66" Height="28" Background="#241217" Foreground="#FFA3A3" BorderBrush="#FF4D4D" BorderThickness="1" Margin="0,0,4,0" Cursor="Hand" FontWeight="Bold" FontSize="10"/>
+                                                        <Button Tag="3" Click="BtnGestaoAction_Click" Content="Liberar" Width="62" Height="28" Background="#10251C" Foreground="#4EDEA3" BorderBrush="#276749" BorderThickness="1" Cursor="Hand" FontWeight="Bold" FontSize="10"/>
+                                                    </StackPanel>
+                                                </Grid>
+                                            </Border>
+
+                                            <!-- Configuracoes -->
+                                            <Border Background="#121222" CornerRadius="8" Padding="10,9" Margin="0,0,0,8" BorderBrush="#25253E" BorderThickness="1">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <StackPanel VerticalAlignment="Center">
+                                                        <TextBlock Text="⚙️ Configurações" Foreground="#FFFFFF" FontWeight="Bold" FontSize="11"/>
+                                                        <TextBlock Text="Restringe o menu de Configurações do sistema" Foreground="#85859E" FontSize="9" Margin="0,2,0,0"/>
+                                                    </StackPanel>
+                                                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                                        <Button Tag="2" Click="BtnGestaoAction_Click" Content="Restringir" Width="72" Height="28" Background="#2A2412" Foreground="#FFE699" BorderBrush="#FFD666" BorderThickness="1" Margin="0,0,4,0" Cursor="Hand" FontWeight="Bold" FontSize="10"/>
+                                                        <Button Tag="4" Click="BtnGestaoAction_Click" Content="Liberar" Width="62" Height="28" Background="#10251C" Foreground="#4EDEA3" BorderBrush="#276749" BorderThickness="1" Cursor="Hand" FontWeight="Bold" FontSize="10"/>
+                                                    </StackPanel>
+                                                </Grid>
+                                            </Border>
+
+                                            <!-- Modo Restrito -->
+                                            <Border Background="#121222" CornerRadius="8" Padding="10,9" Margin="0,0,0,8" BorderBrush="#25253E" BorderThickness="1">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <StackPanel VerticalAlignment="Center">
+                                                        <TextBlock Text="🛑 Modo Restrito" Foreground="#FFFFFF" FontWeight="Bold" FontSize="11"/>
+                                                        <TextBlock Text="Trava conjunta em Câmera + Configurações" Foreground="#85859E" FontSize="9" Margin="0,2,0,0"/>
+                                                    </StackPanel>
+                                                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                                        <Button Tag="5" Click="BtnGestaoAction_Click" Content="Ativar" Width="62" Height="28" Background="#2D1720" Foreground="#FF8080" BorderBrush="#FF4D4D" BorderThickness="1" Margin="0,0,4,0" Cursor="Hand" FontWeight="Bold" FontSize="10"/>
+                                                        <Button Tag="6" Click="BtnGestaoAction_Click" Content="Desativar" Width="70" Height="28" Background="#12241C" Foreground="#55EFC4" BorderBrush="#276749" BorderThickness="1" Cursor="Hand" FontWeight="Bold" FontSize="10"/>
+                                                    </StackPanel>
+                                                </Grid>
+                                            </Border>
+
+                                            <!-- SEPARADOR DE GRUPO -->
+                                            <Border Background="#141126" CornerRadius="8" Padding="10,7" Margin="0,4,0,8" BorderBrush="#513BA6" BorderThickness="1">
+                                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <TextBlock Text="🛡️" FontSize="14" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                                    <TextBlock Text="APLICATIVOS" Foreground="#D2BBFF" FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
                                                 </StackPanel>
-                                            </StackPanel>
-                                        </Button>
-                                        <Button Grid.Column="1" Tag="12,3,4,6" Click="BtnKioskProfile_Click" Height="42" Margin="5,0,0,0" Background="#143024" BorderBrush="#4EDEA3" BorderThickness="1.5" Cursor="Hand" ToolTip="Reativa apps + libera câmera, config e kiosk, em sequência">
-                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center">
-                                                <TextBlock Text="🔄" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                                                <StackPanel VerticalAlignment="Center">
-                                                    <TextBlock Text="Restaurar Tudo" Foreground="#FFFFFF" FontWeight="Bold" FontSize="12"/>
-                                                    <TextBlock Text="desfaz o Kiosk em 1 clique" Foreground="#4EDEA3" FontSize="9"/>
-                                                </StackPanel>
-                                            </StackPanel>
-                                        </Button>
-                                    </Grid>
-                                </Border>
+                                            </Border>
 
-                                <!-- BLOCO: Hardware (compacto) -->
-                                <TextBlock Text="🔒 Câmera e Configurações" Foreground="#D2BBFF" FontSize="11" FontWeight="Bold" Margin="2,0,0,6"/>
+                                            <!-- Blindagem -->
+                                            <Border Background="#141126" CornerRadius="8" Padding="10,9" Margin="0,0,0,8" BorderBrush="#513BA6" BorderThickness="1">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <StackPanel VerticalAlignment="Center">
+                                                        <TextBlock Text="🛡️ Blindagem de Apps" Foreground="#FFFFFF" FontWeight="Bold" FontSize="11"/>
+                                                        <TextBlock Text="Desativa e remove bloatwares do sistema" Foreground="#85859E" FontSize="9" Margin="0,2,0,0"/>
+                                                    </StackPanel>
+                                                    <Button Grid.Column="1" Tag="11" Click="BtnGestaoAction_Click" Content="Aplicar" Width="76" Height="28" Background="#281A54" Foreground="#FFFFFF" BorderBrush="#00E5FF" BorderThickness="1" Cursor="Hand" FontWeight="Bold" FontSize="10" VerticalAlignment="Center"/>
+                                                </Grid>
+                                            </Border>
 
-                                <Grid Margin="0,0,0,10">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-
-                                    <!-- Card Câmeras -->
-                                    <Border Grid.Column="0" Background="#121222" CornerRadius="8" Padding="10,8" Margin="0,0,5,0" BorderBrush="#25253E" BorderThickness="1" ToolTip="Suspende ou libera aplicativos de foto e vídeo.">
-                                        <StackPanel>
-                                            <TextBlock Text="📷 Câmera" Foreground="#FFFFFF" FontWeight="Bold" FontSize="11" Margin="0,0,0,6"/>
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="*"/>
-                                                </Grid.ColumnDefinitions>
-                                                <Button Grid.Column="0" Tag="1" Click="BtnKioskAction_Click" Content="Bloquear" Height="28" Background="#241217" Foreground="#FFA3A3" BorderBrush="#FF4D4D" BorderThickness="1" Margin="0,0,2,0" Cursor="Hand" FontWeight="Bold" FontSize="10"/>
-                                                <Button Grid.Column="1" Tag="3" Click="BtnKioskAction_Click" Content="Liberar" Height="28" Background="#10251C" Foreground="#4EDEA3" BorderBrush="#276749" BorderThickness="1" Margin="2,0,0,0" Cursor="Hand" FontWeight="Bold" FontSize="10"/>
-                                            </Grid>
+                                            <!-- Restauracao -->
+                                            <Border Background="#0E1E19" CornerRadius="8" Padding="10,9" Margin="0,0,0,4" BorderBrush="#276749" BorderThickness="1">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <StackPanel VerticalAlignment="Center">
+                                                        <TextBlock Text="🔄 Restauração" Foreground="#FFFFFF" FontWeight="Bold" FontSize="11"/>
+                                                        <TextBlock Text="Reativa todos os pacotes do sistema" Foreground="#85859E" FontSize="9" Margin="0,2,0,0"/>
+                                                    </StackPanel>
+                                                    <Button Grid.Column="1" Tag="12" Click="BtnGestaoAction_Click" Content="Reativar" Width="76" Height="28" Background="#143024" Foreground="#FFFFFF" BorderBrush="#4EDEA3" BorderThickness="1" Cursor="Hand" FontWeight="Bold" FontSize="10" VerticalAlignment="Center"/>
+                                                </Grid>
+                                            </Border>
                                         </StackPanel>
-                                    </Border>
-
-                                    <!-- Card Configurações -->
-                                    <Border Grid.Column="1" Background="#121222" CornerRadius="8" Padding="10,8" Margin="2.5,0,2.5,0" BorderBrush="#25253E" BorderThickness="1" ToolTip="Impede o acesso ao menu Configurações.">
-                                        <StackPanel>
-                                            <TextBlock Text="⚙️ Configurações" Foreground="#FFFFFF" FontWeight="Bold" FontSize="11" Margin="0,0,0,6"/>
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="*"/>
-                                                </Grid.ColumnDefinitions>
-                                                <Button Grid.Column="0" Tag="2" Click="BtnKioskAction_Click" Content="Restringir" Height="28" Background="#2A2412" Foreground="#FFE699" BorderBrush="#FFD666" BorderThickness="1" Margin="0,0,2,0" Cursor="Hand" FontWeight="Bold" FontSize="10"/>
-                                                <Button Grid.Column="1" Tag="4" Click="BtnKioskAction_Click" Content="Liberar" Height="28" Background="#10251C" Foreground="#4EDEA3" BorderBrush="#276749" BorderThickness="1" Margin="2,0,0,0" Cursor="Hand" FontWeight="Bold" FontSize="10"/>
-                                            </Grid>
-                                        </StackPanel>
-                                    </Border>
-
-                                    <!-- Card Modo Kiosk Total -->
-                                    <Border Grid.Column="2" Background="#121222" CornerRadius="8" Padding="10,8" Margin="5,0,0,0" BorderBrush="#25253E" BorderThickness="1" ToolTip="Trava conjunta em Câmera + Configurações.">
-                                        <StackPanel>
-                                            <TextBlock Text="🛑 Kiosk Estrito" Foreground="#FFFFFF" FontWeight="Bold" FontSize="11" Margin="0,0,0,6"/>
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="*"/>
-                                                </Grid.ColumnDefinitions>
-                                                <Button Grid.Column="0" Tag="5" Click="BtnKioskAction_Click" Content="Ativar" Height="28" Background="#2D1720" Foreground="#FF8080" BorderBrush="#FF4D4D" BorderThickness="1" Margin="0,0,2,0" Cursor="Hand" FontWeight="Bold" FontSize="10"/>
-                                                <Button Grid.Column="1" Tag="6" Click="BtnKioskAction_Click" Content="Desativar" Height="28" Background="#12241C" Foreground="#55EFC4" BorderBrush="#276749" BorderThickness="1" Margin="2,0,0,0" Cursor="Hand" FontWeight="Bold" FontSize="10"/>
-                                            </Grid>
-                                        </StackPanel>
-                                    </Border>
+                                    </ScrollViewer>
                                 </Grid>
+                            </Border>
 
-                                <!-- BLOCO: Apps (compacto, acesso individual) -->
-                                <TextBlock Text="📦 Aplicativos" Foreground="#D2BBFF" FontSize="11" FontWeight="Bold" Margin="2,0,0,6"/>
+                            <!-- ================= COLUNA DIREITA ================= -->
+                            <Border Grid.Column="2" Background="#101020" CornerRadius="10" Padding="10" BorderBrush="#25253E" BorderThickness="1">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
 
-                                <Grid Margin="0,0,0,10">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-
-                                    <!-- Card Blindagem individual -->
-                                    <Border Grid.Column="0" Background="#141126" CornerRadius="8" Padding="10,8" Margin="0,0,5,0" BorderBrush="#513BA6" BorderThickness="1" ToolTip="Desativa e remove bloatwares (Google, YouTube, Chrome, etc.).">
-                                        <StackPanel>
-                                            <TextBlock Text="🛡️ Blindagem de Apps" Foreground="#FFFFFF" FontWeight="Bold" FontSize="11" Margin="0,0,0,6"/>
-                                            <Button Tag="11" Click="BtnKioskAction_Click" Content="Aplicar Blindagem" Height="28" Background="#281A54" Foreground="#FFFFFF" BorderBrush="#00E5FF" BorderThickness="1" Cursor="Hand" FontWeight="Bold" FontSize="10"/>
+                                    <Border Grid.Row="0" Background="#141126" CornerRadius="8" Padding="10,7" Margin="0,0,0,8" BorderBrush="#513BA6" BorderThickness="1">
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <TextBlock Text="🎨" FontSize="14" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                            <TextBlock Text="PERSONIZAÇÃO E REDE" Foreground="#D2BBFF" FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
                                         </StackPanel>
                                     </Border>
 
-                                    <!-- Card Restauração individual -->
-                                    <Border Grid.Column="1" Background="#0E1E19" CornerRadius="8" Padding="10,8" Margin="5,0,0,0" BorderBrush="#276749" BorderThickness="1" ToolTip="Reativa todos os pacotes (install-existing + pm enable).">
+                                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Focusable="False">
                                         <StackPanel>
-                                            <TextBlock Text="🔄 Restauração" Foreground="#FFFFFF" FontWeight="Bold" FontSize="11" Margin="0,0,0,6"/>
-                                            <Button Tag="12" Click="BtnKioskAction_Click" Content="Reativar Apps" Height="28" Background="#143024" Foreground="#FFFFFF" BorderBrush="#4EDEA3" BorderThickness="1" Cursor="Hand" FontWeight="Bold" FontSize="10"/>
+                                            <!-- Papel de Parede -->
+                                            <Border Background="#121222" CornerRadius="8" Padding="10,9" Margin="0,0,0,8" BorderBrush="#25253E" BorderThickness="1">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <StackPanel VerticalAlignment="Center">
+                                                        <TextBlock Text="🖼️ Papel de Parede" Foreground="#FFFFFF" FontWeight="Bold" FontSize="11"/>
+                                                        <TextBlock Text="Aplica o wallpaper configurado do município" Foreground="#85859E" FontSize="9" Margin="0,2,0,0"/>
+                                                    </StackPanel>
+                                                    <Button Grid.Column="1" Tag="7" Click="BtnGestaoAction_Click" Content="Aplicar" Width="76" Height="28" Background="#161830" Foreground="#D2BBFF" BorderBrush="#8570E6" BorderThickness="1" Cursor="Hand" FontWeight="Bold" FontSize="10" VerticalAlignment="Center"/>
+                                                </Grid>
+                                            </Border>
+
+                                            <!-- Internet USB -->
+                                            <Border Background="#121222" CornerRadius="8" Padding="10,9" Margin="0,0,0,8" BorderBrush="#25253E" BorderThickness="1">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <StackPanel VerticalAlignment="Center">
+                                                        <TextBlock Text="🌐 Internet USB" Foreground="#FFFFFF" FontWeight="Bold" FontSize="11"/>
+                                                        <TextBlock Text="Compartilha a internet do PC via cabo USB" Foreground="#85859E" FontSize="9" Margin="0,2,0,0"/>
+                                                    </StackPanel>
+                                                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                                        <Button Tag="8" Click="BtnGestaoAction_Click" Content="Ligar" Width="58" Height="28" Background="#0E222A" Foreground="#00E5FF" BorderBrush="#00BCD4" BorderThickness="1" Margin="0,0,4,0" Cursor="Hand" FontWeight="Bold" FontSize="10"/>
+                                                        <Button Tag="9" Click="BtnGestaoAction_Click" Content="Desligar" Width="66" Height="28" Background="#241217" Foreground="#FFA3A3" BorderBrush="#FF4D4D" BorderThickness="1" Cursor="Hand" FontWeight="Bold" FontSize="10"/>
+                                                    </StackPanel>
+                                                </Grid>
+                                            </Border>
+
+                                            <!-- Barra de Pesquisa -->
+                                            <Border Background="#121222" CornerRadius="8" Padding="10,9" Margin="0,0,0,4" BorderBrush="#25253E" BorderThickness="1">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <StackPanel VerticalAlignment="Center">
+                                                        <TextBlock Text="🧹 Barra de Pesquisa" Foreground="#FFFFFF" FontWeight="Bold" FontSize="11"/>
+                                                        <TextBlock Text="Remove a barra de busca da tela inicial" Foreground="#85859E" FontSize="9" Margin="0,2,0,0"/>
+                                                    </StackPanel>
+                                                    <Button Grid.Column="1" Tag="10" Click="BtnGestaoAction_Click" Content="Ocultar" Width="72" Height="28" Background="#1E1C12" Foreground="#FFE699" BorderBrush="#FFC107" BorderThickness="1" Cursor="Hand" FontWeight="Bold" FontSize="10" VerticalAlignment="Center"/>
+                                                </Grid>
+                                            </Border>
                                         </StackPanel>
-                                    </Border>
+                                    </ScrollViewer>
                                 </Grid>
+                            </Border>
+                        </Grid>
 
-                                <!-- BLOCO: Personalização e rede (compacto) -->
-                                <TextBlock Text="🎨 Personalização e Rede" Foreground="#D2BBFF" FontSize="11" FontWeight="Bold" Margin="2,0,0,6"/>
-
-                                <Grid Margin="0,0,0,4">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-
-                                    <!-- Card Wallpaper -->
-                                    <Border Grid.Column="0" Background="#121222" CornerRadius="8" Padding="10,8" Margin="0,0,5,0" BorderBrush="#25253E" BorderThickness="1" ToolTip="Aplica o wallpaper configurado do município.">
-                                        <StackPanel>
-                                            <TextBlock Text="🖼️ Papel de Parede" Foreground="#FFFFFF" FontWeight="Bold" FontSize="11" Margin="0,0,0,6"/>
-                                            <Button Tag="7" Click="BtnKioskAction_Click" Content="Aplicar" Height="28" Background="#161830" Foreground="#D2BBFF" BorderBrush="#8570E6" BorderThickness="1" Cursor="Hand" FontWeight="Bold" FontSize="10"/>
-                                        </StackPanel>
-                                    </Border>
-
-                                    <!-- Card Internet USB Gnirehtet -->
-                                    <Border Grid.Column="1" Background="#121222" CornerRadius="8" Padding="10,8" Margin="2.5,0,2.5,0" BorderBrush="#25253E" BorderThickness="1" ToolTip="Compartilha a internet do PC via cabo USB.">
-                                        <StackPanel>
-                                            <TextBlock Text="🌐 Internet USB" Foreground="#FFFFFF" FontWeight="Bold" FontSize="11" Margin="0,0,0,6"/>
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="*"/>
-                                                </Grid.ColumnDefinitions>
-                                                <Button Grid.Column="0" Tag="8" Click="BtnKioskAction_Click" Content="Ligar" Height="28" Background="#0E222A" Foreground="#00E5FF" BorderBrush="#00BCD4" BorderThickness="1" Margin="0,0,2,0" Cursor="Hand" FontWeight="Bold" FontSize="10"/>
-                                                <Button Grid.Column="1" Tag="9" Click="BtnKioskAction_Click" Content="Desligar" Height="28" Background="#241217" Foreground="#FFA3A3" BorderBrush="#FF4D4D" BorderThickness="1" Margin="2,0,0,0" Cursor="Hand" FontWeight="Bold" FontSize="10"/>
-                                            </Grid>
-                                        </StackPanel>
-                                    </Border>
-
-                                    <!-- Card Barra de Pesquisa -->
-                                    <Border Grid.Column="2" Background="#121222" CornerRadius="8" Padding="10,8" Margin="5,0,0,0" BorderBrush="#25253E" BorderThickness="1" ToolTip="Remove a barra Google da tela inicial.">
-                                        <StackPanel>
-                                            <TextBlock Text="🧹 Barra de Pesquisa" Foreground="#FFFFFF" FontWeight="Bold" FontSize="11" Margin="0,0,0,6"/>
-                                            <Button Tag="10" Click="BtnKioskAction_Click" Content="Ocultar Barra" Height="28" Background="#1E1C12" Foreground="#FFE699" BorderBrush="#FFC107" BorderThickness="1" Cursor="Hand" FontWeight="Bold" FontSize="10"/>
-                                        </StackPanel>
-                                    </Border>
-                                </Grid>
-
-                            </StackPanel>
-                        </ScrollViewer>
-
-                        <!-- Barra de Status e Execução Rápida no Rodapé do Painel Kiosk -->
-                        <Border Grid.Row="2" Background="#0C0C16" CornerRadius="8" Padding="12,8" Margin="0,8,0,0" BorderBrush="#222236" BorderThickness="1">
+                        <!-- RODAPE: Status + Execucao em Lote -->
+                        <Border Grid.Row="3" Background="#0C0C16" CornerRadius="8" Padding="12,8" Margin="0,8,0,0" BorderBrush="#222236" BorderThickness="1">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
-                                
+
                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                     <TextBlock Text="Status:" Foreground="#8570E6" FontWeight="Bold" FontSize="11" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                                    <TextBlock x:Name="TxtKioskStatus" Text="Selecione uma opção acima para aplicar aos tablets conectados." Foreground="#E2DDFE" FontSize="11" VerticalAlignment="Center"/>
+                                    <TextBlock x:Name="TxtGestaoStatus" Text="Selecione uma opção acima para aplicar aos tablets conectados." Foreground="#E2DDFE" FontSize="11" VerticalAlignment="Center"/>
                                 </StackPanel>
 
                                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                                     <TextBlock Text="Lote (ex: 11,5,7):" Foreground="#8570E6" FontWeight="SemiBold" FontSize="11" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                                    <TextBox x:Name="TxtKioskBatchInput" Width="90" Height="24" Background="#17172A" Foreground="#FFFFFF" BorderBrush="#513BA6" BorderThickness="1" Padding="4,2" FontSize="11" VerticalContentAlignment="Center" ToolTip="Ex: 11,5,7" KeyDown="TxtKioskBatchInput_KeyDown"/>
-                                    <Button Content="Executar" Click="BtnKioskBatchRun_Click" Height="24" Background="#281A54" Foreground="#4EDEA3" BorderBrush="#513BA6" BorderThickness="1" Margin="6,0,0,0" Padding="8,0" Cursor="Hand" FontWeight="Bold" FontSize="10"/>
+                                    <TextBox x:Name="TxtGestaoBatchInput" Width="90" Height="24" Background="#17172A" Foreground="#FFFFFF" BorderBrush="#513BA6" BorderThickness="1" Padding="4,2" FontSize="11" VerticalContentAlignment="Center" ToolTip="Ex: 11,5,7" KeyDown="TxtGestaoBatchInput_KeyDown"/>
+                                    <Button Content="Executar" Click="BtnGestaoBatchRun_Click" Height="24" Background="#281A54" Foreground="#4EDEA3" BorderBrush="#513BA6" BorderThickness="1" Margin="6,0,0,0" Padding="8,0" Cursor="Hand" FontWeight="Bold" FontSize="10"/>
                                 </StackPanel>
                             </Grid>
                         </Border>
@@ -575,7 +724,6 @@
                 </Grid>
             </Border>
         </Grid>
-
         <!-- PAINEL INFERIOR: Painel de Ações Rápidas por Modelo -->
         <Border Grid.Row="1" Background="#121220" CornerRadius="12" Padding="14,10" Margin="0,12,0,0" BorderBrush="#222236" BorderThickness="1">
             <Grid>
@@ -672,7 +820,7 @@
                     <Button Content="[F1] Conf. Geral" Style="{StaticResource F1Style}" Click="BtnF1_Click"/>
                     <Button Content="[F2] Limpeza e Instalação" Style="{StaticResource F2Style}" Click="BtnF2_Click"/>
                     <Button Content="[F3] Atualizar Pacote" Style="{StaticResource F3Style}" Click="BtnF3_Click"/>
-                    <Button Content="[F4] Gestão Kiosk (Hardware &amp; Apps)" Style="{StaticResource F4Style}" Click="BtnF4_Click"/>
+                    <Button Content="[F4] Gestão do Aparelho (Hardware &amp; Apps)" Style="{StaticResource F4Style}" Click="BtnF4_Click"/>
                     <Button Content="[F5] Desligar Aparelhos" Style="{StaticResource F5Style}" Click="BtnF5_Click"/>
                     <Button Content="[F6] Sincronização Avançada" Style="{StaticResource F6Style}" Click="BtnF6_Click"/>
                     <Button Content="[F8] Conexão Ativa (Gnirehtet)" Style="{StaticResource F8Style}" Click="BtnF8_Click"/>
@@ -683,7 +831,7 @@
                 <UniformGrid x:Name="GridMultilaserActions" Grid.Row="1" Columns="4" Rows="2" Visibility="Collapsed">
                     <Button Content="[F1] Instalação + Prep (Tab-MULTI)" Style="{StaticResource F7Style}" Click="BtnF7_Click"/>
                     <Button Content="[F2] Atualizar Pacote" Style="{StaticResource F3Style}" Click="BtnM7_F2_Click"/>
-                    <Button Content="[F3] Terminal (Gestão Kiosk)" Style="{StaticResource F4Style}" Click="BtnM7_F3_Click"/>
+                    <Button Content="[F3] Terminal (Gestão do Aparelho)" Style="{StaticResource F4Style}" Click="BtnM7_F3_Click"/>
                     <Button Content="[F4] Desligar Aparelhos" Style="{StaticResource F5Style}" Click="BtnM7_F4_Click"/>
                     <Button Content="[F5] Login + Sinc 30s + Shutdown" Style="{StaticResource F6Style}" Click="BtnM7_F5_Click"/>
                     <Button Content="🛑 Parar [ESC / ESPAÇO]" Style="{StaticResource StopStyle}" Click="BtnStop_Click"/>

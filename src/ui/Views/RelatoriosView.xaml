@@ -390,6 +390,7 @@
                               SelectionMode="Extended"
                               GridLinesVisibility="Horizontal"
                               HeadersVisibility="Column"
+                              CellEditEnding="GridBancoDados_CellEditEnding"
                               SelectionChanged="GridBancoDados_SelectionChanged">
                         <DataGrid.Columns>
                             <!-- ID -->
@@ -402,6 +403,30 @@
                                         <Setter Property="Margin" Value="8,0"/>
                                     </Style>
                                 </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+
+                            <!-- Nº de Patrimônio (edição manual inline) -->
+                            <DataGridTextColumn Header="Nº Patrimônio" Width="140" Binding="{Binding Patrimonio, UpdateSourceTrigger=PropertyChanged}" IsReadOnly="False">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="#FFB703"/>
+                                        <Setter Property="FontWeight" Value="SemiBold"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="Margin" Value="8,0"/>
+                                        <Setter Property="ToolTip" Value="Clique na celula e digite o numero de patrimonio. Click duplo abre a edicao completa."/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                                <DataGridTextColumn.EditingElementStyle>
+                                    <Style TargetType="TextBox">
+                                        <Setter Property="Background" Value="#0A0A0F"/>
+                                        <Setter Property="Foreground" Value="#FFB703"/>
+                                        <Setter Property="BorderBrush" Value="#513BA6"/>
+                                        <Setter Property="CaretBrush" Value="#FFB703"/>
+                                        <Setter Property="SelectionBrush" Value="#513BA6"/>
+                                        <Setter Property="Padding" Value="6,0"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                    </Style>
+                                </DataGridTextColumn.EditingElementStyle>
                             </DataGridTextColumn>
 
                             <!-- Marca e Modelo -->
@@ -434,18 +459,6 @@
                                     <Style TargetType="TextBlock">
                                         <Setter Property="Foreground" Value="#4EDEA3"/>
                                         <Setter Property="FontFamily" Value="Consolas"/>
-                                        <Setter Property="VerticalAlignment" Value="Center"/>
-                                        <Setter Property="Margin" Value="8,0"/>
-                                    </Style>
-                                </DataGridTextColumn.ElementStyle>
-                            </DataGridTextColumn>
-
-                            <!-- Data de Registro -->
-                            <DataGridTextColumn Header="Data de Registro" Width="140" Binding="{Binding DataRegistro}" IsReadOnly="True">
-                                <DataGridTextColumn.ElementStyle>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="Foreground" Value="#85859E"/>
-                                        <Setter Property="FontSize" Value="11"/>
                                         <Setter Property="VerticalAlignment" Value="Center"/>
                                         <Setter Property="Margin" Value="8,0"/>
                                     </Style>
@@ -752,6 +765,9 @@
                 </Border.Effect>
                 <StackPanel>
                     <TextBlock x:Name="TxtModalTitulo" Text="➕ Adicionar Novo Dispositivo" Foreground="#FFFFFF" FontSize="18" FontWeight="Bold" Margin="0,0,0,16"/>
+
+                    <TextBlock Text="Nº de Patrimônio:" Foreground="#A1A1AA" FontSize="11" Margin="0,0,0,4"/>
+                    <TextBox x:Name="TxtModalPatrimonio" Background="#0A0A0F" Foreground="#FFB703" FontFamily="Consolas" BorderBrush="#2A2A40" Padding="8,6" Margin="0,0,0,10" FontSize="12"/>
 
                     <TextBlock Text="Fabricante:" Foreground="#A1A1AA" FontSize="11" Margin="0,0,0,4"/>
                     <TextBox x:Name="TxtModalFabricante" Background="#0A0A0F" Foreground="#E3E0F2" BorderBrush="#2A2A40" Padding="8,6" Margin="0,0,0,10" FontSize="12"/>

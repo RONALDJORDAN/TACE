@@ -3,7 +3,7 @@
 
 #include "../pipeline.h"
 
-// Pipeline F4: Terminal Kiosk e Aplicação de Wallpaper Positivo Vision 7
+// Pipeline F4: Gestao do Aparelho (Hardware, Apps, Rede e Wallpaper) Positivo Vision 7
 int F4_ExecutarFerramenta(const char* serial, int acao, LogCallback cb);
 int F4_DefinirWallpaper(const char* serial, const char* wp_path, LogCallback cb);
 

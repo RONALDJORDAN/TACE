@@ -175,10 +175,10 @@ __declspec(dllexport) int Engine_ExecuteF3_UpdatePackage(const char* serial, con
     return F3_ExecutarAtualizacaoPacote(serial, apk_path, pacote_path, package_name, cb);
 }
 
-// [Automação] F4: Ferramentas e Gestão Kiosk (Vision 7)
+// [Automação] F4: Gestão do Aparelho (Vision 7)
 DllExport int Engine_ExecuteF4_Terminal(const char* serial, LogCallback cb) {
     if (!serial) return PIPELINE_ERROR;
-    if (cb) cb("[API] Solicitacao F4 Terminal / Kiosk recebida. Ativando Modo Kiosk...");
+    if (cb) cb("[API] Solicitacao F4 Gestao do Aparelho recebida. Ativando Modo Restrito...");
     return F4_ExecutarFerramenta(serial, 5, cb);
 }
 
@@ -393,6 +393,20 @@ DllExport int Engine_Learn_SetActiveMode(int active) {
 // Retorna o modo atual da IA: 0 = Estático, 1 = Ativo
 DllExport int Engine_Learn_GetActiveMode() {
     return learn_get_active_mode();
+}
+
+// ============================================================================
+// [Nova Função] Captura de Endereço MAC Wi-Fi via ADB
+// ============================================================================
+// A implementacao real vive no driver (adb_get_mac), que reproduz o mesmo
+// ciclo da ferramenta de captura: tenta a leitura direta, e se a interface
+// wlan0 estiver inativa, liga o Wi-Fi, extrai o endereco e restaura o
+// estado original (o pipeline exige o Wi-Fi desligado).
+// Retorna 1 se obteve MAC válido, 0 caso contrário.
+// ============================================================================
+DllExport int Engine_CapturarMAC(const char* serial, char* out_mac, int max_len) {
+    if (!serial || !out_mac || max_len <= 0) return 0;
+    return adb_get_mac(serial, out_mac, max_len);
 }
 
 

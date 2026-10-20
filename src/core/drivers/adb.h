@@ -33,6 +33,12 @@ void adb_get_model(const char* serial, char* out_model, int max_len);
 // Busca IMEI do dispositivo
 void adb_get_imei(const char* serial, char* out_imei, int max_len);
 
+// Captura o endereco MAC Wi-Fi do dispositivo.
+// O MAC so e legivel com a interface wlan0 ativa: por isso a rotina
+// reproduz o ciclo da ferramenta de captura (le direct -> liga Wi-Fi ->
+// extrai -> restaura o estado original). Retorna 1 se ok, 0 se falhou.
+int adb_get_mac(const char* serial, char* out_mac, int max_len);
+
 
 // Estrutura para um Pacote (App)
 #define MAX_PACKAGES 500

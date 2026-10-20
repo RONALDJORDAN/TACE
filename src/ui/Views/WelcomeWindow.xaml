@@ -131,7 +131,7 @@
                 <Border x:Name="Card1" Grid.Column="0" Style="{StaticResource CardStyle}">
                     <StackPanel VerticalAlignment="Center">
                         <TextBlock Text="⚙️" FontSize="48" HorizontalAlignment="Center" Margin="0,0,0,15"/>
-                        <TextBlock Text="Kiosk Mode" Foreground="#513BA6" FontWeight="Bold" FontSize="18" HorizontalAlignment="Center" Margin="0,0,0,10"/>
+                        <TextBlock Text="Gestão do Aparelho" Foreground="#513BA6" FontWeight="Bold" FontSize="18" HorizontalAlignment="Center" Margin="0,0,0,10"/>
                         <TextBlock Text="Automação avançada para tablets e totens, direto no hardware sem depender de internet." Foreground="#A1A1AA" TextWrapping="Wrap" TextAlignment="Center"/>
                     </StackPanel>
                 </Border>

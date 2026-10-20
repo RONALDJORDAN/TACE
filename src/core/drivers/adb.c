@@ -225,6 +225,228 @@ void adb_get_path(char* out_path, int max_len) {
     out_path[0] = '\0';
 }
 
+// ============================================================================
+//  CACHE DE MAC POR SERIAL
+// ============================================================================
+//  O endereco MAC de um aparelho nao muda. Guardamos o resultado para que
+//  o comando de refresh (que roda a cada 5s) nao precise repetir o
+//  "dumpsys wifi" (~200ms por aparelho) em todos os ciclos.
+// ============================================================================
+typedef struct {
+    char serial[MAX_SERIAL];
+    char mac[MAX_MAC];
+} MacCacheEntry;
+
+static MacCacheEntry g_mac_cache[MAX_DEVICES];
+static int g_mac_cache_count = 0;
+
+static int mac_cache_get(const char* serial, char* out_mac, size_t out_size) {
+    for (int i = 0; i < g_mac_cache_count; i++) {
+        if (strcmp(g_mac_cache[i].serial, serial) == 0) {
+            strncpy(out_mac, g_mac_cache[i].mac, out_size - 1);
+            out_mac[out_size - 1] = '\0';
+            return 1;
+        }
+    }
+    return 0;
+}
+
+static void mac_cache_set(const char* serial, const char* mac) {
+    if (!serial || !mac || !*mac) return;
+
+    for (int i = 0; i < g_mac_cache_count; i++) {
+        if (strcmp(g_mac_cache[i].serial, serial) == 0) {
+            strncpy(g_mac_cache[i].mac, mac, MAX_MAC - 1);
+            g_mac_cache[i].mac[MAX_MAC - 1] = '\0';
+            return;
+        }
+    }
+
+    if (g_mac_cache_count < MAX_DEVICES) {
+        strncpy(g_mac_cache[g_mac_cache_count].serial, serial, MAX_SERIAL - 1);
+        g_mac_cache[g_mac_cache_count].serial[MAX_SERIAL - 1] = '\0';
+        strncpy(g_mac_cache[g_mac_cache_count].mac, mac, MAX_MAC - 1);
+        g_mac_cache[g_mac_cache_count].mac[MAX_MAC - 1] = '\0';
+        g_mac_cache_count++;
+    }
+}
+
+// Verifica se um texto tem o formato de MAC (XX:XX:XX:XX:XX:XX)
+static int is_valid_mac(const char* s) {
+    if (!s) return 0;
+    int digits = 0, colons = 0;
+    for (const char* p = s; *p; p++) {
+        if (*p == ':') { colons++; continue; }
+        if ((*p >= '0' && *p <= '9') || (*p >= 'a' && *p <= 'f') || (*p >= 'A' && *p <= 'F')) { digits++; continue; }
+        return 0;
+    }
+    return (digits == 12 && colons == 5);
+}
+
+// Normaliza para minusculas e remove espacos/newlines
+static void normalize_mac(const char* in, char* out, size_t out_size) {
+    size_t j = 0;
+    for (const char* p = in; *p && j + 1 < out_size; p++) {
+        if (*p == '\n' || *p == '\r' || *p == ' ' || *p == '\t') continue;
+        out[j++] = (*p >= 'A' && *p <= 'F') ? (char)(*p + 32) : *p;
+    }
+    out[j] = '\0';
+}
+
+// Extrai o MAC do Wi-Fi a partir de um texto que contenha "link/ether XX:..."
+static int extract_ether_from_text(const char* text, char* out_mac, size_t out_size) {
+    if (!text) return 0;
+    const char* p = strstr(text, "link/ether");
+    if (!p) return 0;
+    p += 10;
+    while (*p == ' ' || *p == '\t') p++;
+    char buf[64] = {0};
+    size_t k = 0;
+    while (*p && *p != ' ' && *p != '\n' && *p != '\r' && k + 1 < sizeof(buf)) buf[k++] = *p++;
+    buf[k] = '\0';
+    normalize_mac(buf, out_mac, out_size);
+    return is_valid_mac(out_mac);
+}
+
+// Extrai o MAC do Wi-Fi a partir de um texto que contenha "MAC: XX:..."
+static int extract_mac_label_from_text(const char* text, char* out_mac, size_t out_size) {
+    if (!text) return 0;
+    const char* p = strstr(text, "MAC: ");
+    if (!p) return 0;
+    p += 5;
+    char buf[64] = {0};
+    size_t k = 0;
+    while (*p && *p != ',' && *p != ' ' && *p != '\n' && *p != '\r' && k + 1 < sizeof(buf)) buf[k++] = *p++;
+    buf[k] = '\0';
+    normalize_mac(buf, out_mac, out_size);
+    return is_valid_mac(out_mac);
+}
+
+// ============================================================================
+//  CAPTURA DO MAC WI-FI
+// ============================================================================
+//  O MAC so e legivel com a interface wlan0 ativa. Por isso a rotina
+//  reproduz o mesmo ciclo da ferramenta externa de captura:
+//    1) Tenta ler o MAC direto (cache do supplicant / wlan0 ja ativa).
+//    2) Se nao conseguir, LIGA o Wi-Fi, espera a interface subir, extrai
+//       e volta o Wi-Fi ao estado original (desligado).
+//  Ordem de leitura: /sys/class/net/wlan0/address -> ip link show wlan0
+//                      -> dumpsys wifi ("MAC: ...")
+// ============================================================================
+
+// Le o MAC a partir de um unico comando (sem alterar o estado do Wi-Fi)
+static int adb_read_mac_once(const char* serial, char* out_mac, size_t out_size) {
+    char args[512];
+    char* out = NULL;
+    int found = 0;
+
+    // 1) /sys/class/net/wlan0/address
+    snprintf(args, sizeof(args), "-s %s shell cat /sys/class/net/wlan0/address 2>/dev/null", serial);
+    out = adb_exec(args);
+    if (out) {
+        char buf[64] = {0};
+        size_t olen = strlen(out);
+        while (olen > 0 && (out[olen - 1] == '\n' || out[olen - 1] == '\r' ||
+                            out[olen - 1] == ' ' || out[olen - 1] == '\t')) {
+            out[--olen] = '\0';
+        }
+        if (olen > 0 && olen < sizeof(buf)) {
+            memcpy(buf, out, olen);
+            buf[olen] = '\0';
+            if (strstr(buf, "permission") == NULL && strstr(buf, "No such") == NULL) {
+                normalize_mac(buf, out_mac, out_size);
+                if (is_valid_mac(out_mac)) found = 1;
+            }
+        }
+        free(out);
+    }
+    if (found) return 1;
+
+    // 2) ip link show wlan0
+    snprintf(args, sizeof(args), "-s %s shell ip link show wlan0 2>/dev/null", serial);
+    out = adb_exec(args);
+    if (out) {
+        found = extract_ether_from_text(out, out_mac, out_size);
+        free(out);
+    }
+    if (found) return 1;
+
+    // 3) dumpsys wifi -> "MAC: xx:xx:xx:xx:xx:xx"
+    snprintf(args, sizeof(args), "-s %s shell dumpsys wifi 2>/dev/null", serial);
+    out = adb_exec(args);
+    if (out) {
+        found = extract_mac_label_from_text(out, out_mac, out_size);
+        free(out);
+    }
+    return found;
+}
+
+// Le o estado do Wi-Fi: 1 ligado, 0 desligado, -1 desconhecido
+static int adb_wifi_state(const char* serial) {
+    char args[256];
+    snprintf(args, sizeof(args), "-s %s shell settings get global wifi_on", serial);
+    char* out = adb_exec(args);
+    if (!out) return -1;
+    int state = -1;
+    char* nl = strpbrk(out, "\r\n");
+    if (nl) *nl = '\0';
+    if (strstr(out, "1")) state = 1;
+    else if (strstr(out, "0")) state = 0;
+    free(out);
+    return state;
+}
+
+// Liga ou desliga o Wi-Fi
+static void adb_wifi_set(const char* serial, int on) {
+    char args[256];
+    snprintf(args, sizeof(args), "-s %s shell svc wifi %s", serial, on ? "enable" : "disable");
+    char* out = adb_exec(args);
+    if (out) free(out);
+}
+
+int adb_get_mac(const char* serial, char* out_mac, int max_len) {
+    if (!serial || !out_mac || max_len <= 0) return 0;
+    out_mac[0] = '\0';
+
+    // 1) Tentativa direta (sem mexer no Wi-Fi) - cobre o caso em que a
+    //    interface ja esta ativa ou o supplicant ainda guarda o endereco.
+    if (adb_read_mac_once(serial, out_mac, (size_t)max_len)) {
+        mac_cache_set(serial, out_mac);
+        return 1;
+    }
+
+    // 2) Ciclo completo da ferramenta de captura: liga o Wi-Fi (necessario
+    //    para a interface wlan0 existir), extrai e restaura o estado original.
+    int estado_anterior = adb_wifi_state(serial);
+    if (estado_anterior == 1) {
+        // Ja estava ligado: nao altera nada, apenas tenta novamente.
+        Sleep(1500);
+        if (adb_read_mac_once(serial, out_mac, (size_t)max_len)) {
+            mac_cache_set(serial, out_mac);
+            return 1;
+        }
+        return 0;
+    }
+
+    adb_wifi_set(serial, 1);
+
+    // Aguarda a interface subir e o supplicant popular o endereco (max ~6s)
+    int extraiu = 0;
+    for (int i = 0; i < 6; i++) {
+        Sleep(1000);
+        if (adb_read_mac_once(serial, out_mac, (size_t)max_len)) { extraiu = 1; break; }
+    }
+
+    // Restaura o estado original do Wi-Fi. O pipeline F1/F2/F5 exige o
+    // Wi-Fi DESLIGADO (o trafego passa pelo tunel Gnirehtet), portanto
+    // deixar o Wi-Fi ligado quebraria a etapa de login.
+    adb_wifi_set(serial, 0);
+
+    if (extraiu) mac_cache_set(serial, out_mac);
+
+    return extraiu;
+}
+
 int adb_list_devices(AdbDevice* devices, int max_devices) {
     char* out = adb_exec("devices");
     if (!out) return 0;
@@ -250,17 +472,34 @@ int adb_list_devices(AdbDevice* devices, int max_devices) {
                 /* --- OTIMIZACAO: 1 unico processo ADB para coletar todos os dados --- */
                 /* Antes: 6 processos sequenciais (~3-4s por dispositivo)             */
                 /* Depois: 1 processo consolidado (~300ms por dispositivo)            */
-                char args[512];
-                snprintf(args, sizeof(args),
-                    "-s %s shell \""
-                    "echo MODEL:$(getprop ro.product.model);"
-                    "echo MFR:$(getprop ro.product.manufacturer);"
-                    "echo VER:$(getprop ro.build.version.release);"
-                    "echo SDK:$(getprop ro.build.version.sdk);"
-                    "echo BAT:$(dumpsys battery 2>/dev/null | grep ' level:' | tr -d ' ');"
-                    "echo IMEI:$(service call iphonesubinfo 1 2>/dev/null | grep -oE '[0-9a-f]{8}' | tr -d '\\\\n' || echo N/A)"
-                    "\"",
-                    serial);
+                /* O bloco do MAC so entra no batched quando ainda nao temos o       */
+                /* endereco em cache (o MAC nao muda: ~200ms economizados/refresh)  */
+                char mac_cacheado[MAX_MAC] = {0};
+                int mac_ja_conhecido = mac_cache_get(serial, mac_cacheado, sizeof(mac_cacheado));
+
+                char args[1024];
+                if (mac_ja_conhecido) {
+                    snprintf(args, sizeof(args),
+                        "-s %s shell \""
+                        "echo MODEL:$(getprop ro.product.model);"
+                        "echo MFR:$(getprop ro.product.manufacturer);"
+                        "echo VER:$(getprop ro.build.version.release);"
+                        "echo SDK:$(getprop ro.build.version.sdk);"
+                        "echo BAT:$(dumpsys battery 2>/dev/null | grep ' level:' | tr -d ' ');"
+                        "echo IMEI:$(service call iphonesubinfo 1 2>/dev/null | grep -oE '[0-9a-f]{8}' | tr -d '\\\\n' || echo N/A)\"",
+                        serial);
+                } else {
+                    snprintf(args, sizeof(args),
+                        "-s %s shell \""
+                        "echo MODEL:$(getprop ro.product.model);"
+                        "echo MFR:$(getprop ro.product.manufacturer);"
+                        "echo VER:$(getprop ro.build.version.release);"
+                        "echo SDK:$(getprop ro.build.version.sdk);"
+                        "echo BAT:$(dumpsys battery 2>/dev/null | grep ' level:' | tr -d ' ');"
+                        "echo IMEI:$(service call iphonesubinfo 1 2>/dev/null | grep -oE '[0-9a-f]{8}' | tr -d '\\\\n' || echo N/A);"
+                        "echo MAC:$(dumpsys wifi 2>/dev/null | grep -m1 -oE 'MAC: [0-9a-fA-F]{2}(:[0-9a-fA-F]{2}){5}' | cut -d' ' -f2 | tr -d '\\\\n')\"",
+                        serial);
+                }
 
                 char* bulk = adb_exec(args);
                 /* Defaults */
@@ -271,6 +510,12 @@ int adb_list_devices(AdbDevice* devices, int max_devices) {
                 strcpy(d->battery, "---");
                 strcpy(d->mac, "N/A");
                 strcpy(d->imei, "N/A");
+
+                /* MAC vindo do cache (ja conhecido em ciclo anterior) */
+                if (mac_ja_conhecido) {
+                    strncpy(d->mac, mac_cacheado, MAX_MAC - 1);
+                    d->mac[MAX_MAC - 1] = '\0';
+                }
 
                 if (bulk) {
                     /* Parseia linha a linha */
@@ -299,6 +544,16 @@ int adb_list_devices(AdbDevice* devices, int max_devices) {
                             strncpy(d->imei, inner_line + 5, MAX_IMEI - 1);
                             if (strstr(d->imei, "ffffffff") || strstr(d->imei, "ermission"))
                                 strcpy(d->imei, "N/A (Seguranca)");
+                        }
+                        else if (strncmp(inner_line, "MAC:", 4) == 0 && strlen(inner_line) > 4) {
+                            char mac_buf[64] = {0};
+                            normalize_mac(inner_line + 4, mac_buf, sizeof(mac_buf));
+                            if (is_valid_mac(mac_buf)) {
+                                strncpy(d->mac, mac_buf, MAX_MAC - 1);
+                                d->mac[MAX_MAC - 1] = '\0';
+                                /* Guarda em cache: evita repetir o dumpsys wifi nos proximos ciclos */
+                                mac_cache_set(serial, d->mac);
+                            }
                         }
                         inner_line = strtok_s(NULL, "\n", &inner_context);
                     }

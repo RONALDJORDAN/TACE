@@ -14,11 +14,136 @@
 //  MÓDULO F2: REINSTALAÇÃO LIMPA & DESLIGAMENTO (VISION TAB 7)
 // =============================================================================
 
+// =============================================================================
+//  F2 - ETAPA 7b: LIMPEZA VISUAL DE TODOS OS APPS ABERTOS (TELA DE RECENTES)
+// =============================================================================
+//  Fecha visualmente, no display do tablet, TODOS os aplicativos que ficaram
+//  abertos durante o fluxo (InnovAva, DocumentsUI, Chrome e demais):
+//    1. Garante tela acesa e desbloqueada.
+//    2. Vai para a HOME.
+//    3. Abre a visao de multitarefas (KEYCODE_APP_SWITCH 187) e aguarda o SO
+//       desenhar os cartoes.
+//    4. Desliza os cartoes ate revelar o botao 'Limpar tudo'.
+//    5. Clica no centroide do botao via XML (Fast Memory Dump) e, se nao
+//       localizar, aplica um toque de fallback.
+//    6. Retorna para a HOME limpa.
+//  Isolada neste arquivo para efeito colateral zero no F1 e nos demais modelos.
+// =============================================================================
+static int F2_Etapa7_CleanRecents(const char *serial, LogCallback cb) {
+  char cmd[512];
+  int cleared = 0;
+
+  // 1. Tela acesa e desbloqueada
+  snprintf(cmd, sizeof(cmd),
+           "-s %s shell \"input keyevent 224 && input keyevent 82\"", serial);
+  char *wake = adb_exec(cmd);
+  if (wake)
+    free(wake);
+  Sleep(400);
+
+  // 2. HOME
+  snprintf(cmd, sizeof(cmd), "-s %s shell input keyevent 3", serial);
+  char *home = adb_exec(cmd);
+  if (home)
+    free(home);
+  Sleep(500);
+
+  // 3. Abre a tela de Recentes e aguarda o SO desenhar os cartoes
+  if (cb)
+    cb("[-] [F2 - Etapa 7] Fechando todos os apps abertos (limpeza visual na "
+       "tela de recentes)...");
+  snprintf(cmd, sizeof(cmd), "-s %s shell input keyevent 187", serial);
+  char *recents = adb_exec(cmd);
+  if (recents)
+    free(recents);
+  Sleep(1200);
+
+  // 4. Desliza os cartoes para a direita ate revelar o botao 'Limpar tudo'
+  if (cb)
+    cb("[-] [F2 - Etapa 7] Deslizando os apps recentes para localizar o botao "
+       "'Limpar tudo'...");
+  for (int s = 0; s < 2; s++) {
+    snprintf(cmd, sizeof(cmd), "-s %s shell input swipe 150 500 850 500 250",
+             serial);
+    char *swipe = adb_exec(cmd);
+    if (swipe)
+      free(swipe);
+    Sleep(500);
+  }
+
+  // 5. Le o XML da tela de recentes e clica em 'Limpar tudo'
+  char *xml_recents = adb_dump_stdout(serial);
+  if (!xml_recents || strlen(xml_recents) < 100) {
+    if (xml_recents)
+      free(xml_recents);
+    snprintf(cmd, sizeof(cmd),
+             "-s %s shell uiautomator dump /sdcard/dump_recents_f2.xml "
+             "2>/dev/null",
+             serial);
+    char *dumped = adb_exec(cmd);
+    if (dumped)
+      free(dumped);
+    snprintf(cmd, sizeof(cmd), "-s %s shell cat /sdcard/dump_recents_f2.xml",
+             serial);
+    xml_recents = adb_exec(cmd);
+  }
+
+  if (xml_recents) {
+    int cx = 0, cy = 0;
+    if (get_centroid_from_xml(xml_recents, "Limpar tudo", &cx, &cy, 0) ||
+        get_centroid_from_xml(xml_recents, "Fechar tudo", &cx, &cy, 0) ||
+        get_centroid_from_xml(xml_recents, "Clear all", &cx, &cy, 0)) {
+      snprintf(cmd, sizeof(cmd), "-s %s shell input tap %d %d", serial, cx, cy);
+      char *tap = adb_exec(cmd);
+      if (tap)
+        free(tap);
+      cleared = 1;
+      if (cb)
+        cb("[-] [F2 - Etapa 7] Botao 'Limpar tudo' clicado na tela de "
+           "recentes.");
+    }
+    free(xml_recents);
+  }
+
+  // 6. Fallback: novo deslize + toque na regiao do botao de limpar
+  if (!cleared) {
+    snprintf(cmd, sizeof(cmd), "-s %s shell input swipe 150 500 850 500 250",
+             serial);
+    char *swipe = adb_exec(cmd);
+    if (swipe)
+      free(swipe);
+    Sleep(500);
+    if (cb)
+      cb("[WARNING] [F2 - Etapa 7] Botao 'Limpar tudo' nao localizado via XML; "
+         "usando toque de fallback.");
+    snprintf(cmd, sizeof(cmd), "-s %s shell input tap 300 950", serial);
+    char *tap = adb_exec(cmd);
+    if (tap)
+      free(tap);
+  }
+  Sleep(1000); // Aguarda visualmente os cartoes sumirem
+
+  // 7. Volta para a HOME limpa
+  snprintf(cmd, sizeof(cmd), "-s %s shell input keyevent 3", serial);
+  char *home_final = adb_exec(cmd);
+  if (home_final)
+    free(home_final);
+  Sleep(400);
+
+  if (cb)
+    cb(cleared
+           ? "[+] [F2 - Etapa 7] Todos os aplicativos abertos foram fechados."
+           : "[WARNING] [F2 - Etapa 7] Fechamento visual concluido com toque de "
+             "fallback.");
+
+  return cleared;
+}
+
 // Etapa 7 local do F2: igual a F1_Etapa7_CloseApps, porém com espera
-// pré-monitoramento de 3s (F1 mantém 5s) e final próprio: após fechar o
-// InnovAva, desliga Wi-Fi/Bluetooth/Localização, fixa brilho 70% e
-// desliga o aparelho (reboot -p). Isolada neste arquivo para
-// efeito colateral zero no F1.
+// pré-monitoramento de 3s (F1 mantém 2,5s) e final próprio: após fechar
+// visualmente todos os apps abertos (limpeza da tela de Recentes), desliga
+// Wi-Fi/Bluetooth/Localização, fixa brilho 70% e desliga o aparelho (reboot -p).
+// Isolada neste arquivo para efeito colateral zero no F1.
 static int F2_Etapa7_CloseApps(const char *serial, const char *package_name,
                                LogCallback cb) {
   if (cb)
@@ -68,7 +193,7 @@ static int F2_Etapa7_CloseApps(const char *serial, const char *package_name,
 
   if (cb)
     cb("[-] Fechando aplicativos abertos (App e Gerenciador)...");
-  char cmd[256];
+  char cmd[512];
 
   // Pressiona 'Voltar' 3 vezes para sair de qualquer menu aberto
   snprintf(cmd, sizeof(cmd), "-s %s shell input keyevent 4", serial);
@@ -84,6 +209,10 @@ static int F2_Etapa7_CloseApps(const char *serial, const char *package_name,
   char *home_out = adb_exec(cmd);
   if (home_out)
     free(home_out);
+  Sleep(400);
+
+  // Fecha VISUALMENTE todos os apps abertos na tela de Recentes ('Limpar tudo')
+  F2_Etapa7_CleanRecents(serial, cb);
 
   // Força a parada do aplicativo principal
   snprintf(cmd, sizeof(cmd), "-s %s shell am force-stop %s", serial,
@@ -91,6 +220,13 @@ static int F2_Etapa7_CloseApps(const char *serial, const char *package_name,
   char *stop_app = adb_exec(cmd);
   if (stop_app)
     free(stop_app);
+
+  // Fecha o navegador (evita card do Chrome na entrega)
+  snprintf(cmd, sizeof(cmd),
+           "-s %s shell am force-stop com.android.chrome", serial);
+  char *stop_chrome = adb_exec(cmd);
+  if (stop_chrome)
+    free(stop_chrome);
 
   // Força a parada do gerenciador de arquivos (Google e AOSP)
   snprintf(cmd, sizeof(cmd),

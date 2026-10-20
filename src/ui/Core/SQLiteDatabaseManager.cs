@@ -18,8 +18,13 @@ namespace BotRpaUI.Core
         public string Bateria { get; set; } = string.Empty;
         public string IMEI { get; set; } = string.Empty;
         public string MAC { get; set; } = string.Empty;
-        public string DataRegistro { get; set; } = string.Empty;
         public string MarcaModelo { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Numero de Patrimonio (etiqueta patrimonial do tablet).
+        /// Coluna manual: o operador preenche o codigo de inventario de cada aparelho.
+        /// </summary>
+        public string Patrimonio { get; set; } = string.Empty;
     }
 
     public static class SQLiteDatabaseManager
@@ -30,6 +35,7 @@ namespace BotRpaUI.Core
         private static readonly object _cacheLock = new object();
         private static string _dbPath = "";
         private static string _connectionString = "";
+        private static bool _esquemaValidado = false;
 
         public static string GetDatabasePath()
         {
@@ -69,6 +75,7 @@ namespace BotRpaUI.Core
                 string createDispositivos = @"
                     CREATE TABLE IF NOT EXISTS Dispositivos (
                         ID INTEGER PRIMARY KEY AUTOINCREMENT,
+                        Patrimonio TEXT,
                         Serial TEXT UNIQUE,
                         Fabricante TEXT,
                         Modelo TEXT,
@@ -76,8 +83,7 @@ namespace BotRpaUI.Core
                         API_Level TEXT,
                         Bateria TEXT,
                         IMEI TEXT,
-                        MAC TEXT,
-                        DataRegistro TEXT
+                        MAC TEXT
                     );";
 
                 using (var cmd = new SqliteCommand(createDispositivos, connection))
@@ -98,9 +104,187 @@ namespace BotRpaUI.Core
                     cmd.ExecuteNonQuery();
                 }
 
+                // Garante o schema canonico (Patrimonio apos ID, sem DataRegistro)
+                // e a numeracao contigua de IDs (1..N, sem lacunas).
+                GarantirEsquemaDispositivos(connection);
+
                 if (isNew)
                 {
                     ImportFromCsvIfExists(connection);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Colunas canonicas da tabela Dispositivos (a ordem importa: Patrimonio vem logo apos o ID).
+        /// </summary>
+        private static readonly string[] COLUNAS_DISPOSITIVOS =
+        {
+            "Patrimonio", "Serial", "Fabricante", "Modelo",
+            "Versao_Android", "API_Level", "Bateria", "IMEI", "MAC"
+        };
+
+        /// <summary>
+        /// Garante o formato do banco e a integridade da sequencia de IDs.
+        /// 1) Migra o schema legado (com DataRegistro) para o schema atual (com Patrimonio).
+        /// 2) Renumera os IDs de forma contigua (1..N), eliminando lacunas de deletoes antigas.
+        /// </summary>
+        private static void GarantirEsquemaDispositivos(SqliteConnection connection)
+        {
+            try
+            {
+                // Validacao feita uma vez por processo (o schema so muda por migracao nossa).
+                if (_esquemaValidado) return;
+
+                var colunasAtuais = LerColunas(connection, "Dispositivos");
+                if (colunasAtuais.Count == 0) return; // tabela recem-criada no schema correto
+
+                bool precisaMigrarSchema =
+                    colunasAtuais.Contains("DataRegistro", StringComparer.OrdinalIgnoreCase) ||
+                    !colunasAtuais.Contains("Patrimonio", StringComparer.OrdinalIgnoreCase);
+
+                bool precisaRenumerar = false;
+                if (!precisaMigrarSchema)
+                {
+                    long total = 0; long maxId = 0;
+                    using (var cmd = connection.CreateCommand())
+                    {
+                        cmd.CommandText = "SELECT COUNT(*), IFNULL(MAX(ID), 0) FROM Dispositivos;";
+                        using (var reader = cmd.ExecuteReader())
+                        {
+                            if (reader.Read())
+                            {
+                                total = reader.GetInt64(0);
+                                maxId = reader.GetInt64(1);
+                            }
+                        }
+                    }
+                    // Sequencia contigua esperada: o maior ID deve igualar a quantidade de linhas.
+                    precisaRenumerar = total > 0 && maxId != total;
+                }
+
+                if (precisaMigrarSchema || precisaRenumerar)
+                {
+                    RecriarTabelaDispositivos(connection);
+                }
+
+                _esquemaValidado = true;
+            }
+            catch { }
+        }
+
+        private static List<string> LerColunas(SqliteConnection connection, string tabela)
+        {
+            var lista = new List<string>();
+            try
+            {
+                using (var cmd = connection.CreateCommand())
+                {
+                    cmd.CommandText = $"PRAGMA table_info({tabela});";
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            if (!reader.IsDBNull(1)) lista.Add(reader.GetString(1));
+                        }
+                    }
+                }
+            }
+            catch { }
+            return lista;
+        }
+
+        /// <summary>
+        /// Recria a tabela Dispositivos copiando os dados existentes (na ordem atual de ID)
+        /// e reatribuindo IDs contiguos a partir de 1. Colunas legadas sao descartadas
+        /// e colunas ausentes recebem valor vazio.
+        /// </summary>
+        private static void RecriarTabelaDispositivos(SqliteConnection connection)
+        {
+            var colunasAtuais = LerColunas(connection, "Dispositivos");
+            if (colunasAtuais.Count == 0) return;
+
+            // Todas as colunas canonicas entram no destino; as ausentes na origem recebem ''.
+            // O Serial mantem NULL (em vez de '') para nao violar a constraint UNIQUE
+            // caso existam linhas antigas com serial vazio.
+            var expressoes = new List<string>();
+            foreach (var c in COLUNAS_DISPOSITIVOS)
+            {
+                if (!colunasAtuais.Contains(c, StringComparer.OrdinalIgnoreCase))
+                    expressoes.Add("''");
+                else if (string.Equals(c, "Serial", StringComparison.OrdinalIgnoreCase))
+                    expressoes.Add("\"Serial\"");
+                else
+                    expressoes.Add("COALESCE(\"" + c + "\", '')");
+            }
+            if (expressoes.Count == 0) return;
+
+            using (var transaction = connection.BeginTransaction())
+            {
+                try
+                {
+                    using (var cmd = connection.CreateCommand())
+                    {
+                        cmd.Transaction = transaction;
+                        cmd.CommandText = @"
+                            CREATE TABLE Dispositivos__novo (
+                                ID INTEGER PRIMARY KEY AUTOINCREMENT,
+                                Patrimonio TEXT,
+                                Serial TEXT UNIQUE,
+                                Fabricante TEXT,
+                                Modelo TEXT,
+                                Versao_Android TEXT,
+                                API_Level TEXT,
+                                Bateria TEXT,
+                                IMEI TEXT,
+                                MAC TEXT
+                            );";
+                        cmd.ExecuteNonQuery();
+                    }
+
+                    string listaColunas = string.Join(", ", COLUNAS_DISPOSITIVOS);
+                    string listaValores = string.Join(", ", expressoes);
+
+                    using (var cmd = connection.CreateCommand())
+                    {
+                        cmd.Transaction = transaction;
+                        // Sem a coluna ID: o SQLite atribui IDs contiguos 1..N na ordem de insercao.
+                        cmd.CommandText = $"INSERT INTO Dispositivos__novo ({listaColunas}) SELECT {listaValores} FROM Dispositivos ORDER BY ID ASC;";
+                        cmd.ExecuteNonQuery();
+                    }
+
+                    using (var cmd = connection.CreateCommand())
+                    {
+                        cmd.Transaction = transaction;
+                        cmd.CommandText = "DROP TABLE Dispositivos;";
+                        cmd.ExecuteNonQuery();
+                    }
+
+                    using (var cmd = connection.CreateCommand())
+                    {
+                        cmd.Transaction = transaction;
+                        cmd.CommandText = "ALTER TABLE Dispositivos__novo RENAME TO Dispositivos;";
+                        cmd.ExecuteNonQuery();
+                    }
+
+                    using (var cmd = connection.CreateCommand())
+                    {
+                        cmd.Transaction = transaction;
+                        try
+                        {
+                            // Reseta o autoincrement para que o proximo registro use max(ID)+1.
+                            cmd.CommandText = "DELETE FROM sqlite_sequence WHERE name = 'Dispositivos';";
+                            cmd.ExecuteNonQuery();
+                        }
+                        catch { }
+                    }
+
+                    transaction.Commit();
+                }
+                catch
+                {
+                    try { transaction.Rollback(); } catch { }
+                    throw;
                 }
             }
         }
@@ -118,9 +302,10 @@ namespace BotRpaUI.Core
                 {
                     var cmd = connection.CreateCommand();
                     cmd.CommandText = @"
-                        INSERT OR IGNORE INTO Dispositivos (Serial, Fabricante, Modelo, Versao_Android, API_Level, Bateria, IMEI, MAC, DataRegistro)
-                        VALUES ($serial, $fabricante, $modelo, $versao, $api, $bateria, $imei, $mac, $data)";
+                        INSERT OR IGNORE INTO Dispositivos (Patrimonio, Serial, Fabricante, Modelo, Versao_Android, API_Level, Bateria, IMEI, MAC)
+                        VALUES ($patrimonio, $serial, $fabricante, $modelo, $versao, $api, $bateria, $imei, $mac)";
 
+                    var pPat = cmd.CreateParameter(); pPat.ParameterName = "$patrimonio"; cmd.Parameters.Add(pPat);
                     var pSerial = cmd.CreateParameter(); pSerial.ParameterName = "$serial"; cmd.Parameters.Add(pSerial);
                     var pFab = cmd.CreateParameter(); pFab.ParameterName = "$fabricante"; cmd.Parameters.Add(pFab);
                     var pMod = cmd.CreateParameter(); pMod.ParameterName = "$modelo"; cmd.Parameters.Add(pMod);
@@ -129,7 +314,6 @@ namespace BotRpaUI.Core
                     var pBat = cmd.CreateParameter(); pBat.ParameterName = "$bateria"; cmd.Parameters.Add(pBat);
                     var pImei = cmd.CreateParameter(); pImei.ParameterName = "$imei"; cmd.Parameters.Add(pImei);
                     var pMac = cmd.CreateParameter(); pMac.ParameterName = "$mac"; cmd.Parameters.Add(pMac);
-                    var pData = cmd.CreateParameter(); pData.ParameterName = "$data"; cmd.Parameters.Add(pData);
 
                     for (int i = 1; i < lines.Length; i++)
                     {
@@ -137,6 +321,7 @@ namespace BotRpaUI.Core
                         var parts = lines[i].Split(';');
                         if (parts.Length >= 9)
                         {
+                            pPat.Value = "";
                             pSerial.Value = parts[0];
                             pFab.Value = parts[1];
                             pMod.Value = parts[2];
@@ -145,7 +330,6 @@ namespace BotRpaUI.Core
                             pBat.Value = parts[5];
                             pImei.Value = parts[6];
                             pMac.Value = parts[7];
-                            pData.Value = parts[8];
                             cmd.ExecuteNonQuery();
                         }
                     }
@@ -290,8 +474,9 @@ namespace BotRpaUI.Core
                         connection.Open();
                         var cmd = connection.CreateCommand();
                         cmd.CommandText = @"
-                            INSERT OR IGNORE INTO Dispositivos (Serial, Fabricante, Modelo, Versao_Android, API_Level, Bateria, IMEI, MAC, DataRegistro)
-                            VALUES ($serial, $fabricante, $modelo, $versao, $api, $bateria, $imei, $mac, $data)";
+                            INSERT OR IGNORE INTO Dispositivos (Patrimonio, Serial, Fabricante, Modelo, Versao_Android, API_Level, Bateria, IMEI, MAC)
+                            VALUES ($patrimonio, $serial, $fabricante, $modelo, $versao, $api, $bateria, $imei, $mac)";
+                        cmd.Parameters.AddWithValue("$patrimonio", "");
                         cmd.Parameters.AddWithValue("$serial", serial);
                         cmd.Parameters.AddWithValue("$fabricante", string.IsNullOrEmpty(fabricante) ? "Desconhecido" : fabricante);
                         cmd.Parameters.AddWithValue("$modelo", modelo);
@@ -300,7 +485,6 @@ namespace BotRpaUI.Core
                         cmd.Parameters.AddWithValue("$bateria", "N/A");
                         cmd.Parameters.AddWithValue("$imei", "N/A");
                         cmd.Parameters.AddWithValue("$mac", mac);
-                        cmd.Parameters.AddWithValue("$data", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
                         cmd.ExecuteNonQuery();
                     }
                     cache.Add(serial);
@@ -325,16 +509,16 @@ namespace BotRpaUI.Core
                 {
                     connection.Open();
                     var cmd = connection.CreateCommand();
-                    cmd.CommandText = "SELECT ID, Serial, Fabricante, Modelo, Versao_Android, API_Level, Bateria, IMEI, MAC, DataRegistro FROM Dispositivos WHERE Serial = $serial LIMIT 1";
+                    cmd.CommandText = "SELECT ID, Patrimonio, Serial, Fabricante, Modelo, Versao_Android, API_Level, Bateria, IMEI, MAC FROM Dispositivos WHERE Serial = $serial LIMIT 1";
                     cmd.Parameters.AddWithValue("$serial", serial);
 
                     using (var reader = cmd.ExecuteReader())
                     {
                         if (reader.Read())
                         {
-                            string ser = reader.IsDBNull(1) ? string.Empty : reader.GetString(1);
-                            string fab = reader.IsDBNull(2) ? string.Empty : reader.GetString(2);
-                            string mod = reader.IsDBNull(3) ? string.Empty : reader.GetString(3);
+                            string ser = reader.IsDBNull(2) ? string.Empty : reader.GetString(2);
+                            string fab = reader.IsDBNull(3) ? string.Empty : reader.GetString(3);
+                            string mod = reader.IsDBNull(4) ? string.Empty : reader.GetString(4);
 
                             bool isVision7 = 
                                 (ser.IndexOf("T30764", StringComparison.OrdinalIgnoreCase) >= 0 || ser.IndexOf("T030764", StringComparison.OrdinalIgnoreCase) >= 0 || ser.IndexOf("T307G", StringComparison.OrdinalIgnoreCase) >= 0 || ser.IndexOf("T0307G", StringComparison.OrdinalIgnoreCase) >= 0) ||
@@ -354,16 +538,16 @@ namespace BotRpaUI.Core
                             return new DispositivoDB
                             {
                                 ID = reader.GetInt32(0),
+                                Patrimonio = reader.IsDBNull(1) ? string.Empty : reader.GetString(1),
                                 Serial = ser,
                                 Fabricante = fab,
                                 Modelo = mod,
                                 MarcaModelo = (fab + " " + mod).Trim(),
-                                Versao_Android = reader.IsDBNull(4) ? "N/A" : reader.GetString(4),
-                                API_Level = reader.IsDBNull(5) ? "N/A" : reader.GetString(5),
-                                Bateria = reader.IsDBNull(6) ? "N/A" : reader.GetString(6),
-                                IMEI = reader.IsDBNull(7) ? "N/A" : reader.GetString(7),
-                                MAC = reader.IsDBNull(8) ? "N/A" : reader.GetString(8),
-                                DataRegistro = reader.IsDBNull(9) ? "N/A" : reader.GetString(9)
+                                Versao_Android = reader.IsDBNull(5) ? "N/A" : reader.GetString(5),
+                                API_Level = reader.IsDBNull(6) ? "N/A" : reader.GetString(6),
+                                Bateria = reader.IsDBNull(7) ? "N/A" : reader.GetString(7),
+                                IMEI = reader.IsDBNull(8) ? "N/A" : reader.GetString(8),
+                                MAC = reader.IsDBNull(9) ? "N/A" : reader.GetString(9)
                             };
                         }
                     }
@@ -385,15 +569,15 @@ namespace BotRpaUI.Core
                 {
                     connection.Open();
                     var cmd = connection.CreateCommand();
-                    cmd.CommandText = "SELECT ID, Serial, Fabricante, Modelo, Versao_Android, API_Level, Bateria, IMEI, MAC, DataRegistro FROM Dispositivos";
+                    cmd.CommandText = "SELECT ID, Patrimonio, Serial, Fabricante, Modelo, Versao_Android, API_Level, Bateria, IMEI, MAC FROM Dispositivos ORDER BY ID ASC";
                     
                     using (var reader = cmd.ExecuteReader())
                     {
                         while (reader.Read())
                         {
-                            string ser = reader.IsDBNull(1) ? string.Empty : reader.GetString(1);
-                            string fab = reader.IsDBNull(2) ? string.Empty : reader.GetString(2);
-                            string mod = reader.IsDBNull(3) ? string.Empty : reader.GetString(3);
+                            string ser = reader.IsDBNull(2) ? string.Empty : reader.GetString(2);
+                            string fab = reader.IsDBNull(3) ? string.Empty : reader.GetString(3);
+                            string mod = reader.IsDBNull(4) ? string.Empty : reader.GetString(4);
 
                             // Normalização Positivo Tab Vision 7 para seriais T30764 / T030764 e modelos T0307G / T307G
                             bool isVision7 = 
@@ -416,16 +600,16 @@ namespace BotRpaUI.Core
                             lista.Add(new DispositivoDB
                             {
                                 ID = reader.GetInt32(0),
+                                Patrimonio = reader.IsDBNull(1) ? string.Empty : reader.GetString(1),
                                 Serial = ser,
                                 Fabricante = fab,
                                 Modelo = mod,
                                 MarcaModelo = marcaModeloFormada,
-                                Versao_Android = reader.IsDBNull(4) ? string.Empty : reader.GetString(4),
-                                API_Level = reader.IsDBNull(5) ? string.Empty : reader.GetString(5),
-                                Bateria = reader.IsDBNull(6) ? string.Empty : reader.GetString(6),
-                                IMEI = reader.IsDBNull(7) ? string.Empty : reader.GetString(7),
-                                MAC = reader.IsDBNull(8) ? string.Empty : reader.GetString(8),
-                                DataRegistro = reader.IsDBNull(9) ? string.Empty : reader.GetString(9)
+                                Versao_Android = reader.IsDBNull(5) ? string.Empty : reader.GetString(5),
+                                API_Level = reader.IsDBNull(6) ? string.Empty : reader.GetString(6),
+                                Bateria = reader.IsDBNull(7) ? string.Empty : reader.GetString(7),
+                                IMEI = reader.IsDBNull(8) ? string.Empty : reader.GetString(8),
+                                MAC = reader.IsDBNull(9) ? string.Empty : reader.GetString(9)
                             });
                         }
                     }
@@ -448,12 +632,14 @@ namespace BotRpaUI.Core
                         var cmd = connection.CreateCommand();
                         cmd.CommandText = @"
                             UPDATE Dispositivos SET 
+                            Patrimonio = $patrimonio,
                             Fabricante = $fabricante, 
                             Modelo = $modelo, 
                             MAC = $mac, 
                             Serial = $serial
                             WHERE ID = $id";
 
+                        var pPat = cmd.CreateParameter(); pPat.ParameterName = "$patrimonio"; cmd.Parameters.Add(pPat);
                         var pFab = cmd.CreateParameter(); pFab.ParameterName = "$fabricante"; cmd.Parameters.Add(pFab);
                         var pMod = cmd.CreateParameter(); pMod.ParameterName = "$modelo"; cmd.Parameters.Add(pMod);
                         var pMac = cmd.CreateParameter(); pMac.ParameterName = "$mac"; cmd.Parameters.Add(pMac);
@@ -462,6 +648,7 @@ namespace BotRpaUI.Core
 
                         foreach (var d in lista)
                         {
+                            pPat.Value = d.Patrimonio ?? string.Empty;
                             pFab.Value = d.Fabricante ?? string.Empty;
                             pMod.Value = d.Modelo ?? string.Empty;
                             pMac.Value = d.MAC ?? string.Empty;
@@ -478,6 +665,28 @@ namespace BotRpaUI.Core
             catch { }
         }
 
+        /// <summary>
+        /// Atualiza somente o numero de patrimonio de um dispositivo (edicao rapida na grade).
+        /// </summary>
+        public static bool AtualizarPatrimonio(int id, string patrimonio)
+        {
+            try
+            {
+                using (var connection = new SqliteConnection(_connectionString))
+                {
+                    connection.Open();
+                    var cmd = connection.CreateCommand();
+                    cmd.CommandText = "UPDATE Dispositivos SET Patrimonio = $patrimonio WHERE ID = $id";
+                    cmd.Parameters.AddWithValue("$patrimonio", patrimonio ?? string.Empty);
+                    cmd.Parameters.AddWithValue("$id", id);
+                    cmd.ExecuteNonQuery();
+                }
+                SincronizarCsv();
+                return true;
+            }
+            catch { return false; }
+        }
+
         public static void Excluir(int id)
         {
             try
@@ -489,6 +698,9 @@ namespace BotRpaUI.Core
                     cmd.CommandText = "DELETE FROM Dispositivos WHERE ID = $id";
                     cmd.Parameters.AddWithValue("$id", id);
                     cmd.ExecuteNonQuery();
+
+                    // Reaproveita a mesma conexao para renumerar os IDs, mantendo a sequencia contigua 1..N.
+                    RecriarTabelaDispositivos(connection);
                 }
             }
             catch { }
@@ -499,6 +711,64 @@ namespace BotRpaUI.Core
             lock (_cacheLock)
             {
                 _serialCache = null;
+            }
+        }
+
+        /// <summary>
+        /// Registra ou atualiza o MAC Wi-Fi de um dispositivo na tabela Dispositivos.
+        /// Se o serial já existe: atualiza MAC e Modelo (sem duplicar).
+        /// Se não existe: insere novo registro (UPSERT).
+        /// </summary>
+        public static void RegistrarOuAtualizarMAC(string serial, string modelo, string mac)
+        {
+            if (string.IsNullOrEmpty(serial)) return;
+            if (serial == "unknown" || serial.StartsWith("?") || serial == "Pendente") return;
+            if (string.IsNullOrWhiteSpace(mac)) return;
+
+            lock (_cacheLock)
+            {
+                var cache = GetSerialCache();
+                bool jaExiste = cache.Contains(serial);
+
+                try
+                {
+                    using (var connection = new SqliteConnection(_connectionString))
+                    {
+                        connection.Open();
+                        var cmd = connection.CreateCommand();
+                        cmd.CommandText = @"
+                            UPDATE Dispositivos
+                            SET MAC = $mac,
+                                Modelo = COALESCE(NULLIF($modelo, ''), Modelo)
+                            WHERE Serial = $serial";
+                        cmd.Parameters.AddWithValue("$mac", mac);
+                        cmd.Parameters.AddWithValue("$modelo", string.IsNullOrEmpty(modelo) ? "Desconhecido" : modelo);
+                        cmd.Parameters.AddWithValue("$serial", serial);
+                        int linhasAfetadas = cmd.ExecuteNonQuery();
+
+                        if (linhasAfetadas == 0)
+                        {
+                            // Não existe ainda: insere novo
+                            cmd.CommandText = @"
+                                INSERT OR IGNORE INTO Dispositivos (Patrimonio, Serial, Fabricante, Modelo, Versao_Android, API_Level, Bateria, IMEI, MAC)
+                                VALUES ($patrimonio, $serial, $fabricante, $modelo, $versao, $api, $bateria, $imei, $mac)";
+                            cmd.Parameters.Clear();
+                            cmd.Parameters.AddWithValue("$patrimonio", "");
+                            cmd.Parameters.AddWithValue("$serial", serial);
+                            cmd.Parameters.AddWithValue("$fabricante", "Desconhecido");
+                            cmd.Parameters.AddWithValue("$modelo", string.IsNullOrEmpty(modelo) ? "Desconhecido" : modelo);
+                            cmd.Parameters.AddWithValue("$versao", "N/A");
+                            cmd.Parameters.AddWithValue("$api", "N/A");
+                            cmd.Parameters.AddWithValue("$bateria", "N/A");
+                            cmd.Parameters.AddWithValue("$imei", "N/A");
+                            cmd.Parameters.AddWithValue("$mac", mac);
+                            cmd.ExecuteNonQuery();
+                        }
+                    }
+                    cache.Add(serial);
+                    SincronizarCsv();
+                }
+                catch { }
             }
         }
 
@@ -513,19 +783,19 @@ namespace BotRpaUI.Core
                 string csvPath = System.IO.Path.Combine(dataDir, "dispositivos_registrados.csv");
                 var todos = LerTodos();
                 var sb = new StringBuilder();
-                sb.AppendLine("ID;Serial;Fabricante;Modelo;Versao_Android;API_Level;Bateria;MAC;DataRegistro");
+                sb.AppendLine("ID;Patrimonio;Serial;Fabricante;Modelo;Versao_Android;API_Level;Bateria;IMEI;MAC");
                 foreach (var d in todos)
                 {
-                    sb.AppendLine($"{d.ID};{d.Serial};{d.Fabricante};{d.Modelo};{d.Versao_Android};{d.API_Level};{d.Bateria};{d.MAC};{d.DataRegistro}");
+                    sb.AppendLine($"{d.ID};{d.Patrimonio};{d.Serial};{d.Fabricante};{d.Modelo};{d.Versao_Android};{d.API_Level};{d.Bateria};{d.IMEI};{d.MAC}");
                 }
                 System.IO.File.WriteAllText(csvPath, sb.ToString(), Encoding.UTF8);
 
                 string relatorioPath = System.IO.Path.Combine(dataDir, "relatorio_serial_mac.csv");
                 var sbRel = new StringBuilder();
-                sbRel.AppendLine("Serial;MAC;Fabricante;Modelo;DataRegistro");
+                sbRel.AppendLine("Serial;Patrimonio;MAC;Fabricante;Modelo");
                 foreach (var d in todos)
                 {
-                    sbRel.AppendLine($"{d.Serial};{d.MAC};{d.Fabricante};{d.Modelo};{d.DataRegistro}");
+                    sbRel.AppendLine($"{d.Serial};{d.Patrimonio};{d.MAC};{d.Fabricante};{d.Modelo}");
                 }
                 System.IO.File.WriteAllText(relatorioPath, sbRel.ToString(), Encoding.UTF8);
             }
@@ -561,14 +831,16 @@ namespace BotRpaUI.Core
                     api_level = string.IsNullOrWhiteSpace(disp.API_Level) ? "N/A" : disp.API_Level,
                     bateria = string.IsNullOrWhiteSpace(disp.Bateria) ? "N/A" : disp.Bateria,
                     imei = string.IsNullOrWhiteSpace(disp.IMEI) ? "N/A" : disp.IMEI,
-                    dataRegistro = string.IsNullOrWhiteSpace(disp.DataRegistro) ? DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") : disp.DataRegistro,
+                    patrimonio = string.IsNullOrWhiteSpace(disp.Patrimonio) ? "" : disp.Patrimonio,
                     syncedAt = DateTime.UtcNow.ToString("o"),
                     origem = "Bot_RPA",
                     machineId = Environment.MachineName
                 };
 
                 string json = System.Text.Json.JsonSerializer.Serialize(payload);
-                return await FirebaseAuthService.PutJsonAsync(url, json, _innovStockHttp);
+                // PATCH (merge) em vez de PUT: preserva campos da nuvem que nao sao
+                // gerenciados localmente (ex.: dataRegistro gravada por outras bancadas).
+                return await FirebaseAuthService.PatchJsonAsync(url, json, _innovStockHttp);
             }
             catch
             {
@@ -603,7 +875,7 @@ namespace BotRpaUI.Core
                         api_level = string.IsNullOrWhiteSpace(disp.API_Level) ? "N/A" : disp.API_Level,
                         bateria = string.IsNullOrWhiteSpace(disp.Bateria) ? "N/A" : disp.Bateria,
                         imei = string.IsNullOrWhiteSpace(disp.IMEI) ? "N/A" : disp.IMEI,
-                        dataRegistro = string.IsNullOrWhiteSpace(disp.DataRegistro) ? DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") : disp.DataRegistro,
+                        patrimonio = string.IsNullOrWhiteSpace(disp.Patrimonio) ? "" : disp.Patrimonio,
                         syncedAt = DateTime.UtcNow.ToString("o"),
                         origem = "Bot_RPA",
                         machineId = Environment.MachineName
@@ -736,15 +1008,15 @@ namespace BotRpaUI.Core
                         using (var transaction = connection.BeginTransaction())
                         {
                             var selCmd = connection.CreateCommand();
-                            selCmd.CommandText = "SELECT Fabricante, Modelo, Versao_Android, API_Level, Bateria, IMEI, MAC, DataRegistro FROM Dispositivos WHERE Serial = $serial LIMIT 1;";
+                            selCmd.CommandText = "SELECT Fabricante, Modelo, Versao_Android, API_Level, Bateria, IMEI, MAC, Patrimonio FROM Dispositivos WHERE Serial = $serial LIMIT 1;";
                             var pSel = selCmd.CreateParameter(); pSel.ParameterName = "$serial"; selCmd.Parameters.Add(pSel);
 
                             var insCmd = connection.CreateCommand();
                             insCmd.CommandText = @"
-                                INSERT OR IGNORE INTO Dispositivos (Serial, Fabricante, Modelo, Versao_Android, API_Level, Bateria, IMEI, MAC, DataRegistro)
-                                VALUES ($serial, $fabricante, $modelo, $versao, $api, $bateria, $imei, $mac, $data);";
+                                INSERT OR IGNORE INTO Dispositivos (Patrimonio, Serial, Fabricante, Modelo, Versao_Android, API_Level, Bateria, IMEI, MAC)
+                                VALUES ($patrimonio, $serial, $fabricante, $modelo, $versao, $api, $bateria, $imei, $mac);";
                             var pIns = new Microsoft.Data.Sqlite.SqliteParameter[9];
-                            string[] insNomes = { "$serial", "$fabricante", "$modelo", "$versao", "$api", "$bateria", "$imei", "$mac", "$data" };
+                            string[] insNomes = { "$patrimonio", "$serial", "$fabricante", "$modelo", "$versao", "$api", "$bateria", "$imei", "$mac" };
                             for (int i = 0; i < insNomes.Length; i++)
                             {
                                 pIns[i] = insCmd.CreateParameter();
@@ -756,9 +1028,9 @@ namespace BotRpaUI.Core
                             updCmd.CommandText = @"
                                 UPDATE Dispositivos SET Fabricante = $fabricante, Modelo = $modelo,
                                     Versao_Android = $versao, API_Level = $api, Bateria = $bateria,
-                                    IMEI = $imei, MAC = $mac WHERE Serial = $serial;";
-                            var pUpd = new Microsoft.Data.Sqlite.SqliteParameter[8];
-                            string[] updNomes = { "$fabricante", "$modelo", "$versao", "$api", "$bateria", "$imei", "$mac", "$serial" };
+                                    IMEI = $imei, MAC = $mac, Patrimonio = $patrimonio WHERE Serial = $serial;";
+                            var pUpd = new Microsoft.Data.Sqlite.SqliteParameter[9];
+                            string[] updNomes = { "$fabricante", "$modelo", "$versao", "$api", "$bateria", "$imei", "$mac", "$patrimonio", "$serial" };
                             for (int i = 0; i < updNomes.Length; i++)
                             {
                                 pUpd[i] = updCmd.CreateParameter();
@@ -793,10 +1065,10 @@ namespace BotRpaUI.Core
                                 string cBat = CloudTexto(el, "bateria");
                                 string cImei = CloudTexto(el, "imei");
                                 string cMac = CloudTexto(el, "mac");
-                                string cData = CloudTexto(el, "dataRegistro");
+                                string cPat = CloudTexto(el, "patrimonio");
 
                                 pSel.Value = serial;
-                                string lFab = "", lMod = "", lVer = "", lApi = "", lBat = "", lImei = "", lMac = "";
+                                string lFab = "", lMod = "", lVer = "", lApi = "", lBat = "", lImei = "", lMac = "", lPat = "";
                                 bool existe = false;
                                 using (var reader = selCmd.ExecuteReader())
                                 {
@@ -810,6 +1082,7 @@ namespace BotRpaUI.Core
                                         lBat = reader.IsDBNull(4) ? "" : reader.GetString(4);
                                         lImei = reader.IsDBNull(5) ? "" : reader.GetString(5);
                                         lMac = reader.IsDBNull(6) ? "" : reader.GetString(6);
+                                        lPat = reader.IsDBNull(7) ? "" : reader.GetString(7);
                                     }
                                 }
 
@@ -838,15 +1111,15 @@ namespace BotRpaUI.Core
                                     }
                                     if (!mergedByMac)
                                     {
-                                        pIns[0].Value = serial;
-                                        pIns[1].Value = CloudVazio(cFab) ? "" : cFab;
-                                        pIns[2].Value = CloudVazio(cMod) ? "" : cMod;
-                                        pIns[3].Value = CloudVazio(cVer) ? "" : cVer;
-                                        pIns[4].Value = CloudVazio(cApi) ? "" : cApi;
-                                        pIns[5].Value = CloudVazio(cBat) ? "" : cBat;
-                                        pIns[6].Value = CloudVazio(cImei) ? "" : cImei;
-                                        pIns[7].Value = CloudVazio(cMac) ? "" : cMac;
-                                        pIns[8].Value = string.IsNullOrWhiteSpace(cData) ? DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") : cData;
+                                        pIns[0].Value = CloudVazio(cPat) ? "" : cPat;
+                                        pIns[1].Value = serial;
+                                        pIns[2].Value = CloudVazio(cFab) ? "" : cFab;
+                                        pIns[3].Value = CloudVazio(cMod) ? "" : cMod;
+                                        pIns[4].Value = CloudVazio(cVer) ? "" : cVer;
+                                        pIns[5].Value = CloudVazio(cApi) ? "" : cApi;
+                                        pIns[6].Value = CloudVazio(cBat) ? "" : cBat;
+                                        pIns[7].Value = CloudVazio(cImei) ? "" : cImei;
+                                        pIns[8].Value = CloudVazio(cMac) ? "" : cMac;
                                         if (insCmd.ExecuteNonQuery() == 1) { importados++; afetados.Add(serial); }
                                     }
                                 }
@@ -859,11 +1132,12 @@ namespace BotRpaUI.Core
                                     string nBat = CloudVazio(lBat) && !CloudVazio(cBat) ? cBat : lBat;
                                     string nImei = CloudVazio(lImei) && !CloudVazio(cImei) ? cImei : lImei;
                                     string nMac = CloudVazio(lMac) && !CloudVazio(cMac) ? cMac : lMac;
-                                    if (nFab != lFab || nMod != lMod || nVer != lVer || nApi != lApi || nBat != lBat || nImei != lImei || nMac != lMac)
+                                    string nPat = CloudVazio(lPat) && !CloudVazio(cPat) ? cPat : lPat;
+                                    if (nFab != lFab || nMod != lMod || nVer != lVer || nApi != lApi || nBat != lBat || nImei != lImei || nMac != lMac || nPat != lPat)
                                     {
                                         pUpd[0].Value = nFab; pUpd[1].Value = nMod; pUpd[2].Value = nVer;
                                         pUpd[3].Value = nApi; pUpd[4].Value = nBat; pUpd[5].Value = nImei;
-                                        pUpd[6].Value = nMac; pUpd[7].Value = serial;
+                                        pUpd[6].Value = nMac; pUpd[7].Value = nPat; pUpd[8].Value = serial;
                                         updCmd.ExecuteNonQuery();
                                         atualizados++;
                                         afetados.Add(serial);

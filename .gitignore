@@ -1,82 +1,153 @@
-# Ignore arquivos ZIP
-*.zip
+# ==========================================================================
+# Bot_RPA — .gitignore
+# Stack: C (motor) + C# WPF (UI) + PowerShell/Batch (scripts)
+# Referencia: AGENTS.md / memoria_bot_rpa.md
+# ==========================================================================
 
-# Ignore variáveis de ambiente
-.env
-.env.*
-
-# Ignore ambientes virtuais Python
+# --------------------------------------------------------------------------
+# 1. Dependencias e ambientes
+# --------------------------------------------------------------------------
+node_modules/
 venv/
 env/
 .venv/
+__pycache__/
+*.py[cod]
 
-# Ignore arquivos/pastas relacionados ao Firebase
-firebase.json
-.firebaserc
-firebase/
+# --------------------------------------------------------------------------
+# 2. Build / Artefatos compilados
+# --------------------------------------------------------------------------
+# C (motor)
+*.o
+*.obj
+*.a
+*.lib
+*.exp
+*.pdb
+*.ilk
+*.exe
+*.dll
 
-# ==========================================
-# Outros ignorados úteis para o seu projeto:
-# ==========================================
-
-# Builds do C# WPF
+# C# WPF (UI)
 src/ui/bin/
 src/ui/obj/
-
-# Arquivos de log e auditoria locais
-logs/
-registros/
-
-# XMLs de debug do UIAutomator
-*.xml
-!login_live.xml
-!login_app.xml
-
-# Binários e bibliotecas compiladas (Pasta oficial de teste/dev)
-data/output/
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
 *.wpftmp.csproj
+*.csproj.user
+*.sln.docstates
 
-# Pastas específicas de release e saída (nunca versionar: contêm exe/dll/db e settings com credenciais)
-InnoRPA_Release/
-BotRPA_Release/
+# Empacotamento / release
+*.zip
 *.rar
+*.7z
+*.tar.gz
 output/
 output_teste/
+BotRPA_Release/
+InnoRPA_Release/
+data/output/
 
-# Compiladores e ferramentas pesadas locais (binários provisionados via PreflightChecker/setup_adb)
+# Ferramentas pesadas provisionadas por PreflightChecker/setup_adb
 tools/mingw64/
 tools/platform-tools/
 tools/*.apk
 tools/reverse_tethering/*.exe
 tools/reverse_tethering/*.apk
-src/ui/Resources/temp/
-*.o
-*.obj
-*.exe
-*.dll
-*.apk
-*.pdb
+
+# Ferramenta auxiliar de captura de MAC (fonte versionada, saida ignorada)
+capturamac/*.exe
+capturamac/*.csv
+capturamac/*.log
+capturamac/*.txt
+
+# --------------------------------------------------------------------------
+# 3. Cache e artefatos temporarios
+# --------------------------------------------------------------------------
+.cache/
+*.tmp
+*.temp
 *.bak
+*.old
+*.orig
+*.rej
+*.suo
+*.user
+*.userosscache
+*.cache
+.vs/
+.idea/
+src/ui/Resources/temp/
 
-# IDEs e configurações locais
-.vscode/
-.clangd
-compile_commands.json
+# --------------------------------------------------------------------------
+# 4. Logs e auditoria local
+# --------------------------------------------------------------------------
+# Logs de execucao de dispositivo (locais — nunca versionar)
+logs/
+registros/*/*_execucao.log
+registros/**/*.log
 
-# Scratch e testes temporários
-scratch/
-
-# Dados locais e relatórios dinâmicos (raiz; src/core/data tem fontes C versionadas)
+# --------------------------------------------------------------------------
+# 5. Dados locais, bancos e relatorios dinamicos
+# --------------------------------------------------------------------------
+# ATENCAO: usar barra inicial. src/core/data possui fontes C versionadas.
 /data/
 /municipios.csv
 /version.txt
 *.db
 *.sqlite
 *.sqlite3
-
-# Config local com credenciais (e-mail/senha Firebase) — nunca versionar
+*.db-shm
+*.db-wal
 config/settings.json
 
-# Cache local e manifestos OTA gerados
-.cache/
+# --------------------------------------------------------------------------
+# 6. Ambiente, credenciais e segredos
+# --------------------------------------------------------------------------
+.env
+.env.*
+!.env.example
+!.env.template
+*.key
+*.pem
+*.pfx
+*.p12
+*.jks
+config/settings.json
+
+# Firebase (nao usado como hosting neste projeto)
+firebase.json
+.firebaserc
+firebase/
+
+# Manifests OTA gerados
 controle/ota_manifest_*.json
+
+# --------------------------------------------------------------------------
+# 7. IDEs e ferramentas de agente (local)
+# --------------------------------------------------------------------------
+.vscode/
+.clangd
+compile_commands.json
+.opencode/
+scratch/
+
+# --------------------------------------------------------------------------
+# 8. Sistema operacional
+# --------------------------------------------------------------------------
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# --------------------------------------------------------------------------
+# 9. XMLs de debug do UIAutomator (mantem os fixtures nomeados)
+# --------------------------------------------------------------------------
+*.xml
+!login_live.xml
+!login_app.xml

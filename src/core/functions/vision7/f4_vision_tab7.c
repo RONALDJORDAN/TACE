@@ -10,7 +10,7 @@
 #define adb_exec(args) adb_exec_retry(args, 3, 2000, (AdbLogCallback)cb)
 
 // =============================================================================
-//  MÓDULO F4: TERMINAL KIOSK, GESTÃO DE HARDWARE E WALLPAPER (VISION TAB 7)
+//  MODULO F4: GESTAO DO APPARELHO (HARDWARE, APPS, REDE E WALLPAPER) - VISION TAB 7
 // =============================================================================
 
 static const char *PKG_SETTINGS = "com.android.settings";
@@ -29,7 +29,8 @@ static const char *CAMERA_PACKAGES[] = {
 
 static const int NUM_CAMERA_PACKAGES = sizeof(CAMERA_PACKAGES) / sizeof(CAMERA_PACKAGES[0]);
 
-static const char *KIOSK_DEBLOAT_PACKAGES[] = {
+// Pacotes de sistema ocultados na Blindagem e reativados na Restauracao.
+static const char *APPARELHO_DEBLOAT_PACKAGES[] = {
     // 1. Câmeras
     "com.softwinner.camera2", "com.android.camera2", "com.android.camera",
     "com.sec.android.app.camera", "com.motorola.camera2",
@@ -99,8 +100,8 @@ static const char *KIOSK_DEBLOAT_PACKAGES[] = {
     "com.google.android.syncadapters.calendar"
 };
 
-static const int NUM_KIOSK_DEBLOAT =
-    sizeof(KIOSK_DEBLOAT_PACKAGES) / sizeof(KIOSK_DEBLOAT_PACKAGES[0]);
+static const int NUM_APPARELHO_DEBLOAT =
+    sizeof(APPARELHO_DEBLOAT_PACKAGES) / sizeof(APPARELHO_DEBLOAT_PACKAGES[0]);
 
 int F4_ExecutarFerramenta(const char *serial, int acao, LogCallback cb) {
   char args[1024];
@@ -144,7 +145,7 @@ int F4_ExecutarFerramenta(const char *serial, int acao, LogCallback cb) {
     }
     if (cb && acao == 5) {
       snprintf(msg, sizeof(msg),
-               "[F4] Aparelho [%s] -> Modo Kiosk Estrito ATIVADO (Cameras e Configuracoes restritas).",
+               "[F4] Aparelho [%s] -> Modo Restrito ATIVADO (Cameras e Configuracoes restritas).",
                serial);
       cb(msg);
     }
@@ -176,7 +177,7 @@ int F4_ExecutarFerramenta(const char *serial, int acao, LogCallback cb) {
     }
     if (cb && acao == 6) {
       snprintf(msg, sizeof(msg),
-               "[F4] Aparelho [%s] -> Modo Kiosk DESATIVADO (Acesso total liberado).",
+               "[F4] Aparelho [%s] -> Modo Restrito DESATIVADO (Acesso total liberado).",
                serial);
       cb(msg);
     }
@@ -406,10 +407,10 @@ int F4_ExecutarFerramenta(const char *serial, int acao, LogCallback cb) {
 
 
 
-  if (acao == 11) { // Blindagem Kiosk: Ocultar Aplicativos Dispensáveis
+  if (acao == 11) { // Blindagem: Ocultar Aplicativos Dispensáveis
     if (cb) {
       snprintf(msg, sizeof(msg),
-               "[F4] Aparelho [%s] -> Aplicando Blindagem Kiosk (Ocultando aplicativos dispensaveis)...",
+               "[F4] Aparelho [%s] -> Aplicando Blindagem (Ocultando aplicativos dispensaveis)...",
                serial);
       cb(msg);
     }
@@ -418,14 +419,14 @@ int F4_ExecutarFerramenta(const char *serial, int acao, LogCallback cb) {
     int count_in_batch = 0;
     int offset = snprintf(cmd_batch, sizeof(cmd_batch), "-s %s shell \"", serial);
 
-    for (int i = 0; i < NUM_KIOSK_DEBLOAT; i++) {
-      const char *pkg = KIOSK_DEBLOAT_PACKAGES[i];
-      offset += snprintf(cmd_batch + offset, sizeof(cmd_batch) - offset,
-                         "pm disable-user --user 0 %s 2>/dev/null; pm suspend %s 2>/dev/null; pm uninstall -k --user 0 %s 2>/dev/null; ",
-                         pkg, pkg, pkg);
-      count_in_batch++;
+    for (int i = 0; i < NUM_APPARELHO_DEBLOAT; i++) {
+        const char *pkg = APPARELHO_DEBLOAT_PACKAGES[i];
+        offset += snprintf(cmd_batch + offset, sizeof(cmd_batch) - offset,
+                           "pm disable-user --user 0 %s 2>/dev/null; pm suspend %s 2>/dev/null; pm uninstall -k --user 0 %s 2>/dev/null; ",
+                           pkg, pkg, pkg);
+        count_in_batch++;
 
-      if (count_in_batch >= 6 || i == NUM_KIOSK_DEBLOAT - 1) {
+        if (count_in_batch >= 6 || i == NUM_APPARELHO_DEBLOAT - 1) {
         if (offset < (int)sizeof(cmd_batch) - 2) {
           cmd_batch[offset++] = '\"';
           cmd_batch[offset] = '\0';
@@ -445,7 +446,7 @@ int F4_ExecutarFerramenta(const char *serial, int acao, LogCallback cb) {
 
     if (cb) {
       snprintf(msg, sizeof(msg),
-               "[+] Aparelho [%s] -> Blindagem Kiosk concluida! Aplicativos ocultados com sucesso.",
+               "[+] Aparelho [%s] -> Blindagem concluida! Aplicativos ocultados com sucesso.",
                serial);
       cb(msg);
     }
@@ -464,14 +465,14 @@ int F4_ExecutarFerramenta(const char *serial, int acao, LogCallback cb) {
     int count_in_batch = 0;
     int offset = snprintf(cmd_batch, sizeof(cmd_batch), "-s %s shell \"", serial);
 
-    for (int i = 0; i < NUM_KIOSK_DEBLOAT; i++) {
-      const char *pkg = KIOSK_DEBLOAT_PACKAGES[i];
-      offset += snprintf(cmd_batch + offset, sizeof(cmd_batch) - offset,
-                         "cmd package install-existing %s 2>/dev/null; pm enable %s 2>/dev/null; pm unsuspend %s 2>/dev/null; ",
-                         pkg, pkg, pkg);
-      count_in_batch++;
+    for (int i = 0; i < NUM_APPARELHO_DEBLOAT; i++) {
+        const char *pkg = APPARELHO_DEBLOAT_PACKAGES[i];
+        offset += snprintf(cmd_batch + offset, sizeof(cmd_batch) - offset,
+                           "cmd package install-existing %s 2>/dev/null; pm enable %s 2>/dev/null; pm unsuspend %s 2>/dev/null; ",
+                           pkg, pkg, pkg);
+        count_in_batch++;
 
-      if (count_in_batch >= 6 || i == NUM_KIOSK_DEBLOAT - 1) {
+        if (count_in_batch >= 6 || i == NUM_APPARELHO_DEBLOAT - 1) {
         if (offset < (int)sizeof(cmd_batch) - 2) {
           cmd_batch[offset++] = '\"';
           cmd_batch[offset] = '\0';

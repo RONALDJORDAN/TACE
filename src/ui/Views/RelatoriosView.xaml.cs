@@ -235,7 +235,7 @@ namespace BotRpaUI.Views
                 {
                     var ultimo = todosDispositivos[todosDispositivos.Count - 1];
                     if (TxtUltimoDispositivo != null)
-                        TxtUltimoDispositivo.Text = $"{ultimo.MarcaModelo} | S/N: {ultimo.Serial} ({ultimo.DataRegistro})";
+                        TxtUltimoDispositivo.Text = $"{ultimo.MarcaModelo} | S/N: {ultimo.Serial} | Patrimônio: {(string.IsNullOrWhiteSpace(ultimo.Patrimonio) ? "—" : ultimo.Patrimonio)}";
                 }
                 else
                 {
@@ -348,13 +348,14 @@ namespace BotRpaUI.Views
                 TxtInfoSelecionado.Text = "Nenhum registro selecionado";
                 return;
             }
-            TxtInfoSelecionado.Text = $"Selecionado: #{item.ID} — {item.MarcaModelo} | N/S: {item.Serial} | MAC: {item.MAC} | Registrado em: {item.DataRegistro}";
+            TxtInfoSelecionado.Text = $"Selecionado: #{item.ID} — {item.MarcaModelo} | N/S: {item.Serial} | MAC: {item.MAC} | Patrimônio: {(string.IsNullOrWhiteSpace(item.Patrimonio) ? "—" : item.Patrimonio)}";
         }
 
         private void BtnNovoDispositivo_Click(object sender, RoutedEventArgs e)
         {
             _editingDeviceId = 0;
             TxtModalTitulo.Text = "➕ Adicionar Novo Dispositivo";
+            TxtModalPatrimonio.Text = "";
             TxtModalFabricante.Text = "Positivo";
             TxtModalModelo.Text = "Tab Vision 7 (T307G)";
             TxtModalSerial.Text = "";
@@ -373,11 +374,26 @@ namespace BotRpaUI.Views
 
             _editingDeviceId = selectedItem.ID;
             TxtModalTitulo.Text = $"✏️ Editar Dispositivo #{selectedItem.ID}";
+            TxtModalPatrimonio.Text = selectedItem.Patrimonio ?? "";
             TxtModalFabricante.Text = selectedItem.Fabricante;
             TxtModalModelo.Text = selectedItem.Modelo;
             TxtModalSerial.Text = selectedItem.Serial;
             TxtModalMAC.Text = selectedItem.MAC;
             PanelModalEditDevice.Visibility = Visibility.Visible;
+        }
+
+        /// <summary>
+        /// Grava a edicao inline da coluna "Nº Patrimonio" direto na base de dados.
+        /// </summary>
+        private void GridBancoDados_CellEditEnding(object sender, DataGridCellEditEndingEventArgs e)
+        {
+            if (e.Row.Item is not BotRpaUI.Core.DispositivoDB item) return;
+            if (e.Column?.Header?.ToString() != "Nº Patrimônio") return;
+
+            string novoValor = (item.Patrimonio ?? "").Trim();
+            BotRpaUI.Core.SQLiteDatabaseManager.AtualizarPatrimonio(item.ID, novoValor);
+
+            System.Diagnostics.Debug.WriteLine($"[RelatoriosView] Patrimonio do #{item.ID} atualizado para '{novoValor}'.");
         }
 
         private void BtnModalCancelar_Click(object sender, RoutedEventArgs e)
@@ -393,6 +409,7 @@ namespace BotRpaUI.Views
                 string fabricante = TxtModalFabricante.Text.Trim();
                 string modelo = TxtModalModelo.Text.Trim();
                 string mac = TxtModalMAC.Text.Trim();
+                string patrimonio = TxtModalPatrimonio.Text.Trim();
 
                 if (string.IsNullOrWhiteSpace(serial))
                 {
@@ -403,6 +420,9 @@ namespace BotRpaUI.Views
                 if (_editingDeviceId == 0)
                 {
                     BotRpaUI.Core.SQLiteDatabaseManager.RegistrarSeNovo(serial, fabricante, modelo, mac);
+                    var novo = BotRpaUI.Core.SQLiteDatabaseManager.BuscarPorSerial(serial);
+                    if (novo != null && !string.IsNullOrWhiteSpace(patrimonio))
+                        BotRpaUI.Core.SQLiteDatabaseManager.AtualizarPatrimonio(novo.ID, patrimonio);
                 }
                 else
                 {
@@ -414,6 +434,7 @@ namespace BotRpaUI.Views
                         item.Fabricante = fabricante;
                         item.Modelo = modelo;
                         item.MAC = mac;
+                        item.Patrimonio = patrimonio;
                         BotRpaUI.Core.SQLiteDatabaseManager.SalvarTodos(todos);
                     }
                 }
@@ -826,14 +847,13 @@ namespace BotRpaUI.Views
 
                 // Tabela de Dados
                 var table = new System.Windows.Documents.Table();
-                double[] widths = { 40, 160, 140, 140, 110 };
-                foreach (var w in widths) table.Columns.Add(new System.Windows.Documents.TableColumn { Width = new GridLength(w) });
+                double[] widths = { 40, 160, 140, 140, 110 };                foreach (var w in widths) table.Columns.Add(new System.Windows.Documents.TableColumn { Width = new GridLength(w) });
 
                 var rg = new System.Windows.Documents.TableRowGroup();
                 table.RowGroups.Add(rg);
 
                 // Cabeçalho da Tabela
-                string[] headers = { "#", "Fabricante / Modelo", "N/S (Serial)", "MAC Address", "Data Registro" };
+                string[] headers = { "#", "Nº Patrimônio", "Fabricante / Modelo", "N/S (Serial)", "MAC Address" };
                 var hr = new System.Windows.Documents.TableRow { Background = Brushes.DarkSlateGray };
                 foreach (var h in headers)
                 {
@@ -853,7 +873,7 @@ namespace BotRpaUI.Views
                 {
                     var row = new System.Windows.Documents.TableRow { Background = alt ? Brushes.WhiteSmoke : Brushes.White };
                     alt = !alt;
-                    string[] vals = { d.ID.ToString(), d.MarcaModelo, d.Serial, d.MAC, d.DataRegistro };
+                    string[] vals = { d.ID.ToString(), string.IsNullOrWhiteSpace(d.Patrimonio) ? "-" : d.Patrimonio, d.MarcaModelo, d.Serial, d.MAC };
                     foreach (var v in vals)
                     {
                         row.Cells.Add(new System.Windows.Documents.TableCell(new System.Windows.Documents.Paragraph(new System.Windows.Documents.Run(v ?? "-"))
@@ -916,10 +936,10 @@ namespace BotRpaUI.Views
                 if (sfd.ShowDialog() == true)
                 {
                     var sb = new System.Text.StringBuilder();
-                    sb.AppendLine("ID;Fabricante_Modelo;Serial;MAC_Address;Data_Registro");
+                    sb.AppendLine("ID;Patrimonio;Fabricante_Modelo;Serial;MAC_Address");
                     foreach (var d in lista)
                     {
-                        sb.AppendLine($"{d.ID};\"{d.MarcaModelo}\";\"{d.Serial}\";\"{d.MAC}\";\"{d.DataRegistro}\"");
+                        sb.AppendLine($"{d.ID};\"{d.Patrimonio}\";\"{d.MarcaModelo}\";\"{d.Serial}\";\"{d.MAC}\"");
                     }
 
                     await File.WriteAllTextAsync(sfd.FileName, sb.ToString(), System.Text.Encoding.UTF8);

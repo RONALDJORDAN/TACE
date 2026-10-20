@@ -755,7 +755,8 @@ namespace BotRpaUI.Views
                             // Registra no banco SQLite para histórico contínuo
                             BotRpaUI.Core.SQLiteDatabaseManager.RegistrarSeNovo(dev.serial, dev.manufacturer, dev.model, macPro);
 
-
+                            // Garante o MAC no cadastro (motor C + ciclo de Wi-Fi se faltar)
+                            BotRpaUI.Core.MacCaptureService.GarantirMacRegistrado(dev.serial, dev.model, macPro);
 
                             // Se o modelo deste aparelho estiver DESATIVADO em Configurações, oculta do monitor ADB
                             if (!BotRpaUI.Core.DeviceFilterHelper.IsDeviceModelAllowed(dev.serial, dev.model, dev.manufacturer))
