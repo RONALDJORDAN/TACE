@@ -1004,6 +1004,17 @@ namespace BotRpaUI.Views
                                 // refresh (batched); se faltar, o servico extrai com o ciclo
                                 // de Wi-Fi (liga -> extrai -> restaura) e grava no banco.
                                 BotRpaUI.Core.MacCaptureService.GarantirMacRegistrado(serial, model, mac);
+
+                                // A captura pode ter gravado um MAC novo: relê do banco para
+                                // exibir na lista ja neste ciclo.
+                                if (!BotRpaUI.Core.MacCaptureService.MacValido(mac))
+                                {
+                                    var gravado = BotRpaUI.Core.SQLiteDatabaseManager.BuscarPorSerial(serial);
+                                    if (gravado != null && BotRpaUI.Core.MacCaptureService.MacValido(gravado.MAC))
+                                    {
+                                        mac = gravado.MAC;
+                                    }
+                                }
                             }
 
                             // Se o modelo deste aparelho estiver DESATIVADO em Configurações, oculta do monitor ADB

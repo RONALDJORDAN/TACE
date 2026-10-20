@@ -1615,6 +1615,33 @@ O **InnoAI** é o motor de inteligência e automação visual da Plataforma Inno
 - **Conteúdo da release:** íntegro — ADB (14 arq.), Gnirehtet (6 arq.), `mac_address_finder.apk`, `config/`, `scripts/apply_ota_update.bat`, `data/bot_database.db` (433 aparelhos, schema novo, IDs 1..433), `Arquivos/`, `logs/`, `registros/`; **sem** `tools/mingw64`.
 - **Destaque da versão:** captura de MAC Wi-Fi **nativa e automática** ao conectar o tablet (motor C + `MacCaptureService`), validada em hardware real.
 
+### [2026-10-20 18:40] - Lista "Aparelhos Conectados": Modelo · Número de Série · MAC Wi-Fi
+- **Pedido do usuário (com imagem da tela):** no Monitor clássico, a lista de apparatus conectados mostrava **Bateria · Marca · Número de Série**. Deveria mostrar **Modelo · Número de Série · Número MAC** — "seria mais interessante" (a bateria e a marca estão em outros lugares da UI; o MAC era o dado que faltava).
+- **XAML (`MonitorView.xaml`)** — `GridView` da `ListDevices` reorganizado:
+  - **Modelo** (Width 105) — `ModeloExibicao`, cor `#E3E0F2` SemiBold.
+  - **Número de Série** (Width 150) — `Serial`, `#5EB1FF` Consolas.
+  - **MAC Wi-Fi** (Width 130) — `MACExibicao`, `#4EDEA3` Consolas.
+  - Colunas com `GridViewColumn.CellTemplate` + `DataTemplate` (o `GridViewColumn` **não** possui `CellStyle` — erro MC3074 corrigido nessa rodada).
+  - A coluna **Bateria** (com `ProgressBar`) e a coluna **Marca** foram **removidas** desta lista.
+- **Code-behind (`MonitorView.xaml.cs`)** — novas propriedades de exibição no `DeviceModel`:
+  - **`ModeloExibicao`**: traduz o código interno do ADB para o **nome comercial** — `T307G`/`T0307G`/`Vision` → **"Tab Vision 7"**; `M7`/`Multi`/`TabMulti`/`ML01`/`NB36x` → **"TabMulti M7"**; `T20`/`TA-`/`Nokia` → **"Nokia T20"**; caso contrário mantém o valor original. Vazios viram `---` e pendentes viram "Pendente".
+  - **`MACExibicao`**: o MAC em **maiúsculas**; valores ausentes/placeholder (`N/A`, `---`, `02:00:00:00:00:00`) viram **"Aguardando"** em vez de texto cru.
+  - Ambas notificam `PropertyChanged` (MAC também quando o `Model`/`Manufacturer` mudam), mantendo a lista viva.
+- **Atualização imediata do MAC na lista:** após `MacCaptureService.GarantirMacRegistrado(...)`, o código **relê o MAC do banco** quando o valor local ainda não é válido — assim o endereço capturado no ciclo de Wi-Fi (que leva ~2 s) **aparece na tela no mesmo ciclo**, sem esperar o próximo refresh de 5 s. Aplicado no **MonitorView** e no **MonitorProView**.
+- **Propriedade `Marca` mantida** (continua usada internamente e em `ModeloExibicao`); apenas a **coluna** saiu da lista.
+- **Validação:**
+  - App real executado com 2 tablets T30764G conectados: a lista exibe **"Tab Vision 7" | T30764G2508009388 | 8C:92:53:C1:39:57** e **"Tab Vision 7" | T30764G2508016440 | 8C:92:53:C1:54:E3** (modelo comercial, série e MAC reais).
+  - Banco confirma os MACs gravados automaticamente: `8c:92:53:c1:39:57` e `8c:92:53:c1:54:e3`.
+  - Builds `20.10.2026.1838` (**falhou** com MC3074 pelo `GridViewColumn.CellStyle` inexistente — **corrigido**) e `20.10.2026.1839` (TESTE) com **zero warnings / zero errors**.
+
+### [2026-10-20 18:43] - Build FINAL com a nova lista de Aparelhos Conectados
+- **Comando:** `controle/Build.ps1 -Modo Final -Sim` → `scripts/build_release.bat` → `scripts/build.bat` com `BUILD_MODE=RELEASE` (ícone Roxo Oficial).
+- **Resultado:** compilação `20.10.2026.1843` com **zero warnings / zero errors**. Auditoria `registros/2026-10-20/18-43_Plataforma_BotRPA_DESKTOP_BUILD` (com `build.log`).
+- **Artefatos e SHA-256:**
+  - `BotRPAui.exe` — 194.084.133 B (185,1 MB) · `9BF9662C533B2A22DAA21D6697FB40ADAAB3286F2F8FE20CFDDDA35E00BC8AAA`
+  - `BotEngine.dll` — 414.720 B (405 KB) · `B2AEBB0FA0E42D31A0C90234F7D2C2378CECB76646181C0462AA779B3636B3BD`
+- **Pacote de distribuição:** `controle/BotRPA_Release_20.10.2026.1843.zip` (91.732.618 bytes).
+
 ### [2026-10-20] - Ferramenta CapturaMAC: automação de MAC Wi-Fi de tablets via ADB
 - **Pedido (usuário):** criar pasta `capturamac/` com ferramenta simples em C + CMD para capturar o endereço MAC Wi-Fi de tablets conectados via ADB.
 - **Arquivos criados:**

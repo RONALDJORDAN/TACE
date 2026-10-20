@@ -168,39 +168,30 @@
                             <ListView.View>
                                 <GridView>
                                     <!-- Modelo -->
-                                    <GridViewColumn Header="Modelo" Width="105" DisplayMemberBinding="{Binding ModeloExibicao}">
-                                        <GridViewColumn.CellStyle>
-                                            <Style TargetType="TextBlock">
-                                                <Setter Property="Foreground" Value="#E3E0F2"/>
-                                                <Setter Property="FontWeight" Value="SemiBold"/>
-                                                <Setter Property="FontSize" Value="11"/>
-                                                <Setter Property="VerticalAlignment" Value="Center"/>
-                                            </Style>
-                                        </GridViewColumn.CellStyle>
+                                    <GridViewColumn Header="Modelo" Width="105">
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding ModeloExibicao}" Foreground="#E3E0F2" FontWeight="SemiBold" FontSize="11" VerticalAlignment="Center"/>
+                                            </DataTemplate>
+                                        </GridViewColumn.CellTemplate>
                                     </GridViewColumn>
 
                                     <!-- Número de Série -->
-                                    <GridViewColumn Header="Número de Série" Width="150" DisplayMemberBinding="{Binding Serial}">
-                                        <GridViewColumn.CellStyle>
-                                            <Style TargetType="TextBlock">
-                                                <Setter Property="Foreground" Value="#5EB1FF"/>
-                                                <Setter Property="FontFamily" Value="Consolas"/>
-                                                <Setter Property="FontSize" Value="11"/>
-                                                <Setter Property="VerticalAlignment" Value="Center"/>
-                                            </Style>
-                                        </GridViewColumn.CellStyle>
+                                    <GridViewColumn Header="Número de Série" Width="150">
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding Serial}" Foreground="#5EB1FF" FontFamily="Consolas" FontSize="11" VerticalAlignment="Center"/>
+                                            </DataTemplate>
+                                        </GridViewColumn.CellTemplate>
                                     </GridViewColumn>
 
                                     <!-- MAC Wi-Fi -->
-                                    <GridViewColumn Header="MAC Wi-Fi" Width="130" DisplayMemberBinding="{Binding MACExibicao}">
-                                        <GridViewColumn.CellStyle>
-                                            <Style TargetType="TextBlock">
-                                                <Setter Property="Foreground" Value="#4EDEA3"/>
-                                                <Setter Property="FontFamily" Value="Consolas"/>
-                                                <Setter Property="FontSize" Value="11"/>
-                                                <Setter Property="VerticalAlignment" Value="Center"/>
-                                            </Style>
-                                        </GridViewColumn.CellStyle>
+                                    <GridViewColumn Header="MAC Wi-Fi" Width="130">
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding MACExibicao}" Foreground="#4EDEA3" FontFamily="Consolas" FontSize="11" VerticalAlignment="Center"/>
+                                            </DataTemplate>
+                                        </GridViewColumn.CellTemplate>
                                     </GridViewColumn>
                                 </GridView>
                             </ListView.View>

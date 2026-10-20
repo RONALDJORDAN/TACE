@@ -758,6 +758,16 @@ namespace BotRpaUI.Views
                             // Garante o MAC no cadastro (motor C + ciclo de Wi-Fi se faltar)
                             BotRpaUI.Core.MacCaptureService.GarantirMacRegistrado(dev.serial, dev.model, macPro);
 
+                            // A captura pode ter gravado um MAC novo: relê do banco
+                            if (!BotRpaUI.Core.MacCaptureService.MacValido(macPro))
+                            {
+                                var gravadoPro = BotRpaUI.Core.SQLiteDatabaseManager.BuscarPorSerial(dev.serial);
+                                if (gravadoPro != null && BotRpaUI.Core.MacCaptureService.MacValido(gravadoPro.MAC))
+                                {
+                                    macPro = gravadoPro.MAC;
+                                }
+                            }
+
                             // Se o modelo deste aparelho estiver DESATIVADO em Configurações, oculta do monitor ADB
                             if (!BotRpaUI.Core.DeviceFilterHelper.IsDeviceModelAllowed(dev.serial, dev.model, dev.manufacturer))
                             {
