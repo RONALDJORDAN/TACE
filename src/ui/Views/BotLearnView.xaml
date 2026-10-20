@@ -234,144 +234,65 @@
         <Grid Margin="16">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>  <!-- 0: Header -->
-                <RowDefinition Height="Auto"/>  <!-- 1: Hubs Executivos (4 Cards) -->
-                <RowDefinition Height="Auto"/>  <!-- 2: BotAI 2.0 Heuristic Lab & Inspector -->
-                <RowDefinition Height="Auto"/>  <!-- 3: Matriz de Estratégias -->
-                <RowDefinition Height="Auto"/>  <!-- 4: Backups -->
-                <RowDefinition Height="Auto"/>  <!-- 5: Zona de Segurança -->
+                <RowDefinition Height="Auto"/>  <!-- 1: BotAI 2.0 Heuristic Lab & Inspector -->
+                <RowDefinition Height="Auto"/>  <!-- 2: Matriz de Estratégias -->
+                <RowDefinition Height="Auto"/>  <!-- 3: Backups -->
+                <RowDefinition Height="Auto"/>  <!-- 4: Zona de Segurança -->
             </Grid.RowDefinitions>
 
             <!-- ===================== 0: HEADER HERO BOTAI 2.0 ===================== -->
-            <Grid Grid.Row="0" Margin="0,0,0,18">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
+            <Border Grid.Row="0" Margin="0,0,0,16" Style="{StaticResource GlassCard}" Padding="16" BorderBrush="#2D1F5E">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
 
-                <StackPanel Grid.Column="0">
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <Border Background="#2D1F5E" CornerRadius="6" Padding="8,3" Margin="0,0,10,0">
-                            <TextBlock Text="BOT_RPA COGNITIVE PLATFORM" Foreground="#00E5FF" FontSize="10" FontWeight="Black"/>
-                        </Border>
-                        <Border x:Name="BadgeIaMode" Background="#12251B" BorderBrush="#4EDEA3" BorderThickness="1" CornerRadius="6" Padding="8,3">
-                            <StackPanel Orientation="Horizontal">
-                                <Ellipse x:Name="DotIaMode" Width="7" Height="7" Fill="#4EDEA3" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                                <TextBlock x:Name="TxtIaMode" Text="IA ESTÁTICA v2.0" Foreground="#4EDEA3" FontSize="10" FontWeight="Bold"/>
-                            </StackPanel>
-                        </Border>
-                    </StackPanel>
-                    
-                    <StackPanel Orientation="Horizontal" Margin="0,8,0,0" VerticalAlignment="Center">
+                    <!-- Linha 0: selos + ações -->
+                    <Grid Grid.Row="0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <Border Background="#2D1F5E" CornerRadius="6" Padding="8,3" Margin="0,0,10,0">
+                                <TextBlock Text="BOT_RPA COGNITIVE PLATFORM" Foreground="#00E5FF" FontSize="10" FontWeight="Black"/>
+                            </Border>
+                            <Border x:Name="BadgeIaMode" Background="#12251B" BorderBrush="#4EDEA3" BorderThickness="1" CornerRadius="6" Padding="8,3">
+                                <StackPanel Orientation="Horizontal">
+                                    <Ellipse x:Name="DotIaMode" Width="7" Height="7" Fill="#4EDEA3" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                    <TextBlock x:Name="TxtIaMode" Text="IA ESTÁTICA v2.0" Foreground="#4EDEA3" FontSize="10" FontWeight="Bold"/>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Button x:Name="BtnMapeamento" Content="🧠 REDE NEURAL 3D"
+                                    Style="{StaticResource NeuralBtnStyle}" Margin="0,0,10,0"
+                                    Click="BtnMapeamento_Click"/>
+
+                            <Button x:Name="BtnAtualizar" Content="↻ RECALIBRAR DADOS"
+                                    Style="{StaticResource PrimaryBtn}"
+                                    Click="BtnAtualizar_Click"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Linha 1: título -->
+                    <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,10,0,0" VerticalAlignment="Center">
                         <TextBlock Text="BotAI 2.0" Foreground="#FFFFFF" FontSize="26" FontWeight="Black"/>
                         <TextBlock Text=" — Matriz Neural &amp; Heurística" Foreground="#D2BBFF" FontSize="26" FontWeight="SemiBold"/>
                     </StackPanel>
-                    
-                    <TextBlock Text="Mecanismo de IA adaptativa com Centroid Matching, resolução multi-fallback e proteção contra drift de tela."
+
+                    <!-- Linha 2: subtítulo por modo -->
+                    <TextBlock x:Name="TxtIaSubtitle" Grid.Row="2" Text="Mecanismo de IA adaptativa com Centroid Matching, resolução multi-fallback e proteção contra drift de tela."
                                Foreground="#8E8EA0" FontSize="12" Margin="0,4,0,0"/>
-                </StackPanel>
+                </Grid>
+            </Border>
 
-                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Button x:Name="BtnMapeamento" Content="🧠 REDE NEURAL 3D"
-                            Style="{StaticResource NeuralBtnStyle}" Margin="0,0,10,0"
-                            Click="BtnMapeamento_Click"/>
-
-                    <Button x:Name="BtnAtualizar" Content="↻ RECALIBRAR DADOS"
-                            Style="{StaticResource PrimaryBtn}"
-                            Click="BtnAtualizar_Click"/>
-                </StackPanel>
-            </Grid>
-
-            <!-- ===================== 1: 4 COCKPITS TELEMETRY HUBS ===================== -->
-            <Grid Grid.Row="1" Margin="0,0,0,16">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="12"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="12"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="12"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-
-                <!-- Hub 1: Dispositivos & Execução Física -->
-                <Border Style="{StaticResource GlassCard}" Grid.Column="0" Padding="14">
-                    <StackPanel>
-                        <Grid Margin="0,0,0,6">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Text="HUB DE HARDWARE" Foreground="#8570E6" FontSize="10" FontWeight="Black"/>
-                            <TextBlock Text="USB ADB" Foreground="#00E5FF" FontSize="10" FontWeight="Bold" Grid.Column="1"/>
-                        </Grid>
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom">
-                            <TextBlock x:Name="LblActive" Text="--" Foreground="#4EDEA3" FontSize="28" FontWeight="Black"/>
-                            <TextBlock Text=" / " Foreground="#555566" FontSize="20" FontWeight="Bold" VerticalAlignment="Bottom" Margin="4,0,4,4"/>
-                            <TextBlock x:Name="LblTotal" Text="--" Foreground="#FFFFFF" FontSize="20" FontWeight="Bold" VerticalAlignment="Bottom" Margin="0,0,0,4"/>
-                        </StackPanel>
-                        <TextBlock Text="Conectados / Registrados no Banco" Foreground="#8E8EA0" FontSize="10" Margin="0,4,0,0"/>
-                    </StackPanel>
-                </Border>
-
-                <!-- Hub 2: Alvos & Heurísticas Cognitivas -->
-                <Border Style="{StaticResource GlassCard}" Grid.Column="2" Padding="14">
-                    <StackPanel>
-                        <Grid Margin="0,0,0,6">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Text="ALVOS MAPEADOS" Foreground="#8570E6" FontSize="10" FontWeight="Black"/>
-                            <TextBlock Text="HEURÍSTICAS" Foreground="#FFD666" FontSize="10" FontWeight="Bold" Grid.Column="1"/>
-                        </Grid>
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom">
-                            <TextBlock x:Name="LblTotalTargets" Text="--" Foreground="#FFFFFF" FontSize="28" FontWeight="Black"/>
-                            <TextBlock Text=" alvos" Foreground="#8570E6" FontSize="14" FontWeight="Bold" VerticalAlignment="Bottom" Margin="6,0,0,5"/>
-                        </StackPanel>
-                        <TextBlock Text="Com 96 queries de centroid e fallback" Foreground="#8E8EA0" FontSize="10" Margin="0,4,0,0"/>
-                    </StackPanel>
-                </Border>
-
-                <!-- Hub 3: Assertividade Heurística -->
-                <Border Style="{StaticResource GlassCard}" Grid.Column="4" Padding="14">
-                    <StackPanel>
-                        <Grid Margin="0,0,0,6">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Text="TAXA DE SUCESSO" Foreground="#8570E6" FontSize="10" FontWeight="Black"/>
-                            <TextBlock Text="IA 2.0" Foreground="#4EDEA3" FontSize="10" FontWeight="Bold" Grid.Column="1"/>
-                        </Grid>
-                        <TextBlock x:Name="LblSuccessRate" Text="--" Foreground="#4EDEA3" FontSize="28" FontWeight="Black"/>
-                        <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
-                            <TextBlock Text="Hits: " Foreground="#8E8EA0" FontSize="10"/>
-                            <TextBlock x:Name="LblTotalHits" Text="--" Foreground="#4EDEA3" FontSize="10" FontWeight="Bold" Margin="0,0,8,0"/>
-                            <TextBlock Text="Misses: " Foreground="#8E8EA0" FontSize="10"/>
-                            <TextBlock x:Name="LblTotalMisses" Text="--" Foreground="#FF6B6B" FontSize="10" FontWeight="Bold"/>
-                        </StackPanel>
-                    </StackPanel>
-                </Border>
-
-                <!-- Hub 4: Integridade & Anti-Drift -->
-                <Border Style="{StaticResource GlassCard}" Grid.Column="6" Padding="14">
-                    <StackPanel>
-                        <Grid Margin="0,0,0,6">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Text="INTEGRIDADE SEED" Foreground="#8570E6" FontSize="10" FontWeight="Black"/>
-                            <TextBlock Text="100% OK" Foreground="#00E5FF" FontSize="10" FontWeight="Bold" Grid.Column="1"/>
-                        </Grid>
-                        <TextBlock Text="Zero-Drift" Foreground="#00E5FF" FontSize="26" FontWeight="Black"/>
-                        <TextBlock Text="Protegido contra cliques falsos" Foreground="#8E8EA0" FontSize="10" Margin="0,4,0,0"/>
-                    </StackPanel>
-                </Border>
-            </Grid>
-
-            <!-- ===================== 2: BOTAI 2.0 HEURISTIC LAB & INSPECTOR ===================== -->
-            <Border Style="{StaticResource GlassCard}" Grid.Row="2" Padding="14" Margin="0,0,0,16" BorderBrush="#35266A">
+            <!-- ===================== 1: BOTAI 2.0 HEURISTIC LAB & INSPECTOR ===================== -->
+            <Border Style="{StaticResource GlassCard}" Grid.Row="1" Padding="14" Margin="0,0,0,16" BorderBrush="#35266A">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -430,8 +351,8 @@
                 </Grid>
             </Border>
 
-            <!-- ===================== 3: MATRIZ DE ESTRATÉGIAS COM BUSCA ===================== -->
-            <Border Style="{StaticResource GlassCard}" Grid.Row="3" Padding="14" Margin="0,0,0,16">
+            <!-- ===================== 2: MATRIZ DE ESTRATÉGIAS COM BUSCA ===================== -->
+            <Border Style="{StaticResource GlassCard}" Grid.Row="2" Padding="14" Margin="0,0,0,16">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -453,7 +374,11 @@
                             </Border>
                         </StackPanel>
 
-                        <TextBlock Grid.Column="1" Text="Heurísticas agrupadas por etapa e ordenadas por score" Foreground="#6E6E82" FontSize="11" VerticalAlignment="Center"/>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="Heurísticas agrupadas por etapa e ordenadas por score" Foreground="#6E6E82" FontSize="11" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <Button Content="＋ Todas" Style="{StaticResource PrimaryBtn}" Padding="8,3" FontSize="10" Margin="0,0,6,0" Click="BtnExpandAllGroups_Click" ToolTip="Expande todas as etapas"/>
+                            <Button Content="－ Todas" Style="{StaticResource PrimaryBtn}" Padding="8,3" FontSize="10" Click="BtnCollapseAllGroups_Click" ToolTip="Recolhe todas as etapas"/>
+                        </StackPanel>
                     </Grid>
 
                     <!-- Linha 1: Abas de Modelo e Campo de Busca Rápida -->
@@ -483,6 +408,7 @@
                                 <TextBox x:Name="TxtSearchStrategy" Grid.Column="1" Background="Transparent" Foreground="#FFFFFF" BorderThickness="0"
                                          FontSize="11" VerticalAlignment="Center" TextChanged="TxtSearchStrategy_TextChanged"
                                          ToolTip="Filtrar por elemento, query ou categoria..."/>
+                                <TextBlock x:Name="TxtSearchWatermark" Grid.Column="1" Text="Filtrar por elemento, query ou categoria..." Foreground="#555566" FontSize="11" VerticalAlignment="Center" IsHitTestVisible="False"/>
                             </Grid>
                         </Border>
                     </Grid>
@@ -492,6 +418,7 @@
                               Background="Transparent" BorderThickness="0"
                               AlternationCount="2"
                               ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                              PreviewMouseWheel="ListStrategies_PreviewMouseWheel"
                               ItemContainerStyle="{StaticResource ZebraRow}">
                         <!-- Agrupamento por Etapa -->
                         <ListView.GroupStyle>
@@ -501,28 +428,30 @@
                                         <Setter Property="Template">
                                             <Setter.Value>
                                                 <ControlTemplate TargetType="{x:Type GroupItem}">
-                                                    <StackPanel Margin="0,0,0,12">
-                                                        <!-- Cabeçalho do Grupo de Etapa -->
-                                                        <Border Background="#151526" BorderBrush="#262640" BorderThickness="1" CornerRadius="6" Padding="12,8" Margin="0,0,0,4">
-                                                            <Grid>
-                                                                <Grid.ColumnDefinitions>
-                                                                    <ColumnDefinition Width="*"/>
-                                                                    <ColumnDefinition Width="Auto"/>
-                                                                </Grid.ColumnDefinitions>
-                                                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                                    <TextBlock Text="📁 " FontSize="12" VerticalAlignment="Center"/>
-                                                                    <TextBlock Text="{Binding Name}" Foreground="#C5B8F8" FontWeight="Bold" FontSize="12" VerticalAlignment="Center"/>
-                                                                </StackPanel>
-                                                                
-                                                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                                                                    <TextBlock Text="Assertividade Média:" Foreground="#7A7A8E" FontSize="11" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                                                    <ProgressBar Minimum="-100" Maximum="100" Value="{Binding Items, Converter={StaticResource GroupProgressConv}, Mode=OneWay}" Foreground="{Binding Items, Converter={StaticResource GroupProgressBrushConv}}" Width="80" Height="7" Style="{StaticResource AnimatedProgressStyle}" Margin="0,0,8,0"/>
-                                                                    <TextBlock Text="{Binding Items, Converter={StaticResource GroupProgressStrConv}}" Foreground="{Binding Items, Converter={StaticResource GroupProgressBrushConv}}" FontWeight="Bold" FontSize="11" VerticalAlignment="Center"/>
-                                                                </StackPanel>
-                                                            </Grid>
-                                                        </Border>
+                                                    <Expander Margin="0,0,0,12" IsExpanded="True" Background="Transparent" BorderThickness="0" HorizontalContentAlignment="Stretch">
+                                                        <Expander.Header>
+                                                            <!-- Cabeçalho do Grupo de Etapa (clique na seta recolhe/expande) -->
+                                                            <Border Background="#151526" BorderBrush="#262640" BorderThickness="1" CornerRadius="6" Padding="12,8" Margin="0,0,0,4" HorizontalAlignment="Stretch">
+                                                                <Grid>
+                                                                    <Grid.ColumnDefinitions>
+                                                                        <ColumnDefinition Width="*"/>
+                                                                        <ColumnDefinition Width="Auto"/>
+                                                                    </Grid.ColumnDefinitions>
+                                                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                                        <TextBlock Text="📁 " FontSize="12" VerticalAlignment="Center"/>
+                                                                        <TextBlock Text="{Binding Name}" Foreground="#C5B8F8" FontWeight="Bold" FontSize="12" VerticalAlignment="Center"/>
+                                                                    </StackPanel>
+
+                                                                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                                                        <TextBlock Text="Assertividade Média:" Foreground="#7A7A8E" FontSize="11" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                                                        <ProgressBar Minimum="-100" Maximum="100" Value="{Binding Items, Converter={StaticResource GroupProgressConv}, Mode=OneWay}" Foreground="{Binding Items, Converter={StaticResource GroupProgressBrushConv}}" Width="80" Height="7" Style="{StaticResource AnimatedProgressStyle}" Margin="0,0,8,0"/>
+                                                                        <TextBlock Text="{Binding Items, Converter={StaticResource GroupProgressStrConv}}" Foreground="{Binding Items, Converter={StaticResource GroupProgressBrushConv}}" FontWeight="Bold" FontSize="11" VerticalAlignment="Center"/>
+                                                                    </StackPanel>
+                                                                </Grid>
+                                                            </Border>
+                                                        </Expander.Header>
                                                         <ItemsPresenter Margin="8,0,8,0"/>
-                                                    </StackPanel>
+                                                    </Expander>
                                                 </ControlTemplate>
                                             </Setter.Value>
                                         </Setter>
@@ -533,8 +462,8 @@
 
                         <ListView.View>
                             <GridView>
-                                <GridViewColumn Header="ELEMENTO" Width="190" DisplayMemberBinding="{Binding ElementoId}"/>
-                                <GridViewColumn Header="ESTRATÉGIA (QUERY / XPATH)" Width="280">
+                                <GridViewColumn Header="ELEMENTO" Width="170" DisplayMemberBinding="{Binding ElementoId}"/>
+                                <GridViewColumn Header="ESTRATÉGIA (QUERY / XPATH)" Width="240">
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
                                             <TextBlock Text="{Binding Query}" Foreground="#E3E0F2" FontFamily="Consolas" FontSize="11" TextTrimming="CharacterEllipsis"/>
@@ -545,8 +474,8 @@
                                 <GridViewColumn Header="ACERTOS" Width="80" DisplayMemberBinding="{Binding Hits}"/>
                                 <GridViewColumn Header="FALHAS" Width="80" DisplayMemberBinding="{Binding Misses}"/>
                                 <GridViewColumn Header="PRECISÃO" Width="85" DisplayMemberBinding="{Binding Precisao}"/>
-                                <GridViewColumn Header="STATUS" Width="110" DisplayMemberBinding="{Binding StatusStr}"/>
-                                <GridViewColumn Header="AVALIAÇÃO COGNITIVA" Width="130">
+                                <GridViewColumn Header="STATUS" Width="100" DisplayMemberBinding="{Binding StatusStr}"/>
+                                <GridViewColumn Header="AVALIAÇÃO COGNITIVA" Width="120">
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
                                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
@@ -565,8 +494,8 @@
                 </Grid>
             </Border>
 
-            <!-- ===================== 4: SUBMÓDULO DE BACKUPS ===================== -->
-            <Border Style="{StaticResource GlassCard}" Grid.Row="4" Padding="14" Margin="0,0,0,16">
+            <!-- ===================== 3: SUBMÓDULO DE BACKUPS ===================== -->
+            <Border Style="{StaticResource GlassCard}" Grid.Row="3" Padding="14" Margin="0,0,0,16">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -614,8 +543,8 @@
                 </Grid>
             </Border>
 
-            <!-- ===================== 5: ZONA DE SEGURANÇA E RESET ===================== -->
-            <Border Grid.Row="5" Background="#1A0C0E" CornerRadius="12" BorderBrush="#4A181C" BorderThickness="1" Padding="14">
+            <!-- ===================== 4: ZONA DE SEGURANÇA E RESET ===================== -->
+            <Border Grid.Row="4" Background="#1A0C0E" CornerRadius="12" BorderBrush="#4A181C" BorderThickness="1" Padding="14">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>

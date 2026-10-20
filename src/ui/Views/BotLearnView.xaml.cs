@@ -207,10 +207,6 @@ namespace BotRpaUI.Views
         // --- Filtro por Modelo de Hardware ---
         private string _currentModelFilter = "ALL";
 
-        // --- Timer do Super Dashboard ---
-        private DispatcherTimer _timer;
-        private bool _isRefreshing = false;
-
         // --- Coleção de dados master e da tabela ---
         private System.Collections.Generic.List<LearnStrategyItem> _allStrategies = new();
         private ObservableCollection<LearnStrategyItem> _strategies = new();
@@ -221,58 +217,7 @@ namespace BotRpaUI.Views
             BotRpaUI.Core.BotLearnBackupManager.ExecutarRotinaDiaria();
             CarregarDados();
 
-            _timer = new DispatcherTimer();
-            _timer.Interval = TimeSpan.FromSeconds(5);
-            _timer.Tick += Timer_Tick;
-            _timer.Start();
-
-            UpdateDashboardStats();
-        }
-
-        private void Timer_Tick(object? sender, EventArgs e)
-        {
-            if (_isRefreshing) return;
-            _isRefreshing = true;
-
-            System.Threading.Tasks.Task.Run(() =>
-            {
-                try
-                {
-                    int activeCount = Engine_RefreshDevices();
-                    int totalCount = Engine_GetRegisteredTotal();
-
-                    Dispatcher.BeginInvoke(() =>
-                    {
-                        LblTotal.Text = totalCount.ToString();
-                        LblActive.Text = activeCount.ToString();
-                        _isRefreshing = false;
-                    });
-                }
-                catch (Exception)
-                {
-                    Dispatcher.BeginInvoke(() =>
-                    {
-                        LblTotal.Text = "ERRO DLL";
-                        _isRefreshing = false;
-                    });
-                }
-            });
-        }
-
-        private void UpdateDashboardStats()
-        {
-            try
-            {
-                int activeCount = Engine_RefreshDevices();
-                int totalCount = Engine_GetRegisteredTotal();
-                LblTotal.Text = totalCount.ToString();
-                LblActive.Text = activeCount.ToString();
-                UpdateIaModeBadge();
-            }
-            catch (Exception)
-            {
-                LblTotal.Text = "ERRO DLL";
-            }
+            UpdateIaModeBadge();
         }
 
         private void UpdateIaModeBadge()
@@ -290,6 +235,8 @@ namespace BotRpaUI.Views
                     DotIaMode.Fill = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#00E5FF"));
                     BadgeIaMode.Background = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#0A2235"));
                     BadgeIaMode.BorderBrush = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#00E5FF"));
+                    if (TxtIaSubtitle != null) TxtIaSubtitle.Text = "Mecanismo de IA adaptativa com Centroid Matching, resolução multi-fallback e proteção contra drift de tela.";
+                    if (BtnResetDB != null) { BtnResetDB.IsEnabled = true; BtnResetDB.ToolTip = "Apaga o histórico de aprendizado persistido e volta ao seed."; }
                 }
                 else
                 {
@@ -298,6 +245,8 @@ namespace BotRpaUI.Views
                     DotIaMode.Fill = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#4EDEA3"));
                     BadgeIaMode.Background = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#12251B"));
                     BadgeIaMode.BorderBrush = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#4EDEA3"));
+                    if (TxtIaSubtitle != null) TxtIaSubtitle.Text = "Seletores determinísticos versionados — aprendizado desligado, sem persistência (recomendado produção).";
+                    if (BtnResetDB != null) { BtnResetDB.IsEnabled = false; BtnResetDB.ToolTip = "Modo Estático: sem histórico persistido — nada a resetar. Ative o modo ATIVO nas Configurações para aprender."; }
                 }
             }
             catch { }
@@ -316,7 +265,58 @@ namespace BotRpaUI.Views
             if (sender is TextBox tb)
             {
                 _searchTerm = tb.Text.Trim();
+                if (TxtSearchWatermark != null)
+                    TxtSearchWatermark.Visibility = string.IsNullOrEmpty(tb.Text) ? Visibility.Visible : Visibility.Collapsed;
                 AplicarFiltroEAgrupamento();
+            }
+        }
+
+        public void BtnExpandAllGroups_Click(object sender, RoutedEventArgs e)
+        {
+            SetAllGroupsExpanded(true);
+        }
+
+        public void BtnCollapseAllGroups_Click(object sender, RoutedEventArgs e)
+        {
+            SetAllGroupsExpanded(false);
+        }
+
+        private void SetAllGroupsExpanded(bool expanded)
+        {
+            if (ListStrategies == null) return;
+            foreach (var expander in FindVisualChildren<Expander>(ListStrategies))
+                expander.IsExpanded = expanded;
+        }
+
+        private static System.Collections.Generic.IEnumerable<T> FindVisualChildren<T>(DependencyObject dep) where T : DependencyObject
+        {
+            if (dep == null) yield break;
+            for (int i = 0; i < System.Windows.Media.VisualTreeHelper.GetChildrenCount(dep); i++)
+            {
+                var child = System.Windows.Media.VisualTreeHelper.GetChild(dep, i);
+                if (child is T typed) yield return typed;
+                foreach (var sub in FindVisualChildren<T>(child)) yield return sub;
+            }
+        }
+
+        // A roda do mouse sobre a matriz era engolida pelo ScrollViewer interno
+        // do ListView (barra desabilitada) e nunca chegava ao ScrollViewer da
+        // página. Repassa o evento ao ScrollViewer externo mais próximo.
+        private void ListStrategies_PreviewMouseWheel(object sender, System.Windows.Input.MouseWheelEventArgs e)
+        {
+            if (sender is not ListView lv) return;
+            e.Handled = true;
+            DependencyObject? parent = lv;
+            while (parent != null && parent is not ScrollViewer)
+                parent = System.Windows.Media.VisualTreeHelper.GetParent(parent);
+            if (parent is ScrollViewer scroller)
+            {
+                var args = new System.Windows.Input.MouseWheelEventArgs(e.MouseDevice, e.Timestamp, e.Delta)
+                {
+                    RoutedEvent = UIElement.MouseWheelEvent,
+                    Source = lv
+                };
+                scroller.RaiseEvent(args);
             }
         }
 
@@ -363,23 +363,16 @@ namespace BotRpaUI.Views
             _allStrategies.Clear();
             _strategies.Clear();
 
-            int totalTargets    = 0;
             int totalStrategies = 0;
-            int totalHits       = 0;
-            int totalMisses     = 0;
 
             try
             {
-                totalTargets    = Engine_Learn_GetTargetCount();
                 totalStrategies = Engine_Learn_GetStrategyCount();
 
                 for (int i = 0; i < totalStrategies; i++)
                 {
                     int found = Engine_Learn_GetStrategy(i, out LearnStrategyExport raw);
                     if (found == 0) break;
-
-                    totalHits   += raw.Hits;
-                    totalMisses += raw.Misses;
 
                     string tid = raw.TargetId ?? "";
                     _allStrategies.Add(new LearnStrategyItem
@@ -412,22 +405,6 @@ namespace BotRpaUI.Views
             {
                 MessageBox.Show($"Erro ao ler banco BotLearn:\n{ex.Message}",
                     "BotLearn — Erro", MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
-
-            // Atualiza os cards de resumo
-            LblTotalTargets.Text   = totalTargets.ToString();
-            LblTotalHits.Text      = totalHits.ToString();
-            LblTotalMisses.Text    = totalMisses.ToString();
-
-            int grandTotal = totalHits + totalMisses;
-            if (grandTotal > 0)
-            {
-                double rate = (double)totalHits / grandTotal * 100.0;
-                LblSuccessRate.Text = $"{rate:F1}%";
-            }
-            else
-            {
-                LblSuccessRate.Text = "—";
             }
 
             // Cancela qualquer confirmação dupla pendente ao recarregar
