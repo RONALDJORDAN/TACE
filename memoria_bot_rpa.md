@@ -1364,6 +1364,7 @@ O **InnoAI** é o motor de inteligência e automação visual da Plataforma Inno
   - `scripts/build.bat`: `cofre.c` no `SRCS_CORE` + `-lcrypt32`.
 - **Validação:** teste round-trip dedicado (14/14 OK: proteger/revelar, CSV-safe sem `;`, idempotência, legado intacto) + `-Wall -Wextra` limpo; build `05.10.2026.1752` **zero warnings / zero errors**, auditoria `registros/2026-10-05/17-52_Plataforma_BotRPA_DESKTOP_BUILD`.
 - **Limites conhecidos (Fase 1):** o arquivo só abre no mesmo usuário/máquina (DPAPI user-scope) — release para outro PC exige recadastrar; seed `config/municipios.csv` segue em claro até a Fase 2 (seed público sem credenciais + cofre local). Para testar: abrir Gerenciar Municípios, salvar → `municipios.csv` passa a exibir `DPAPIv1:...`.
+- **Commits (working tree limpo):** `f308f7b fix: gitignore data/ abrangente ignorava fontes C de src/core/data` (a regra `data/` sem âncora escondia arquivos novos em `src/core/data/`, ex: `cofre.c`; trocada por `/data/`) + `f0823e1 feat: cofre DPAPI para login/senha de municipios` (8 arquivos). Sem push. Pendente: `config/municipios.csv` segue com senha real no histórico (rotação pendente desde 01/10).
 
 ### [2026-10-05] - UI: terminal Kiosk simplificado (perfis 1-clique + cards compactos)
 - **Pedido:** a interface do terminal Kiosk estava conturbada; melhorar e simplificar.
@@ -1382,4 +1383,67 @@ O **InnoAI** é o motor de inteligência e automação visual da Plataforma Inno
 - **Diagnóstico:** `UpdateProgress` (`MonitorView.xaml.cs`) mapeava F1/F3/F5 mas deixava 6 marcadores do F2 sem regra (início F2, 1.2, 1.7, 2.1, 2.5, 4.5 e `[F2 - Etapa 7]`) — a barra ficava parada nesses trechos. (Monitor Pro já tinha mapa próprio 15→98 por `etapa N`.)
 - **Correção (só UI C#):** novas regras — início F2→5%, 1.2→15%, 1.7→35%, 2.1→48%, 2.5→51%, 4.5→70%, `[F2 - Etapa 7]`→92% (100% já era `CONCLUIDO COM SUCESSO`). Mapa final F2: 5/10/15/30/35/45/48/51/55/65/70/75/85/92/100, monotônico e sem colisão de substring com as regras existentes (também refina o F1, que usa os mesmos marcadores).
 - **Validação:** incluído no build `05.10.2026.1726` (**zero warnings / zero errors**, auditoria `registros/2026-10-05/17-27_Plataforma_BotRPA_DESKTOP_BUILD`).
+
+### [2026-10-05] - Estudos: Etapa 1.5 debloat + análise geral do projeto + backlog de melhorias
+- **Estudo Etapa 1.5 (`V7_Etapa1_5`, `f1_vision_tab7.c:139-273`):** lista `V7_DEBLOAT_PACKAGES` (~55 pacotes/19 grupos: câmeras, Chrome, Maps, YouTube, Play Store etc.); isolamento em 3 níveis (`disable-user` + `suspend` + `uninstall -k --user 0`) em lotes de 6 ADB; `DocumentsUI` preservado de propósito (SAF do ZIP); reversível via `install-existing`/`pm enable`; só o F1 executa (F2 pula). Confirmado: Google Fotos (`com.google.android.apps.photos`) está no grupo 8. Base para a otimização uninstall-first aplicada no mesmo dia.
+- **Análise geral do projeto:** motor C em 3 modelos isolados (F1 V7 2137 linhas/52 Sleeps; F1 M7 1199/35; F1 T20 1287/45); UI com 11 telas (Monitor clássico 2121 linhas CS é a maior); zero warnings/errors nos builds; zero TODOs no código; isolamento e rastreabilidade cumpridos; ponto de atenção: working tree estava há dias sem commit (resolvido com `f308f7b` + `f0823e1`, sem push).
+- **Backlog de melhorias proposto (ordem do analista):** 🔴 cofre DPAPI (implementado/Fase 1) + rotação da senha real ainda no histórico do git; 🟡 replicar otimização de tempo no M7/T20 + `DeviceActionRouter` único (eliminar chaveamento duplicado Monitor/Pro) + Firebase com auth e PII mínima; 🟢 fumaça pós-build + decisão BotLearn (reativar vs. ajustar discurso) + OTA diferencial (~190MB) + rotação de `logs/`/`registros/` + README fiel.
+- **Listagem Kiosk registrada:** ações 1-Câmera bloquear, 2-Config restringir, 3-Câmera liberar, 4-Config liberar, 5-Kiosk ativar, 6-Kiosk desativar, 7-Wallpaper, 8-Gnirehtet ligar, 9-Gnirehtet desligar, 10-Barra ocultar, 11-Blindagem, 12-Restauração; perfis Blindar Tudo=`11,1,2,5,10`, Restaurar Tudo=`12,3,4,6`.
+- **Validação:** só estudos e registros, sem código; sem build.
+
+### [2026-10-09] - Cofre DPAPI Fase 2: seed público sem credenciais + cofre local (ponto 1a)
+- **Pedido:** corrigir o detalhe 1a do estudo de riscos (seed vs cofre).
+- **Diagnóstico:** `config/municipios.csv` (seed versionado no git) tinha `Boca da Mata;aplicador;bm@12345;` em claro; a Release/OTA embarcava `data/output/municipios.csv` (vault DPAPI da dev) — que além de vazar ciphertext, **não descriptografa em outro PC** (DPAPI CURRENT_USER) e o OTA (`apply_ota_update.bat` com `Expand-Archive -Force`) **sobrescrevia o cofre local do usuário** com blobs inúteis. `scripts/build.bat` ainda apontava para o caminho morto `registros/municipios/municipios.csv` (inexistente).
+- **Correções (nenhum `.c` de dispositivo tocado — Ouro #1 preservado):**
+  - `config/municipios.csv`: seed agora só com nomes (`Boca da Mata;;;`). Credenciais vivem só no runtime ao lado do exe (gitignorado), cifradas via Gerenciar Municípios.
+  - `scripts/build.bat`: fallback de seed aponta para `config/municipios.csv`.
+  - `scripts/build_release.bat`: Release embarca o seed sanitizado (nunca o vault da dev).
+  - `controle/Atualizacao.ps1/.bat`: `municipios.csv` removido do pacote OTA (protege o cofre do usuário).
+  - **Bug de link achado no caminho:** `Atualizacao.ps1/.bat` não compilavam `src/core/data/cofre.c` nem linkavam `-lcrypt32` (só `build.bat` tinha) — a DLL do OTA quebraria com `cofre_*` indefinido. Corrigido nos dois.
+- **Mudança de comportamento:** PC do usuário sai da release/OTA sem credenciais — operador cadastra 1x via ⚙ Gerenciar (salva cifrado local). Vale para dev novo também (fresh `data/output/` recebe só nomes).
+- **Pendente (fora deste escopo):** senha `bm@12345` segue no histórico do git (rotação pendente desde 01/10); recadastrar credenciais reais nos PCs de bancada.
+- **Validação:** revisão estática dos diffs; sem build (diretriz 03/09/2026, aguardando ordem explícita).
+
+### [2026-10-09] - BotLearn ponto 2: discurso honesto por modo (Estático vs Ativo)
+- **Pedido:** corrigir o ponto 2 do estudo de riscos; direção escolhida pelo usuário: **discurso honesto** (sem reativar o aprendizado).
+- **Diagnóstico:** com `ai_learn_active=false` (padrão), o `learn_db_save` é no-op e nada persiste — mas o cabeçalho da tela prometia "Mecanismo de IA adaptativa..." e o botão Reset oferecia apagar "histórico de aprendizado" inexistente em disco. Badge e toggle já refletiam o modo corretamente; o Heuristic Lab já se declara "SIMULAÇÃO AO VIVO".
+- **Correções (só UI C#/XAML, nenhum `.c` tocado — Ouro #1 preservado):**
+  - `BotLearnView.xaml`: subtítulo ganhou `x:Name="TxtIaSubtitle"`.
+  - `BotLearnView.xaml.cs` (`UpdateIaModeBadge`, com null-guards): Estático exibe "Seletores determinísticos versionados — aprendizado desligado, sem persistência (recomendado produção)." + Reset **desabilitado** com tooltip explicativo; Ativo mantém o texto adaptativo + Reset habilitado.
+- **Validação:** revisão estática dos diffs; sem build (diretriz 03/09/2026, aguardando ordem explícita).
+
+### [2026-10-09] - Build TESTE validando lote 1a + ponto 2 (ordem explícita)
+- **Gatilho:** comando explícito do usuário (`build`).
+- **Script:** `scripts/build.bat` (modo TESTE, ícone Azul Escuro).
+- **Resultado:** GCC `BotEngine.dll` (397,2KB) silencioso + `dotnet publish` sem warnings/errors — `BotRPAui.exe` 185,1MB. Versão `09.10.2026.1613` em `config/version.txt`. Auditoria `registros/2026-10-09/16-14_Plataforma_BotRPA_DESKTOP_BUILD`.
+- **Escopo validado:** seed `config/municipios.csv` sem credenciais, fallback de seed no `build.bat`, seed sanitizado na Release, OTA sem `municipios.csv`, `cofre.c`+`-lcrypt32` nos scripts OTA, subtítulo do BotLearn por modo + Reset por modo. Vault de dev `data/output/municipios.csv` preservado intacto (guard `if not exist`).
+- **Isolamento:** nenhum `.c` de dispositivo tocado (só scripts/CSV/UI).
+
+### [2026-10-09] - BotLearnView: dash superior vira card moderno + matriz retrátil (pedidos do usuário)
+- **Pedido 1:** remover o dash superior (faixa dos 4 hubs). **Pedido 2 (emenda):** preservar os dados num card moderno na parte superior. **Pedido 3:** matriz vertical vira grupos retráteis por etapa.
+- **Alterações (`BotLearnView.xaml` + `BotLearnView.xaml.cs`, nenhum `.c` tocado — Ouro #1 preservado):**
+  - Header virou `GlassCard` (`BorderBrush #2D1F5E`): selos + botões, título, subtítulo por modo (mantido do ponto 2) e **faixa de telemetria moderna** embutida (fundo `#0C0C16`, divisórias, ícones 🛰🎯📈🛡️) com os mesmos dados: dispositivos `LblActive/LblTotal` (timer 5s + null-guards), alvos `LblTotalTargets` + legenda viva `LblTotalQueries` ("Com N queries", sem número fixo), taxa `LblSuccessRate` + hits/misses, Zero-Drift estático.
+  - Matriz: grupos de etapa viraram `Expander` (seta recolhe/expande, `IsExpanded=True` por padrão, `HorizontalContentAlignment=Stretch`); botões `＋ Todas` / `－ Todas` no cabeçalho da matriz via `FindVisualChildren<Expander>` (sem novo using, `VisualTreeHelper` fully-qualified).
+  - Busca com placeholder visível (`TxtSearchWatermark`, alternado no `TextChanged` existente); colunas da matriz 1030→950px totais (ELEMENTO 170, QUERY 240, STATUS 100, AVALIAÇÃO 120) contra corte em janela estreita.
+- **Validação:** com ordem explícita do usuário (`build`), executado `scripts/build.bat` (TESTE, ícone Azul): compilação `09.10.2026.1634` com **zero warnings / zero errors** (`BotEngine.dll` + `BotRPAui.exe` em `data/output/`). Auditoria `registros/2026-10-09/16-35_Plataforma_BotRPA_DESKTOP_BUILD`.
+
+### [2026-10-09] - BotLearnView: scroll da matriz não rolava a página (fix)
+- **Sintoma:** com o mouse sobre a matriz, a roda não rolava nada.
+- **Causa:** o `ScrollViewer` interno do `ListView` (barra desabilitada) engolia o `MouseWheel`, que nunca borbulhava ao `ScrollViewer` da página.
+- **Correção (só `BotLearnView.xaml/.cs`):** handler `ListStrategies_PreviewMouseWheel` — marca `Handled` e re-dispara o evento no `ScrollViewer` externo mais próximo (via `VisualTreeHelper`, fully-qualified, sem novo using).
+- **Validação:** revisão estática; sem build (aguardando ordem explícita).
+
+### [2026-10-09] - BotLearnView: faixa de telemetria do header removida (pedido do usuário)
+- **Pedido:** remover a faixa de stats (🛰🎯📈🛡️) recém-criada no card superior; o header volta a ter só selos + título + subtítulo + botões.
+- **Alterações (só `BotLearnView.xaml/.cs`):** excluído o `Border` da faixa (Linha 3) e sua `RowDefinition`; removidos timer de 5s (`_timer`/`Timer_Tick`/`UpdateDashboardStats` — construtor chama `UpdateIaModeBadge()` direto) e o bloco de resumo no `CarregarDados`. Sem referências pendentes (só `LblTotalStrategies` da matriz permanece, existindo nos dois lados).
+- **Validação:** com ordem explícita do usuário (`build`), executado `scripts/build.bat` (TESTE, ícone Azul): compilação `09.10.2026.1641` com **zero warnings / zero errors** (`BotEngine.dll` + `BotRPAui.exe` em `data/output/`). Auditoria `registros/2026-10-09/16-42_Plataforma_BotRPA_DESKTOP_BUILD`.
+
+### [2026-10-20] - Build FINAL (Release PnP) com todas as ferramentas obrigatórias
+- **Pedido:** gerar a versão final portátil, com todas as ferramentas necessárias ao uso completo do produto.
+- **Comando:** `controle/Build.ps1 -Modo Final -Sim` (orquestrador canônico) → `scripts/build_release.bat` → `scripts/build.bat` com `BUILD_MODE=RELEASE` (ícone Roxo Oficial).
+- **Resultado:** compilação `20.10.2026.0931` com **zero warnings / zero errors** — GCC (motor C: V7 + M7 + T20) e `dotnet publish` self-contained single-file. Auditoria `registros/2026-10-20/09-32_Plataforma_BotRPA_DESKTOP_BUILD` (com `build.log` gravado, contendo hashes SHA-256 e checklist de conteúdo).
+- **Conteúdo entregue em `BotRPA_Release/` (212,3 MB):** `BotRPAui.exe` (189.519 KB) · `BotEngine.dll` (397 KB) · `municipios.csv` (seed público sanitizado) · `tools/platform-tools` (ADB oficial, 14 arquivos) · `tools/reverse_tethering` (Gnirehtet: `.exe`/`.apk`/`.cmd` + scripts, 6 arquivos) · `tools/mac_address_finder.apk` · `config/` (settings, first_run, version, municipios) · `scripts/apply_ota_update.bat` (OTA) · `data/bot_database.db` (registros embarcados) · `data/input/municipios` e `data/input/apps` · `Arquivos/` · `logs/` · `registros/`. **Sem** `tools/mingw64` (toolchain de dev).
+- **SHA-256:** `BotRPAui.exe` = `DBD1E88C99231122E7830CCCAB1F1BD4EC349E8D5A39AFDFA6C2AAD6BFE99A47` · `BotEngine.dll` = `B4238CB23624F1DDD40B8587C23E8DAA5337B35BC1A52178896E24D97E1EC699`.
+- **Pendências registradas na auditoria:** (1) `config/settings.json` embarcado ainda com `firebase_api_key` em texto plano; (2) cofre DPAPI é por máquina/usuário → o operador recadastra as credenciais 1x em Gerenciar Municípios; (3) `data/bot_learn.json` ausente por Expected (`learn_db_save` é no-op no modo estático do BotLearn); (4) build executado sobre o working tree com as alterações de 09/10 ainda não commitadas.
+- **Regra de Ouro #1 preservada:** nenhum `.c` de dispositivo foi tocado (build e empacotamento apenas).
 
