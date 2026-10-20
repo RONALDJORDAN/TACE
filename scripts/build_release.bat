@@ -81,12 +81,11 @@ if exist "Arquivos" (
     echo [+][OK] Diretorio Arquivos copiado.
 )
 
-REM 6. Copiando base de dados de municipios (municipios.csv) se necessario
+REM 6. Seed publico de municipios (SEM credenciais: o cofre DPAPI e por maquina
+REM e nao descriptografa em outro PC; credenciais se cadastram via Gerenciar Municipios)
 if not exist "%RELEASE_DIR%\municipios.csv" (
-    if exist "data\output\municipios.csv" (
-        copy /y "data\output\municipios.csv" "%RELEASE_DIR%\municipios.csv" >nul
-    ) else if exist "registros\municipios\municipios.csv" (
-        copy /y "registros\municipios\municipios.csv" "%RELEASE_DIR%\municipios.csv" >nul
+    if exist "config\municipios.csv" (
+        copy /y "config\municipios.csv" "%RELEASE_DIR%\municipios.csv" >nul
     )
 )
 

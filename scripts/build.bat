@@ -72,7 +72,7 @@ echo [+] Compilacao concluida com sucesso!
 echo [+] Motor: data\output\BotEngine.dll
 echo [+] Interface: data\output\BotRPAui.exe
 if not exist "data\output\municipios.csv" (
-    copy /y "registros\municipios\municipios.csv" "data\output\municipios.csv" >nul
+    copy /y "config\municipios.csv" "data\output\municipios.csv" >nul
 )
 
 :: Garante a existencia das pastas de Arquivos de automação

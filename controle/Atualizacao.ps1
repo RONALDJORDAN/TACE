@@ -22,12 +22,12 @@ Write-Host "[*] Compilando motor BotEngine.dll..." -ForegroundColor Yellow
 $env:PATH += ";$env:USERPROFILE\AppData\Local\Microsoft\WinGet\Packages\BrechtSanders.WinLibs.POSIX.UCRT_Microsoft.Winget.Source_8wekyb3d8bbwe\mingw64\bin"
 New-Item -ItemType Directory -Path "data\output" -Force | Out-Null
 
-$srcsCore = "src/api.c", "src/core/drivers/adb.c", "src/core/data/municipios.c", "src/core/data/dispositivos.c", "src/core/config/config.c", "src/core/learn/learn_db.c", "src/core/learn/learn_engine.c"
+$srcsCore = "src/api.c", "src/core/drivers/adb.c", "src/core/data/municipios.c", "src/core/data/cofre.c", "src/core/data/dispositivos.c", "src/core/config/config.c", "src/core/learn/learn_db.c", "src/core/learn/learn_engine.c"
 $srcsV7 = "src/core/functions/vision7/f1_vision_tab7.c", "src/core/functions/vision7/f2_vision_tab7.c", "src/core/functions/vision7/f3_vision_tab7.c", "src/core/functions/vision7/f4_vision_tab7.c", "src/core/functions/vision7/f5_vision_tab7.c", "src/core/functions/vision7/f6_vision_tab7.c", "src/core/functions/vision7/f8_vision_tab7.c"
 $srcsM7 = "src/core/functions/tabmulti/f1_tabmulti_m7.c", "src/core/functions/tabmulti/f2_tabmulti_m7.c", "src/core/functions/tabmulti/f3_tabmulti_m7.c", "src/core/functions/tabmulti/f4_tabmulti_m7.c", "src/core/functions/tabmulti/f5_tabmulti_m7.c", "src/core/functions/tabmulti/m7_helpers.c"
 $srcsT20 = "src/core/functions/nokia_t20/f1_nokia_t20.c", "src/core/functions/nokia_t20/f2_nokia_t20.c", "src/core/functions/nokia_t20/f3_nokia_t20.c"
 
-gcc -shared $srcsCore $srcsV7 $srcsM7 $srcsT20 -o data/output/BotEngine.dll -static -lcomctl32 -lgdi32 -luser32 -mwindows -D_WIN32_WINNT=0x0A00 -DWINVER=0x0A00
+gcc -shared $srcsCore $srcsV7 $srcsM7 $srcsT20 -o data/output/BotEngine.dll -static -lcomctl32 -lgdi32 -luser32 -lcrypt32 -mwindows -D_WIN32_WINNT=0x0A00 -DWINVER=0x0A00
 
 # Compilar UI C# WPF
 Write-Host "[*] Compilando BotRPAui.exe (C# WPF)..." -ForegroundColor Yellow
@@ -43,7 +43,8 @@ Copy-Item "data/output/BotRPAui.exe" -Destination $otaTemp -Force
 Copy-Item "data/output/BotEngine.dll" -Destination $otaTemp -Force
 Copy-Item "config/version.txt" -Destination "$otaTemp/config/version.txt" -Force
 if (Test-Path "scripts/apply_ota_update.bat") { Copy-Item "scripts/apply_ota_update.bat" -Destination "$otaTemp/scripts/apply_ota_update.bat" -Force }
-if (Test-Path "data/output/municipios.csv") { Copy-Item "data/output/municipios.csv" -Destination $otaTemp -Force }
+# municipios.csv NAO entra no OTA: o cofre DPAPI e por maquina (nao descriptografa
+# em outro PC) e o pacote sobrescreveria o cofre local do usuario. Seed vai na Release.
 
 $otaPkgDir = "controle"
 New-Item -ItemType Directory -Path $otaPkgDir -Force | Out-Null

@@ -30,12 +30,12 @@ echo [*] Compilando motor BotEngine.dll...
 set "PATH=%PATH%;%USERPROFILE%\AppData\Local\Microsoft\WinGet\Packages\BrechtSanders.WinLibs.POSIX.MSVCRT_Microsoft.Winget.Source_8wekyb3d8bbwe\mingw64\bin;%USERPROFILE%\AppData\Local\Microsoft\WinGet\Packages\BrechtSanders.WinLibs.POSIX.UCRT_Microsoft.Winget.Source_8wekyb3d8bbwe\mingw64\bin"
 mkdir "data\output" 2>nul
 
-set SRCS_CORE=src\api.c src\core\drivers\adb.c src\core\data\municipios.c src\core\data\dispositivos.c src\core\config\config.c src\core\learn\learn_db.c src\core\learn\learn_engine.c
+set SRCS_CORE=src\api.c src\core\drivers\adb.c src\core\data\municipios.c src\core\data\cofre.c src\core\data\dispositivos.c src\core\config\config.c src\core\learn\learn_db.c src\core\learn\learn_engine.c
 set SRCS_V7=src\core\functions\vision7\f1_vision_tab7.c src\core\functions\vision7\f2_vision_tab7.c src\core\functions\vision7\f3_vision_tab7.c src\core\functions\vision7\f4_vision_tab7.c src\core\functions\vision7\f5_vision_tab7.c src\core\functions\vision7\f6_vision_tab7.c src\core\functions\vision7\f8_vision_tab7.c
 set SRCS_M7=src\core\functions\tabmulti\f1_tabmulti_m7.c src\core\functions\tabmulti\f2_tabmulti_m7.c src\core\functions\tabmulti\f3_tabmulti_m7.c src\core\functions\tabmulti\f4_tabmulti_m7.c src\core\functions\tabmulti\f5_tabmulti_m7.c src\core\functions\tabmulti\m7_helpers.c
 set SRCS_T20=src\core\functions\nokia_t20\f1_nokia_t20.c src\core\functions\nokia_t20\f2_nokia_t20.c src\core\functions\nokia_t20\f3_nokia_t20.c
 
-gcc -shared %SRCS_CORE% %SRCS_V7% %SRCS_M7% %SRCS_T20% -o data\output\BotEngine.dll -static -lcomctl32 -lgdi32 -luser32 -mwindows -D_WIN32_WINNT=0x0A00 -DWINVER=0x0A00
+gcc -shared %SRCS_CORE% %SRCS_V7% %SRCS_M7% %SRCS_T20% -o data\output\BotEngine.dll -static -lcomctl32 -lgdi32 -luser32 -lcrypt32 -mwindows -D_WIN32_WINNT=0x0A00 -DWINVER=0x0A00
 
 :: 4. Compilar UI C# WPF em modo Self-Contained Release
 echo [*] Compilando BotRPAui.exe (C# WPF)...
@@ -54,7 +54,7 @@ copy /y "data\output\BotRPAui.exe" "%OTA_DIR%\" >nul
 copy /y "data\output\BotEngine.dll" "%OTA_DIR%\" >nul
 copy /y "config\version.txt" "%OTA_DIR%\config\version.txt" >nul
 if exist "scripts\apply_ota_update.bat" copy /y "scripts\apply_ota_update.bat" "%OTA_DIR%\scripts\apply_ota_update.bat" >nul
-if exist "data\output\municipios.csv" copy /y "data\output\municipios.csv" "%OTA_DIR%\" >nul
+REM municipios.csv NAO entra no OTA: cofre DPAPI e por maquina e o pacote sobrescreveria o cofre local do usuario. Seed vai na Release.
 
 set OTA_PKG_DIR=controle
 mkdir "%OTA_PKG_DIR%" 2>nul
