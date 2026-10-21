@@ -1,18 +1,16 @@
 #include "municipios.h"
 #include "cofre.h"
+#include "paths.h"
 #include <stdio.h>
 #include <string.h>
 #include <windows.h>
 
 void municipios_get_csv_path(char* out_path, int max_len) {
-    char exe_path[MAX_STR];
-    GetModuleFileNameA(NULL, exe_path, sizeof(exe_path));
-    
-    // Obtém o diretório do executável
-    char* p = strrchr(exe_path, '\\');
-    if (p) *p = '\0';
-    
-    snprintf(out_path, max_len, "%s\\municipios.csv", exe_path);
+    // O cofre de credenciais e DADO DO USUARIO: mora na pasta de dados
+    // (modo portatil: junto do exe; instalado em Program Files: %ProgramData%).
+    char data_dir[MAX_PATH] = {0};
+    paths_get_data_dir(data_dir, sizeof(data_dir));
+    snprintf(out_path, max_len, "%s\\municipios.csv", data_dir);
 }
 
 // Converte string lida do CSV em UTF-8 para ANSI (CP_ACP) para que o P/Invoke CharSet.Ansi do C# leia sem caracteres estranhos (Ã§, Ã£)

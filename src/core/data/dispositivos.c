@@ -1,17 +1,15 @@
 ﻿#include "dispositivos.h"
+#include "paths.h"
 #include <stdio.h>
 #include <string.h>
 #include <windows.h>
 #include <time.h>
 
 static void get_csv_path(char* out_path, int max_len) {
-    char exe_path[MAX_PATH];
-    GetModuleFileNameA(NULL, exe_path, sizeof(exe_path));
-    // Sobe 1 nivel apenas, removendo o nome do executavel, para ficar na pasta output
-    char* p = strrchr(exe_path, '\\'); if (p) *p = '\0';
-    
-    // Aponta para a nova pasta compartilhada
-    snprintf(out_path, max_len, "%s\\registros_de_dispositivos\\banco_dispositivos.csv", exe_path);
+    // CSV legado: dado do usuario -> mora na pasta de dados
+    char data_dir[MAX_PATH] = {0};
+    paths_get_data_dir(data_dir, sizeof(data_dir));
+    snprintf(out_path, max_len, "%s\\registros_de_dispositivos\\banco_dispositivos.csv", data_dir);
 }
 
 int dispositivos_carregar(DispositivoRegistro* lista, int max) {

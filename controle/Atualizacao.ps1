@@ -22,7 +22,7 @@ Write-Host "[*] Compilando motor BotEngine.dll..." -ForegroundColor Yellow
 $env:PATH += ";$env:USERPROFILE\AppData\Local\Microsoft\WinGet\Packages\BrechtSanders.WinLibs.POSIX.UCRT_Microsoft.Winget.Source_8wekyb3d8bbwe\mingw64\bin"
 New-Item -ItemType Directory -Path "data\output" -Force | Out-Null
 
-$srcsCore = "src/api.c", "src/core/drivers/adb.c", "src/core/data/municipios.c", "src/core/data/cofre.c", "src/core/data/dispositivos.c", "src/core/config/config.c", "src/core/learn/learn_db.c", "src/core/learn/learn_engine.c"
+$srcsCore = "src/api.c", "src/core/drivers/adb.c", "src/core/data/municipios.c", "src/core/data/cofre.c", "src/core/data/paths.c", "src/core/data/dispositivos.c", "src/core/config/config.c", "src/core/learn/learn_db.c", "src/core/learn/learn_engine.c"
 $srcsV7 = "src/core/functions/vision7/f1_vision_tab7.c", "src/core/functions/vision7/f2_vision_tab7.c", "src/core/functions/vision7/f3_vision_tab7.c", "src/core/functions/vision7/f4_vision_tab7.c", "src/core/functions/vision7/f5_vision_tab7.c", "src/core/functions/vision7/f6_vision_tab7.c", "src/core/functions/vision7/f8_vision_tab7.c"
 $srcsM7 = "src/core/functions/tabmulti/f1_tabmulti_m7.c", "src/core/functions/tabmulti/f2_tabmulti_m7.c", "src/core/functions/tabmulti/f3_tabmulti_m7.c", "src/core/functions/tabmulti/f4_tabmulti_m7.c", "src/core/functions/tabmulti/f5_tabmulti_m7.c", "src/core/functions/tabmulti/m7_helpers.c"
 $srcsT20 = "src/core/functions/nokia_t20/f1_nokia_t20.c", "src/core/functions/nokia_t20/f2_nokia_t20.c", "src/core/functions/nokia_t20/f3_nokia_t20.c"

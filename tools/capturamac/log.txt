@@ -1,0 +1,26 @@
+=== Capturador Automatico de MAC (Tablets via ADB) ===
+
+Tablets detectados: 2
+
+[1] Processando T30764G2508004646 ...
+     Wi-Fi desligado. Ligando...
+     Wi-Fi ligado com sucesso.
+cat: /sys/class/net/wlan0/address: Permission denied
+request send failed: Permission denied
+     Serial: T30764G2508004646
+     Modelo: T307G
+     MAC Wi-Fi: 8c:92:53:c1:26:d1
+     Registrado em capturamac_resultado.csv
+     Wi-Fi desligado apos captura.
+
+[2] Processando T30764G2508014707 ...
+     Wi-Fi ja esta ligado.
+cat: /sys/class/net/wlan0/address: Permission denied
+request send failed: Permission denied
+     Serial: T30764G2508014707
+     Modelo: T307G
+     MAC Wi-Fi: 8c:92:53:c1:4e:1e
+     Registrado em capturamac_resultado.csv
+     Wi-Fi desligado apos captura.
+
+Captura finalizada para 2 tablet(s).

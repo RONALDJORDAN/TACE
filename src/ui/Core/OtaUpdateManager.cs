@@ -87,7 +87,8 @@ namespace BotRpaUI.Core
             {
                 try
                 {
-                    string versionFile = Path.Combine(PathHelper.GetRootDirectory(), "config", "version.txt");
+                    // version.txt e arquivo de PROGRAMA (instalado junto dos binarios)
+                    string versionFile = Path.Combine(PathHelper.GetInstallDirectory(), "config", "version.txt");
                     if (File.Exists(versionFile))
                     {
                         string ver = File.ReadAllText(versionFile).Trim();
@@ -453,7 +454,8 @@ namespace BotRpaUI.Core
         {
             try
             {
-                string root = PathHelper.GetRootDirectory();
+                // A atualizacao substitui os PROGRAMAS: usa a pasta de instalacao.
+                string root = PathHelper.GetInstallDirectory();
                 string scriptPath = Path.Combine(root, "scripts", "apply_ota_update.bat");
                 if (!File.Exists(scriptPath))
                 {

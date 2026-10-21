@@ -13,8 +13,8 @@ namespace BotRpaUI.Core
         {
             try
             {
-                // Caminho da raiz do sistema
-                string baseDir = BotRpaUI.Core.PathHelper.GetRootDirectory();
+                // Caminho da pasta de PROGRAMAS (tools/ fica junto dos binarios)
+                string baseDir = BotRpaUI.Core.PathHelper.GetInstallDirectory();
                 
                 string toolsDir = Path.Combine(baseDir, "tools", "reverse_tethering");
                 string gnirehtetExe = Path.Combine(toolsDir, "gnirehtet.exe");

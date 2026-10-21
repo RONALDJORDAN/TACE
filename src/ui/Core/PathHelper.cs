@@ -5,7 +5,20 @@ namespace BotRpaUI.Core
 {
     public static class PathHelper
     {
-        public static string GetRootDirectory()
+        /// <summary>
+        /// Variavel de ambiente que aponta a pasta de DADOS do usuario.
+        /// Definida pelo instalador (machine-wide) quando o programa e
+        /// instalado em "C:\Program Files" (sem permissao de escrita).
+        /// </summary>
+        public const string EnvDataDir = "BOT_RPA_DATA_DIR";
+
+        private static string? _dataDirCache;
+
+        /// <summary>
+        /// Pasta onde ficam os PROGRAMAS (binarios, tools, scripts).
+        /// Sempre a pasta de instalacao (ex.: C:\Program Files\Bot_RPA).
+        /// </summary>
+        public static string GetInstallDirectory()
         {
             string current = AppDomain.CurrentDomain.BaseDirectory;
             DirectoryInfo? dir = new DirectoryInfo(current);
@@ -19,6 +32,69 @@ namespace BotRpaUI.Core
             }
 
             return AppDomain.CurrentDomain.BaseDirectory;
+        }
+
+        /// <summary>
+        /// Pasta onde ficam os DADOS do usuario (banco de dispositivos, cofre de
+        /// credenciais, pacotes dos municipios, logs e registros).
+        ///
+        /// Resolucao:
+        ///   1) Variavel de ambiente BOT_RPA_DATA_DIR (definida pelo instalador);
+        ///   2) A propria pasta de instalacao, se for gravavel (modo portatil);
+        ///   3) %ProgramData%\Bot_RPA (instalacao em Program Files).
+        /// </summary>
+        public static string GetRootDirectory()
+        {
+            if (!string.IsNullOrEmpty(_dataDirCache)) return _dataDirCache;
+
+            string resolved;
+
+            // 1) Variavel de ambiente (instalador)
+            string? env = Environment.GetEnvironmentVariable(EnvDataDir);
+            if (!string.IsNullOrWhiteSpace(env) && Directory.Exists(env))
+            {
+                resolved = env;
+            }
+            else
+            {
+                string install = GetInstallDirectory();
+                // 2) Modo portatil: a propria pasta de instalacao, se gravavel
+                if (IsDirectoryWritable(install))
+                {
+                    resolved = install;
+                }
+                else
+                {
+                    // 3) Instalacao em Program Files: dados em area machine-wide
+                    string programData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
+                    if (string.IsNullOrWhiteSpace(programData))
+                        programData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+                    resolved = Path.Combine(programData, "Bot_RPA");
+                }
+            }
+
+            try { Directory.CreateDirectory(resolved); } catch { }
+            _dataDirCache = resolved;
+            return resolved;
+        }
+
+        /// <summary>Testa se e possivel gravar um arquivo na pasta informada.</summary>
+        private static bool IsDirectoryWritable(string dir)
+        {
+            try
+            {
+                string probe = Path.Combine(dir, ".botrpa_write_test.tmp");
+                using (var fs = new FileStream(probe, FileMode.Create, FileAccess.Write, FileShare.ReadWrite))
+                {
+                    fs.WriteByte(0);
+                }
+                try { File.Delete(probe); } catch { }
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
         public static string RemoveAccents(string text)
         {

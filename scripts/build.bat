@@ -25,7 +25,7 @@ set "PATH=%PATH%;%USERPROFILE%\AppData\Local\Microsoft\WinGet\Packages\BrechtSan
 
 :: Compilar o Engine em C (DLL) - Motores Separados Vision7 e TabMulti
 mkdir "data\output" 2>nul
-set SRCS_CORE=src\api.c src\core\drivers\adb.c src\core\data\municipios.c src\core\data\cofre.c src\core\data\dispositivos.c src\core\config\config.c src\core\learn\learn_db.c src\core\learn\learn_engine.c
+set SRCS_CORE=src\api.c src\core\drivers\adb.c src\core\data\municipios.c src\core\data\cofre.c src\core\data\paths.c src\core\data\dispositivos.c src\core\config\config.c src\core\learn\learn_db.c src\core\learn\learn_engine.c
 
 set SRCS_V7=src\core\functions\vision7\f1_vision_tab7.c src\core\functions\vision7\f2_vision_tab7.c src\core\functions\vision7\f3_vision_tab7.c src\core\functions\vision7\f4_vision_tab7.c src\core\functions\vision7\f5_vision_tab7.c src\core\functions\vision7\f6_vision_tab7.c src\core\functions\vision7\f8_vision_tab7.c
 set SRCS_M7=src\core\functions\tabmulti\f1_tabmulti_m7.c src\core\functions\tabmulti\f2_tabmulti_m7.c src\core\functions\tabmulti\f3_tabmulti_m7.c src\core\functions\tabmulti\f4_tabmulti_m7.c src\core\functions\tabmulti\f5_tabmulti_m7.c src\core\functions\tabmulti\m7_helpers.c
