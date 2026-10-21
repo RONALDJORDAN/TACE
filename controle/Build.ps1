@@ -2,17 +2,19 @@
 #  Plataforma Bot_RPA - Central de Build
 #  Arquivo: controle/Build.ps1
 #
-#  Painel interativo com 2 opcoes:
+#  Painel interativo com 3 opcoes:
 #    [1] Build TESTE - compila motor + UI em data/output (icone azul)
 #    [2] Build FINAL - gera pacote portatil PnP em BotRPA_Release (icone roxo)
+#    [3] Build INSTALAVEL - gera o instalador .exe (Inno Setup) em controle/
 #
 #  Uso interativo (duplo clique):  controle\Build.bat
 #  Uso direto (sem menu):
 #      powershell -File controle\Build.ps1 -Modo Teste
 #      powershell -File controle\Build.ps1 -Modo Final [-Sim]
+#      powershell -File controle\Build.ps1 -Modo Instalavel [-Sim]
 # ================================================================
 param(
-    [ValidateSet("", "Teste", "Final")]
+    [ValidateSet("", "Teste", "Final", "Instalavel")]
     [string]$Modo = "",
     [switch]$Sim
 )
@@ -28,6 +30,7 @@ $Root = Split-Path -Parent $ControleDir
 
 $BuildBat        = Join-Path $Root "scripts\build.bat"
 $BuildReleaseBat = Join-Path $Root "scripts\build_release.bat"
+$BuildInstalBat  = Join-Path $Root "scripts\build_installer.bat"
 $VersionFile     = Join-Path $Root "config\version.txt"
 $TesteDll        = Join-Path $Root "data\output\BotEngine.dll"
 $TesteExe        = Join-Path $Root "data\output\BotRPAui.exe"
@@ -203,6 +206,40 @@ function Invoke-BuildFinal {
 }
 
 # ----------------------------------------------------------------
+function Invoke-BuildInstalador {
+    Write-Host ""
+    Write-Host "== BUILD INSTALAVEL (Inno Setup -> controle) ==" -ForegroundColor Magenta
+    if (-not (Test-Path -LiteralPath $BuildInstalBat)) {
+        Write-Host "[ERRO] Gerador ausente: $BuildInstalBat" -ForegroundColor Red
+        return $false
+    }
+    if (-not (Test-Path -LiteralPath $ReleaseExe)) {
+        Write-Host "[ERRO] Pacote portatil ausente: $ReleaseExe" -ForegroundColor Red
+        Write-Host "       Rode antes o build FINAL (opcao [2] ou -Modo Final)." -ForegroundColor Yellow
+        return $false
+    }
+    Write-Host "[!] Isso empacota BotRPA_Release em um instalador .exe (Inno Setup)." -ForegroundColor Yellow
+    if (-not (Read-SimNao -Pergunta "Continuar com o build INSTALAVEL?")) {
+        Write-Host "[*] Build INSTALAVEL cancelado pelo usuario." -ForegroundColor Yellow
+        return $false
+    }
+    Stop-UiAberta
+    $code = Invoke-BatchFile -BatPath $BuildInstalBat
+    if ($code -ne 0) {
+        Write-Host "[FALHA] scripts\build_installer.bat saiu com codigo $code." -ForegroundColor Red
+        return $false
+    }
+    $setup = Join-Path $Root ("controle\BotRPA_Instalador_{0}.exe" -f (Get-VersaoAtual))
+    if (-not (Test-Path -LiteralPath $setup)) {
+        Write-Host "[ERRO] Instalador nao gerado: $setup" -ForegroundColor Red
+        return $false
+    }
+    Write-Host "[OK] Instalador gerado: $setup" -ForegroundColor Green
+    Write-Host "[SUCESSO] Build INSTALAVEL concluido. Versao: $(Get-VersaoAtual)" -ForegroundColor Green
+    return $true
+}
+
+# ----------------------------------------------------------------
 function Show-Painel {
     Clear-Host
     Write-Host "========================================================" -ForegroundColor Cyan
@@ -217,6 +254,7 @@ function Show-Painel {
     Write-Host "--------------------------------------------------------" -ForegroundColor DarkGray
     Write-Host "  [1] Build TESTE  -> data\output (icone azul, dev)"
     Write-Host "  [2] Build FINAL  -> BotRPA_Release PnP (icone roxo)"
+    Write-Host "  [3] Build INSTALAVEL  -> instalador .exe (controle)\BotRPA_Instalador_<versao>.exe"
     Write-Host "  [0] Sair"
     Write-Host "========================================================" -ForegroundColor Cyan
 }
@@ -235,6 +273,9 @@ try {
     elseif ($Modo -eq "Final") {
         if (-not (Invoke-BuildFinal)) { $exitCode = 1 }
     }
+    elseif ($Modo -eq "Instalavel") {
+        if (-not (Invoke-BuildInstalador)) { $exitCode = 1 }
+    }
     else {
         $sair = $false
         while (-not $sair) {
@@ -249,9 +290,13 @@ try {
                     if (-not (Invoke-BuildFinal)) { $exitCode = 1 } else { $exitCode = 0 }
                     Read-Host "Pressione ENTER para voltar ao painel" | Out-Null
                 }
+                "3" {
+                    if (-not (Invoke-BuildInstalador)) { $exitCode = 1 } else { $exitCode = 0 }
+                    Read-Host "Pressione ENTER para voltar ao painel" | Out-Null
+                }
                 "0" { $sair = $true }
                 default {
-                    Write-Host "Opcao invalida. Use 1, 2 ou 0." -ForegroundColor Yellow
+                    Write-Host "Opcao invalida. Use 1, 2, 3 ou 0." -ForegroundColor Yellow
                     Start-Sleep -Seconds 1
                 }
             }

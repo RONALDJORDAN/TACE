@@ -70,35 +70,10 @@ namespace BotRpaUI.Views
             ListSelecionados.ItemsSource = _listaSelecionados;
 
             ConfigurarObservadorDB();
-            BotRpaUI.Core.SQLiteDatabaseManager.OnCloudPullCompleted += OnCloudPull_BancoDados;
             AtualizarDashboardMetrics();
             LoadBancoDadosDedicado();
             LoadRegistrosLocais();
             LoadRelatorioDados();
-        }
-
-        private void OnCloudPull_BancoDados(int importados, int atualizados)
-        {
-            try
-            {
-                Dispatcher.BeginInvoke(() =>
-                {
-                    try
-                    {
-                        AtualizarDashboardMetrics();
-                        if (PanelBancoDados != null && PanelBancoDados.Visibility == Visibility.Visible)
-                        {
-                            LoadBancoDadosDedicado();
-                        }
-                        else if (PanelExportacao != null && PanelExportacao.Visibility == Visibility.Visible)
-                        {
-                            LoadRelatorioDados();
-                        }
-                    }
-                    catch { }
-                });
-            }
-            catch { }
         }
 
         // =========================================================================
@@ -150,11 +125,6 @@ namespace BotRpaUI.Views
             }
             catch { }
             LoadBancoDadosDedicado();
-            _ = System.Threading.Tasks.Task.Run(async () =>
-            {
-                try { await BotRpaUI.Core.SQLiteDatabaseManager.BaixarDoInnovStockAsync(); }
-                catch { }
-            });
         }
 
         private void BtnSubRegistros_Click(object sender, RoutedEventArgs e)
@@ -230,10 +200,10 @@ namespace BotRpaUI.Views
                 if (DashTotalRegistros != null) DashTotalRegistros.Text = totalLogs.ToString("N0");
                 if (TxtTotalSessoesBuild != null) TxtTotalSessoesBuild.Text = $"{totalLogs} sessões gravadas";
 
-                // Último dispositivo
-                if (todosDispositivos.Count > 0)
+                // Último dispositivo (por ID de cadastro, independente da ordenação por patrimônio)
+                var ultimo = todosDispositivos.OrderByDescending(d => d.ID).FirstOrDefault();
+                if (ultimo != null)
                 {
-                    var ultimo = todosDispositivos[todosDispositivos.Count - 1];
                     if (TxtUltimoDispositivo != null)
                         TxtUltimoDispositivo.Text = $"{ultimo.MarcaModelo} | S/N: {ultimo.Serial} | Patrimônio: {(string.IsNullOrWhiteSpace(ultimo.Patrimonio) ? "—" : ultimo.Patrimonio)}";
                 }
@@ -275,7 +245,7 @@ namespace BotRpaUI.Views
         private void AplicarFiltroBD()
         {
             var resultado = new System.Collections.Generic.List<BotRpaUI.Core.DispositivoDB>();
-            string busca = (TxtBuscaBD?.Text ?? string.Empty).Trim().ToLower();
+            string busca = NormalizarBusca(TxtBuscaBD?.Text);
 
             foreach (var d in _bancoDadosCache)
             {
@@ -294,21 +264,44 @@ namespace BotRpaUI.Views
                     passaModelo = (d.MarcaModelo != null && (d.MarcaModelo.IndexOf("Nokia", StringComparison.OrdinalIgnoreCase) >= 0 || d.MarcaModelo.IndexOf("T20", StringComparison.OrdinalIgnoreCase) >= 0 || d.MarcaModelo.IndexOf("TA-1392", StringComparison.OrdinalIgnoreCase) >= 0 || d.MarcaModelo.IndexOf("TA1392", StringComparison.OrdinalIgnoreCase) >= 0));
                 }
 
-                bool passaBusca = string.IsNullOrEmpty(busca)
-                    || (d.Serial?.ToLower().Contains(busca) == true)
-                    || (d.MarcaModelo?.ToLower().Contains(busca) == true)
-                    || (d.MAC?.ToLower().Contains(busca) == true);
+                bool passaBusca = busca.Length == 0
+                    || NormalizarBusca(d.Patrimonio).Contains(busca)
+                    || NormalizarBusca(d.Serial).Contains(busca)
+                    || NormalizarBusca(d.MAC).Contains(busca)
+                    || NormalizarBusca(d.MarcaModelo).Contains(busca)
+                    || NormalizarBusca(d.Fabricante).Contains(busca)
+                    || NormalizarBusca(d.Modelo).Contains(busca);
 
                 if (passaModelo && passaBusca)
                     resultado.Add(d);
             }
 
+            resultado = resultado
+                .OrderBy(d => BotRpaUI.Core.PatrimonioHelper.ExtrairNumero(d.Patrimonio))
+                .ThenBy(d => d.ID)
+                .ToList();
+
             GridBancoDados.ItemsSource = resultado;
             if (TxtContadorBD != null)
                 TxtContadorBD.Text = $"{resultado.Count} registro{(resultado.Count != 1 ? "s" : "")}" + (_bancoDadosCache.Count != resultado.Count ? $" de {_bancoDadosCache.Count}" : "");
-            
+
+            if (TxtBuscaBDPlaceholder != null)
+                TxtBuscaBDPlaceholder.Visibility = string.IsNullOrWhiteSpace(TxtBuscaBD?.Text) ? Visibility.Visible : Visibility.Collapsed;
+
             if (TxtInfoSelecionado != null)
                 TxtInfoSelecionado.Text = "Nenhum registro selecionado";
+        }
+
+        private static string NormalizarBusca(string? valor)
+        {
+            if (string.IsNullOrWhiteSpace(valor)) return string.Empty;
+
+            var sb = new System.Text.StringBuilder(valor.Length);
+            foreach (char c in valor)
+            {
+                if (char.IsLetterOrDigit(c)) sb.Append(char.ToLowerInvariant(c));
+            }
+            return sb.ToString();
         }
 
         private void ResetFilterPillButtons()
@@ -374,7 +367,7 @@ namespace BotRpaUI.Views
 
             _editingDeviceId = selectedItem.ID;
             TxtModalTitulo.Text = $"✏️ Editar Dispositivo #{selectedItem.ID}";
-            TxtModalPatrimonio.Text = selectedItem.Patrimonio ?? "";
+            TxtModalPatrimonio.Text = SomenteDigitosPatrimonio(selectedItem.Patrimonio);
             TxtModalFabricante.Text = selectedItem.Fabricante;
             TxtModalModelo.Text = selectedItem.Modelo;
             TxtModalSerial.Text = selectedItem.Serial;
@@ -390,10 +383,35 @@ namespace BotRpaUI.Views
             if (e.Row.Item is not BotRpaUI.Core.DispositivoDB item) return;
             if (e.Column?.Header?.ToString() != "Nº Patrimônio") return;
 
-            string novoValor = (item.Patrimonio ?? "").Trim();
-            BotRpaUI.Core.SQLiteDatabaseManager.AtualizarPatrimonio(item.ID, novoValor);
+            Dispatcher.BeginInvoke(new Action(() => FinalizarEdicaoPatrimonio(item)));
+        }
 
-            System.Diagnostics.Debug.WriteLine($"[RelatoriosView] Patrimonio do #{item.ID} atualizado para '{novoValor}'.");
+        private void FinalizarEdicaoPatrimonio(BotRpaUI.Core.DispositivoDB item)
+        {
+            string digitado = (item.Patrimonio ?? string.Empty).Trim();
+
+            if (!BotRpaUI.Core.PatrimonioHelper.TryNormalizar(digitado, out string normalizado, out string erro))
+            {
+                MessageBox.Show(erro, "Patrimônio inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
+                LoadBancoDadosDedicado();
+                return;
+            }
+
+            if (!BotRpaUI.Core.SQLiteDatabaseManager.AtualizarPatrimonio(item.ID, normalizado))
+            {
+                MessageBox.Show("Não foi possível salvar o patrimônio. Tente novamente.", "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
+                LoadBancoDadosDedicado();
+                return;
+            }
+
+            System.Diagnostics.Debug.WriteLine($"[RelatoriosView] Patrimonio do #{item.ID} atualizado para '{normalizado}'.");
+            LoadBancoDadosDedicado();
+        }
+
+        private static string SomenteDigitosPatrimonio(string? patrimonio)
+        {
+            if (string.IsNullOrWhiteSpace(patrimonio)) return string.Empty;
+            return new string(patrimonio.Where(char.IsDigit).ToArray());
         }
 
         private void BtnModalCancelar_Click(object sender, RoutedEventArgs e)
@@ -409,7 +427,13 @@ namespace BotRpaUI.Views
                 string fabricante = TxtModalFabricante.Text.Trim();
                 string modelo = TxtModalModelo.Text.Trim();
                 string mac = TxtModalMAC.Text.Trim();
-                string patrimonio = TxtModalPatrimonio.Text.Trim();
+
+                if (!BotRpaUI.Core.PatrimonioHelper.TryNormalizar(TxtModalPatrimonio.Text, out string patrimonio, out string erroPatrimonio))
+                {
+                    MessageBox.Show(erroPatrimonio, "Patrimônio inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    TxtModalPatrimonio.Focus();
+                    return;
+                }
 
                 if (string.IsNullOrWhiteSpace(serial))
                 {
@@ -1032,91 +1056,5 @@ namespace BotRpaUI.Views
             _isRefreshingDb = false;
         }
 
-        private async void BtnSyncInnovStock_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                if (!BotRpaUI.Core.FirebaseAuthService.HasCredentials)
-                {
-                    MessageBox.Show("Sync desativado: configure a conta do InnovStock em Configurações → Geral → “Conta InnovStock (sync de nuvem)” e tente de novo.", "Conta não configurada", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-                if (BtnSyncInnovStock != null)
-                {
-                    BtnSyncInnovStock.IsEnabled = false;
-                    BtnSyncInnovStock.Content = "⏳ Sincronizando...";
-                }
-
-                int count = await BotRpaUI.Core.SQLiteDatabaseManager.SincronizarTodosComInnovStockAsync();
-                if (count > 0)
-                {
-                    MessageBox.Show($"Sucesso! {count} dispositivo(s) foram sincronizados com o banco de dados da nuvem do InnovStock.", "Sincronização InnovStock", MessageBoxButton.OK, MessageBoxImage.Information);
-                }
-                else
-                {
-                    MessageBox.Show("Nenhum dispositivo encontrado para sincronizar ou ocorreu uma falha de conexão com o InnovStock. Verifique a internet e tente novamente.", "Sincronização InnovStock", MessageBoxButton.OK, MessageBoxImage.Warning);
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Erro durante a sincronização com o InnovStock: {ex.Message}", "Erro de Sincronização", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-            finally
-            {
-                if (BtnSyncInnovStock != null)
-                {
-                    BtnSyncInnovStock.IsEnabled = true;
-                    BtnSyncInnovStock.Content = "☁️ Sync InnovStock";
-                }
-            }
-        }
-
-        private async void BtnBaixarInnovStock_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                if (!BotRpaUI.Core.FirebaseAuthService.HasCredentials)
-                {
-                    MessageBox.Show("Download desativado: configure a conta do InnovStock em Configurações → Geral → “Conta InnovStock (sync de nuvem)” e tente de novo.", "Conta não configurada", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-                if (BtnBaixarInnovStock != null)
-                {
-                    BtnBaixarInnovStock.IsEnabled = false;
-                    BtnBaixarInnovStock.Content = "⏳ Baixando...";
-                }
-
-                var (importados, atualizados, _) = await BotRpaUI.Core.SQLiteDatabaseManager.BaixarDoInnovStockAsync();
-                if (importados > 0 || atualizados > 0)
-                {
-                    AtualizarDashboardMetrics();
-                    if (PanelBancoDados.Visibility == Visibility.Visible)
-                    {
-                        LoadBancoDadosDedicado();
-                    }
-                    else if (PanelExportacao.Visibility == Visibility.Visible)
-                    {
-                        LoadRelatorioDados();
-                    }
-                    MessageBox.Show($"Nuvem sincronizada: {importados} novo(s) e {atualizados} atualizado(s) neste PC.", "Download InnovStock", MessageBoxButton.OK, MessageBoxImage.Information);
-                }
-                else
-                {
-                    MessageBox.Show("Nada novo na nuvem ou falha de conexão. Verifique a internet e tente novamente.", "Download InnovStock", MessageBoxButton.OK, MessageBoxImage.Warning);
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Erro ao baixar do InnovStock: {ex.Message}", "Erro de Download", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-            finally
-            {
-                if (BtnBaixarInnovStock != null)
-                {
-                    BtnBaixarInnovStock.IsEnabled = true;
-                    BtnBaixarInnovStock.Content = "⬇ Baixar InnovStock";
-                }
-            }
-        }
     }
 }

@@ -128,9 +128,8 @@
                     <Button x:Name="BtnSubGeral" Content="🎛️  1. Sistema &amp; Controle" Style="{StaticResource SideMenuButton}" Click="BtnSubGeral_Click" Foreground="#4EDEA3" Background="#2A2A40"/>
                     <Button x:Name="BtnSubAparelhos" Content="📱  2. Aparelhos Suportados" Style="{StaticResource SideMenuButton}" Click="BtnSubAparelhos_Click"/>
                     <Button x:Name="BtnSubRede" Content="🌐  3. Rede &amp; Tethering" Style="{StaticResource SideMenuButton}" Click="BtnSubRede_Click"/>
-                    <Button x:Name="BtnSubOta" Content="🔄  4. Atualização OTA" Style="{StaticResource SideMenuButton}" Click="BtnSubOta_Click"/>
-                    <Button x:Name="BtnSubDados" Content="💾  5. Backup &amp; Gestão" Style="{StaticResource SideMenuButton}" Click="BtnSubDados_Click"/>
-                    <Button x:Name="BtnSubBibliotecas" Content="📚  6. Tecnologias &amp; Licença" Style="{StaticResource SideMenuButton}" Click="BtnSubBibliotecas_Click"/>
+                    <Button x:Name="BtnSubDados" Content="💾  4. Backup &amp; Gestão" Style="{StaticResource SideMenuButton}" Click="BtnSubDados_Click"/>
+                    <Button x:Name="BtnSubBibliotecas" Content="📚  5. Tecnologias &amp; Licença" Style="{StaticResource SideMenuButton}" Click="BtnSubBibliotecas_Click"/>
                 </StackPanel>
 
                 <!-- Rodapé informativo do Menu -->
@@ -269,58 +268,6 @@
                             </Grid>
                         </Border>
 
-                        <!-- Nuvem InnovStock: Download automático -->
-                        <Border Style="{StaticResource CardStyle}">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <StackPanel VerticalAlignment="Center" Margin="0,0,20,0">
-                                    <TextBlock Text="Nuvem InnovStock: Baixar Aparelhos ao Iniciar" Foreground="#FFFFFF" FontSize="15" FontWeight="Bold"/>
-                                    <TextBlock Text="Quando ativado, o sistema baixa automaticamente os dispositivos registrados na nuvem ao abrir (só adiciona/atualiza, nunca apaga o banco local)." Foreground="#85859E" FontSize="12" Margin="0,4,0,0" TextWrapping="Wrap"/>
-                                    <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-                                        <TextBlock Text="Intervalo do sync automático:" Foreground="#85859E" FontSize="12" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                        <ComboBox x:Name="CmbCloudInterval" Width="100" SelectionChanged="CmbCloudInterval_SelectionChanged" VerticalAlignment="Center">
-                                            <ComboBoxItem Content="5 min" Tag="5"/>
-                                            <ComboBoxItem Content="10 min" Tag="10"/>
-                                            <ComboBoxItem Content="15 min" Tag="15"/>
-                                            <ComboBoxItem Content="30 min" Tag="30"/>
-                                            <ComboBoxItem Content="60 min" Tag="60"/>
-                                        </ComboBox>
-                                    </StackPanel>
-                                </StackPanel>
-                                <CheckBox Grid.Column="1" x:Name="ToggleCloudPull" Content="Ativo" Style="{StaticResource ToggleSwitchStyle}" IsChecked="True" Checked="ToggleCloudPull_Checked" Unchecked="ToggleCloudPull_Unchecked" VerticalAlignment="Center"/>
-                            </Grid>
-                        </Border>
-
-                        <!-- Conta InnovStock: autenticação do sync de nuvem -->
-                        <Border Style="{StaticResource CardStyle}">
-                            <StackPanel>
-                                <TextBlock Text="Conta InnovStock (sync de nuvem)" Foreground="#FFFFFF" FontSize="15" FontWeight="Bold"/>
-                                <TextBlock Text="O banco da nuvem exige login. Informe uma conta do InnovStock com perfil operacional ou superior para enviar e baixar aparelhos. Sem conta, o sync fica desativado." Foreground="#85859E" FontSize="12" Margin="0,4,0,10" TextWrapping="Wrap"/>
-                                <Grid Margin="0,0,0,8">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="90"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Text="E-mail:" Foreground="#E3E0F2" FontSize="12" VerticalAlignment="Center"/>
-                                    <TextBox x:Name="TxtFirebaseEmail" Grid.Column="1" Height="28" Background="#0A0A0F" Foreground="#E3E0F2" BorderBrush="#2A2A40" FontSize="12" Padding="8,4" TextChanged="TxtFirebaseAccount_Changed"/>
-                                </Grid>
-                                <Grid Margin="0,0,0,8">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="90"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Text="Senha:" Foreground="#E3E0F2" FontSize="12" VerticalAlignment="Center"/>
-                                    <PasswordBox x:Name="TxtFirebasePassword" Grid.Column="1" Height="28" Background="#0A0A0F" Foreground="#E3E0F2" BorderBrush="#2A2A40" FontSize="12" Padding="8,4" PasswordChanged="TxtFirebaseAccount_Changed"/>
-                                </Grid>
-                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                    <Button x:Name="BtnTestarFirebase" Content="🔌 Testar conexão" Padding="14,6" Cursor="Hand" Click="BtnTestarFirebase_Click" Background="#0E7490" Foreground="#FFFFFF" FontWeight="Bold" FontSize="12" BorderThickness="0"/>
-                                    <TextBlock x:Name="TxtFirebaseStatus" Text="Não configurado." Foreground="#85859E" FontSize="12" VerticalAlignment="Center" Margin="12,0,0,0" TextWrapping="Wrap"/>
-                                </StackPanel>
-                            </StackPanel>
-                        </Border>
                     </StackPanel>
                 </ScrollViewer>
             </Border>
@@ -393,6 +340,43 @@
                                 <CheckBox Grid.Column="2" x:Name="ToggleDeviceNokiaT20" Content="Monitorar" Style="{StaticResource ToggleSwitchStyle}" IsChecked="True" Checked="ToggleDevice_Changed" Unchecked="ToggleDevice_Changed" VerticalAlignment="Center"/>
                             </Grid>
                         </Border>
+
+                        <!-- Conta Google Padrao (F4) -->
+                        <Border Style="{StaticResource CardStyle}" BorderBrush="#4285F4">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <Border Width="38" Height="38" CornerRadius="8" Background="#16233A" BorderBrush="#4285F4" BorderThickness="1.5" Margin="0,0,12,0">
+                                        <TextBlock Text="G" Foreground="#8AB4F8" FontSize="20" FontWeight="Black" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="Conta Google Padrao (F4)" Foreground="#FFFFFF" FontSize="15" FontWeight="Bold"/>
+                                        <TextBlock Text="Usada automaticamente pelo F4 ao adicionar conta nos tablets Vision 7." Foreground="#85859E" FontSize="12" Margin="0,4,0,0"/>
+                                    </StackPanel>
+                                </StackPanel>
+
+                                <Grid Margin="0,14,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="16"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="E-mail da conta Google" Foreground="#A1A1AA" FontSize="11" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                                        <TextBox x:Name="TxtGoogleEmail" Height="34" MaxLength="200" Background="#0A0A0F" Foreground="#F4F4FF" BorderBrush="#2A2A40" BorderThickness="1" Padding="9,6" FontSize="13" VerticalContentAlignment="Center"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="Senha" Foreground="#A1A1AA" FontSize="11" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                                        <PasswordBox x:Name="PwdGoogleSenha" Height="34" MaxLength="200" Background="#0A0A0F" Foreground="#F4F4FF" BorderBrush="#2A2A40" BorderThickness="1" Padding="9,6" FontSize="13" VerticalContentAlignment="Center"/>
+                                        <TextBlock Text="Protegida pelo Windows (DPAPI). Deixe em branco para manter a senha atual." Foreground="#6E6E88" FontSize="10" Margin="0,5,0,0" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                </Grid>
+
+                                <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
+                                    <Button x:Name="BtnSalvarGoogle" Content="Salvar conta padrao" Width="170" Height="32" Background="#16233A" Foreground="#8AB4F8" BorderBrush="#4285F4" BorderThickness="1.5" Cursor="Hand" FontWeight="Bold" FontSize="12" Click="BtnSalvarGoogle_Click"/>
+                                    <TextBlock x:Name="TxtGoogleStatus" Foreground="#85859E" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" Margin="12,0,0,0" TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
                     </StackPanel>
                 </ScrollViewer>
             </Border>
@@ -462,74 +446,7 @@
             </Border>
 
             <!-- ========================================================================= -->
-            <!-- SUBMÓDULO 4: ATUALIZAÇÕES OTA -->
-            <!-- ========================================================================= -->
-            <Border x:Name="PanelOta" Background="#151525" CornerRadius="12" Padding="20" BorderBrush="#23233A" BorderThickness="1" Visibility="Collapsed">
-                <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <StackPanel>
-                        <TextBlock Text="Atualização do Sistema (OTA Remote)" Style="{StaticResource CategoryTitle}"/>
-                        <TextBlock Text="Verifique a disponibilidade de novos patches de compilação ou atualizações na nuvem." Style="{StaticResource CategoryDesc}"/>
-
-                        <Border Style="{StaticResource CardStyle}">
-                            <StackPanel>
-                                <Grid Margin="0,0,0,12">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
-                                    <StackPanel VerticalAlignment="Center" Margin="0,0,20,0">
-                                        <TextBlock Text="Versão do Sistema em Execução" Foreground="#FFFFFF" FontSize="15" FontWeight="Bold"/>
-                                        <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
-                                            <TextBlock x:Name="TxtCurrentVersion" Text="v1.0.0" Foreground="#4EDEA3" FontSize="14" FontWeight="Bold" FontFamily="Consolas"/>
-                                            <TextBlock x:Name="TxtStatusOta" Text=" (Conectado à nuvem)" Foreground="#85859E" FontSize="12" Margin="10,0,0,0" VerticalAlignment="Center"/>
-                                        </StackPanel>
-                                    </StackPanel>
-                                    <Button Grid.Column="1" x:Name="BtnCheckOta" Content="🔍 Verificar Atualizações" Background="#2A2A40" Foreground="#5EB1FF" BorderThickness="1" BorderBrush="#5EB1FF" Padding="15,8" Cursor="Hand" FontWeight="Bold" FontSize="12" Click="BtnCheckOta_Click" VerticalAlignment="Center"/>
-                                </Grid>
-
-                                <!-- Card de Atualização Disponível -->
-                                <Border x:Name="BorderUpdateAvailable" Visibility="Collapsed" Background="#1A1A2E" BorderBrush="#513BA6" BorderThickness="1" CornerRadius="8" Padding="15" Margin="0,10,0,10">
-                                    <StackPanel>
-                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                                            <TextBlock Text="🚀 Nova Versão Disponível: " Foreground="#00E5FF" FontSize="14" FontWeight="Bold"/>
-                                            <TextBlock x:Name="TxtNewVersion" Text="v1.1.0" Foreground="#00E5FF" FontSize="14" FontWeight="Bold" FontFamily="Consolas"/>
-                                            <TextBlock x:Name="TxtOtaMandatory" Text="" Foreground="#FFB020" FontSize="12" FontWeight="Bold" Margin="10,0,0,0" VerticalAlignment="Center"/>
-                                        </StackPanel>
-                                        <TextBlock x:Name="TxtChangelog" Text="Melhorias de desempenho e estabilidade..." Foreground="#E3E0F2" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,12"/>
-                                        <Button x:Name="BtnInstallOta" Content="⚡ Instalar Atualização Agora" Background="#513BA6" Foreground="#FFFFFF" BorderThickness="0" Padding="18,8" Cursor="Hand" FontWeight="Bold" FontSize="13" Click="BtnInstallOta_Click"/>
-                                    </StackPanel>
-                                </Border>
-
-                                <!-- Progresso do Download OTA -->
-                                <Border x:Name="PanelOtaProgress" Visibility="Collapsed" Background="#0A0A0F" CornerRadius="8" Padding="12" Margin="0,8,0,0">
-                                    <StackPanel>
-                                        <TextBlock x:Name="TxtOtaProgressStatus" Text="Baixando atualização..." Foreground="#00E5FF" FontSize="12" FontWeight="SemiBold" Margin="0,0,0,6" HorizontalAlignment="Center"/>
-                                        <ProgressBar x:Name="OtaProgressBar" Height="8" Background="#151525" Foreground="#00E5FF" BorderThickness="0" Value="0" Maximum="100"/>
-                                    </StackPanel>
-                                </Border>
-                            </StackPanel>
-                        </Border>
-
-                        <!-- Telemetria Automática -->
-                        <Border Style="{StaticResource CardStyle}">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <StackPanel VerticalAlignment="Center" Margin="0,0,20,0">
-                                    <TextBlock Text="Telemetria Automática de Versão" Foreground="#FFFFFF" FontSize="15" FontWeight="Bold"/>
-                                    <TextBlock Text="Reporta periodicamente ao servidor a versão desta máquina para inventário no painel corporativo." Foreground="#85859E" FontSize="12" Margin="0,4,0,0" TextWrapping="Wrap"/>
-                                </StackPanel>
-                                <CheckBox Grid.Column="1" x:Name="ToggleTelemetry" Content="Ativo" Style="{StaticResource ToggleSwitchStyle}" IsChecked="True" Checked="ToggleTelemetry_Checked" Unchecked="ToggleTelemetry_Unchecked" VerticalAlignment="Center"/>
-                            </Grid>
-                        </Border>
-                    </StackPanel>
-                </ScrollViewer>
-            </Border>
-
-            <!-- ========================================================================= -->
-            <!-- SUBMÓDULO 5: BACKUP & GESTÃO DE DADOS -->
+            <!-- SUBMÓDULO 4: BACKUP & GESTÃO DE DADOS -->
             <!-- ========================================================================= -->
             <Border x:Name="PanelDados" Background="#151525" CornerRadius="12" Padding="20" BorderBrush="#23233A" BorderThickness="1" Visibility="Collapsed">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">

@@ -21,7 +21,7 @@ namespace BotRpaUI
         {
             InitializeComponent();
             
-            string versionStr = BotRpaUI.Core.OtaUpdateManager.CurrentVersion;
+            string versionStr = BotRpaUI.Core.AppInfo.CurrentVersion;
             Title = $"Bot_RPA - v{versionStr}";
             TxtHeaderVersion.Text = versionStr;
 
@@ -72,37 +72,6 @@ namespace BotRpaUI
                     }
                 });
             };
-
-            Loaded += MainWindow_Loaded;
-        }
-
-        private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
-        {
-            await CheckForOtaUpdatesOnStartupAsync();
-        }
-
-        private async System.Threading.Tasks.Task CheckForOtaUpdatesOnStartupAsync()
-        {
-            try
-            {
-                var otaManager = new BotRpaUI.Core.OtaUpdateManager();
-                var manifest = await otaManager.CheckForUpdatesAsync();
-
-                if (manifest != null && otaManager.IsUpdateAvailable(manifest))
-                {
-                    // Somente atualizações marcadas como obrigatórias interrompem o boot.
-                    // Opcionais aparecem apenas em Configurações → OTA.
-                    if (!manifest.Mandatory) return;
-                    // OBRIGATÓRIO: Nova versão encontrada na nuvem! Abre a janela modal de atualização obrigatória.
-                    var mandatoryWindow = new OtaMandatoryUpdateWindow(manifest);
-                    mandatoryWindow.Owner = this;
-                    mandatoryWindow.ShowDialog();
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"[Startup OTA Check Error] {ex.Message}");
-            }
         }
 
         public void UpdateMonitorNavigationVisibility()

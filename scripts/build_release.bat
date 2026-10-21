@@ -37,10 +37,6 @@ if exist "tools\reverse_tethering" xcopy /s /e /i /y "tools\reverse_tethering" "
 if exist "tools\mac_address_finder.apk" copy /y "tools\mac_address_finder.apk" "%RELEASE_DIR%\tools\" >nul
 echo [+][OK] Tools copiadas (platform-tools + reverse_tethering, sem mingw64).
 
-REM 4b. Script de aplicacao OTA (usado pelo OtaUpdateManager.ApplyUpdate)
-mkdir "%RELEASE_DIR%\scripts" 2>nul
-if exist "scripts\apply_ota_update.bat" copy /y "scripts\apply_ota_update.bat" "%RELEASE_DIR%\scripts\" >nul
-
 REM 5. Banco de dados do sistema COM os registros dos aparelhos (ordem explicita
 REM do usuario em 28/09/2026): embarca data\bot_database.db (410 aparelhos) para que
 REM Relatorios > Banco de Dados abra com os registros. InitializeDatabase() usa

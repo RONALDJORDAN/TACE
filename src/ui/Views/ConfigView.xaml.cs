@@ -34,27 +34,16 @@ namespace BotRpaUI.Views
                 UpdateAiModeBadge(SettingsManager.AiLearnActive);
                 ToggleTethering.IsChecked = SettingsManager.ReverseTetheringEnabled;
                 ToggleShowDisconnected.IsChecked = SettingsManager.ShowDisconnectedDevices;
-                ToggleCloudPull.IsChecked = SettingsManager.CloudPullAuto;
-                foreach (var it in CmbCloudInterval.Items)
-                {
-                    if (it is System.Windows.Controls.ComboBoxItem ci && ci.Tag is string t && t == SettingsManager.CloudSyncMinutes.ToString())
-                    {
-                        CmbCloudInterval.SelectedItem = it;
-                        break;
-                    }
-                }
 
                 ToggleDeviceVision7.IsChecked = SettingsManager.EnableDeviceVision7;
                 ToggleDeviceTabMulti.IsChecked = SettingsManager.EnableDeviceTabMulti;
                 ToggleDeviceNokiaT20.IsChecked = SettingsManager.EnableDeviceNokiaT20;
 
-                ToggleTelemetry.IsChecked = SettingsManager.TelemetryEnabled;
-
-                TxtFirebaseEmail.Text = SettingsManager.FirebaseEmail;
-                TxtFirebasePassword.Password = SettingsManager.FirebasePassword;
-                AtualizarStatusFirebase();
-
                 UpdateInterfaceSelectionUI(SettingsManager.UsbMonitorInterface);
+
+                TxtGoogleEmail.Text = SettingsManager.GoogleAccountEmail;
+                PwdGoogleSenha.Clear();
+                AtualizarStatusGoogleConta();
             }
             catch (Exception ex)
             {
@@ -64,6 +53,78 @@ namespace BotRpaUI.Views
             {
                 _isInitializingSettings = false;
             }
+        }
+
+        private void AtualizarStatusGoogleConta()
+        {
+            if (TxtGoogleStatus == null)
+                return;
+
+            if (SettingsManager.HasGoogleAccountConfigured)
+            {
+                DefinirStatusGoogle($"Conta configurada: {SettingsManager.GoogleAccountEmail}", "#4EDEA3");
+            }
+            else
+            {
+                DefinirStatusGoogle("Nenhuma conta Google configurada.", "#85859E");
+            }
+        }
+
+        private void DefinirStatusGoogle(string mensagem, string corHex)
+        {
+            if (TxtGoogleStatus == null)
+                return;
+
+            TxtGoogleStatus.Text = mensagem;
+            TxtGoogleStatus.Foreground = new System.Windows.Media.SolidColorBrush(
+                (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(corHex));
+        }
+
+        private void BtnSalvarGoogle_Click(object sender, RoutedEventArgs e)
+        {
+            string email = (TxtGoogleEmail.Text ?? "").Trim();
+            string senha = PwdGoogleSenha.Password;
+
+            if (email.Length == 0 || email.Length > 200 || !email.Contains("@"))
+            {
+                DefinirStatusGoogle("Informe um e-mail Google valido.", "#FF8080");
+                return;
+            }
+
+            if (string.IsNullOrEmpty(senha))
+            {
+                if (!SettingsManager.HasGoogleAccountConfigured)
+                {
+                    DefinirStatusGoogle("Informe a senha da conta Google.", "#FF8080");
+                    return;
+                }
+
+                if (!string.Equals(email, SettingsManager.GoogleAccountEmail, StringComparison.OrdinalIgnoreCase))
+                {
+                    DefinirStatusGoogle("Informe a senha ao alterar o e-mail.", "#FF8080");
+                    return;
+                }
+
+                DefinirStatusGoogle("Senha mantida. Conta Google ja configurada.", "#4EDEA3");
+                return;
+            }
+
+            if (senha.Length > 200)
+            {
+                DefinirStatusGoogle("A senha informada e muito longa.", "#FF8080");
+                return;
+            }
+
+            if (!SettingsManager.SetGoogleAccount(email, senha))
+            {
+                DefinirStatusGoogle("Nao foi possivel salvar a conta Google.", "#FF8080");
+                return;
+            }
+
+            PwdGoogleSenha.Clear();
+            TxtGoogleEmail.Text = SettingsManager.GoogleAccountEmail;
+            DefinirStatusGoogle("Conta salva. Senha protegida pelo Windows.", "#4EDEA3");
+            senha = string.Empty;
         }
 
         private void SaveSettings()
@@ -78,13 +139,10 @@ namespace BotRpaUI.Views
                 try { Engine_Learn_SetActiveMode(SettingsManager.AiLearnActive ? 1 : 0); } catch { }
                 SettingsManager.ReverseTetheringEnabled = ToggleTethering.IsChecked == true;
                 SettingsManager.ShowDisconnectedDevices = ToggleShowDisconnected.IsChecked == true;
-                SettingsManager.CloudPullAuto = ToggleCloudPull.IsChecked == true;
-                SettingsManager.CloudAutoSync = ToggleCloudPull.IsChecked == true;
 
                 SettingsManager.EnableDeviceVision7 = ToggleDeviceVision7.IsChecked == true;
                 SettingsManager.EnableDeviceTabMulti = ToggleDeviceTabMulti.IsChecked == true;
                 SettingsManager.EnableDeviceNokiaT20 = ToggleDeviceNokiaT20.IsChecked == true;
-                SettingsManager.TelemetryEnabled = ToggleTelemetry.IsChecked == true;
 
                 SettingsManager.Save();
             }
@@ -167,16 +225,6 @@ namespace BotRpaUI.Views
             SwitchSubmodule(BtnSubAparelhos, PanelAparelhos);
         }
 
-        private BotRpaUI.Core.OtaUpdateManager _otaManager = new BotRpaUI.Core.OtaUpdateManager();
-        private BotRpaUI.Core.OtaManifest? _availableManifest = null;
-
-        private void BtnSubOta_Click(object sender, RoutedEventArgs e)
-        {
-            SwitchSubmodule(BtnSubOta, PanelOta);
-            TxtCurrentVersion.Text = "v" + BotRpaUI.Core.OtaUpdateManager.CurrentVersion;
-            _ = _otaManager.SendTelemetryPingAsync();
-        }
-
         private void BtnSubDados_Click(object sender, RoutedEventArgs e)
         {
             SwitchSubmodule(BtnSubDados, PanelDados);
@@ -201,8 +249,6 @@ namespace BotRpaUI.Views
             BtnSubRede.Background = bgNormal;
             BtnSubAparelhos.Foreground = brushNormal;
             BtnSubAparelhos.Background = bgNormal;
-            BtnSubOta.Foreground = brushNormal;
-            BtnSubOta.Background = bgNormal;
             BtnSubDados.Foreground = brushNormal;
             BtnSubDados.Background = bgNormal;
             BtnSubBibliotecas.Foreground = brushNormal;
@@ -216,7 +262,6 @@ namespace BotRpaUI.Views
             PanelGeral.Visibility = Visibility.Collapsed;
             PanelRede.Visibility = Visibility.Collapsed;
             PanelAparelhos.Visibility = Visibility.Collapsed;
-            PanelOta.Visibility = Visibility.Collapsed;
             PanelDados.Visibility = Visibility.Collapsed;
             PanelBibliotecas.Visibility = Visibility.Collapsed;
 
@@ -288,100 +333,6 @@ namespace BotRpaUI.Views
         private void ToggleShowDisconnected_Unchecked(object sender, RoutedEventArgs e)
         {
             SaveSettings();
-        }
-
-        private void TxtFirebaseAccount_Changed(object sender, RoutedEventArgs e)
-        {
-            if (_isInitializingSettings) return;
-            try
-            {
-                SettingsManager.FirebaseEmail = TxtFirebaseEmail.Text?.Trim() ?? string.Empty;
-                SettingsManager.FirebasePassword = TxtFirebasePassword.Password ?? string.Empty;
-                AtualizarStatusFirebase();
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"[ConfigView] Erro ao salvar conta Firebase: {ex.Message}");
-            }
-        }
-
-        private void AtualizarStatusFirebase()
-        {
-            try
-            {
-                if (TxtFirebaseStatus == null) return;
-                if (!BotRpaUI.Core.FirebaseAuthService.HasCredentials)
-                {
-                    TxtFirebaseStatus.Text = "Não configurado — sync de nuvem desativado.";
-                }
-                else
-                {
-                    TxtFirebaseStatus.Text = "Conta configurada. Use “Testar conexão” para validar.";
-                }
-            }
-            catch { }
-        }
-
-        private async void BtnTestarFirebase_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                SettingsManager.FirebaseEmail = TxtFirebaseEmail.Text?.Trim() ?? string.Empty;
-                SettingsManager.FirebasePassword = TxtFirebasePassword.Password ?? string.Empty;
-                if (BtnTestarFirebase != null) { BtnTestarFirebase.IsEnabled = false; BtnTestarFirebase.Content = "⏳ Testando..."; }
-                if (TxtFirebaseStatus != null) TxtFirebaseStatus.Text = "Conectando ao InnovStock...";
-                BotRpaUI.Core.FirebaseAuthService.Invalidate();
-                string token = await BotRpaUI.Core.FirebaseAuthService.GetIdTokenAsync();
-                if (string.IsNullOrEmpty(token))
-                {
-                    if (TxtFirebaseStatus != null) TxtFirebaseStatus.Text = "❌ Falha no login. Confira e-mail e senha da conta.";
-                    MessageBox.Show("Não foi possível autenticar no InnovStock. Confira o e-mail e a senha.", "Teste de conexão", MessageBoxButton.OK, MessageBoxImage.Warning);
-                }
-                else
-                {
-                    var (imp, atu, _) = await BotRpaUI.Core.SQLiteDatabaseManager.BaixarDoInnovStockAsync();
-                    if (TxtFirebaseStatus != null) TxtFirebaseStatus.Text = $"✅ Conectado! Nuvem: {imp} novo(s), {atu} atualizado(s).";
-                    MessageBox.Show($"Conexão OK! A nuvem retornou {imp} novo(s) e {atu} atualizado(s) para este PC.", "Teste de conexão", MessageBoxButton.OK, MessageBoxImage.Information);
-                }
-            }
-            catch (Exception ex)
-            {
-                if (TxtFirebaseStatus != null) TxtFirebaseStatus.Text = "❌ Erro: " + ex.Message;
-            }
-            finally
-            {
-                if (BtnTestarFirebase != null) { BtnTestarFirebase.IsEnabled = true; BtnTestarFirebase.Content = "🔌 Testar conexão"; }
-            }
-        }
-
-        private void ToggleCloudPull_Checked(object sender, RoutedEventArgs e)
-        {
-            SaveSettings();
-            BotRpaUI.Core.CloudAutoSyncService.RestartTimer();
-        }
-
-        private void ToggleCloudPull_Unchecked(object sender, RoutedEventArgs e)
-        {
-            SaveSettings();
-            BotRpaUI.Core.CloudAutoSyncService.RestartTimer();
-        }
-
-        private void CmbCloudInterval_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (_isInitializingSettings) return;
-            try
-            {
-                if (CmbCloudInterval.SelectedItem is System.Windows.Controls.ComboBoxItem item
-                    && item.Tag is string tag && int.TryParse(tag, out int min))
-                {
-                    SettingsManager.CloudSyncMinutes = min;
-                    BotRpaUI.Core.CloudAutoSyncService.RestartTimer();
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"[ConfigView] Erro ao salvar intervalo da nuvem: {ex.Message}");
-            }
         }
 
         private void ToggleDevice_Changed(object sender, RoutedEventArgs e)
@@ -678,81 +629,6 @@ namespace BotRpaUI.Views
             BtnTesteVelocidade.IsEnabled = true;
         }
 
-        private async void BtnCheckOta_Click(object sender, RoutedEventArgs e)
-        {
-            BtnCheckOta.IsEnabled = false;
-            TxtStatusOta.Text = " (Consultando nuvem...)";
-            TxtStatusOta.Foreground = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#00E5FF"));
-
-            var manifest = await _otaManager.CheckForUpdatesAsync();
-            BtnCheckOta.IsEnabled = true;
-
-            if (manifest != null && _otaManager.IsUpdateAvailable(manifest))
-            {
-                _availableManifest = manifest;
-                TxtStatusOta.Text = " (Nova atualização encontrada!)";
-                TxtStatusOta.Foreground = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#4EDEA3"));
-
-                TxtNewVersion.Text = "v" + manifest.Version;
-                TxtOtaMandatory.Text = manifest.Mandatory ? "● OBRIGATÓRIA" : "○ OPCIONAL";
-                TxtOtaMandatory.Foreground = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(manifest.Mandatory ? "#FF6B6B" : "#8A8A9E"));
-                TxtChangelog.Text = string.IsNullOrWhiteSpace(manifest.Changelog) ? "Melhorias de desempenho e estabilidade do sistema." : manifest.Changelog;
-                BorderUpdateAvailable.Visibility = Visibility.Visible;
-            }
-            else
-            {
-                _availableManifest = null;
-                BorderUpdateAvailable.Visibility = Visibility.Collapsed;
-                TxtStatusOta.Text = " (Você está utilizando a versão mais recente)";
-                TxtStatusOta.Foreground = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#8A8A9E"));
-            }
-        }
-
-        private async void BtnInstallOta_Click(object sender, RoutedEventArgs e)
-        {
-            if (_availableManifest == null) return;
-
-            BtnInstallOta.IsEnabled = false;
-            PanelOtaProgress.Visibility = Visibility.Visible;
-            TxtOtaProgressStatus.Text = "Iniciando download da atualização...";
-            OtaProgressBar.Value = 0;
-
-            var progress = new Progress<double>(val =>
-            {
-                OtaProgressBar.Value = val;
-                TxtOtaProgressStatus.Text = $"Baixando pacote: {Math.Round(val)}%";
-            });
-
-            var (success, zipPath, error) = await _otaManager.DownloadAndVerifyUpdateAsync(_availableManifest, progress);
-
-            if (success && !string.IsNullOrEmpty(zipPath))
-            {
-                TxtOtaProgressStatus.Text = "Download concluído! Aplicando atualização e reiniciando...";
-                await Task.Delay(1000);
-                _otaManager.ApplyUpdate(zipPath);
-            }
-            else
-            {
-                PanelOtaProgress.Visibility = Visibility.Collapsed;
-                BtnInstallOta.IsEnabled = true;
-                MessageBox.Show($"Falha ao baixar atualização OTA:\n{error}", "Erro de Atualização", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-
-        private async void ToggleTelemetry_Checked(object sender, RoutedEventArgs e)
-        {
-            if (_isInitializingSettings) return;
-            SaveSettings();
-            if (SettingsManager.TelemetryEnabled)
-                await _otaManager.SendTelemetryPingAsync(null, "ONLINE");
-        }
-
-        private void ToggleTelemetry_Unchecked(object sender, RoutedEventArgs e)
-        {
-            // Opt-out imediato: salva desligado e NÃO envia nenhum ping.
-            if (_isInitializingSettings) return;
-            SaveSettings();
-        }
     }
 
     public class SpeedScoreItem

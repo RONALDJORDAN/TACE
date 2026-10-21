@@ -685,6 +685,24 @@
                                                     <Button Grid.Column="1" Tag="10" Click="BtnGestaoAction_Click" Content="Ocultar" Width="72" Height="28" Background="#1E1C12" Foreground="#FFE699" BorderBrush="#FFC107" BorderThickness="1" Cursor="Hand" FontWeight="Bold" FontSize="10" VerticalAlignment="Center"/>
                                                 </Grid>
                                             </Border>
+
+                                            <!-- Conta Google -->
+                                            <Border Background="#0F172A" CornerRadius="8" Padding="10,9" Margin="0,0,0,4" BorderBrush="#4285F4" BorderThickness="1">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <StackPanel VerticalAlignment="Center">
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <TextBlock Text="G" Foreground="#8AB4F8" FontWeight="Black" FontSize="12" Margin="0,0,5,0"/>
+                                                            <TextBlock Text="Conta Google" Foreground="#FFFFFF" FontWeight="Bold" FontSize="11"/>
+                                                        </StackPanel>
+                                                        <TextBlock Text="Usa a conta Google padrao configurada" Foreground="#85859E" FontSize="9" Margin="0,2,0,0"/>
+                                                    </StackPanel>
+                                                    <Button Grid.Column="1" Click="BtnGestaoGoogleAccount_Click" Content="Adicionar" Width="76" Height="28" Background="#16233A" Foreground="#8AB4F8" BorderBrush="#4285F4" BorderThickness="1" Cursor="Hand" FontWeight="Bold" FontSize="10" VerticalAlignment="Center"/>
+                                                </Grid>
+                                            </Border>
                                         </StackPanel>
                                     </ScrollViewer>
                                 </Grid>

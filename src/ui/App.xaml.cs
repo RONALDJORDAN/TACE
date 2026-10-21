@@ -15,23 +15,15 @@ public partial class App : Application
     {
         base.OnStartup(e);
 
+        // Garante o encerramento do ADB tambem em logoff/shutdown e saidas nao tratadas
+        AppDomain.CurrentDomain.ProcessExit += (sender, args) => BotRpaUI.Core.AdbServerManager.Encerrar();
+        SessionEnding += (sender, args) => BotRpaUI.Core.AdbServerManager.Encerrar();
+
         // Inicializa o Sistema Anti-Crash Guard (Triplo Handler + Watchdog)
         BotRpaUI.Core.AntiCrashGuard.Initialize();
 
-        // Envia o ping de telemetria OTA para inventário no Firebase
-        // (respeita o opt-out em Configurações → Telemetria Automática).
-        BotRpaUI.Core.SettingsManager.Load();
-        if (BotRpaUI.Core.SettingsManager.TelemetryEnabled)
-        {
-            _ = new BotRpaUI.Core.OtaUpdateManager().SendTelemetryPingAsync();
-        }
-
         // Roda a varredura offline antes de abrir a interface
         BotRpaUI.Core.PreflightChecker.CheckAndRepair();
-
-        // Sincronizacao automatica com a nuvem (pull no startup + periodico + ao reconectar)
-        BotRpaUI.Core.SettingsManager.Load();
-        BotRpaUI.Core.CloudAutoSyncService.Start();
 
         // Modernização: Forçar execução apenas no Windows 11 ou superior
         if (!OperatingSystem.IsWindowsVersionAtLeast(10, 0, 22000))
@@ -72,34 +64,7 @@ public partial class App : Application
 
     protected override void OnExit(ExitEventArgs e)
     {
-        KillAdbServer();
+        BotRpaUI.Core.AdbServerManager.Encerrar();
         base.OnExit(e);
-    }
-
-    private void KillAdbServer()
-    {
-        try
-        {
-            string baseDir = BotRpaUI.Core.PathHelper.GetRootDirectory();
-            string adbExe = System.IO.Path.Combine(baseDir, "tools", "platform-tools", "adb.exe");
-            
-            if (System.IO.File.Exists(adbExe))
-            {
-                var startInfo = new System.Diagnostics.ProcessStartInfo
-                {
-                    FileName = adbExe,
-                    Arguments = "kill-server",
-                    CreateNoWindow = true,
-                    UseShellExecute = false,
-                    WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden
-                };
-                
-                using (var process = System.Diagnostics.Process.Start(startInfo))
-                {
-                    process?.WaitForExit(5000);
-                }
-            }
-        }
-        catch {}
     }
 }

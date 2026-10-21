@@ -190,6 +190,10 @@ DllExport int Engine_ExecuteF4_Wallpaper(const char* serial, const char* wp_path
     return F4_DefinirWallpaper(serial, wp_path, cb);
 }
 
+DllExport int Engine_ExecuteF4_AdicionarContaGoogle(const char* serial, const char* email, const char* senha, LogCallback cb) {
+    return F4_AdicionarContaGoogle(serial, email, senha, cb);
+}
+
 // [Automação] F5: Desligamento
 DllExport int Engine_ExecuteF5_Shutdown(const char* serial, LogCallback cb) {
     return F5_ExecutarDesligamento(serial, cb);

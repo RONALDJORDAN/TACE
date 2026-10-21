@@ -48,6 +48,7 @@ output/
 output_teste/
 BotRPA_Release/
 InnoRPA_Release/
+FERRAMENTA_AQUI/
 data/output/
 
 # Ferramentas pesadas provisionadas por PreflightChecker/setup_adb

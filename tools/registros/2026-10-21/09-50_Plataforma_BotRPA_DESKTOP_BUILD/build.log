@@ -1,0 +1,11 @@
+Versao: 21.10.2026.0950
+Modo: RELEASE
+PastaAuditoria: registros\2026-10-21\09-50_Plataforma_BotRPA_DESKTOP_BUILD
+--- gcc BotEngine.dll ---
+--- dotnet publish ---
+  Determinando os projetos a serem restaurados...
+  C:\Projetos\Bot_RPA\src\ui\BotRpaUI.csproj restaurado (em 459 ms).
+  BotRpaUI -> C:\Projetos\Bot_RPA\src\ui\bin\Release\net8.0-windows10.0.22000.0\win-x64\BotRPAui.dll
+          1 arquivo(s) copiado(s).
+  BotRpaUI -> C:\Projetos\Bot_RPA\data\output\
+Resultado: SUCESSO

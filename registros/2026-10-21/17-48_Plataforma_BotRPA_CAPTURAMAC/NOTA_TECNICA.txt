@@ -1,0 +1,31 @@
+﻿CAPTURAMAC - CORRECAO COMPLETA (21/10/2026 17:48)
+------------------------------------------------
+Arquivos origem: tools\capturamac\capturamac.c + run.bat
+
+Bugs corrigidos:
+1. _popen via cmd.exe interpretava "2>/dev/null" como redirect do Windows
+   (erro "O sistema nao pode encontrar o caminho especificado") - adb nunca
+   executava os comandos de leitura. Agora: CreateProcessA reto, STDOUT+
+   STDERR em pipe unico, sem cmd.
+2. Parser de "adb devices -l" assumia TAB; a saida usa ESPACOS alinhados ->
+   0 dispositivos detectados. Parser agora aceita tab OU espacos.
+3. Caminhos (adb/CSV/log) ancorados na pasta do EXE (independe do cwd -
+   antes o run.bat cd tools\ + path relativo ->CSV vazio).
+4. Poll novo: 40 cmds shell rapidos em 10 s derrubavam o adbd dos tablets
+   ("error: closed"). Agora: Sleep(2500) pos svc wifi enable + poll leve
+   (1 cmd sysfs a cada 700 ms, 10x) - tablets nao caem.
+5. MAC so gravado no CSV se valido (XX:XX:XX:XX:XX:XX) - acabou o lixo
+   "nao encontrado" salvo como MAC.
+6. Wi-Fi: desliga ao final SOMENTE se fomos nos que ligamos (estado
+   original do aparelho preservado); se o aparelho sair do USB, nao mexe.
+7. Servidor adb: start-server executado no arranque (sobe se desligado,
+   idempotente/rapido).
+8. CLI: --once (captura todos e sai) e --test (caminhos+raw).
+Codigo: 0 erro 0 warning (gcc -O2 -Wall).
+
+TESTE REAL (17:47-17:48) - 3 tablets T307G conectados:
+  T30764G2507008316  8c:92:53:bf:a2:17
+  T30764G2601007603  8c:92:53:c4:d4:4e
+  T30764G2601007822  8c:92:53:c4:d5:29
+CSV: capture lata em capturamac_resultado.csv (absoluto, na pasta do exe).
+Wi-Fi restaurado em todos; nenhum aparelho caiu.

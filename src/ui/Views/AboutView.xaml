@@ -205,7 +205,7 @@
                                             <TextBlock Text="Menu Superior ➔ 'Configurações'" Foreground="#D2BBFF" FontSize="10" FontWeight="Bold"/>
                                         </Border>
                                     </StackPanel>
-                                    <TextBlock Text="• O que é: Painel administrativo para ativar/desativar modelos de tablets, gerenciar backups .zip e atualizar o sistema via nuvem OTA." Foreground="#E3E0F2" FontSize="12" TextWrapping="Wrap" Margin="0,2,0,4"/>
+                                    <TextBlock Text="• O que é: Painel administrativo para ativar/desativar modelos de tablets, gerenciar backups .zip e configurar a interface de monitoramento." Foreground="#E3E0F2" FontSize="12" TextWrapping="Wrap" Margin="0,2,0,4"/>
                                 </StackPanel>
                             </Grid>
                         </Border>

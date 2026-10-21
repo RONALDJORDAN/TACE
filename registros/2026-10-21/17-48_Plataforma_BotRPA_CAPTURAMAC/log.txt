@@ -1,0 +1,35 @@
+=== Capturador Automatico de MAC (Tablets via ADB) ===
+
+Tablets detectados: 2
+
+[1] Processando T30764G2508004646 ...
+     Wi-Fi desligado. Ligando...
+     Wi-Fi ligado com sucesso.
+cat: /sys/class/net/wlan0/address: Permission denied
+request send failed: Permission denied
+     Serial: T30764G2508004646
+     Modelo: T307G
+     MAC Wi-Fi: 8c:92:53:c1:26:d1
+     Registrado em capturamac_resultado.csv
+     Wi-Fi desligado apos captura.
+
+[2] Processando T30764G2508014707 ...
+     Wi-Fi ja esta ligado.
+cat: /sys/class/net/wlan0/address: Permission denied
+request send failed: Permission denied
+     Serial: T30764G2508014707
+     Modelo: T307G
+     MAC Wi-Fi: 8c:92:53:c1:4e:1e
+     Registrado em capturamac_resultado.csv
+     Wi-Fi desligado apos captura.
+
+Captura finalizada para 2 tablet(s).
+[21/10/2026 17:41:41] FALHA captura: serial=T30764G2507010270 modelo=T307G
+[21/10/2026 17:41:53] FALHA captura: serial=T30764G2508009981 modelo=desconhecido
+[21/10/2026 17:42:04] FALHA captura: serial=T30764G2601006469 modelo=desconhecido
+[21/10/2026 17:46:22] FALHA captura: serial=T30764G2507007301 modelo=desconhecido wi-fi_original=0
+[21/10/2026 17:46:36] FALHA captura: serial=T30764G2508018684 modelo=desconhecido wi-fi_original=-1
+[21/10/2026 17:46:49] FALHA captura: serial=T30764G2601007365 modelo=desconhecido wi-fi_original=-1
+[21/10/2026 17:47:54] MAC capturado: serial=T30764G2507008316 modelo=T307G mac=8c:92:53:bf:a2:17
+[21/10/2026 17:47:58] MAC capturado: serial=T30764G2601007603 modelo=T307G mac=8c:92:53:c4:d4:4e
+[21/10/2026 17:48:02] MAC capturado: serial=T30764G2601007822 modelo=T307G mac=8c:92:53:c4:d5:29

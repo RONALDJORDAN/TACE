@@ -334,7 +334,6 @@
                                 <StackPanel Orientation="Horizontal">
                                     <Button x:Name="BtnViewList" Content="📑 Lista" Style="{StaticResource ViewModeToggleStyle}" Click="BtnViewList_Click"/>
                                     <Button x:Name="BtnViewGrid" Content="🔲 Cards" Style="{StaticResource ViewModeToggleStyle}" Click="BtnViewGrid_Click"/>
-                                    <Button x:Name="BtnPullCloudPro" Content="⬇ Puxar Nuvem" Style="{StaticResource ViewModeToggleStyle}" Click="BtnPullCloudPro_Click" ToolTip="Baixa /rpa_devices da nuvem e atualiza a lista local (só adiciona/preenche, nunca apaga)"/>
                                 </StackPanel>
                             </Border>
                         </StackPanel>

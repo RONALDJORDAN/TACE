@@ -53,33 +53,21 @@ if "!ISCC!"=="" (
 )
 echo [*] Compilador: !ISCC!
 
-REM --- 4. Gera o script temporario com a versao atual ---
-set "ISS_TMP=%TEMP%\BotRPA_build.iss"
-if exist "!ISS_TMP!" del "!ISS_TMP!"
-
-set "VER_LINHA=AppVersion={#AppVersion}"
-set "VER_NOME=AppVerName={#AppName} {#AppVersion}"
-set "ARQ_VER=OutputBaseFilename=InstaladorBot_RPA_!VER!"
-
-powershell -NoProfile -Command ^
-  "$src = Get-Content -LiteralPath 'controle\BotRPA.iss' -Raw; " ^
-  "$src = $src -replace '(?m)^#define AppVersion .*$', '%%VER_LINHA%%'; " ^
-  "$src = $src -replace '(?m)^#define AppVerName .*$', '%%VER_NOME%%'; " ^
-  "$src = $src -replace '(?m)^OutputBaseFilename=.*$', '%%ARQ_VER%%'; " ^
-  "Set-Content -LiteralPath $env:ISS_TMP -Value $src -Encoding UTF8" 2>nul
-if not exist "!ISS_TMP!" (
-    echo [ERRO] Falha ao gerar o script temporario do Inno Setup.
+REM --- 4. Sincroniza a versao no script do instalador (controle\BotRPA.iss) ---
+set "BOTRPA_VER=!VER!"
+powershell -NoProfile -Command "$f='controle\BotRPA.iss'; $v=$env:BOTRPA_VER; $c=[char]34; $s=Get-Content -LiteralPath $f -Raw; $s=$s -replace '(?m)^#define AppVersion .*$', ('#define AppVersion ' + $c + $v + $c); Set-Content -LiteralPath $f -Value $s -Encoding UTF8"
+if errorlevel 1 (
+    echo [ERRO] Falha ao sincronizar a versao em controle\BotRPA.iss.
     pause
     exit /b 1
 )
+echo [*] Versao gravada no script do instalador: !VER!
 
 REM --- 5. Compila o instalador ---
 echo.
 echo [*] Compilando o instalador...
-pushd "%TEMP%"
-"!ISCC!" "BotRPA_build.iss" > "%TEMP%\BotRPA_iscc.log" 2>&1
+"!ISCC!" "controle\BotRPA.iss" > "%TEMP%\BotRPA_iscc.log" 2>&1
 set "ISCC_ERR=%errorlevel%"
-popd
 
 if not "%ISCC_ERR%"=="0" (
     echo.
@@ -90,7 +78,7 @@ if not "%ISCC_ERR%"=="0" (
 )
 
 REM --- 6. Confere o resultado ---
-set "SETUP=controle\InstaladorBot_RPA_!VER!.exe"
+set "SETUP=controle\BotRPA_Instalador_!VER!.exe"
 if not exist "!SETUP!" (
     echo [ERRO] Instalador nao gerado: !SETUP!
     pause

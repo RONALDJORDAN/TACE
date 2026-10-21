@@ -103,6 +103,26 @@ static const char *APPARELHO_DEBLOAT_PACKAGES[] = {
 static const int NUM_APPARELHO_DEBLOAT =
     sizeof(APPARELHO_DEBLOAT_PACKAGES) / sizeof(APPARELHO_DEBLOAT_PACKAGES[0]);
 
+static void f4_module_dir(char *out_path, size_t max_len) {
+  if (!out_path || max_len == 0)
+    return;
+  out_path[0] = '\0';
+
+  HMODULE module = GetModuleHandleA("BotEngine.dll");
+  if (!module)
+    module = GetModuleHandleA(NULL);
+
+  DWORD len = GetModuleFileNameA(module, out_path, (DWORD)max_len);
+  if (len == 0 || len >= max_len) {
+    out_path[0] = '\0';
+    return;
+  }
+
+  char *slash = strrchr(out_path, '\\');
+  if (slash)
+    *slash = '\0';
+}
+
 int F4_ExecutarFerramenta(const char *serial, int acao, LogCallback cb) {
   char args[1024];
   char msg[256];
@@ -187,10 +207,7 @@ int F4_ExecutarFerramenta(const char *serial, int acao, LogCallback cb) {
     if (cb)
       cb("[F4] Ferramenta 8: Iniciando Gnirehtet Proxy (LIGAR)...");
     char exe_path[MAX_PATH];
-    GetModuleFileNameA(NULL, exe_path, MAX_PATH);
-    char *last_slash = strrchr(exe_path, '\\');
-    if (last_slash)
-      *last_slash = '\0';
+    f4_module_dir(exe_path, sizeof(exe_path));
 
     char gnirehtet_path[MAX_PATH];
     char gnirehtet_apk[MAX_PATH];
@@ -287,10 +304,7 @@ int F4_ExecutarFerramenta(const char *serial, int acao, LogCallback cb) {
       cb("[F4] Ferramenta 9: Parando Gnirehtet Proxy (DESLIGAR)...");
     char cmd_stop[1024];
     char exe_path2[MAX_PATH];
-    GetModuleFileNameA(NULL, exe_path2, MAX_PATH);
-    char *last_slash2 = strrchr(exe_path2, '\\');
-    if (last_slash2)
-      *last_slash2 = '\0';
+    f4_module_dir(exe_path2, sizeof(exe_path2));
 
     char gnirehtet_path[MAX_PATH];
     snprintf(gnirehtet_path, sizeof(gnirehtet_path),
@@ -910,4 +924,655 @@ int F4_DefinirWallpaper(const char *serial, const char *wp_path,
   if (cb)
     cb("[F4] Wallpaper definido com sucesso e sistema limpo!");
   return PIPELINE_SUCCESS;
+}
+
+static const char *const F4_GOOGLE_ADD_ANOTHER[] = {
+    "Add another account", "Adicionar outra conta",
+    "Use another account", "Usar outra conta"};
+static const char *const F4_GOOGLE_PROVIDER[] = {
+    "Sign in with your Google Account", "Fazer login com sua Conta do Google",
+    "Google", "Conta Google"};
+static const char *const F4_GOOGLE_2FA[] = {
+    "2-Step Verification", "duas etapas", "Verify it's you",
+    "Verifique se e voce", "verificacao em duas etapas", "Enter the code",
+    "Digite o codigo", "verification code", "Check your phone",
+    "Verifique seu telefone", "Tap Yes", "Toque em Sim",
+    "Try another way", "Tentar outra forma", "More ways to verify",
+    "Mais formas de verificar", "Use your phone", "Use seu telefone",
+    "Verify your identity", "Verifique sua identidade", "Check your email",
+    "Verifique seu e-mail"};
+static const char *const F4_GOOGLE_ERRORS[] = {
+    "Couldn't find your Google Account",
+    "Could not find your Google Account",
+    "Nao foi possivel encontrar sua Conta do Google",
+    "Enter a valid email", "Digite um e-mail valido", "Wrong password",
+    "Senha incorreta", "A senha esta incorreta", "Your password was changed",
+    "Sua senha foi alterada", "couldn't sign you in", "could not sign you in",
+    "Nao foi possivel fazer login", "This account is not allowed",
+    "Esta conta nao tem permissao", "This device isn't Play Protect certified",
+    "dispositivo nao e certificado", "This account already exists",
+    "Esta conta ja existe", "There was a problem", "Ocorreu um erro",
+    "Algo deu errado"};
+static const char *const F4_GOOGLE_SUCCESS[] = {
+    "Account added", "Conta adicionada", "You're all set", "Tudo pronto",
+    "Your account is ready", "Sua conta esta pronta"};
+static const char *const F4_GOOGLE_TERMS[] = {
+    "I agree", "Aceito", "Concordo", "Accept", "Aceitar", "Agree",
+    "Concordar", "Continue", "Continuar", "More", "Mais", "Allow",
+    "Permitir"};
+static const char *const F4_GOOGLE_NEXT[] = {
+    "Next", "Proximo", "Proxima", "Avancar", "Continue", "Continuar",
+    "Sign in", "Entrar", "Done", "Concluir", "Finish", "Finalizar"};
+static const char *const F4_GOOGLE_DISMISS[] = {
+    "No thanks", "Nao, obrigado", "Not now", "Agora nao", "Skip", "Pular",
+    "Later", "Mais tarde"};
+static const char *const F4_GOOGLE_PASSWORD[] = {
+    "Enter your password", "Digite sua senha", "Forgot password",
+    "Esqueceu a senha", "Show password", "Mostrar senha"};
+static const char *const F4_GOOGLE_USE_PASSWORD[] = {
+    "Use your password", "Usar sua senha", "Use password instead",
+    "Usar senha"};
+
+#define F4_GOOGLE_ARRAY_COUNT(a) ((int)(sizeof(a) / sizeof((a)[0])))
+
+static int f4_google_sleep(int ms) {
+  engine_sleep_check(ms);
+  return g_engine_canceled ? 0 : 1;
+}
+
+static char *f4_google_dump(const char *serial, LogCallback cb) {
+  char *xml = adb_dump_stdout(serial);
+  if (xml)
+    return xml;
+
+  char args[512];
+  snprintf(args, sizeof(args), "-s %s shell rm -f /sdcard/f4_google_dump.xml",
+           serial);
+  char *out = adb_exec(args);
+  if (out)
+    free(out);
+
+  snprintf(args, sizeof(args),
+           "-s %s shell uiautomator dump /sdcard/f4_google_dump.xml", serial);
+  out = adb_exec(args);
+  if (out)
+    free(out);
+
+  snprintf(args, sizeof(args), "-s %s shell cat /sdcard/f4_google_dump.xml",
+           serial);
+  out = adb_exec(args);
+  if (out && (strstr(out, "<hierarchy") || strstr(out, "<?xml")))
+    return out;
+  if (out)
+    free(out);
+  return NULL;
+}
+
+static int f4_google_tap_xy(const char *serial, int cx, int cy,
+                            LogCallback cb) {
+  char args[256];
+  snprintf(args, sizeof(args), "-s %s shell input tap %d %d", serial, cx, cy);
+  char *out = adb_exec(args);
+  int ok = out != NULL;
+  if (out)
+    free(out);
+  return ok;
+}
+
+static int f4_google_xml_has_any(const char *xml, const char *const *items,
+                                 int count) {
+  if (!xml)
+    return 0;
+  for (int i = 0; i < count; i++) {
+    if (inno_stristr_fuzzy(xml, items[i]))
+      return 1;
+  }
+  return 0;
+}
+
+static int f4_google_tap_any(const char *serial, const char *xml,
+                             const char *const *items, int count,
+                             LogCallback cb) {
+  int cx = 0;
+  int cy = 0;
+  for (int i = 0; i < count; i++) {
+    if (adb_get_centroid_fuzzy(xml, items[i], &cx, &cy, 0)) {
+      if (cb) {
+        char msg[256];
+        snprintf(msg, sizeof(msg), "[F4 Google] Clicando em '%s'...",
+                 items[i]);
+        cb(msg);
+      }
+      return f4_google_tap_xy(serial, cx, cy, cb);
+    }
+  }
+  return 0;
+}
+
+static int f4_google_tap_edit(const char *serial, const char *xml,
+                              LogCallback cb) {
+  int cx = 0;
+  int cy = 0;
+  if (!adb_get_centroid_fuzzy(xml, "android.widget.EditText", &cx, &cy, 0))
+    return 0;
+  if (cx <= 0 || cy <= 0)
+    return 0;
+  return f4_google_tap_xy(serial, cx, cy, cb);
+}
+
+static int f4_google_tap_clickable_any(const char *serial, const char *xml,
+                                       const char *const *items, int count,
+                                       LogCallback cb) {
+  if (!xml)
+    return 0;
+  for (int i = 0; i < count; i++) {
+    const char *p = xml;
+    int skip = 0;
+    while ((p = inno_stristr_fuzzy(p, items[i])) != NULL) {
+      const char *tag_start = p;
+      while (tag_start > xml && strncmp(tag_start, "<node ", 6) != 0)
+        tag_start--;
+      const char *tag_end = strchr(p, '>');
+      if (strncmp(tag_start, "<node ", 6) == 0 && tag_end) {
+        size_t len = (size_t)(tag_end - tag_start + 1);
+        if (len < 2048) {
+          char tag[2048];
+          memcpy(tag, tag_start, len);
+          tag[len] = '\0';
+          if (strstr(tag, "clickable=\"true\"") &&
+              strstr(tag, "enabled=\"true\"")) {
+            int cx = 0;
+            int cy = 0;
+            if (adb_get_centroid_fuzzy(xml, items[i], &cx, &cy, skip) &&
+                cx > 0 && cy > 0) {
+              char msg[128];
+              snprintf(msg, sizeof(msg), "[F4 Google] Clicando em '%s'...",
+                       items[i]);
+              if (cb)
+                cb(msg);
+              return f4_google_tap_xy(serial, cx, cy, cb);
+            }
+          }
+        }
+      }
+      p++;
+      skip++;
+    }
+  }
+  return 0;
+}
+
+static int f4_google_scroll_down(const char *serial, LogCallback cb) {
+  char args[256];
+  snprintf(args, sizeof(args),
+           "-s %s shell input swipe 300 850 300 350 350", serial);
+  char *out = adb_exec(args);
+  int ok = out != NULL;
+  if (out)
+    free(out);
+  return ok;
+}
+
+static void f4_google_escape_text(const char *src, char *dest,
+                                  size_t dest_size) {
+  size_t written = 0;
+  while (*src && written + 5 < dest_size) {
+    if (*src == ' ') {
+      dest[written++] = '%';
+      dest[written++] = 's';
+    } else if (*src == '\'') {
+      dest[written++] = '\'';
+      dest[written++] = '\\';
+      dest[written++] = '\'';
+      dest[written++] = '\'';
+    } else if (*src == '"') {
+      dest[written++] = '\\';
+      dest[written++] = '"';
+    } else if (*src == '\\') {
+      dest[written++] = '\\';
+      dest[written++] = '\\';
+    } else {
+      dest[written++] = *src;
+    }
+    src++;
+  }
+  dest[written] = '\0';
+}
+
+static int f4_google_clear_and_type(const char *serial, const char *text,
+                                    LogCallback cb) {
+  if (!text || !*text)
+    return 0;
+  if (!f4_google_sleep(600))
+    return 0;
+
+  char args[8192];
+  snprintf(args, sizeof(args),
+           "-s %s shell \"input keyevent 123; i=0; while [ $i -lt 80 ]; do "
+           "input keyevent 67; i=$((i+1)); done\"",
+           serial);
+  char *out = adb_exec(args);
+  if (out)
+    free(out);
+  if (!f4_google_sleep(300))
+    return 0;
+
+  char escaped[4096];
+  f4_google_escape_text(text, escaped, sizeof(escaped));
+  snprintf(args, sizeof(args), "-s %s shell input text '%s'", serial, escaped);
+  out = adb_exec(args);
+  if (out)
+    free(out);
+  SecureZeroMemory(escaped, sizeof(escaped));
+  SecureZeroMemory(args, sizeof(args));
+  if (!f4_google_sleep(800))
+    return 0;
+
+  snprintf(args, sizeof(args), "-s %s shell input keyevent 66", serial);
+  out = adb_exec(args);
+  if (out)
+    free(out);
+  int result = f4_google_sleep(1200);
+  SecureZeroMemory(args, sizeof(args));
+  return result;
+}
+
+static int f4_google_account_registered(const char *serial, const char *email,
+                                        LogCallback cb) {
+  if (!email || !*email)
+    return 0;
+
+  char args[512];
+  snprintf(args, sizeof(args), "-s %s shell dumpsys account", serial);
+  char *out = adb_exec(args);
+  if (!out)
+    return 0;
+
+  char needle[256];
+  snprintf(needle, sizeof(needle), "name=%s", email);
+  int found = inno_stristr_fuzzy(out, needle) != NULL;
+  free(out);
+  return found;
+}
+
+static int f4_google_ping_ok(const char *serial, LogCallback cb) {
+  char args[512];
+  snprintf(args, sizeof(args),
+           "-s %s shell \"ping -c 1 -W 2 8.8.8.8 2>/dev/null\"", serial);
+  char *out = adb_exec(args);
+  if (!out)
+    return 0;
+
+  int ok = strstr(out, "1 received") != NULL ||
+           strstr(out, "1 packets received") != NULL ||
+           strstr(out, ", 0% packet loss") != NULL;
+  free(out);
+  return ok;
+}
+
+static int f4_google_tunnel_active(const char *serial, LogCallback cb) {
+  char args[512];
+  snprintf(args, sizeof(args),
+           "-s %s shell \"ip route get 8.8.8.8 2>/dev/null\"", serial);
+  char *out = adb_exec(args);
+  int active = out && strstr(out, "dev tun") != NULL;
+  free(out);
+  return active;
+}
+
+static int f4_google_ensure_internet(const char *serial, LogCallback cb) {
+  if (f4_google_ping_ok(serial, cb) && f4_google_tunnel_active(serial, cb)) {
+    if (cb)
+      cb("[F4 Google] Internet via Gnirehtet confirmada.");
+    return 1;
+  }
+
+  if (f4_google_tunnel_active(serial, cb)) {
+    if (cb)
+      cb("[F4 Google] Tunel Gnirehtet sem internet. Reiniciando...");
+    F4_ExecutarFerramenta(serial, 9, cb);
+    if (!f4_google_sleep(1500))
+      return 0;
+  }
+
+  if (cb)
+    cb("[F4 Google] Garantindo internet via Gnirehtet...");
+  F4_ExecutarFerramenta(serial, 8, cb);
+
+  for (int i = 0; i < 30; i++) {
+    if (!f4_google_sleep(1500))
+      return 0;
+    if (f4_google_ping_ok(serial, cb) && f4_google_tunnel_active(serial, cb)) {
+      if (cb)
+        cb("[F4 Google] Internet via Gnirehtet confirmada.");
+      return 1;
+    }
+  }
+
+  if (cb)
+    cb("[F4 Google] Erro: sem internet via Gnirehtet. Verifique o cabo USB, "
+       "a rede do PC e o Gnirehtet.");
+  return 0;
+}
+
+static int f4_google_prepare_signin(const char *serial, LogCallback cb) {
+  char args[512];
+  for (int attempt = 0; attempt < 10; attempt++) {
+    char *xml = f4_google_dump(serial, cb);
+    if (xml) {
+      int cx = 0;
+      int cy = 0;
+      int is_google_ui =
+          inno_stristr_fuzzy(xml, "com.google.android.gms") != NULL ||
+          inno_stristr_fuzzy(xml, "com.google.android.gsf") != NULL;
+      int has_password_field =
+          adb_get_centroid_fuzzy(xml, "password=\"true\"", &cx, &cy, 0);
+      if (is_google_ui && !has_password_field &&
+          adb_get_centroid_fuzzy(xml, "android.widget.EditText", &cx, &cy, 0)) {
+        free(xml);
+        return 1;
+      }
+      if (f4_google_tap_any(serial, xml, F4_GOOGLE_ADD_ANOTHER,
+                            F4_GOOGLE_ARRAY_COUNT(F4_GOOGLE_ADD_ANOTHER),
+                            cb)) {
+        free(xml);
+        if (!f4_google_sleep(2500))
+          return 0;
+        continue;
+      }
+      if (f4_google_tap_any(serial, xml, F4_GOOGLE_PROVIDER,
+                            F4_GOOGLE_ARRAY_COUNT(F4_GOOGLE_PROVIDER), cb)) {
+        free(xml);
+        if (!f4_google_sleep(2500))
+          return 0;
+        continue;
+      }
+      free(xml);
+    }
+
+    if (attempt == 3) {
+      snprintf(args, sizeof(args),
+               "-s %s shell am start -a "
+               "android.settings.ADD_ACCOUNT_SETTINGS --esa accountTypes "
+               "com.google",
+               serial);
+      char *out = adb_exec(args);
+      if (out)
+        free(out);
+    } else if (attempt == 6) {
+      snprintf(args, sizeof(args),
+               "-s %s shell am start -n "
+               "com.android.settings/.accounts.AddAccountSettings",
+               serial);
+      char *out = adb_exec(args);
+      if (out)
+        free(out);
+    }
+
+    if (!f4_google_sleep(1000))
+      return 0;
+  }
+  return 0;
+}
+
+int F4_AdicionarContaGoogle(const char *serial, const char *email,
+                            const char *senha, LogCallback cb) {
+  if (!serial || !*serial || !email || !*email || !senha || !*senha) {
+    if (cb)
+      cb("[F4 Google] Erro: serial, e-mail e senha sao obrigatorios.");
+    return PIPELINE_ERROR;
+  }
+  if (!strchr(email, '@') || strlen(email) > 200 || strlen(senha) > 800) {
+    if (cb)
+      cb("[F4 Google] Erro: e-mail invalido ou credencial muito longa.");
+    return PIPELINE_ERROR;
+  }
+
+  char msg[512];
+  char args[512];
+  snprintf(msg, sizeof(msg),
+           "[F4 Google] Aparelho [%s] -> preparando inclusao da conta %s...",
+           serial, email);
+  if (cb)
+    cb(msg);
+
+  if (f4_google_account_registered(serial, email, cb)) {
+    if (cb)
+      cb("[F4 Google] A conta ja esta cadastrada neste aparelho.");
+    return PIPELINE_SUCCESS;
+  }
+
+  snprintf(args, sizeof(args),
+           "-s %s shell \"input keyevent 224 && input keyevent 82\"", serial);
+  char *out = adb_exec(args);
+  if (out)
+    free(out);
+  if (!f4_google_sleep(500))
+    return PIPELINE_ERROR;
+
+  snprintf(args, sizeof(args), "-s %s shell wm dismiss-keyguard", serial);
+  out = adb_exec(args);
+  if (out)
+    free(out);
+  if (!f4_google_sleep(500))
+    return PIPELINE_ERROR;
+
+  if (!f4_google_ensure_internet(serial, cb)) {
+    if (cb)
+      cb(g_engine_canceled
+             ? "[F4 Google] Operacao cancelada."
+             : "[F4 Google] Sem internet via Gnirehtet; inclusao abortada.");
+    return PIPELINE_ERROR;
+  }
+
+  if (cb)
+    cb("[F4 Google] Abrindo a tela de adicionar conta...");
+  snprintf(args, sizeof(args),
+           "-s %s shell am start -a android.settings.ADD_ACCOUNT_SETTINGS",
+           serial);
+  out = adb_exec(args);
+  if (out)
+    free(out);
+  if (!f4_google_sleep(2500))
+    return PIPELINE_ERROR;
+
+  if (!f4_google_prepare_signin(serial, cb)) {
+    if (cb)
+      cb(g_engine_canceled
+             ? "[F4 Google] Operacao cancelada."
+             : "[F4 Google] Nao foi possivel abrir o login do Google. "
+               "Verifique se o tablet esta desbloqueado, as Configuracoes "
+               "estao liberadas e a internet esta ativa.");
+    return PIPELINE_ERROR;
+  }
+
+  char *xml = f4_google_dump(serial, cb);
+  if (!xml || !f4_google_tap_edit(serial, xml, cb)) {
+    if (xml)
+      free(xml);
+    if (cb)
+      cb("[F4 Google] Campo de e-mail nao encontrado.");
+    return PIPELINE_ERROR;
+  }
+  free(xml);
+
+  if (cb)
+    cb("[F4 Google] Preenchendo e-mail...");
+  if (!f4_google_clear_and_type(serial, email, cb)) {
+    if (cb)
+      cb("[F4 Google] Falha ao preencher o e-mail.");
+    return PIPELINE_ERROR;
+  }
+  if (!f4_google_sleep(2500))
+    return PIPELINE_ERROR;
+
+  int password_ready = 0;
+  for (int attempt = 0; attempt < 30; attempt++) {
+    xml = f4_google_dump(serial, cb);
+    if (xml) {
+      if (f4_google_xml_has_any(xml, F4_GOOGLE_ERRORS,
+                                F4_GOOGLE_ARRAY_COUNT(F4_GOOGLE_ERRORS))) {
+        if (cb)
+          cb("[F4 Google] O Google recusou o e-mail. Verifique a conta.");
+        free(xml);
+        return PIPELINE_ERROR;
+      }
+
+      if (f4_google_tap_any(serial, xml, F4_GOOGLE_USE_PASSWORD,
+                            F4_GOOGLE_ARRAY_COUNT(F4_GOOGLE_USE_PASSWORD),
+                            cb)) {
+        free(xml);
+        if (!f4_google_sleep(1500))
+          return PIPELINE_ERROR;
+        continue;
+      }
+
+      int cx = 0;
+      int cy = 0;
+      int has_password_attr =
+          adb_get_centroid_fuzzy(xml, "password=\"true\"", &cx, &cy, 0);
+      if (has_password_attr && (cx <= 0 || cy <= 0))
+        has_password_attr = 0;
+      int is_password_screen =
+          f4_google_xml_has_any(xml, F4_GOOGLE_PASSWORD,
+                                F4_GOOGLE_ARRAY_COUNT(F4_GOOGLE_PASSWORD));
+      if (has_password_attr || is_password_screen) {
+        if (has_password_attr)
+          f4_google_tap_xy(serial, cx, cy, cb);
+        else
+          f4_google_tap_edit(serial, xml, cb);
+        free(xml);
+        password_ready = 1;
+        break;
+      }
+
+      f4_google_tap_any(serial, xml, F4_GOOGLE_NEXT,
+                        F4_GOOGLE_ARRAY_COUNT(F4_GOOGLE_NEXT), cb);
+      free(xml);
+    }
+    if (!f4_google_sleep(1000))
+      return PIPELINE_ERROR;
+  }
+
+  if (!password_ready) {
+    if (cb)
+      cb("[F4 Google] Campo de senha nao encontrado. O fluxo do Google pode "
+         "ter mudado.");
+    return PIPELINE_ERROR;
+  }
+
+  if (cb)
+    cb("[F4 Google] Preenchendo senha...");
+  if (!f4_google_clear_and_type(serial, senha, cb)) {
+    if (cb)
+      cb("[F4 Google] Falha ao preencher a senha.");
+    return PIPELINE_ERROR;
+  }
+  if (!f4_google_sleep(3000))
+    return PIPELINE_ERROR;
+
+  int account_ok = 0;
+  int twofa_notified = 0;
+  ULONGLONG wait_started = GetTickCount64();
+  while (GetTickCount64() - wait_started < 180000ULL) {
+    if (g_engine_canceled)
+      return PIPELINE_ERROR;
+
+    if (f4_google_account_registered(serial, email, cb)) {
+      account_ok = 1;
+      break;
+    }
+
+    xml = f4_google_dump(serial, cb);
+    if (xml) {
+      if (f4_google_xml_has_any(xml, F4_GOOGLE_ERRORS,
+                                F4_GOOGLE_ARRAY_COUNT(F4_GOOGLE_ERRORS))) {
+        if (cb)
+          cb("[F4 Google] O Google retornou erro de login. Verifique a "
+             "senha/conta.");
+        free(xml);
+        return PIPELINE_ERROR;
+      }
+
+      if (f4_google_xml_has_any(xml, F4_GOOGLE_2FA,
+                                F4_GOOGLE_ARRAY_COUNT(F4_GOOGLE_2FA))) {
+        if (!twofa_notified) {
+          if (cb)
+            cb("[F4 Google] Verificacao em duas etapas solicitada. Conclua no "
+               "tablet; aguardando ate 180s...");
+          twofa_notified = 1;
+        }
+        free(xml);
+        if (!f4_google_sleep(1000))
+          return PIPELINE_ERROR;
+        continue;
+      }
+
+      if (f4_google_xml_has_any(xml, F4_GOOGLE_SUCCESS,
+                                F4_GOOGLE_ARRAY_COUNT(F4_GOOGLE_SUCCESS))) {
+        account_ok = 1;
+        free(xml);
+        break;
+      }
+
+      if (f4_google_tap_clickable_any(
+              serial, xml, F4_GOOGLE_TERMS,
+              F4_GOOGLE_ARRAY_COUNT(F4_GOOGLE_TERMS), cb)) {
+        free(xml);
+        if (!f4_google_sleep(2000))
+          return PIPELINE_ERROR;
+        continue;
+      }
+      if (f4_google_xml_has_any(xml, F4_GOOGLE_TERMS,
+                                F4_GOOGLE_ARRAY_COUNT(F4_GOOGLE_TERMS))) {
+        if (cb)
+          cb("[F4 Google] Termo encontrado, mas botao ainda nao clicavel. "
+             "Rolando a tela...");
+        free(xml);
+        f4_google_scroll_down(serial, cb);
+        if (!f4_google_sleep(1200))
+          return PIPELINE_ERROR;
+        continue;
+      }
+
+      if (f4_google_tap_any(serial, xml, F4_GOOGLE_DISMISS,
+                            F4_GOOGLE_ARRAY_COUNT(F4_GOOGLE_DISMISS), cb)) {
+        free(xml);
+        if (!f4_google_sleep(1500))
+          return PIPELINE_ERROR;
+        continue;
+      }
+
+      if (f4_google_tap_any(serial, xml, F4_GOOGLE_NEXT,
+                            F4_GOOGLE_ARRAY_COUNT(F4_GOOGLE_NEXT), cb)) {
+        free(xml);
+        if (!f4_google_sleep(2000))
+          return PIPELINE_ERROR;
+        continue;
+      }
+
+      free(xml);
+    }
+
+    if (!f4_google_sleep(1000))
+      return PIPELINE_ERROR;
+  }
+
+  if (!account_ok && f4_google_account_registered(serial, email, cb))
+    account_ok = 1;
+
+  if (account_ok) {
+    if (cb)
+      cb("[F4 Google] Conta Google adicionada com sucesso.");
+    snprintf(args, sizeof(args), "-s %s shell input keyevent 3", serial);
+    out = adb_exec(args);
+    if (out)
+      free(out);
+    return PIPELINE_SUCCESS;
+  }
+
+  if (cb)
+    cb("[F4 Google] Tempo esgotado: a conta nao foi confirmada. Verifique o "
+       "tablet.");
+  return PIPELINE_ERROR;
 }

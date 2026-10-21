@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using System.Text.Json;
 using Microsoft.Data.Sqlite;
 
 namespace BotRpaUI.Core
@@ -29,13 +28,12 @@ namespace BotRpaUI.Core
 
     public static class SQLiteDatabaseManager
     {
-        public static event Action<int, int>? OnCloudPullCompleted;
-
         private static HashSet<string>? _serialCache = null;
         private static readonly object _cacheLock = new object();
         private static string _dbPath = "";
         private static string _connectionString = "";
         private static bool _esquemaValidado = false;
+        private static bool _patrimoniosNormalizados = false;
 
         public static string GetDatabasePath()
         {
@@ -112,6 +110,12 @@ namespace BotRpaUI.Core
                 {
                     ImportFromCsvIfExists(connection);
                 }
+
+                if (!_patrimoniosNormalizados)
+                {
+                    NormalizarPatrimoniosExistentes(connection);
+                    _patrimoniosNormalizados = true;
+                }
             }
         }
 
@@ -169,6 +173,57 @@ namespace BotRpaUI.Core
                 }
 
                 _esquemaValidado = true;
+            }
+            catch { }
+        }
+
+        /// <summary>
+        /// Padroniza os patrimonios legados para o formato INVxxxx (apenas digitos apos o prefixo).
+        /// Valores sem digitos (ex.: etiquetas antigas com letras) sao preservados para revisao manual.
+        /// </summary>
+        private static void NormalizarPatrimoniosExistentes(SqliteConnection connection)
+        {
+            try
+            {
+                var atualizacoes = new List<KeyValuePair<int, string>>();
+
+                using (var select = connection.CreateCommand())
+                {
+                    select.CommandText = "SELECT ID, Patrimonio FROM Dispositivos WHERE Patrimonio IS NOT NULL AND TRIM(Patrimonio) <> '';";
+                    using (var reader = select.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            int id = reader.GetInt32(0);
+                            string atual = reader.IsDBNull(1) ? string.Empty : reader.GetString(1).Trim();
+                            if (string.IsNullOrWhiteSpace(atual)) continue;
+                            if (!PatrimonioHelper.TryNormalizar(atual, out string normalizado, out _)) continue;
+                            if (string.IsNullOrWhiteSpace(normalizado) || normalizado == atual) continue;
+
+                            atualizacoes.Add(new KeyValuePair<int, string>(id, normalizado));
+                        }
+                    }
+                }
+
+                if (atualizacoes.Count == 0) return;
+
+                using (var transaction = connection.BeginTransaction())
+                {
+                    using (var update = connection.CreateCommand())
+                    {
+                        update.CommandText = "UPDATE Dispositivos SET Patrimonio = $patrimonio WHERE ID = $id";
+                        var pPat = update.CreateParameter(); pPat.ParameterName = "$patrimonio"; update.Parameters.Add(pPat);
+                        var pId = update.CreateParameter(); pId.ParameterName = "$id"; update.Parameters.Add(pId);
+
+                        foreach (var par in atualizacoes)
+                        {
+                            pPat.Value = par.Value;
+                            pId.Value = par.Key;
+                            update.ExecuteNonQuery();
+                        }
+                    }
+                    transaction.Commit();
+                }
             }
             catch { }
         }
@@ -423,10 +478,6 @@ namespace BotRpaUI.Core
                                 cmd.ExecuteNonQuery();
                             }
                             SincronizarCsv();
-                            _ = Task.Run(async () => {
-                                var d = BuscarPorSerial(serial);
-                                if (d != null) await SincronizarComInnovStockAsync(d);
-                            });
                         }
                         catch { }
                     }
@@ -456,10 +507,6 @@ namespace BotRpaUI.Core
                                 updateCmd.ExecuteNonQuery();
                                 cache.Add(serial);
                                 SincronizarCsv();
-                                _ = Task.Run(async () => {
-                                    var d = BuscarPorSerial(serial);
-                                    if (d != null) await SincronizarComInnovStockAsync(d);
-                                });
                                 return;
                             }
                         }
@@ -489,10 +536,6 @@ namespace BotRpaUI.Core
                     }
                     cache.Add(serial);
                     if (!string.IsNullOrEmpty(mac) && mac.Length == 17) SincronizarCsv();
-                    _ = Task.Run(async () => {
-                        var d = BuscarPorSerial(serial);
-                        if (d != null) await SincronizarComInnovStockAsync(d);
-                    });
                 }
                 catch { }
             }
@@ -569,7 +612,16 @@ namespace BotRpaUI.Core
                 {
                     connection.Open();
                     var cmd = connection.CreateCommand();
-                    cmd.CommandText = "SELECT ID, Patrimonio, Serial, Fabricante, Modelo, Versao_Android, API_Level, Bateria, IMEI, MAC FROM Dispositivos ORDER BY ID ASC";
+                    cmd.CommandText = @"
+                        SELECT ID, Patrimonio, Serial, Fabricante, Modelo, Versao_Android, API_Level, Bateria, IMEI, MAC
+                        FROM Dispositivos
+                        ORDER BY
+                            CASE WHEN Patrimonio IS NULL OR TRIM(Patrimonio) = '' THEN 1 ELSE 0 END,
+                            CASE WHEN UPPER(TRIM(Patrimonio)) LIKE 'INV%'
+                                 THEN CAST(SUBSTR(UPPER(TRIM(Patrimonio)), 4) AS INTEGER)
+                                 ELSE 999999999 END,
+                            Patrimonio COLLATE NOCASE,
+                            ID ASC";
                     
                     using (var reader = cmd.ExecuteReader())
                     {
@@ -648,7 +700,7 @@ namespace BotRpaUI.Core
 
                         foreach (var d in lista)
                         {
-                            pPat.Value = d.Patrimonio ?? string.Empty;
+                            pPat.Value = PatrimonioHelper.NormalizarOuOriginal(d.Patrimonio);
                             pFab.Value = d.Fabricante ?? string.Empty;
                             pMod.Value = d.Modelo ?? string.Empty;
                             pMac.Value = d.MAC ?? string.Empty;
@@ -660,7 +712,6 @@ namespace BotRpaUI.Core
                     }
                 }
                 SincronizarCsv();
-                _ = Task.Run(() => SincronizarTodosComInnovStockAsync());
             }
             catch { }
         }
@@ -670,6 +721,8 @@ namespace BotRpaUI.Core
         /// </summary>
         public static bool AtualizarPatrimonio(int id, string patrimonio)
         {
+            if (!PatrimonioHelper.TryNormalizar(patrimonio, out string normalizado, out _)) return false;
+
             try
             {
                 using (var connection = new SqliteConnection(_connectionString))
@@ -677,7 +730,7 @@ namespace BotRpaUI.Core
                     connection.Open();
                     var cmd = connection.CreateCommand();
                     cmd.CommandText = "UPDATE Dispositivos SET Patrimonio = $patrimonio WHERE ID = $id";
-                    cmd.Parameters.AddWithValue("$patrimonio", patrimonio ?? string.Empty);
+                    cmd.Parameters.AddWithValue("$patrimonio", normalizado);
                     cmd.Parameters.AddWithValue("$id", id);
                     cmd.ExecuteNonQuery();
                 }
@@ -802,362 +855,5 @@ namespace BotRpaUI.Core
             catch { }
         }
 
-        private static readonly System.Net.Http.HttpClient _innovStockHttp = new System.Net.Http.HttpClient { Timeout = TimeSpan.FromSeconds(15) };
-
-        public static string SanitizeFirebaseKey(string key)
-        {
-            if (string.IsNullOrWhiteSpace(key)) return "unknown";
-            return key.Replace(".", "_").Replace("$", "_").Replace("[", "_").Replace("]", "_").Replace("#", "_").Replace("/", "_").Trim();
-        }
-
-        public static async Task<bool> SincronizarComInnovStockAsync(DispositivoDB disp)
-        {
-            if (disp == null || string.IsNullOrWhiteSpace(disp.Serial)) return false;
-            try
-            {
-                string baseUrl = SettingsManager.FirebaseDatabaseUrl.TrimEnd('/');
-                string safeKey = SanitizeFirebaseKey(disp.Serial);
-                string url = $"{baseUrl}/rpa_devices/{safeKey}.json";
-
-                var payload = new
-                {
-                    id = disp.ID,
-                    serial = disp.Serial,
-                    mac = string.IsNullOrWhiteSpace(disp.MAC) ? "N/A" : disp.MAC,
-                    fabricante = string.IsNullOrWhiteSpace(disp.Fabricante) ? "Desconhecido" : disp.Fabricante,
-                    modelo = string.IsNullOrWhiteSpace(disp.Modelo) ? "Desconhecido" : disp.Modelo,
-                    marcaModelo = disp.MarcaModelo,
-                    versao_android = string.IsNullOrWhiteSpace(disp.Versao_Android) ? "N/A" : disp.Versao_Android,
-                    api_level = string.IsNullOrWhiteSpace(disp.API_Level) ? "N/A" : disp.API_Level,
-                    bateria = string.IsNullOrWhiteSpace(disp.Bateria) ? "N/A" : disp.Bateria,
-                    imei = string.IsNullOrWhiteSpace(disp.IMEI) ? "N/A" : disp.IMEI,
-                    patrimonio = string.IsNullOrWhiteSpace(disp.Patrimonio) ? "" : disp.Patrimonio,
-                    syncedAt = DateTime.UtcNow.ToString("o"),
-                    origem = "Bot_RPA",
-                    machineId = Environment.MachineName
-                };
-
-                string json = System.Text.Json.JsonSerializer.Serialize(payload);
-                // PATCH (merge) em vez de PUT: preserva campos da nuvem que nao sao
-                // gerenciados localmente (ex.: dataRegistro gravada por outras bancadas).
-                return await FirebaseAuthService.PatchJsonAsync(url, json, _innovStockHttp);
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
-        public static async Task<int> SincronizarTodosComInnovStockAsync()
-        {
-            try
-            {
-                var todos = LerTodos();
-                if (todos == null || todos.Count == 0) return 0;
-
-                string baseUrl = SettingsManager.FirebaseDatabaseUrl.TrimEnd('/');
-                string url = $"{baseUrl}/rpa_devices.json";
-
-                var dict = new Dictionary<string, object>();
-                foreach (var disp in todos)
-                {
-                    if (string.IsNullOrWhiteSpace(disp.Serial)) continue;
-                    string safeKey = SanitizeFirebaseKey(disp.Serial);
-                    dict[safeKey] = new
-                    {
-                        id = disp.ID,
-                        serial = disp.Serial,
-                        mac = string.IsNullOrWhiteSpace(disp.MAC) ? "N/A" : disp.MAC,
-                        fabricante = string.IsNullOrWhiteSpace(disp.Fabricante) ? "Desconhecido" : disp.Fabricante,
-                        modelo = string.IsNullOrWhiteSpace(disp.Modelo) ? "Desconhecido" : disp.Modelo,
-                        marcaModelo = disp.MarcaModelo,
-                        versao_android = string.IsNullOrWhiteSpace(disp.Versao_Android) ? "N/A" : disp.Versao_Android,
-                        api_level = string.IsNullOrWhiteSpace(disp.API_Level) ? "N/A" : disp.API_Level,
-                        bateria = string.IsNullOrWhiteSpace(disp.Bateria) ? "N/A" : disp.Bateria,
-                        imei = string.IsNullOrWhiteSpace(disp.IMEI) ? "N/A" : disp.IMEI,
-                        patrimonio = string.IsNullOrWhiteSpace(disp.Patrimonio) ? "" : disp.Patrimonio,
-                        syncedAt = DateTime.UtcNow.ToString("o"),
-                        origem = "Bot_RPA",
-                        machineId = Environment.MachineName
-                    };
-                }
-
-                string json = System.Text.Json.JsonSerializer.Serialize(dict);
-                return await FirebaseAuthService.PatchJsonAsync(url, json, _innovStockHttp) ? dict.Count : 0;
-            }
-            catch
-            {
-                return 0;
-            }
-        }
-
-        private static string CloudTexto(JsonElement el, string nome)
-        {
-            try
-            {
-                if (el.TryGetProperty(nome, out var p))
-                {
-                    if (p.ValueKind == JsonValueKind.String) return p.GetString() ?? string.Empty;
-                    if (p.ValueKind == JsonValueKind.Number) return p.GetRawText();
-                }
-            }
-            catch { }
-            return string.Empty;
-        }
-
-        private static bool CloudVazio(string? v)
-        {
-            return string.IsNullOrWhiteSpace(v) || v == "N/A" || v == "---" || v == "Desconhecido";
-        }
-
-        private static bool IsMacValido(string? mac)
-        {
-            if (string.IsNullOrWhiteSpace(mac)) return false;
-            if (mac == "N/A" || mac == "---" || mac == "02:00:00:00:00:00") return false;
-            return mac.Length == 17;
-        }
-
-        /// <summary>
-        /// Multi-operador: sobe para a nuvem os seriais locais que ainda nao existem la.
-        /// Evita duplicadas porque a chave no Firebase e o proprio serial sanitizado.
-        /// Retorna quantos foram enviados com sucesso.
-        /// </summary>
-        public static async Task<int> EnviarLocaisFaltantesParaNuvemAsync()
-        {
-            try
-            {
-                string baseUrl = SettingsManager.FirebaseDatabaseUrl.TrimEnd('/');
-                string url = $"{baseUrl}/rpa_devices.json?shallow=true";
-                string? shallowJson = await FirebaseAuthService.GetStringAsync(url, _innovStockHttp);
-                HashSet<string> chavesNuvem = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-                if (!string.IsNullOrWhiteSpace(shallowJson) && shallowJson.Trim() != "null")
-                {
-                    try
-                    {
-                        var dict = JsonSerializer.Deserialize<Dictionary<string, bool>>(shallowJson);
-                        if (dict != null)
-                        {
-                            foreach (var k in dict.Keys) chavesNuvem.Add(k);
-                        }
-                    }
-                    catch
-                    {
-                        try
-                        {
-                            var dict2 = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(shallowJson);
-                            if (dict2 != null)
-                            {
-                                foreach (var k in dict2.Keys) chavesNuvem.Add(k);
-                            }
-                        }
-                        catch { }
-                    }
-                }
-
-                var locais = LerTodos();
-                if (locais == null || locais.Count == 0) return 0;
-                int enviados = 0;
-                foreach (var disp in locais)
-                {
-                    if (string.IsNullOrWhiteSpace(disp.Serial)) continue;
-                    string safeKey = SanitizeFirebaseKey(disp.Serial);
-                    if (chavesNuvem.Contains(safeKey)) continue;
-                    try
-                    {
-                        if (await SincronizarComInnovStockAsync(disp)) enviados++;
-                    }
-                    catch { }
-                }
-                return enviados;
-            }
-            catch
-            {
-                return 0;
-            }
-        }
-
-        /// <summary>
-        /// Baixa os dispositivos da nuvem InnovStock (GET /rpa_devices.json) para o banco local.
-        /// Politica segura Fase 1: SOMENTE adiciona ou preenche campos vazios — nunca apaga
-        /// registros locais e nunca sobrescreve um valor local valido. Nao re-envia nada
-        /// (o upload normal continua pelas rotinas de registro), logo nao ha loop.
-        /// Retorna (importados, atualizados).
-        /// </summary>
-        public static async Task<(int importados, int atualizados, List<string> afetados)> BaixarDoInnovStockAsync()
-        {
-            int importados = 0, atualizados = 0;
-            var afetados = new List<string>();
-            try
-            {
-                string baseUrl = SettingsManager.FirebaseDatabaseUrl.TrimEnd('/');
-                string url = $"{baseUrl}/rpa_devices.json";
-
-                string? json = await FirebaseAuthService.GetStringAsync(url, _innovStockHttp);
-                if (string.IsNullOrWhiteSpace(json) || json.Trim() == "null") return (0, 0, new List<string>());
-
-                var nuvem = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(json);
-                if (nuvem == null || nuvem.Count == 0) return (0, 0, new List<string>());
-
-                InitializeDatabase();
-
-                lock (_cacheLock)
-                {
-                    using (var connection = new SqliteConnection(_connectionString))
-                    {
-                        connection.Open();
-                        using (var transaction = connection.BeginTransaction())
-                        {
-                            var selCmd = connection.CreateCommand();
-                            selCmd.CommandText = "SELECT Fabricante, Modelo, Versao_Android, API_Level, Bateria, IMEI, MAC, Patrimonio FROM Dispositivos WHERE Serial = $serial LIMIT 1;";
-                            var pSel = selCmd.CreateParameter(); pSel.ParameterName = "$serial"; selCmd.Parameters.Add(pSel);
-
-                            var insCmd = connection.CreateCommand();
-                            insCmd.CommandText = @"
-                                INSERT OR IGNORE INTO Dispositivos (Patrimonio, Serial, Fabricante, Modelo, Versao_Android, API_Level, Bateria, IMEI, MAC)
-                                VALUES ($patrimonio, $serial, $fabricante, $modelo, $versao, $api, $bateria, $imei, $mac);";
-                            var pIns = new Microsoft.Data.Sqlite.SqliteParameter[9];
-                            string[] insNomes = { "$patrimonio", "$serial", "$fabricante", "$modelo", "$versao", "$api", "$bateria", "$imei", "$mac" };
-                            for (int i = 0; i < insNomes.Length; i++)
-                            {
-                                pIns[i] = insCmd.CreateParameter();
-                                pIns[i].ParameterName = insNomes[i];
-                                insCmd.Parameters.Add(pIns[i]);
-                            }
-
-                            var updCmd = connection.CreateCommand();
-                            updCmd.CommandText = @"
-                                UPDATE Dispositivos SET Fabricante = $fabricante, Modelo = $modelo,
-                                    Versao_Android = $versao, API_Level = $api, Bateria = $bateria,
-                                    IMEI = $imei, MAC = $mac, Patrimonio = $patrimonio WHERE Serial = $serial;";
-                            var pUpd = new Microsoft.Data.Sqlite.SqliteParameter[9];
-                            string[] updNomes = { "$fabricante", "$modelo", "$versao", "$api", "$bateria", "$imei", "$mac", "$patrimonio", "$serial" };
-                            for (int i = 0; i < updNomes.Length; i++)
-                            {
-                                pUpd[i] = updCmd.CreateParameter();
-                                pUpd[i].ParameterName = updNomes[i];
-                                updCmd.Parameters.Add(pUpd[i]);
-                            }
-
-                            var selByMacCmd = connection.CreateCommand();
-                            selByMacCmd.CommandText = "SELECT Serial FROM Dispositivos WHERE MAC = $mac LIMIT 1;";
-                            var pMacSel = selByMacCmd.CreateParameter(); pMacSel.ParameterName = "$mac"; selByMacCmd.Parameters.Add(pMacSel);
-
-                            var mergeMacCmd = connection.CreateCommand();
-                            mergeMacCmd.CommandText = "UPDATE Dispositivos SET Serial = $serial, Fabricante = $fabricante, Modelo = $modelo WHERE MAC = $mac;";
-                            var pMergeSerial = mergeMacCmd.CreateParameter(); pMergeSerial.ParameterName = "$serial"; mergeMacCmd.Parameters.Add(pMergeSerial);
-                            var pMergeFab = mergeMacCmd.CreateParameter(); pMergeFab.ParameterName = "$fabricante"; mergeMacCmd.Parameters.Add(pMergeFab);
-                            var pMergeMod = mergeMacCmd.CreateParameter(); pMergeMod.ParameterName = "$modelo"; mergeMacCmd.Parameters.Add(pMergeMod);
-                            var pMergeMac = mergeMacCmd.CreateParameter(); pMergeMac.ParameterName = "$mac"; mergeMacCmd.Parameters.Add(pMergeMac);
-
-                            foreach (var kv in nuvem)
-                            {
-                                var el = kv.Value;
-                                if (el.ValueKind != JsonValueKind.Object) continue;
-                                if (el.TryGetProperty("deleted", out var delProp) && delProp.ValueKind == JsonValueKind.True) continue;
-
-                                string serial = CloudTexto(el, "serial");
-                                if (string.IsNullOrWhiteSpace(serial) || serial == "unknown" || serial.StartsWith("?") || serial == "Pendente") continue;
-
-                                string cFab = CloudTexto(el, "fabricante");
-                                string cMod = CloudTexto(el, "modelo");
-                                string cVer = CloudTexto(el, "versao_android");
-                                string cApi = CloudTexto(el, "api_level");
-                                string cBat = CloudTexto(el, "bateria");
-                                string cImei = CloudTexto(el, "imei");
-                                string cMac = CloudTexto(el, "mac");
-                                string cPat = CloudTexto(el, "patrimonio");
-
-                                pSel.Value = serial;
-                                string lFab = "", lMod = "", lVer = "", lApi = "", lBat = "", lImei = "", lMac = "", lPat = "";
-                                bool existe = false;
-                                using (var reader = selCmd.ExecuteReader())
-                                {
-                                    if (reader.Read())
-                                    {
-                                        existe = true;
-                                        lFab = reader.IsDBNull(0) ? "" : reader.GetString(0);
-                                        lMod = reader.IsDBNull(1) ? "" : reader.GetString(1);
-                                        lVer = reader.IsDBNull(2) ? "" : reader.GetString(2);
-                                        lApi = reader.IsDBNull(3) ? "" : reader.GetString(3);
-                                        lBat = reader.IsDBNull(4) ? "" : reader.GetString(4);
-                                        lImei = reader.IsDBNull(5) ? "" : reader.GetString(5);
-                                        lMac = reader.IsDBNull(6) ? "" : reader.GetString(6);
-                                        lPat = reader.IsDBNull(7) ? "" : reader.GetString(7);
-                                    }
-                                }
-
-                                if (!existe)
-                                {
-                                    bool mergedByMac = false;
-                                    if (IsMacValido(cMac))
-                                    {
-                                        try
-                                        {
-                                            pMacSel.Value = cMac;
-                                            var found = selByMacCmd.ExecuteScalar() as string;
-                                            if (!string.IsNullOrEmpty(found) && !found.Equals(serial, StringComparison.OrdinalIgnoreCase))
-                                            {
-                                                pMergeSerial.Value = serial;
-                                                pMergeFab.Value = CloudVazio(cFab) ? "" : cFab;
-                                                pMergeMod.Value = CloudVazio(cMod) ? "" : cMod;
-                                                pMergeMac.Value = cMac;
-                                                mergeMacCmd.ExecuteNonQuery();
-                                                atualizados++;
-                                                afetados.Add(serial);
-                                                mergedByMac = true;
-                                            }
-                                        }
-                                        catch { }
-                                    }
-                                    if (!mergedByMac)
-                                    {
-                                        pIns[0].Value = CloudVazio(cPat) ? "" : cPat;
-                                        pIns[1].Value = serial;
-                                        pIns[2].Value = CloudVazio(cFab) ? "" : cFab;
-                                        pIns[3].Value = CloudVazio(cMod) ? "" : cMod;
-                                        pIns[4].Value = CloudVazio(cVer) ? "" : cVer;
-                                        pIns[5].Value = CloudVazio(cApi) ? "" : cApi;
-                                        pIns[6].Value = CloudVazio(cBat) ? "" : cBat;
-                                        pIns[7].Value = CloudVazio(cImei) ? "" : cImei;
-                                        pIns[8].Value = CloudVazio(cMac) ? "" : cMac;
-                                        if (insCmd.ExecuteNonQuery() == 1) { importados++; afetados.Add(serial); }
-                                    }
-                                }
-                                else
-                                {
-                                    string nFab = CloudVazio(lFab) && !CloudVazio(cFab) ? cFab : lFab;
-                                    string nMod = CloudVazio(lMod) && !CloudVazio(cMod) ? cMod : lMod;
-                                    string nVer = CloudVazio(lVer) && !CloudVazio(cVer) ? cVer : lVer;
-                                    string nApi = CloudVazio(lApi) && !CloudVazio(cApi) ? cApi : lApi;
-                                    string nBat = CloudVazio(lBat) && !CloudVazio(cBat) ? cBat : lBat;
-                                    string nImei = CloudVazio(lImei) && !CloudVazio(cImei) ? cImei : lImei;
-                                    string nMac = CloudVazio(lMac) && !CloudVazio(cMac) ? cMac : lMac;
-                                    string nPat = CloudVazio(lPat) && !CloudVazio(cPat) ? cPat : lPat;
-                                    if (nFab != lFab || nMod != lMod || nVer != lVer || nApi != lApi || nBat != lBat || nImei != lImei || nMac != lMac || nPat != lPat)
-                                    {
-                                        pUpd[0].Value = nFab; pUpd[1].Value = nMod; pUpd[2].Value = nVer;
-                                        pUpd[3].Value = nApi; pUpd[4].Value = nBat; pUpd[5].Value = nImei;
-                                        pUpd[6].Value = nMac; pUpd[7].Value = nPat; pUpd[8].Value = serial;
-                                        updCmd.ExecuteNonQuery();
-                                        atualizados++;
-                                        afetados.Add(serial);
-                                    }
-                                }
-                            }
-                            transaction.Commit();
-                        }
-                    }
-                    _serialCache = null;
-                    SincronizarCsv();
-                }
-            }
-            catch { }
-            if (importados > 0 || atualizados > 0)
-            {
-                try { OnCloudPullCompleted?.Invoke(importados, atualizados); }
-                catch { }
-            }
-            return (importados, atualizados, afetados);
-        }
     }
 }

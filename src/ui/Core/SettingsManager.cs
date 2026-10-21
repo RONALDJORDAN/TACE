@@ -1,5 +1,7 @@
 using System;
 using System.IO;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -40,32 +42,14 @@ namespace BotRpaUI.Core
         [JsonPropertyName("usb_monitor_interface")]
         public string UsbMonitorInterface { get; set; } = "Classic";
 
-        [JsonPropertyName("firebase_database_url")]
-        public string FirebaseDatabaseUrl { get; set; } = "https://matematica-em-foco-default-rtdb.firebaseio.com";
-
-        [JsonPropertyName("firebase_api_key")]
-        public string FirebaseApiKey { get; set; } = "AIzaSyBBtEFJxzWovflMZBxVJL89n0XIPSP5n5E";
-
-        [JsonPropertyName("firebase_email")]
-        public string FirebaseEmail { get; set; } = string.Empty;
-
-        [JsonPropertyName("firebase_password")]
-        public string FirebasePassword { get; set; } = string.Empty;
-
-        [JsonPropertyName("cloud_pull_auto")]
-        public bool CloudPullAuto { get; set; } = true;
-
-        [JsonPropertyName("cloud_auto_sync")]
-        public bool CloudAutoSync { get; set; } = true;
-
-        [JsonPropertyName("cloud_sync_minutes")]
-        public int CloudSyncMinutes { get; set; } = 15;
-
-        [JsonPropertyName("telemetry_enabled")]
-        public bool TelemetryEnabled { get; set; } = true;
-
         [JsonPropertyName("meta_lote_total")]
         public int MetaLoteTotal { get; set; } = 100;
+
+        [JsonPropertyName("google_account_email")]
+        public string GoogleAccountEmail { get; set; } = "";
+
+        [JsonPropertyName("google_account_password_dpapi")]
+        public string GoogleAccountPasswordDpapi { get; set; } = "";
     }
 
     public enum DeviceHardwareType
@@ -246,61 +230,109 @@ namespace BotRpaUI.Core
             set { _settings.UsbMonitorInterface = value; Save(); }
         }
 
-        public static string FirebaseDatabaseUrl
-        {
-            get => _settings.FirebaseDatabaseUrl;
-            set { _settings.FirebaseDatabaseUrl = value; Save(); }
-        }
-
-        public static string FirebaseApiKey
-        {
-            get => _settings.FirebaseApiKey ?? string.Empty;
-            set { _settings.FirebaseApiKey = value; FirebaseAuthService.Invalidate(); Save(); }
-        }
-
-        public static string FirebaseEmail
-        {
-            get => _settings.FirebaseEmail ?? string.Empty;
-            set { _settings.FirebaseEmail = value; FirebaseAuthService.Invalidate(); Save(); }
-        }
-
-        public static string FirebasePassword
-        {
-            get => _settings.FirebasePassword ?? string.Empty;
-            set { _settings.FirebasePassword = value; FirebaseAuthService.Invalidate(); Save(); }
-        }
-
-        public static bool CloudPullAuto
-        {
-            get => _settings.CloudPullAuto;
-            set { _settings.CloudPullAuto = value; Save(); }
-        }
-
-        public static bool CloudAutoSync
-        {
-            get => _settings.CloudAutoSync;
-            set { _settings.CloudAutoSync = value; Save(); }
-        }
-
-        public static int CloudSyncMinutes
-        {
-            get => _settings.CloudSyncMinutes;
-            set { _settings.CloudSyncMinutes = value < 1 ? 1 : (value > 1440 ? 1440 : value); Save(); }
-        }
-
-        public static bool TelemetryEnabled
-        {
-            get => _settings.TelemetryEnabled;
-            set { _settings.TelemetryEnabled = value; Save(); }
-        }
-
         public static int MetaLoteTotal
         {
             get => _settings.MetaLoteTotal;
             set { _settings.MetaLoteTotal = value < 1 ? 1 : (value > 10000 ? 10000 : value); Save(); }
         }
 
+        public static string GoogleAccountEmail => _settings.GoogleAccountEmail ?? "";
+
+        public static bool HasGoogleAccountConfigured =>
+            !string.IsNullOrWhiteSpace(GoogleAccountEmail) &&
+            !string.IsNullOrWhiteSpace(_settings.GoogleAccountPasswordDpapi);
+
+        public static bool SetGoogleAccount(string email, string password)
+        {
+            email = (email ?? "").Trim();
+            if (email.Length == 0 || email.Length > 200 || !email.Contains('@') ||
+                string.IsNullOrEmpty(password) || password.Length > 200)
+            {
+                return false;
+            }
+
+            string protectedPassword = ProtectSecret(password);
+            if (string.IsNullOrEmpty(protectedPassword))
+            {
+                return false;
+            }
+
+            lock (_lock)
+            {
+                _settings.GoogleAccountEmail = email;
+                _settings.GoogleAccountPasswordDpapi = protectedPassword;
+            }
+            Save();
+            return true;
+        }
+
+        public static string GetGoogleAccountPassword()
+        {
+            return UnprotectSecret(_settings.GoogleAccountPasswordDpapi);
+        }
+
         public static InnoAppSettings Current => _settings;
+
+        private const string DpapiPrefix = "DPAPIv1:";
+        private static readonly byte[] SecretEntropy = Encoding.UTF8.GetBytes("BotRPA-Google-Account-v1");
+
+        private static string ProtectSecret(string plainText)
+        {
+            if (string.IsNullOrEmpty(plainText))
+            {
+                return string.Empty;
+            }
+
+            byte[] plainBytes = Encoding.UTF8.GetBytes(plainText);
+            try
+            {
+                byte[] protectedBytes = ProtectedData.Protect(
+                    plainBytes, SecretEntropy, DataProtectionScope.CurrentUser);
+                return DpapiPrefix + Convert.ToBase64String(protectedBytes);
+            }
+            catch
+            {
+                return string.Empty;
+            }
+            finally
+            {
+                Array.Clear(plainBytes, 0, plainBytes.Length);
+            }
+        }
+
+        private static string UnprotectSecret(string protectedValue)
+        {
+            if (string.IsNullOrWhiteSpace(protectedValue) ||
+                !protectedValue.StartsWith(DpapiPrefix, StringComparison.Ordinal))
+            {
+                return string.Empty;
+            }
+
+            byte[] protectedBytes = Array.Empty<byte>();
+            byte[] plainBytes = Array.Empty<byte>();
+            try
+            {
+                protectedBytes = Convert.FromBase64String(protectedValue.Substring(DpapiPrefix.Length));
+                plainBytes = ProtectedData.Unprotect(
+                    protectedBytes, SecretEntropy, DataProtectionScope.CurrentUser);
+                return Encoding.UTF8.GetString(plainBytes);
+            }
+            catch
+            {
+                return string.Empty;
+            }
+            finally
+            {
+                if (protectedBytes.Length > 0)
+                {
+                    Array.Clear(protectedBytes, 0, protectedBytes.Length);
+                }
+                if (plainBytes.Length > 0)
+                {
+                    Array.Clear(plainBytes, 0, plainBytes.Length);
+                }
+            }
+        }
 
         public static void Load()
         {

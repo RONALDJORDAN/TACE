@@ -13,7 +13,7 @@ namespace BotRpaUI.Views
             // Define a versão atualizada no rodapé do menu lateral
             try
             {
-                TxtAboutVersion.Text = $"v{Core.OtaUpdateManager.CurrentVersion}";
+                TxtAboutVersion.Text = $"v{Core.AppInfo.CurrentVersion}";
             }
             catch { }
         }

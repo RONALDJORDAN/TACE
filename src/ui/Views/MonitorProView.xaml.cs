@@ -334,63 +334,6 @@ namespace BotRpaUI.Views
                 }
             };
             _realtimeTimer.Start();
-
-            BotRpaUI.Core.SQLiteDatabaseManager.OnCloudPullCompleted += OnCloudPullCompleted_Pro;
-        }
-
-        private void OnCloudPullCompleted_Pro(int importados, int atualizados)
-        {
-            try
-            {
-                Dispatcher.Invoke(() =>
-                {
-                    try
-                    {
-                        LogMessage($"[INFO] Nuvem InnovStock: {importados} novo(s), {atualizados} atualizado(s) — lista local atualizada.");
-                        Timer_Tick(null, EventArgs.Empty);
-                    }
-                    catch { }
-                });
-            }
-            catch { }
-        }
-
-        private async void BtnPullCloudPro_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                if (sender is System.Windows.Controls.Button btn)
-                {
-                    btn.IsEnabled = false;
-                    string original = btn.Content?.ToString() ?? "⬇ Puxar Nuvem";
-                    btn.Content = "⏳...";
-                    try
-                    {
-                        var (importados, atualizados, _) = await BotRpaUI.Core.SQLiteDatabaseManager.BaixarDoInnovStockAsync();
-                        if (importados == 0 && atualizados == 0)
-                        {
-                            LogMessage("[AVISO] Nuvem InnovStock: nada novo ou sem conexão. Lista local mantida.");
-                        }
-                    }
-                    finally
-                    {
-                        btn.IsEnabled = true;
-                        btn.Content = original;
-                    }
-                }
-                else
-                {
-                    var (importados, atualizados, _) = await BotRpaUI.Core.SQLiteDatabaseManager.BaixarDoInnovStockAsync();
-                    if (importados == 0 && atualizados == 0)
-                    {
-                        LogMessage("[AVISO] Nuvem InnovStock: nada novo ou sem conexão. Lista local mantida.");
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                LogMessage($"[ERRO] Falha ao puxar nuvem InnovStock: {ex.Message}");
-            }
         }
 
         private static SolidColorBrush HexBrush(string hex)

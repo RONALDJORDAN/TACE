@@ -36,6 +36,7 @@ int F3_ExecutarAtualizacaoPacote(const char* serial, const char* apk_path, const
 // F4: Ferramenta Kiosk
 int Engine_ExecuteF4_Ferramenta(const char* serial, int acao, LogCallback cb);
 int Engine_ExecuteF4_Wallpaper(const char* serial, const char* wp_path, LogCallback cb);
+int Engine_ExecuteF4_AdicionarContaGoogle(const char* serial, const char* email, const char* senha, LogCallback cb);
 
 // F5: Desligamento Remoto
 int Engine_ExecuteF5_Shutdown(const char* serial, LogCallback cb);

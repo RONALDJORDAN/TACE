@@ -826,28 +826,6 @@ namespace BotRpaUI.Views
             _timer.Interval = TimeSpan.FromSeconds(5); // aumentado de 2s para 5s
             _timer.Tick += Timer_Tick;
             _timer.Start();
-
-            BotRpaUI.Core.SQLiteDatabaseManager.OnCloudPullCompleted += OnCloudPullCompleted_Monitor;
-        }
-
-        private void OnCloudPullCompleted_Monitor(int importados, int atualizados)
-        {
-            try
-            {
-                Dispatcher.BeginInvoke(() =>
-                {
-                    try
-                    {
-                        LogMessage($"[INFO] Nuvem InnovStock: {importados} novo(s), {atualizados} atualizado(s) — lista local atualizada.");
-                        if (!_isRefreshing)
-                        {
-                            Timer_Tick(null, EventArgs.Empty);
-                        }
-                    }
-                    catch { }
-                });
-            }
-            catch { }
         }
 
         public void LoadMunicipios()
@@ -1708,6 +1686,85 @@ namespace BotRpaUI.Views
             TxtGestaoBatchInput.Clear();
         }
 
+        private void BtnGestaoGoogleAccount_Click(object sender, RoutedEventArgs e)
+        {
+            var targetDevices = new System.Collections.Generic.List<DeviceModel>();
+            foreach (var device in GetTargetDevices())
+            {
+                string modelo = device.Model ?? string.Empty;
+                bool isVision7 =
+                    modelo.IndexOf("Vision", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    modelo.IndexOf("T307", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    modelo.IndexOf("T0307", StringComparison.OrdinalIgnoreCase) >= 0;
+                if (isVision7 && device.Status == "Pronto")
+                    targetDevices.Add(device);
+            }
+
+            if (targetDevices.Count == 0)
+            {
+                LogMessage("[Erro] Nenhum Tab Vision 7 conectado para adicionar a conta Google.");
+                if (TxtGestaoStatus != null)
+                    TxtGestaoStatus.Text = "Nenhum Tab Vision 7 conectado para adicionar a conta Google.";
+                return;
+            }
+
+            string email = BotRpaUI.Core.SettingsManager.GoogleAccountEmail.Trim();
+            string senha = BotRpaUI.Core.SettingsManager.GetGoogleAccountPassword();
+
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                const string msg = "Conta Google padrao nao configurada. Acesse Configuracoes > Aparelhos Suportados.";
+                LogMessage("[Erro] " + msg);
+                if (TxtGestaoStatus != null)
+                    TxtGestaoStatus.Text = msg;
+                return;
+            }
+
+            if (string.IsNullOrEmpty(senha))
+            {
+                const string msg = "Nao foi possivel ler a senha protegida. Salve a conta Google novamente em Configuracoes.";
+                LogMessage("[Erro] " + msg);
+                if (TxtGestaoStatus != null)
+                    TxtGestaoStatus.Text = msg;
+                return;
+            }
+
+            Engine_ResetCancel();
+            _isPaused = false;
+
+            if (TxtGestaoStatus != null)
+                TxtGestaoStatus.Text = $"Adicionando conta Google em {targetDevices.Count} tablet(s)...";
+            LogMessage($"[F4 Google] Iniciando inclusao da conta {email} em {targetDevices.Count} tablet(s).");
+
+            foreach (var device in targetDevices)
+            {
+                string finalSerial = device.Serial;
+                string finalEmail = email;
+                string finalSenha = senha;
+
+                LogCallback callback = new LogCallback((msg) =>
+                {
+                    Dispatcher.Invoke(() => LogMessage($"[{finalSerial}] {msg}"));
+                });
+
+                System.Threading.Tasks.Task.Run(() =>
+                {
+                    try
+                    {
+                        int result = Engine_ExecuteF4_AdicionarContaGoogle(finalSerial, finalEmail, finalSenha, callback);
+                        Dispatcher.Invoke(() => LogMessage($"[{finalSerial}] Conta Google: {(result == 1 ? "concluida" : "falhou")}."));
+                    }
+                    catch (Exception ex)
+                    {
+                        Dispatcher.Invoke(() => LogMessage($"[{finalSerial}] Conta Google: falha ao chamar o motor ({ex.Message})."));
+                    }
+                    GC.KeepAlive(callback);
+                });
+            }
+
+            senha = string.Empty;
+        }
+
         private void TxtGestaoBatchInput_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
             if (e.Key == System.Windows.Input.Key.Enter)
@@ -1754,6 +1811,13 @@ namespace BotRpaUI.Views
         public static extern int Engine_ExecuteF4_Wallpaper(
             [MarshalAs(UnmanagedType.LPUTF8Str)] string serial, 
             [MarshalAs(UnmanagedType.LPUTF8Str)] string wp_path, 
+            LogCallback cb);
+
+        [DllImport("BotEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        public static extern int Engine_ExecuteF4_AdicionarContaGoogle(
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string serial,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string email,
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string senha,
             LogCallback cb);
 
         [DllImport("BotEngine.dll", CallingConvention = CallingConvention.Cdecl)]

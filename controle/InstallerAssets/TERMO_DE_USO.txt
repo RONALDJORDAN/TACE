@@ -1,0 +1,96 @@
+====================================================================
+ BOT_RPA
+ TERMO DE USO E LICENCA DE SOFTWARE
+ Autoria e propriedade exclusiva: JORDAN R. CARAUJO
+====================================================================
+
+1. IDENTIFICACAO
+A ferramenta "Bot_RPA" (a "FERRAMENTA") e obra
+de autoria exclusiva de JORDAN R. CARAUJO, unico e legitimo
+detentor(a) de todos os direitos sobre ela, quem a idealizou,
+projetou, escreveu, codificou e publicou, em C e em C# WPF
+(motor nativo + interface).
+
+2. PROTECAO LEGAL
+A FERRAMENTA e protegida pela legislacao brasileira de protecao da
+propriedade intelectual de programa de computador e pelos direitos
+autorais, em especial:
+ - Lei no 9.609/98, que dispoe sobre a protecao da propriedade
+   intelectual de programas de computador (a "Lei do Software");
+ - Lei no 9.610/98 (Lei de Direitos Autorais);
+ - e por tratados internacionais ratificados pelo Brasil
+   (Convencao de Berna / Acordo TRIPS), com protecao igual no
+   exterior.
+
+3. PROPRIEDADE INTELECTUAL
+3.1. TODOS os direitos sao do CRIADOR: codigo-fonte e codigo-objeto,
+arquitetura, fluxos, telas, icones, identidade visual, scripts,
+banco de dados, nomes, funcoes, "know-how", e cada componente
+incorporado a FERRAMENTA.
+3.2. A instalacao/atualizacao NAO transmite nenhum direito de
+propriedade ao usuario: este termo concede apenas LICENCA DE USO,
+pessoal, intransmissivel e revogavel.
+3.3. E VEDADO, sob as penas civis e criminais da lei:
+ a) copiar, reproduzir, distribuir, alugar, emprestar, vender,
+    sublicenciar, republicar ou disponibilizar a FERRAMENTA ou
+    partes dela a terceiros, sob qualquer forma;
+ b) praticar ingenharia reversa, descompilacao, desmontagem ou
+    demais praticas do art. 2 da Lei no 9.609/98, salvo se
+    expressamente permitido em lei;
+ c) modificar, alterar, traduzir, incorporar em outro produto,
+    criar obra derivada, ou remover/ocultar avisos e marcacoes
+    de autoria;
+ d) anunciar, revender ou ostentar a autoria da FERRAMENTA
+    como se fosse sua ou de outro.
+
+4. LICENCA DE USO
+4.1. O CRIADOR autoriza o uso da FERRAMENTA para automatizar e
+fiscalizar aparelhos Android sob responsabilidade de quem opera
+(configuracoes de kiosk, wallpaper, seccionamento de modulos,
+ambientes de teste).
+4.2. O usuario responde pela legalidade e pela propriedade dos
+aparelhos, APKs, credenciais e contas utilizados. Uso abusivo,
+ilegal ou contrario a este termo implica revogacao da licenca.
+
+5. DADOS E PRIVACIDADE
+5.1. A FERRAMENTA opera com dados LOCAIS: banco de aparelhos,
+credenciais, pacotes e historico ficam na pasta de dados do
+proprio computador (padr??o C:\ProgramData\Bot_RPA), que e
+PRESERVADA em atualizacoes e opcional na desinstalacao.
+5.2. A FERRAMENTA, por si so, nao envia dados do usuario a
+servicos externos. A comunicacao com aparelhos Android via ADB
+e iniciada pelo operador e sob sua responsabilidade.
+
+6. GARANTIAS E RESPONSABILIDADE
+6.1. A FERRAMENTA e fornecida "NO ESTADO", sem garantias
+expressas ou implicitas de funcionamento continuo, adequacao a
+finalidade ou obtencao de determinado resultado.
+6.2. O CRIADOR nao sera responsavel por perdas diretas ou
+indiretas decorrentes do uso/mau uso (bloqueio de aparelho,
+perda de configuracoes, dependencia de servicos de terceiros).
+
+7. ATUALIZACAO E DESINSTALACAO
+7.1. Para atualizar, executar o MESMO instalador sobre a
+instalacao existente: os PROGRAMAS sao substituidos e os DADOS
+do usuario sao PRESERVADOS.
+7.2. A desinstalacao remove os programas e pergunta se o usuario
+deseja APAGAR os dados (padrao: manter, para reaproveitamento).
+
+8. ACEITACAO
+A aceitacao integral deste termo e REQUISITO para instalar ou
+atualizar a FERRAMENTA. Ao marcar a opcao de aceitacao e
+prosseguir no assistente, o usuario declara ter lido, entendido
+e aceito integralmente este documento.
+
+9. LEGISLACAO E FORO
+Aplica-se a legislacao brasileira (Leis no 9.609/98 e 9.610/98
+e codigo civil correspondente).
+
+====================================================================
+ Bot_RPA - (c) Jordan R. Caraujo - Todos os direitos reservados
+ CRIACAO ORIGINAL: Jordan R. Caraujo
+ Assinatura do criador e detentor: Jordan R. Caraujo
+====================================================================
+
+
+

@@ -1,0 +1,84 @@
+==============================================================
+ PLATAFORMA BotRPA - AUDITORIA DE BUILD (FINAL / RELEASE)
+==============================================================
+ Data/hora .......: 20/10/2026 17:59
+ Versao gerada ...: 20.10.2026.1759  (config/version.txt)
+ Modo ............: RELEASE (icone Roxo Oficial)
+ Orquestrador ....: controle/Build.ps1 -Modo Final
+ Compilador C ....: gcc (MinGW UCRT, WinGet BrechtSanders.WinLibs)
+ Compilador C# ...: dotnet publish -c Release -r win-x64 --self-contained true
+                     -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
+ Resultado .......: SUCESSO - zero errors / zero warnings
+
+--------------------------------------------------------------
+ ARTEFATOS (BotRPA_Release/)
+--------------------------------------------------------------
+ BotRPAui.exe ... 194084133 bytes (185,1 MB)
+   SHA-256: 8B95F321A5BEF6EB7224CB5304F3664FEEAF35E4F994ED1EB2FBF92761596A75
+ BotEngine.dll .. 411416 bytes (402 KB)
+   SHA-256: 36C0B3C643EA5CA6964BB465011C5604D7982186A15080A78E070DDD0EF8BD61
+ municipios.csv .. seed publico SANITIZADO (sem credenciais)
+
+--------------------------------------------------------------
+ CONTEUDO OBRIGATORIO DA RELEASE
+--------------------------------------------------------------
+  [OK] BotRPAui.exe (UI WPF self-contained, single-file)
+  [OK] BotEngine.dll (motor C: V7 + M7 + T20)
+  [OK] tools/platform-tools (14 arquivos - ADB oficial do Google)
+  [OK] tools/reverse_tethering (6 arquivos - Gnirehtet: gnirehtet.exe/.apk/.cmd + scripts)
+  [OK] tools/mac_address_finder.apk
+  [OK] config/ (settings.json, first_run.json, version.txt, municipios.csv)
+  [OK] scripts/apply_ota_update.bat (atualizacao OTA)
+  [OK] data/bot_database.db (433 aparelhos - schema migrado)
+  [OK] data/input/municipios/ e data/input/apps/ (pacotes e APKs do operador)
+  [OK] Arquivos/ (municipios com APK/ZIP/Wallpaper)
+  [OK] logs/ e registros/ (criadas para operacao)
+  [--] tools/mingw64 NAO embarcado (toolchain de dev, ~968 MB)
+  [--] data/bot_learn.json ausente: learn_db_save e no-op (BotLearn em modo estatico)
+  [OK] Release confere com data/output (mesmos SHA-256)
+
+--------------------------------------------------------------
+ NOVIDADES DESTA VERSAO
+--------------------------------------------------------------
+  1) F4 = "GESTAO DO APPARELHO" (antes "Gestao Kiosk")
+     - Painel do Monitor CLASSICO redesenhado em DUAS COLUNAS:
+       esquerda = Controle de Acesso (Camera / Configuracoes / Modo
+       Restrito) + Aplicativos (Blindagem / Restauracao);
+       direita = Personalizacao e Rede (Papel de Parede / Internet USB /
+       Barra de Pesquisa).
+     - NOVO card "Automacao F4 ao Conectar": ao ativar o F4, o card
+       geral "Automacao ao Conectar" some e da lugar a este, que escolhe
+       a subfuncao do F4 (14 opcoes) executada automaticamente em cada
+       aparelho conectado.
+     - Log do motor C: "Modo Restrito" no lugar de "Modo Kiosk Estrito".
+
+  2) BANCO DE DISPOSITIVOS: coluna "Patrimonio" (apos o ID) para o
+     inventario manual, "Data de Registro" removida, IDs contiguos 1..N.
+
+--------------------------------------------------------------
+ BANCO EMBARCADO (data/bot_database.db)
+--------------------------------------------------------------
+  Schema ......... [ID, Patrimonio, Serial, Fabricante, Modelo,
+                     Versao_Android, API_Level, Bateria, IMEI, MAC]
+  Dispositivos ... 433 (min=1 max=433, contiguos 1..N: SIM)
+  Seriais unicos .. 433
+  Patrimonio ..... 0 preenchidos (a preencher manualmente pelo operador)
+
+--------------------------------------------------------------
+ OBSERVACOES / PENDENCIAS
+--------------------------------------------------------------
+  1. config/settings.json segue com firebase_api_key em texto plano na release.
+     Recomendado (FASE 1 do plano de melhorias): mover a chave para .gitignore
+     e/ou entregar a release sem a chave (o operador preenche em Configuracoes).
+  2. config/municipios.csv na release e o seed publico sem credenciais; o cofre
+     DPAPI e por maquina/usuario e nao descriptografa em outro PC. O operador
+     cadastra as credenciais 1x em Gerenciar Municipios.
+  3. Os dumps XML de execucao (window_dump_*.xml) nao sao copiados para a release.
+  4. Working tree com alteracoes de 20/10 ainda nao commitadas (F2
+     CleanRecents, bordas do botao Limpar Logs, banco/Patrimonio, F4 Gestao
+     do Aparelho, .agents/). Nenhum commit foi feito.
+  5. src/ui/Core/MonitorMAC.cs e a pasta capturamac/ foram gerados por uma
+     ferramenta externa a esta sessao. Apenas os 2 erros de compilacao
+     introduzidos foram corrigidos (CS0023 e CS0103) para viabilizar o
+     build; a funcionalidade externa foi preservada.
+==============================================================

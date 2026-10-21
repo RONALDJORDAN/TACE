@@ -13,9 +13,15 @@ set HH=%datetime:~8,2%
 set MIN=%datetime:~10,2%
 
 set BUILD_VER=%DD%.%MM%.%YYYY%.%HH%%MIN%
+set AUDIT_DIR=registros\%YYYY%-%MM%-%DD%\%HH%-%MIN%_Plataforma_BotRPA_DESKTOP_BUILD
 mkdir config 2>nul
 echo %BUILD_VER%> config\version.txt
 echo [*] Versao de Compilacao Gerada: %BUILD_VER%
+mkdir "%AUDIT_DIR%" 2>nul
+echo [*] Registro de build criado em: %AUDIT_DIR%
+> "%AUDIT_DIR%\build.log" echo Versao: %BUILD_VER%
+>> "%AUDIT_DIR%\build.log" echo Modo: %BUILD_MODE%
+>> "%AUDIT_DIR%\build.log" echo PastaAuditoria: %AUDIT_DIR%
 
 :: Encerra qualquer instancia aberta da UI para liberar o executavel para a compilacao
 taskkill /F /IM BotRPAui.exe /T 2>nul
@@ -33,7 +39,15 @@ set SRCS_M7=src\core\functions\tabmulti\f1_tabmulti_m7.c src\core\functions\tabm
 set SRCS_T20=src\core\functions\nokia_t20\f1_nokia_t20.c src\core\functions\nokia_t20\f2_nokia_t20.c src\core\functions\nokia_t20\f3_nokia_t20.c
 
 echo [*] Compilando BotEngine.dll (Motor V7 + Motor M7 + Motor T20)...
-gcc -shared %SRCS_CORE% %SRCS_V7% %SRCS_M7% %SRCS_T20% -o data\output\BotEngine.dll -static -lcomctl32 -lgdi32 -luser32 -lcrypt32 -mwindows -D_WIN32_WINNT=0x0A00 -DWINVER=0x0A00
+>> "%AUDIT_DIR%\build.log" echo --- gcc BotEngine.dll ---
+gcc -shared %SRCS_CORE% %SRCS_V7% %SRCS_M7% %SRCS_T20% -o data\output\BotEngine.dll -static -lcomctl32 -lgdi32 -luser32 -lcrypt32 -mwindows -D_WIN32_WINNT=0x0A00 -DWINVER=0x0A00 >> "%AUDIT_DIR%\build.log" 2>&1
+set GCC_ERR=%errorlevel%
+if %GCC_ERR% neq 0 (
+    echo [!] ERRO na compilacao do motor C. Log: %AUDIT_DIR%\build.log
+    type "%AUDIT_DIR%\build.log"
+    pause
+    exit /b %GCC_ERR%
+)
 
 :: Compilar a Interface Grafica em C# WPF
 echo [*] Compilando BotRpaUI (C# WPF) no modo Self-Contained Offline...
@@ -48,7 +62,8 @@ if "%BUILD_MODE%"=="RELEASE" (
 )
 
 cd src\ui
-"C:\Program Files\dotnet\dotnet.exe" publish BotRpaUI.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o ..\..\data\output\
+>> "..\..\%AUDIT_DIR%\build.log" echo --- dotnet publish ---
+"C:\Program Files\dotnet\dotnet.exe" publish BotRpaUI.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o ..\..\data\output\ >> "..\..\%AUDIT_DIR%\build.log" 2>&1
 set DOTNET_ERR=%errorlevel%
 :: Limpar intermediarios para economizar espaço em disco/memória
 rd /s /q obj 2>nul
@@ -63,9 +78,10 @@ copy /Y "src\ui\Assets\Icons\BotRPAui_Release_Purple.png" "src\ui\Assets\Icons\B
 
 
 if %DOTNET_ERR% neq 0 (
-    echo [!] ERRO na compilacao. Verifique os arquivos fonte.
+    echo [!] ERRO na compilacao. Log: %AUDIT_DIR%\build.log
+    type "%AUDIT_DIR%\build.log"
     pause
-    exit /b %errorlevel%
+    exit /b %DOTNET_ERR%
 )
 
 echo [+] Compilacao concluida com sucesso!
@@ -75,21 +91,10 @@ if not exist "data\output\municipios.csv" (
     copy /y "config\municipios.csv" "data\output\municipios.csv" >nul
 )
 
-:: Garante a existencia das pastas de Arquivos de automação
 mkdir "data\output\arquivos" 2>nul
 mkdir "data\output\arquivos\apks" 2>nul
 mkdir "data\output\arquivos\pacotes" 2>nul
-:: Criação do Registro de Auditoria Obrigatório
-for /f %%I in ('powershell -NoProfile -Command "Get-Date -Format yyyyMMddHHmm"') do set datetime=%%I
-set YYYY=%datetime:~0,4%
-set MM=%datetime:~4,2%
-set DD=%datetime:~6,2%
-set HH=%datetime:~8,2%
-set MIN=%datetime:~10,2%
-
-set AUDIT_DIR=registros\%YYYY%-%MM%-%DD%\%HH%-%MIN%_Plataforma_BotRPA_DESKTOP_BUILD
-mkdir "%AUDIT_DIR%" 2>nul
-echo [*] Registro de build criado em: %AUDIT_DIR%
+>> "%AUDIT_DIR%\build.log" echo Resultado: SUCESSO
 
 echo.
 pause

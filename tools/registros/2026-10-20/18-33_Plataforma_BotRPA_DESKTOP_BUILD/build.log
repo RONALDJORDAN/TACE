@@ -1,0 +1,96 @@
+==============================================================
+ PLATAFORMA BotRPA - AUDITORIA DE BUILD (FINAL / RELEASE)
+==============================================================
+ Data/hora .......: 20/10/2026 18:32
+ Versao gerada ...: 20.10.2026.1832  (config/version.txt)
+ Modo ............: RELEASE (icone Roxo Oficial)
+ Orquestrador ....: controle/Build.ps1 -Modo Final
+ Compilador C ....: gcc (MinGW UCRT, WinGet BrechtSanders.WinLibs)
+ Compilador C# ...: dotnet publish -c Release -r win-x64 --self-contained true
+                     -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
+ Resultado .......: SUCESSO - zero errors / zero warnings
+
+--------------------------------------------------------------
+ ARTEFATOS (BotRPA_Release/)
+--------------------------------------------------------------
+ BotRPAui.exe ... 194084133 bytes (185,1 MB)
+   SHA-256: 8CFE5527C4D41909058A79BB3EED420C5BFA0A7DEBD90C0D9341FCCF0B508FF0
+ BotEngine.dll .. 414720 bytes (405 KB)
+   SHA-256: 51E5EDABBEDEF3C2F95C6B5CD1C279506E926CCDFC0D653CBF6170F74B71FF93
+ municipios.csv .. seed publico SANITIZADO (sem credenciais)
+
+--------------------------------------------------------------
+ CONTEUDO OBRIGATORIO DA RELEASE
+--------------------------------------------------------------
+  [OK] BotRPAui.exe (UI WPF self-contained, single-file)
+  [OK] BotEngine.dll (motor C: V7 + M7 + T20)
+  [OK] tools/platform-tools (14 arquivos - ADB oficial do Google)
+  [OK] tools/reverse_tethering (6 arquivos - Gnirehtet: gnirehtet.exe/.apk/.cmd + scripts)
+  [OK] tools/mac_address_finder.apk
+  [OK] config/ (settings.json, first_run.json, version.txt, municipios.csv)
+  [OK] scripts/apply_ota_update.bat (atualizacao OTA)
+  [OK] data/bot_database.db (433 aparelhos - schema migrado)
+  [OK] data/input/municipios/ e data/input/apps/ (pacotes e APKs do operador)
+  [OK] Arquivos/ (municipios com APK/ZIP/Wallpaper)
+  [OK] logs/ e registros/ (criadas para operacao)
+  [--] tools/mingw64 NAO embarcado (toolchain de dev, ~968 MB)
+  [--] data/bot_learn.json ausente: learn_db_save e no-op (BotLearn em modo estatico)
+
+--------------------------------------------------------------
+ NOVIDADE DESTA VERSAO - CAPTURA DE MAC WI-FI NATIVA
+--------------------------------------------------------------
+  O MAC do tablet e extraido e registrado NO BANCO automaticamente
+  assim que o aparelho conecta - sem acao do operador e sem depender
+  de executavel externo.
+  - Motor C: o comando batched que ja coletava MODELO/FABRICANTE/VERSAO/
+    SDK/BATERIA/IMEI agora inclui o MAC (1 unico processo ADB por
+    aparelho). Cache por serial evita repetir o "dumpsys wifi" a cada
+    refresh de 5s.
+  - Fallback: se a interface wlan0 estiver inativa, o motor liga o
+    Wi-Fi, extrai o endereco e RESTAURA o estado original (desligado) -
+    exigido pelo pipeline F1/F2/F5 (tunel Gnirehtet).
+  - Servico C# MacCaptureService: valida o MAC e grava na tabela
+    Dispositivos (upsert). Retry espacado em 5 minutos por serial.
+  - Validado em hardware (2 tablets T30764G / Android 14): MAC extraido
+    nos 2 aparelhos, Wi-Fi restaurado em DESLIGADO, banco com 433
+    linhas e IDs contiguos 1..433.
+
+--------------------------------------------------------------
+ NOVIDADES ANTERIORES (20/10)
+--------------------------------------------------------------
+  1) F4 = "GESTAO DO APPARELHO" (antes "Gestao Kiosk")
+     - Painel do Monitor CLASSICO em DUAS COLUNAS (Controle de Acesso +
+     Aplicativos | Personalizacao e Rede).
+     - NOVO card "Automacao F4 ao Conectar": substitui o card geral
+       "Automacao ao Conectar" enquanto o F4 esta aberto, com 14
+       subfuncoes do F4 executadas automaticamente ao conectar.
+
+  2) BANCO DE DISPOSITIVOS: coluna "Patrimonio" (apos o ID) para o
+     inventario manual; "Data de Registro" removida; IDs contiguos 1..N.
+
+--------------------------------------------------------------
+ BANCO EMBARCADO (data/bot_database.db)
+--------------------------------------------------------------
+  Schema ......... [ID, Patrimonio, Serial, Fabricante, Modelo,
+                     Versao_Android, API_Level, Bateria, IMEI, MAC]
+  Dispositivos ... 433 (min=1 max=433, contiguos 1..N: SIM)
+  Seriais unicos .. 433
+  MACs validos .... 3 (captura automatica ja preencheu os tablets
+                     testados; os demais sao preenchidos ao conectar)
+
+--------------------------------------------------------------
+ OBSERVACOES / PENDENCIAS
+--------------------------------------------------------------
+  1. config/settings.json segue com firebase_api_key em texto plano na release.
+     Recomendado (FASE 1 do plano de melhorias): mover a chave para .gitignore
+     e/ou entregar a release sem a chave (o operador preenche em Configuracoes).
+  2. config/municipios.csv na release e o seed publico sem credenciais; o cofre
+     DPAPI e por maquina/usuario e nao descriptografa em outro PC. O operador
+     cadastra as credenciais 1x em Gerenciar Municipios.
+  3. Os dumps XML de execucao (window_dump_*.xml) nao sao copiados para a release.
+  4. Pacote de distribuicao: controle/BotRPA_Release_20.10.2026.1832.zip
+     (91.732.471 bytes).
+  5. Working tree com alteracoes de 20/10 ainda nao commitadas. A pasta
+     capturamac/ (executavel externo) NAO e mais necessaria: a logica foi
+     absorvida pelo motor C, mas continua na raiz fora do build.
+==============================================================

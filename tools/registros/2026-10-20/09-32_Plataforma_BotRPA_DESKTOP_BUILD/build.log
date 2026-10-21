@@ -1,0 +1,51 @@
+==============================================================
+ PLATAFORMA BotRPA - AUDITORIA DE BUILD (FINAL / RELEASE)
+==============================================================
+ Data/hora .......: 20/10/2026 09:31
+ Versao gerada ...: 20.10.2026.0931  (config/version.txt)
+ Modo ............: RELEASE (icone Roxo Oficial)
+ Orquestrador ....: controle/Build.ps1 -Modo Final
+ Compilador C ....: gcc (MinGW UCRT, WinGet BrechtSanders.WinLibs)
+ Compilador C# ...: dotnet publish -c Release -r win-x64 --self-contained true
+                    -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
+ Resultado .......: SUCESSO - zero errors / zero warnings
+
+--------------------------------------------------------------
+ ARTEFATOS (BotRPA_Release/)
+--------------------------------------------------------------
+ BotRPAui.exe ... 189519 KB
+   SHA-256: DBD1E88C99231122E7830CCCAB1F1BD4EC349E8D5A39AFDFA6C2AAD6BFE99A47
+ BotEngine.dll .. 397 KB
+   SHA-256: B4238CB23624F1DDD40B8587C23E8DAA5337B35BC1A52178896E24D97E1EC699
+ municipios.csv .. seed publico SANITIZADO (sem credenciais)
+
+--------------------------------------------------------------
+ CONTEUDO OBRIGATORIO DA RELEASE
+--------------------------------------------------------------
+ [OK] BotRPAui.exe (UI WPF self-contained, single-file)
+ [OK] BotEngine.dll (motor C: V7 + M7 + T20)
+ [OK] tools/platform-tools (14 arquivos - ADB oficial do Google)
+ [OK] tools/reverse_tethering (6 arquivos - Gnirehtet: gnirehtet.exe/.apk/.cmd + scripts)
+ [OK] tools/mac_address_finder.apk
+ [OK] config/ (settings.json, first_run.json, version.txt, municipios.csv)
+ [OK] scripts/apply_ota_update.bat (atualizacao OTA)
+ [OK] data/bot_database.db (registros de dispositivos embarcados)
+ [OK] data/input/municipios/ e data/input/apps/ (pacotes e APKs do operador)
+ [OK] Arquivos/ (municipios com APK/ZIP/Wallpaper)
+ [OK] logs/ e registros/ (criadas para operacao)
+ [--] tools/mingw64 NAO embarcado (toolchain de dev, ~968 MB)
+ [--] data/bot_learn.json ausente: learn_db_save e no-op (BotLearn em modo estatico)
+
+--------------------------------------------------------------
+ OBSERVACOES / PENDENCIAS
+--------------------------------------------------------------
+ 1. config/settings.json segue com firebase_api_key em texto plano na release.
+    Recomendado (FASE 1 do plano de melhorias): mover a chave para .gitignore
+    e/ou entregar a release sem a chave (o operador preenche em Configuracoes).
+ 2. config/municipios.csv na release e o seed publico sem credenciais; o cofre
+    DPAPI e por maquina/usuario e nao descriptografa em outro PC. O operador
+    cadastra as credenciais 1x em Gerenciar Municipios.
+ 3. Os dumps XML de execucao (window_dump_*.xml) nao sao copiados para a release.
+ 4. Build executado sobre working tree com alteracoes de 09/10 ainda nao
+    commitadas (BotLearnView.xaml/.cs, cofre Fase 2 nos scripts, seed do CSV).
+==============================================================

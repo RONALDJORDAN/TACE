@@ -21,7 +21,7 @@ if ([string]::IsNullOrWhiteSpace($ControleDir)) {
 $Root = Split-Path -Parent $ControleDir
 
 $BuildPs1       = Join-Path $ControleDir "Build.ps1"
-$AtualizacaoBat = Join-Path $ControleDir "Atualizacao.bat"
+$InstBat        = Join-Path $Root "scripts\build_installer.bat"
 $DepsBat        = Join-Path $Root "scripts\install_dependencies.bat"
 $AdbExe         = Join-Path $Root "tools\platform-tools\adb.exe"
 $VersionFile    = Join-Path $Root "config\version.txt"
@@ -60,10 +60,10 @@ function Show-Ajuda {
     Write-Host "  Comandos disponiveis:" -ForegroundColor Cyan
     Write-Host "    ajuda                    Mostra esta lista"
     Write-Host "    build teste              Compila versao TESTE em data\output (icone azul)"
-    Write-Host "    build final              Compila versao FINAL em BotRPA_Release (icone roxo)"
+    Write-Host "    build final | release    Compila versao FINAL/RELEASE em BotRPA_Release (icone roxo)"
+    Write-Host "    build instalavel         Gera o instalador/Atualizador .exe (Inno Setup) em controle"
     Write-Host "    versao                   Mostra a versao atual (config\version.txt)"
     Write-Host "    dispositivos             Lista aparelhos Android via ADB (adb devices -l)"
-    Write-Host "    ota                      Gera pacote OTA .ZIP em controle\ (recompila tudo)"
     Write-Host "    deps                     Instala dependencias (GCC + .NET 8 SDK)"
     Write-Host "    limpar                   Limpa a tela"
     Write-Host "    sair                     Fecha o terminal"
@@ -73,7 +73,7 @@ function Show-Ajuda {
 function Invoke-TerminalBuild {
     param([string]$Modo)
     if ($Modo -ne "Teste" -and $Modo -ne "Final") {
-        Write-Host "Uso: build teste | build final" -ForegroundColor Yellow
+        Write-Host "Uso: build teste | build final | build instalavel" -ForegroundColor Yellow
         return 1
     }
     if ($Modo -eq "Final") {
@@ -85,6 +85,15 @@ function Invoke-TerminalBuild {
     }
     & powershell -NoProfile -ExecutionPolicy Bypass -File $BuildPs1 -Modo $Modo
     return $LASTEXITCODE
+}
+
+function Invoke-TerminalInstalador {
+    if (-not (Test-Path -LiteralPath $InstBat)) {
+        Write-Host "[ERRO] Gerador nao encontrado: $InstBat" -ForegroundColor Red
+        return 1
+    }
+    Write-Host "[*] Gerando o instalador .exe (Inno Setup)..." -ForegroundColor Cyan
+    return (Invoke-BatchFile -BatPath $InstBat)
 }
 
 function Invoke-Versao {
@@ -118,15 +127,6 @@ function Invoke-Dispositivos {
     return $code
 }
 
-function Invoke-Ota {
-    Write-Host "[!] O comando OTA recompila motor + UI e gera o .ZIP em controle\." -ForegroundColor Yellow
-    if (-not (Read-SimNao -Pergunta "Continuar?")) {
-        Write-Host "[*] Cancelado." -ForegroundColor Yellow
-        return 1
-    }
-    return Invoke-BatchFile -BatPath $AtualizacaoBat
-}
-
 function Invoke-Deps {
     Write-Host "[!] Vai verificar/instalar GCC (winget) e .NET 8 SDK. Pode demorar." -ForegroundColor Yellow
     if (-not (Read-SimNao -Pergunta "Continuar?")) {
@@ -151,13 +151,13 @@ function Invoke-Linha {
         "help" { Show-Ajuda; return 0 }
         "build" {
             if ($arg -eq "teste") { return Invoke-TerminalBuild -Modo "Teste" }
-            if ($arg -eq "final") { return Invoke-TerminalBuild -Modo "Final" }
-            Write-Host "Uso: build teste | build final" -ForegroundColor Yellow
+            if ($arg -eq "final" -or $arg -eq "release") { return Invoke-TerminalBuild -Modo "Final" }
+            if ($arg -eq "instalavel" -or $arg -eq "instalador") { return Invoke-TerminalInstalador }
+            Write-Host "Uso: build teste | build final | build instalavel" -ForegroundColor Yellow
             return 1
         }
         "versao" { return Invoke-Versao }
         "dispositivos" { return Invoke-Dispositivos }
-        "ota" { return Invoke-Ota }
         "deps" { return Invoke-Deps }
         "limpar" { Clear-Host; return 0 }
         "cls" { Clear-Host; return 0 }
