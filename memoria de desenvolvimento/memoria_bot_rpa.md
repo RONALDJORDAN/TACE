@@ -1867,3 +1867,25 @@ O **InnoAI** é o motor de inteligência e automação visual da Plataforma Inno
 - TESTE REAL 3/3 tablets T307G: 2507008316 (8c:92:53:bf:a2:17), 2601007603 (8c:92:53:c4:d4:4e), 2601007822 (8c:92:53:c4:d5:29) ~4s cada; CSV gravado; Wi-Fi restaurado.
 - Auditoria: registros/2026-10-21/17-48_Plataforma_BotRPA_CAPTURAMAC (NOTA_TECNICA.txt + fonte + run.bat + CSV + log).
 - NAO dasim uma RELEASE e NAO alterou o motor nativo (Engine_CapturarMAC segue regular); altera somente a ferramenta standalone em tools.
+
+
+### [2026-10-22 09:09] - FILA DE COMANDOS POR TABLET (anti-sobreposicao + ordem)
+- Pedido: nunca executar a mesma funcao duas vezes ao mesmo tempo no mesmo tablet; permitir enfileirar funcoes diferentes (ex.: F2 -> F3 -> F1) na ordem dos cliques.
+- Novo `src/ui/Core/DeviceCommandQueue.cs`: fila estatica por serial (OrdinalIgnoreCase), um worker sequencial por tablet; chave da funcao em execucao/pendente gera Duplicate e o clique e ignorado; `Clear(serial)` e `ClearAll()` removem pendentes; worker captura excecoes e remove a fila quando esvazia.
+- Integracao em `MonitorView.xaml.cs` e `MonitorProView.xaml.cs` via `EnqueueDeviceCommand(serial, chave, label, action)`: substitui os `Task.Run` de F1-F8, M7, Nokia, F4 Google/lote/automacao e automacao Plug & Play. Chaves canonicas: F1, F2, F3, F5, F6, F8, DESLIGAR, TERMINAL, F4:GOOGLE, F4:<cmd>; Automacao M7 F3 usa F2 (mesma rotina de atualizacao) e desligamentos usam DESLIGAR.
+- Parar/ESC: `ClearAll()` antes de `Engine_CancelAll()`; Parar individual do card limpa a fila do serial. Duplicata e posicao na fila sao registradas no log do aparelho.
+- Sem build por instrucao explicita do usuario ("nao build sem eu mandar"); alteracoes apenas revisadas com `git diff --check`.
+
+### [2026-10-22 09:28] - REGISTRO EM SERIE DE APARELHOS NO BANCO DE DADOS
+- Pedido: no modulo Banco de Dados, abrir modal de registro que mostre as linhas de captura (serial/MAC) dos tablets conectados; se o MAC nao estiver registrado, pedir o numero de patrimonio e gravar; repetir em serie para varios aparelhos.
+- `RelatoriosView.xaml`: botao `Registrar Aparelho` no cabecalho do Banco de Dados e modal `PanelModalRegistroSerie` com grid de aparelhos, painel do aparelho atual (serial, MAC, patrimonio), log monospace de comandos e botoes Registrar/Pular/Reiniciar/Fechar.
+- `RelatoriosView.xaml.cs`: timer de 2s em background chama `Engine_RefreshDevices`/`Engine_GetDevice`; captura MAC ausente via `MacCaptureService.CapturarMac`; consulta MAC no banco; se ja houver patrimonio marca como cadastrado; se nao houver, seleciona um aparelho por vez para o operador informar o patrimonio. Registro concluido libera o proximo tablet da fila. `Pular` ignora o serial ate reiniciar a captura.
+- `SQLiteDatabaseManager`: novo `BuscarPorMAC` e `RegistrarComPatrimonio` (normaliza INV, garante serial/MAC e grava patrimonio). `MacCaptureService.CapturarMac` agora usa lock global de captura para nao sobrepor ciclos de Wi-Fi entre monitor e modal.
+- Sem build (instrucao do usuario); XAML validado como XML, handlers conferidos, braces/parenteses balanceados.
+
+### [2026-10-22 14:19] - REVERSAO DA REFATORACAO VISUAL (UI ANTIGA RESTAURADA)
+- **Pedido:** usuario rejeitou o refinamento visual e solicitou voltar a interface anterior, rebuildando e executando.
+- **Acao:** BotRPAui encerrado; restaurados do backup `docs/backups/Bot_RPA_pre_ui_refactor_2026-10-22_1223.zip` os arquivos `src/ui/App.xaml`, `src/ui/Views/MainWindow.xaml`, `src/ui/Views/MainWindow.xaml.cs`, `src/ui/Views/MonitorView.xaml` e `src/ui/Views/MonitorView.xaml.cs`; removidos `src/ui/Theme/Tokens.xaml` e a pasta `src/ui/Theme`.
+- **Conferencia:** SHA-256 dos 5 arquivos restaurados identico ao backup.
+- **Build TESTE:** `scripts/build.bat` concluido com sucesso; versao `22.10.2026.1419`; auditoria em `registros/2026-10-22/14-19_Plataforma_BotRPA_DESKTOP_BUILD`.
+- **Execucao:** `data/output/BotRPAui.exe` aberto (PID 6916), titulo `Bot_RPA - v22.10.2026.1419`, respondendo.

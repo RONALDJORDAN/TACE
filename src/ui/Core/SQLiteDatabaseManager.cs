@@ -601,6 +601,57 @@ namespace BotRpaUI.Core
             return null;
         }
 
+        public static DispositivoDB? BuscarPorMAC(string mac)
+        {
+            if (string.IsNullOrWhiteSpace(mac)) return null;
+
+            InitializeDatabase();
+            string alvo = mac.Trim().Replace('-', ':').ToUpperInvariant();
+            string? serial = null;
+
+            try
+            {
+                using (var connection = new SqliteConnection(_connectionString))
+                {
+                    connection.Open();
+                    var cmd = connection.CreateCommand();
+                    cmd.CommandText = "SELECT Serial FROM Dispositivos WHERE REPLACE(UPPER(TRIM(MAC)), '-', ':') = $mac ORDER BY CASE WHEN Patrimonio IS NULL OR TRIM(Patrimonio) = '' THEN 1 ELSE 0 END, ID LIMIT 1;";
+                    cmd.Parameters.AddWithValue("$mac", alvo);
+                    serial = cmd.ExecuteScalar() as string;
+                }
+            }
+            catch { }
+
+            if (!string.IsNullOrWhiteSpace(serial))
+                return BuscarPorSerial(serial);
+
+            return null;
+        }
+
+        public static bool RegistrarComPatrimonio(string serial, string fabricante, string modelo, string mac, string patrimonio)
+        {
+            if (string.IsNullOrWhiteSpace(serial)) return false;
+            if (string.IsNullOrWhiteSpace(patrimonio)) return false;
+            if (!PatrimonioHelper.TryNormalizar(patrimonio, out string normalizado, out _)) return false;
+
+            string macNormalizado = (mac ?? string.Empty).Trim();
+            RegistrarSeNovo(serial, fabricante, modelo, macNormalizado);
+
+            var alvo = BuscarPorSerial(serial);
+            if (alvo != null && MacCaptureService.MacValido(macNormalizado))
+            {
+                string macAtual = (alvo.MAC ?? string.Empty).Trim().Replace('-', ':');
+                string macNovo = macNormalizado.Replace('-', ':');
+                if (!string.Equals(macAtual, macNovo, StringComparison.OrdinalIgnoreCase))
+                    RegistrarOuAtualizarMAC(serial, alvo.Modelo, macNormalizado);
+            }
+
+            alvo = BuscarPorMAC(macNormalizado) ?? BuscarPorSerial(serial);
+            if (alvo == null) return false;
+
+            return AtualizarPatrimonio(alvo.ID, normalizado);
+        }
+
         public static List<DispositivoDB> LerTodos()
         {
             var lista = new List<DispositivoDB>();

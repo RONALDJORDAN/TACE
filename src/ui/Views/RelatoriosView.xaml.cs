@@ -37,6 +37,65 @@ namespace BotRpaUI.Views
         protected void OnPropertyChanged(string name) => PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(name));
     }
 
+    public class RegistroAparelhoItem : System.ComponentModel.INotifyPropertyChanged
+    {
+        private string _mac = string.Empty;
+        private string _status = "Aguardando";
+        private string _patrimonio = string.Empty;
+        private bool _registrado;
+
+        public string Serial { get; set; } = string.Empty;
+        public string Modelo { get; set; } = string.Empty;
+        public string Fabricante { get; set; } = string.Empty;
+
+        public string MAC
+        {
+            get => _mac;
+            set
+            {
+                if (_mac == value) return;
+                _mac = value;
+                OnPropertyChanged(nameof(MAC));
+            }
+        }
+
+        public string Status
+        {
+            get => _status;
+            set
+            {
+                if (_status == value) return;
+                _status = value;
+                OnPropertyChanged(nameof(Status));
+            }
+        }
+
+        public string Patrimonio
+        {
+            get => _patrimonio;
+            set
+            {
+                if (_patrimonio == value) return;
+                _patrimonio = value;
+                OnPropertyChanged(nameof(Patrimonio));
+            }
+        }
+
+        public bool Registrado
+        {
+            get => _registrado;
+            set
+            {
+                if (_registrado == value) return;
+                _registrado = value;
+                OnPropertyChanged(nameof(Registrado));
+            }
+        }
+
+        public event System.ComponentModel.PropertyChangedEventHandler? PropertyChanged;
+        protected void OnPropertyChanged(string name) => PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(name));
+    }
+
     public partial class RelatoriosView : UserControl
     {
         private ObservableCollection<RegistroModel> _registrosList;
@@ -56,6 +115,15 @@ namespace BotRpaUI.Views
         private FileSystemWatcher? _dbWatcher;
         private bool _isRefreshingDb = false;
 
+        private readonly ObservableCollection<RegistroAparelhoItem> _registroAparelhos = new ObservableCollection<RegistroAparelhoItem>();
+        private readonly System.Collections.Generic.Dictionary<string, DateTime> _registroUltimaTentativaMac = new System.Collections.Generic.Dictionary<string, DateTime>(StringComparer.OrdinalIgnoreCase);
+        private readonly System.Collections.Generic.HashSet<string> _registroPulados = new System.Collections.Generic.HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        private System.Windows.Threading.DispatcherTimer? _registroTimer;
+        private System.Threading.CancellationTokenSource? _registroCts;
+        private RegistroAparelhoItem? _registroAtual;
+        private bool _registroProcessando;
+        private int _registroUltimoTotalConectados = -1;
+
         public RelatoriosView()
         {
             InitializeComponent();
@@ -68,6 +136,12 @@ namespace BotRpaUI.Views
             ListRegistros.ItemsSource = _registrosList;
             ListBuscaAparelhos.ItemsSource = _listaCompletaSelecionaveis;
             ListSelecionados.ItemsSource = _listaSelecionados;
+            GridRegistroSerie.ItemsSource = _registroAparelhos;
+
+            _registroTimer = new System.Windows.Threading.DispatcherTimer();
+            _registroTimer.Interval = TimeSpan.FromSeconds(2);
+            _registroTimer.Tick += RegistroTimer_Tick;
+            this.Unloaded += (s, e) => EncerrarRegistroSerie();
 
             ConfigurarObservadorDB();
             AtualizarDashboardMetrics();
@@ -515,8 +589,433 @@ namespace BotRpaUI.Views
             }
         }
 
+        private void BtnAbrirRegistroSerie_Click(object sender, RoutedEventArgs e)
+        {
+            if (PanelModalRegistroSerie.Visibility == Visibility.Visible) return;
+
+            _registroAparelhos.Clear();
+            _registroPulados.Clear();
+            _registroUltimaTentativaMac.Clear();
+            _registroAtual = null;
+            _registroUltimoTotalConectados = -1;
+            TxtLogRegistroSerie.Clear();
+            TxtRegistroPatrimonio.Clear();
+            TxtRegistroPatrimonio.IsEnabled = false;
+            BtnRegistrarPatrimonio.IsEnabled = false;
+            BtnPularRegistro.IsEnabled = false;
+            TxtRegistroSerial.Text = "-";
+            TxtRegistroMac.Text = "-";
+            TxtStatusRegistroSerie.Text = "Monitorando tablets conectados...";
+            TxtContadorRegistroSerie.Text = "0 registrados";
+            PanelModalRegistroSerie.Visibility = Visibility.Visible;
+
+            RegistroLog("Registro em serie iniciado.");
+            IniciarRegistroSerie();
+        }
+
+        private void IniciarRegistroSerie()
+        {
+            _registroTimer?.Stop();
+            _registroCts?.Cancel();
+            _registroCts?.Dispose();
+            _registroCts = new System.Threading.CancellationTokenSource();
+            _registroTimer?.Start();
+            RegistroTimer_Tick(null, EventArgs.Empty);
+        }
+
+        private void EncerrarRegistroSerie()
+        {
+            _registroTimer?.Stop();
+
+            var cts = _registroCts;
+            _registroCts = null;
+            if (cts != null)
+            {
+                try { cts.Cancel(); } catch { }
+                cts.Dispose();
+            }
+
+            _registroAtual = null;
+            try { PanelModalRegistroSerie.Visibility = Visibility.Collapsed; } catch { }
+        }
+
+        private async void RegistroTimer_Tick(object? sender, EventArgs e)
+        {
+            var cts = _registroCts;
+            if (_registroProcessando || _registroAtual != null || cts == null || cts.IsCancellationRequested) return;
+
+            _registroProcessando = true;
+            try
+            {
+                var conectados = await System.Threading.Tasks.Task.Run(() => LerDispositivosConectados());
+                if (!SessaoRegistroAtiva(cts)) return;
+
+                AtualizarGridRegistro(conectados);
+                if (_registroAtual != null) return;
+
+                await ProcessarAparelhosConectadosAsync(conectados, cts);
+            }
+            catch (OperationCanceledException) { }
+            catch (Exception ex)
+            {
+                RegistroLog("ERRO: " + ex.Message);
+            }
+            finally
+            {
+                _registroProcessando = false;
+            }
+        }
+
+        private bool SessaoRegistroAtiva(System.Threading.CancellationTokenSource cts)
+        {
+            return _registroCts == cts
+                && !cts.IsCancellationRequested
+                && PanelModalRegistroSerie.Visibility == Visibility.Visible;
+        }
+
+        private System.Collections.Generic.List<DispositivoConectadoRegistro> LerDispositivosConectados()
+        {
+            var lista = new System.Collections.Generic.List<DispositivoConectadoRegistro>();
+            var seriais = new System.Collections.Generic.HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            MonitorView.Engine_RefreshDevices();
+            int total = MonitorView.Engine_GetDeviceCount();
+
+            for (int i = 0; i < total; i++)
+            {
+                var dev = new MonitorView.AdbDevice();
+                MonitorView.Engine_GetDevice(i, ref dev);
+
+                if (dev.authorized != 1 || string.IsNullOrWhiteSpace(dev.serial)) continue;
+                if (dev.serial == "unknown" || dev.serial == "Pendente" || dev.serial.StartsWith("?", StringComparison.Ordinal)) continue;
+                if (!seriais.Add(dev.serial)) continue;
+
+                string mac = dev.mac ?? string.Empty;
+                var registroSerial = BotRpaUI.Core.SQLiteDatabaseManager.BuscarPorSerial(dev.serial);
+
+                if (!BotRpaUI.Core.MacCaptureService.MacValido(mac) && registroSerial != null && BotRpaUI.Core.MacCaptureService.MacValido(registroSerial.MAC))
+                    mac = registroSerial.MAC;
+
+                string patrimonio = string.Empty;
+                if (registroSerial != null && !string.IsNullOrWhiteSpace(registroSerial.Patrimonio))
+                    patrimonio = registroSerial.Patrimonio;
+
+                if (string.IsNullOrWhiteSpace(patrimonio) && BotRpaUI.Core.MacCaptureService.MacValido(mac))
+                {
+                    var registroMac = BotRpaUI.Core.SQLiteDatabaseManager.BuscarPorMAC(mac);
+                    if (registroMac != null && !string.IsNullOrWhiteSpace(registroMac.Patrimonio))
+                        patrimonio = registroMac.Patrimonio;
+                }
+
+                lista.Add(new DispositivoConectadoRegistro
+                {
+                    Serial = dev.serial.Trim(),
+                    Modelo = dev.model ?? string.Empty,
+                    Fabricante = dev.manufacturer ?? string.Empty,
+                    MAC = mac,
+                    PatrimonioExistente = patrimonio
+                });
+            }
+
+            return lista;
+        }
+
+        private void AtualizarGridRegistro(System.Collections.Generic.List<DispositivoConectadoRegistro> conectados)
+        {
+            foreach (var conectado in conectados)
+            {
+                var item = _registroAparelhos.FirstOrDefault(x => string.Equals(x.Serial, conectado.Serial, StringComparison.OrdinalIgnoreCase));
+                if (item == null)
+                {
+                    item = new RegistroAparelhoItem
+                    {
+                        Serial = conectado.Serial,
+                        Modelo = conectado.Modelo,
+                        Fabricante = conectado.Fabricante,
+                        MAC = conectado.MAC,
+                        Status = BotRpaUI.Core.MacCaptureService.MacValido(conectado.MAC) ? "Aguardando" : "Aguardando MAC"
+                    };
+                    _registroAparelhos.Add(item);
+                    RegistroLog($"CONECTADO | S/N: {conectado.Serial} | MAC: {(BotRpaUI.Core.MacCaptureService.MacValido(conectado.MAC) ? conectado.MAC : "pendente")}");
+                }
+                else
+                {
+                    if (!string.IsNullOrWhiteSpace(conectado.Modelo)) item.Modelo = conectado.Modelo;
+                    if (!string.IsNullOrWhiteSpace(conectado.Fabricante)) item.Fabricante = conectado.Fabricante;
+
+                    if (BotRpaUI.Core.MacCaptureService.MacValido(conectado.MAC) && !string.Equals(item.MAC, conectado.MAC, StringComparison.OrdinalIgnoreCase))
+                    {
+                        item.MAC = conectado.MAC;
+                        RegistroLog($"MAC ATUALIZADO | S/N: {conectado.Serial} | MAC: {conectado.MAC}");
+                    }
+                }
+
+                if (!item.Registrado && !string.IsNullOrWhiteSpace(conectado.PatrimonioExistente))
+                {
+                    item.Registrado = true;
+                    item.Patrimonio = conectado.PatrimonioExistente;
+                    item.Status = "Ja cadastrado";
+                    RegistroLog($"JA CADASTRADO | S/N: {conectado.Serial} | MAC: {(string.IsNullOrWhiteSpace(item.MAC) ? "pendente" : item.MAC)} | Patrimonio: {conectado.PatrimonioExistente}");
+                }
+            }
+
+            if (_registroUltimoTotalConectados != conectados.Count)
+            {
+                _registroUltimoTotalConectados = conectados.Count;
+                RegistroLog($"ADB: Engine_RefreshDevices() -> {conectados.Count} dispositivo(s) autorizado(s)");
+            }
+
+            if (conectados.Count == 0)
+                TxtStatusRegistroSerie.Text = "Nenhum tablet autorizado conectado. Conecte o proximo aparelho...";
+            else
+                TxtStatusRegistroSerie.Text = $"{conectados.Count} tablet(s) conectado(s).";
+
+            AtualizarContadorRegistro();
+        }
+
+        private async System.Threading.Tasks.Task ProcessarAparelhosConectadosAsync(
+            System.Collections.Generic.List<DispositivoConectadoRegistro> conectados,
+            System.Threading.CancellationTokenSource cts)
+        {
+            foreach (var conectado in conectados)
+            {
+                if (!SessaoRegistroAtiva(cts) || _registroAtual != null) return;
+
+                var item = _registroAparelhos.FirstOrDefault(x => string.Equals(x.Serial, conectado.Serial, StringComparison.OrdinalIgnoreCase));
+                if (item == null || item.Registrado || _registroPulados.Contains(item.Serial)) continue;
+
+                if (BotRpaUI.Core.MacCaptureService.MacValido(item.MAC))
+                {
+                    var alvo = BotRpaUI.Core.SQLiteDatabaseManager.BuscarPorMAC(item.MAC)
+                        ?? BotRpaUI.Core.SQLiteDatabaseManager.BuscarPorSerial(item.Serial);
+
+                    if (alvo != null && !string.IsNullOrWhiteSpace(alvo.Patrimonio))
+                    {
+                        item.Registrado = true;
+                        item.Patrimonio = alvo.Patrimonio;
+                        item.Status = "Ja cadastrado";
+                        continue;
+                    }
+
+                    SelecionarAparelhoParaPatrimonio(item);
+                    return;
+                }
+
+                if (!PodeTentarCaptura(item.Serial))
+                {
+                    item.Status = "Aguardando MAC";
+                    continue;
+                }
+
+                _registroUltimaTentativaMac[item.Serial] = DateTime.Now;
+                item.Status = "Capturando MAC...";
+                RegistroLog($"CAPTURANDO MAC | S/N: {item.Serial}");
+
+                string mac = await System.Threading.Tasks.Task.Run(() => BotRpaUI.Core.MacCaptureService.CapturarMac(item.Serial));
+                if (!SessaoRegistroAtiva(cts)) return;
+
+                if (!BotRpaUI.Core.MacCaptureService.MacValido(mac))
+                {
+                    item.Status = "MAC nao capturado";
+                    RegistroLog($"FALHA AO CAPTURAR MAC | S/N: {item.Serial}");
+                    continue;
+                }
+
+                item.MAC = mac;
+                item.Status = "MAC capturado";
+                RegistroLog($"MAC CAPTURADO | S/N: {item.Serial} | MAC: {mac}");
+
+                var alvoMac = await System.Threading.Tasks.Task.Run(() =>
+                {
+                    var porMac = BotRpaUI.Core.SQLiteDatabaseManager.BuscarPorMAC(mac);
+                    if (porMac != null && !string.IsNullOrWhiteSpace(porMac.Patrimonio)) return porMac;
+
+                    var porSerial = BotRpaUI.Core.SQLiteDatabaseManager.BuscarPorSerial(item.Serial);
+                    if (porSerial != null && !string.IsNullOrWhiteSpace(porSerial.Patrimonio)) return porSerial;
+
+                    return null;
+                });
+
+                if (!SessaoRegistroAtiva(cts)) return;
+
+                if (alvoMac != null)
+                {
+                    item.Registrado = true;
+                    item.Patrimonio = alvoMac.Patrimonio;
+                    item.Status = "Ja cadastrado";
+                    RegistroLog($"JA CADASTRADO | S/N: {item.Serial} | MAC: {mac} | Patrimonio: {alvoMac.Patrimonio}");
+                    continue;
+                }
+
+                SelecionarAparelhoParaPatrimonio(item);
+                return;
+            }
+
+            AtualizarContadorRegistro();
+        }
+
+        private bool PodeTentarCaptura(string serial)
+        {
+            if (_registroUltimaTentativaMac.TryGetValue(serial, out DateTime ultima))
+                return (DateTime.Now - ultima) >= TimeSpan.FromSeconds(12);
+
+            return true;
+        }
+
+        private void SelecionarAparelhoParaPatrimonio(RegistroAparelhoItem item)
+        {
+            _registroAtual = item;
+            item.Status = "Informe o patrimonio";
+            GridRegistroSerie.SelectedItem = item;
+            TxtRegistroSerial.Text = item.Serial;
+            TxtRegistroMac.Text = BotRpaUI.Core.MacCaptureService.MacValido(item.MAC) ? item.MAC : "nao capturado";
+            TxtRegistroPatrimonio.Text = string.Empty;
+            TxtRegistroPatrimonio.IsEnabled = true;
+            BtnRegistrarPatrimonio.IsEnabled = true;
+            BtnPularRegistro.IsEnabled = true;
+            TxtStatusRegistroSerie.Text = "Informe o numero de patrimonio do aparelho atual.";
+            RegistroLog($"AGUARDANDO PATRIMONIO | S/N: {item.Serial} | MAC: {(BotRpaUI.Core.MacCaptureService.MacValido(item.MAC) ? item.MAC : "nao capturado")}");
+            Dispatcher.BeginInvoke(new Action(() => TxtRegistroPatrimonio.Focus()));
+        }
+
+        private void BtnRegistrarPatrimonio_Click(object sender, RoutedEventArgs e)
+        {
+            if (_registroAtual == null)
+            {
+                MessageBox.Show("Nenhum aparelho aguardando registro.", "Registro", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            string entrada = (TxtRegistroPatrimonio.Text ?? string.Empty).Trim();
+            if (string.IsNullOrWhiteSpace(entrada))
+            {
+                MessageBox.Show("Informe o numero de patrimonio.", "Patrimonio obrigatorio", MessageBoxButton.OK, MessageBoxImage.Warning);
+                TxtRegistroPatrimonio.Focus();
+                return;
+            }
+
+            if (!BotRpaUI.Core.PatrimonioHelper.TryNormalizar(entrada, out string patrimonio, out string erro))
+            {
+                MessageBox.Show(erro, "Patrimonio invalido", MessageBoxButton.OK, MessageBoxImage.Warning);
+                TxtRegistroPatrimonio.Focus();
+                return;
+            }
+
+            var item = _registroAtual;
+            bool salvo = BotRpaUI.Core.SQLiteDatabaseManager.RegistrarComPatrimonio(item.Serial, item.Fabricante, item.Modelo, item.MAC, patrimonio);
+            if (!salvo)
+            {
+                MessageBox.Show("Nao foi possivel registrar o aparelho no banco de dados.", "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            item.Patrimonio = patrimonio;
+            item.Registrado = true;
+            item.Status = "Registrado";
+            RegistroLog($"REGISTRADO | S/N: {item.Serial} | MAC: {item.MAC} | Patrimonio: {patrimonio}");
+
+            _registroAtual = null;
+            TxtRegistroPatrimonio.Clear();
+            TxtRegistroPatrimonio.IsEnabled = false;
+            BtnRegistrarPatrimonio.IsEnabled = false;
+            BtnPularRegistro.IsEnabled = false;
+            TxtRegistroSerial.Text = "-";
+            TxtRegistroMac.Text = "-";
+            TxtStatusRegistroSerie.Text = "Aparelho registrado. Conecte o proximo tablet...";
+            AtualizarContadorRegistro();
+
+            BotRpaUI.Core.SQLiteDatabaseManager.InvalidarCache();
+            LoadBancoDadosDedicado();
+            Dispatcher.BeginInvoke(new Action(() => RegistroTimer_Tick(null, EventArgs.Empty)));
+        }
+
+        private void BtnPularRegistro_Click(object sender, RoutedEventArgs e)
+        {
+            if (_registroAtual == null) return;
+
+            var item = _registroAtual;
+            _registroPulados.Add(item.Serial);
+            item.Status = "Pulado";
+            RegistroLog($"PULADO | S/N: {item.Serial} | MAC: {item.MAC}");
+
+            _registroAtual = null;
+            TxtRegistroPatrimonio.Clear();
+            TxtRegistroPatrimonio.IsEnabled = false;
+            BtnRegistrarPatrimonio.IsEnabled = false;
+            BtnPularRegistro.IsEnabled = false;
+            TxtRegistroSerial.Text = "-";
+            TxtRegistroMac.Text = "-";
+            TxtStatusRegistroSerie.Text = "Aparelho pulado. Aguardando o proximo...";
+            Dispatcher.BeginInvoke(new Action(() => RegistroTimer_Tick(null, EventArgs.Empty)));
+        }
+
+        private void BtnReiniciarCapturaRegistro_Click(object sender, RoutedEventArgs e)
+        {
+            _registroPulados.Clear();
+            _registroUltimaTentativaMac.Clear();
+            _registroAtual = null;
+
+            foreach (var item in _registroAparelhos)
+            {
+                if (!item.Registrado) item.Status = "Aguardando";
+            }
+
+            TxtRegistroPatrimonio.Clear();
+            TxtRegistroPatrimonio.IsEnabled = false;
+            BtnRegistrarPatrimonio.IsEnabled = false;
+            BtnPularRegistro.IsEnabled = false;
+            TxtRegistroSerial.Text = "-";
+            TxtRegistroMac.Text = "-";
+            TxtStatusRegistroSerie.Text = "Captura reiniciada.";
+            RegistroLog("Captura reiniciada pelo operador.");
+            Dispatcher.BeginInvoke(new Action(() => RegistroTimer_Tick(null, EventArgs.Empty)));
+        }
+
+        private void BtnFecharRegistroSerie_Click(object sender, RoutedEventArgs e)
+        {
+            EncerrarRegistroSerie();
+            LoadBancoDadosDedicado();
+        }
+
+        private void TxtRegistroPatrimonio_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            if (e.Key != System.Windows.Input.Key.Enter) return;
+
+            e.Handled = true;
+            BtnRegistrarPatrimonio_Click(sender, new RoutedEventArgs());
+        }
+
+        private void AtualizarContadorRegistro()
+        {
+            int total = _registroAparelhos.Count(x => x.Registrado);
+            TxtContadorRegistroSerie.Text = $"{total} registrado{(total == 1 ? string.Empty : "s")}";
+        }
+
+        private void RegistroLog(string mensagem)
+        {
+            if (!Dispatcher.CheckAccess())
+            {
+                Dispatcher.BeginInvoke(new Action(() => RegistroLog(mensagem)));
+                return;
+            }
+
+            if (TxtLogRegistroSerie == null) return;
+
+            TxtLogRegistroSerie.AppendText($"[{DateTime.Now:HH:mm:ss}] {mensagem}{Environment.NewLine}");
+            TxtLogRegistroSerie.ScrollToEnd();
+        }
+
+        private sealed class DispositivoConectadoRegistro
+        {
+            public string Serial { get; set; } = string.Empty;
+            public string Modelo { get; set; } = string.Empty;
+            public string Fabricante { get; set; } = string.Empty;
+            public string MAC { get; set; } = string.Empty;
+            public string PatrimonioExistente { get; set; } = string.Empty;
+        }
+
         // =========================================================================
-        // SUBMÓDULO 3: REGISTROS & AUDITORIA DE LOGS
+        // SUBMODULO 3: REGISTROS & AUDITORIA DE LOGS
         // =========================================================================
         private void LoadRegistrosLocais()
         {

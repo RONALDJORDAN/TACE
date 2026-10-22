@@ -49,17 +49,10 @@ if %GCC_ERR% neq 0 (
     exit /b %GCC_ERR%
 )
 
-:: Compilar a Interface Grafica em C# WPF
-echo [*] Compilando BotRpaUI (C# WPF) no modo Self-Contained Offline...
-if "%BUILD_MODE%"=="RELEASE" (
-    echo [*] Modo RELEASE detectado: Aplicando Icone Roxo Oficial...
-    copy /Y "src\ui\Assets\Icons\BotRPAui_Release_Purple.ico" "src\ui\Assets\Icons\BotRPAui.ico" 1>nul
-    copy /Y "src\ui\Assets\Icons\BotRPAui_Release_Purple.png" "src\ui\Assets\Icons\BotRPAui.png" 1>nul
-) else (
-    echo [*] Modo TESTE detectado: Aplicando Icone Azul Escuro de Desenvolvimento...
-    copy /Y "src\ui\Assets\Icons\BotRPAui_Test_DarkBlue.ico" "src\ui\Assets\Icons\BotRPAui.ico" 1>nul
-    copy /Y "src\ui\Assets\Icons\BotRPAui_Test_DarkBlue.png" "src\ui\Assets\Icons\BotRPAui.png" 1>nul
-)
+  :: Compilar a Interface Grafica em C# WPF
+  echo [*] Compilando BotRpaUI (C# WPF) no modo Self-Contained Offline...
+  copy /Y "src\\ui\\Assets\\Icons\\BotRPAui.ico" "src\\ui\\Assets\\Icons\\BotRPAui.ico" 1>nul
+  copy /Y "src\\ui\\Assets\\Icons\\BotRPAui.png" "src\\ui\\Assets\\Icons\\BotRPAui.png" 1>nul
 
 cd src\ui
 >> "..\..\%AUDIT_DIR%\build.log" echo --- dotnet publish ---

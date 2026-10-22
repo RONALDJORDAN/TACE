@@ -70,7 +70,7 @@
 
                 <!-- 1. Identidade Visual Bot_RPA (Esquerda) -->
                 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,16,0">
-                    <Border Width="34" Height="34" CornerRadius="8" Background="#513BA6" Margin="0,0,10,0">
+                    <Border Width="34" Height="34" CornerRadius="6" Background="#513BA6" Margin="0,0,10,0">
                         <Border.Effect>
                             <DropShadowEffect Color="#513BA6" BlurRadius="12" Opacity="0.65" ShadowDepth="0"/>
                         </Border.Effect>

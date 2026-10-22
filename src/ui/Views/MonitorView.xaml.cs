@@ -273,7 +273,7 @@ namespace BotRpaUI.Views
                         Dispatcher.Invoke(() => LogMessage($"[{finalSerial}] {msg}"));
                     });
 
-                    System.Threading.Tasks.Task.Run(() =>
+                    EnqueueDeviceCommand(finalSerial, "F1", "F1", () =>
                     {
                         bool isNokia = device != null && device.Model != null && (device.Model.IndexOf("Nokia", StringComparison.OrdinalIgnoreCase) >= 0 || device.Model.IndexOf("T20", StringComparison.OrdinalIgnoreCase) >= 0);
                         if (isNokia)
@@ -365,7 +365,7 @@ namespace BotRpaUI.Views
                         Dispatcher.Invoke(() => LogMessage($"[{finalSerial}] {msg}"));
                     });
 
-                    System.Threading.Tasks.Task.Run(() =>
+                    EnqueueDeviceCommand(finalSerial, "F2", "F2 (Nokia)", () =>
                     {
                         Engine_ExecuteF2_NokiaT20(finalSerial, finalApkPath, finalPacotePath, finalWpPath, finalPackageName, finalLogin, finalSenha, finalMunicipio, callback);
                         GC.KeepAlive(callback);
@@ -423,7 +423,7 @@ namespace BotRpaUI.Views
                         Dispatcher.Invoke(() => LogMessage($"[{finalSerial}] {msg}"));
                     });
 
-                    System.Threading.Tasks.Task.Run(() =>
+                    EnqueueDeviceCommand(finalSerial, "F3", "F3 (Nokia)", () =>
                     {
                         Engine_ExecuteF3_NokiaT20(finalSerial, finalApkPath, finalPacotePath, finalPackageName, callback);
                         GC.KeepAlive(callback);
@@ -530,7 +530,7 @@ namespace BotRpaUI.Views
                 if (actionIdx == 0)
                 {
                     LogMessage($"[{finalSerial}] Automação ativada! Iniciando processo F1 (Tab-Multi) automaticamente...");
-                    System.Threading.Tasks.Task.Run(() =>
+                    EnqueueDeviceCommand(finalSerial, "F1", "F1 (Tab-Multi)", () =>
                     {
                         Engine_ExecuteF7_TabMulti(finalSerial, finalApkPath, finalPacotePath, finalLogin, finalSenha, finalMunicipio, callback);
                         GC.KeepAlive(callback);
@@ -539,7 +539,7 @@ namespace BotRpaUI.Views
                 else if (actionIdx == 1)
                 {
                     LogMessage($"[{finalSerial}] Automação ativada! Iniciando Atualização M7 automaticamente...");
-                    System.Threading.Tasks.Task.Run(() =>
+                    EnqueueDeviceCommand(finalSerial, "F2", "F2 (Tab-Multi)", () =>
                     {
                         Engine_ExecuteF2_TabMulti_Atualizar(finalSerial, finalApkPath, finalPacotePath, callback);
                         GC.KeepAlive(callback);
@@ -548,7 +548,7 @@ namespace BotRpaUI.Views
                 else if (actionIdx == 2)
                 {
                     LogMessage($"[{finalSerial}] Automação ativada! Iniciando Desligamento M7 automaticamente...");
-                    System.Threading.Tasks.Task.Run(() =>
+                    EnqueueDeviceCommand(finalSerial, "DESLIGAR", "Desligar (M7)", () =>
                     {
                         Engine_ExecuteF4_TabMulti_Desligar(finalSerial, callback);
                         GC.KeepAlive(callback);
@@ -557,7 +557,7 @@ namespace BotRpaUI.Views
                 else if (actionIdx == 3)
                 {
                     LogMessage($"[{finalSerial}] Automação ativada! Iniciando F5 (Tab-Multi: Login 30s + Shutdown) automaticamente...");
-                    System.Threading.Tasks.Task.Run(() =>
+                    EnqueueDeviceCommand(finalSerial, "F5", "F5 (Tab-Multi)", () =>
                     {
                         Engine_ExecuteF5_TabMulti(finalSerial, finalApkPath, finalPacotePath, finalLogin, finalSenha, finalMunicipio, callback);
                         GC.KeepAlive(callback);
@@ -569,7 +569,7 @@ namespace BotRpaUI.Views
                 if (actionIdx == 0)
                 {
                     LogMessage($"[{finalSerial}] Automação ativada! Iniciando processo F1 (Nokia T20) automaticamente...");
-                    System.Threading.Tasks.Task.Run(() =>
+                    EnqueueDeviceCommand(finalSerial, "F1", "F1 (Nokia)", () =>
                     {
                         Engine_ExecuteF1_NokiaT20(finalSerial, finalApkPath, finalPacotePath, finalWpPath, finalPackageName, finalLogin, finalSenha, finalMunicipio, callback);
                         GC.KeepAlive(callback);
@@ -578,7 +578,7 @@ namespace BotRpaUI.Views
                 else if (actionIdx == 1)
                 {
                     LogMessage($"[{finalSerial}] Automação ativada! Iniciando processo F2 (Nokia T20 - Preserva Apps) automaticamente...");
-                    System.Threading.Tasks.Task.Run(() =>
+                    EnqueueDeviceCommand(finalSerial, "F2", "F2 (Nokia)", () =>
                     {
                         Engine_ExecuteF2_NokiaT20(finalSerial, finalApkPath, finalPacotePath, finalWpPath, finalPackageName, finalLogin, finalSenha, finalMunicipio, callback);
                         GC.KeepAlive(callback);
@@ -587,7 +587,7 @@ namespace BotRpaUI.Views
                 else if (actionIdx == 2)
                 {
                     LogMessage($"[{finalSerial}] Automação ativada! Iniciando Atualização de Pacote F3 (Nokia T20) automaticamente...");
-                    System.Threading.Tasks.Task.Run(() =>
+                    EnqueueDeviceCommand(finalSerial, "F3", "F3 (Nokia)", () =>
                     {
                         Engine_ExecuteF3_NokiaT20(finalSerial, finalApkPath, finalPacotePath, finalPackageName, callback);
                         GC.KeepAlive(callback);
@@ -600,7 +600,7 @@ namespace BotRpaUI.Views
                 if (actionIdx == 0)
                 {
                     LogMessage($"[{finalSerial}] Automação ativada! Iniciando processo F1 automaticamente...");
-                    System.Threading.Tasks.Task.Run(() =>
+                    EnqueueDeviceCommand(finalSerial, "F1", "F1", () =>
                     {
                         Engine_ExecuteF1_Positivo(finalSerial, finalApkPath, finalPacotePath, finalWpPath, finalPackageName, finalLogin, finalSenha, finalMunicipio, callback);
                         GC.KeepAlive(callback);
@@ -609,7 +609,7 @@ namespace BotRpaUI.Views
                 else if (actionIdx == 1)
                 {
                     LogMessage($"[{finalSerial}] Automação ativada! Iniciando processo F2 (Limpeza e Instalação) automaticamente...");
-                    System.Threading.Tasks.Task.Run(() =>
+                    EnqueueDeviceCommand(finalSerial, "F2", "F2", () =>
                     {
                         Engine_ExecuteF2_Reinstall(finalSerial, finalApkPath, finalPacotePath, finalPackageName, finalLogin, finalSenha, finalMunicipio, callback);
                         GC.KeepAlive(callback);
@@ -618,7 +618,8 @@ namespace BotRpaUI.Views
                 else if (actionIdx == 2)
                 {
                     LogMessage($"[{finalSerial}] Automação ativada! Iniciando Atualização de Pacote (F3) automaticamente...");
-                    System.Threading.Tasks.Task.Run(() =>
+                    bool isM7Auto = device != null && device.Model != null && (device.Model.IndexOf("Multilaser", StringComparison.OrdinalIgnoreCase) >= 0 || device.Model.IndexOf("M7", StringComparison.OrdinalIgnoreCase) >= 0 || device.Model.IndexOf("TabMulti", StringComparison.OrdinalIgnoreCase) >= 0);
+                    EnqueueDeviceCommand(finalSerial, isM7Auto ? "F2" : "F3", "F3", () =>
                     {
                         bool isNokia = device != null && device.Model != null && (device.Model.IndexOf("Nokia", StringComparison.OrdinalIgnoreCase) >= 0 || device.Model.IndexOf("T20", StringComparison.OrdinalIgnoreCase) >= 0);
                         bool isM7 = device != null && device.Model != null && (device.Model.IndexOf("Multilaser", StringComparison.OrdinalIgnoreCase) >= 0 || device.Model.IndexOf("M7", StringComparison.OrdinalIgnoreCase) >= 0 || device.Model.IndexOf("TabMulti", StringComparison.OrdinalIgnoreCase) >= 0);
@@ -634,7 +635,7 @@ namespace BotRpaUI.Views
                 else if (actionIdx == 3)
                 {
                     LogMessage($"[{finalSerial}] Automação ativada! Iniciando desligamento (F5) automaticamente...");
-                    System.Threading.Tasks.Task.Run(() =>
+                    EnqueueDeviceCommand(finalSerial, "DESLIGAR", "Desligar", () =>
                     {
                         Engine_ExecuteF5_Shutdown(finalSerial, callback);
                         GC.KeepAlive(callback);
@@ -643,7 +644,7 @@ namespace BotRpaUI.Views
                 else if (actionIdx == 4)
                 {
                     LogMessage($"[{finalSerial}] Automação ativada! Iniciando Sincronização Avançada (F6) automaticamente...");
-                    System.Threading.Tasks.Task.Run(() =>
+                    EnqueueDeviceCommand(finalSerial, "F6", "F6", () =>
                     {
                         Engine_ExecuteF6_Sincronizacao(finalSerial, callback);
                         GC.KeepAlive(callback);
@@ -652,7 +653,7 @@ namespace BotRpaUI.Views
                 else if (actionIdx == 5)
                 {
                     LogMessage($"[{finalSerial}] Automação ativada! Iniciando Conexão Ativa (F8 - Gnirehtet) automaticamente...");
-                    System.Threading.Tasks.Task.Run(() =>
+                    EnqueueDeviceCommand(finalSerial, "F8", "F8", () =>
                     {
                         Engine_ExecuteF8_ActiveConnection(finalSerial, callback);
                         GC.KeepAlive(callback);
@@ -1442,6 +1443,31 @@ namespace BotRpaUI.Views
             UpdateProgress(msg, targetSerial);
         }
 
+        private void EnqueueDeviceCommand(string serial, string commandKey, string label, Action action)
+        {
+            if (!Dispatcher.CheckAccess())
+            {
+                Dispatcher.BeginInvoke(new Action(() => EnqueueDeviceCommand(serial, commandKey, label, action)));
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(serial))
+            {
+                LogMessage($"[ERRO] Comando {label} sem serial; ignorado.");
+                return;
+            }
+
+            var result = BotRpaUI.Core.DeviceCommandQueue.Enqueue(serial, commandKey, action);
+            if (result.Status == BotRpaUI.Core.DeviceCommandQueue.EnqueueStatus.Duplicate)
+            {
+                LogMessage($"[{serial}] {label} ja esta em execucao ou na fila. Clique ignorado.");
+            }
+            else if (result.Status == BotRpaUI.Core.DeviceCommandQueue.EnqueueStatus.Queued)
+            {
+                LogMessage($"[{serial}] {label} na fila (posicao {result.Position}).");
+            }
+        }
+
         private System.Collections.Generic.List<DeviceModel> GetTargetDevices()
         {
             var targets = new System.Collections.Generic.List<DeviceModel>();
@@ -1522,7 +1548,7 @@ namespace BotRpaUI.Views
                     string finalSenha = senha;
                     string finalMunicipio = municipio;
 
-                    System.Threading.Tasks.Task.Run(() =>
+                    EnqueueDeviceCommand(finalSerial, "F2", "F2", () =>
                     {
                         LogCallback callback = msg =>
                         {
@@ -1613,7 +1639,7 @@ namespace BotRpaUI.Views
                     string finalPacotePath = pacotePath;
                     string finalPackageName = packageName;
 
-                    System.Threading.Tasks.Task.Run(() =>
+                    EnqueueDeviceCommand(finalSerial, "F3", "F3", () =>
                     {
                         LogCallback callback = msg =>
                         {
@@ -1747,7 +1773,7 @@ namespace BotRpaUI.Views
                     Dispatcher.Invoke(() => LogMessage($"[{finalSerial}] {msg}"));
                 });
 
-                System.Threading.Tasks.Task.Run(() =>
+                EnqueueDeviceCommand(finalSerial, "F4:GOOGLE", "F4 Google", () =>
                 {
                     try
                     {
@@ -1877,7 +1903,7 @@ namespace BotRpaUI.Views
                     Dispatcher.Invoke(() => LogMessage($"{msg}"));
                 });
 
-                System.Threading.Tasks.Task.Run(() =>
+                EnqueueDeviceCommand(finalSerial, $"F4:{cmd}", $"F4 [{cmd}]", () =>
                 {
                     foreach (int a in acoes)
                     {
@@ -2000,7 +2026,7 @@ namespace BotRpaUI.Views
             if (TxtGestaoStatus != null)
                 TxtGestaoStatus.Text = $"✔ Automação F4 [{cmd}] disparada para {finalSerial}.";
 
-            System.Threading.Tasks.Task.Run(() =>
+            EnqueueDeviceCommand(finalSerial, $"F4:{cmd}", $"F4 [{cmd}] (automatico)", () =>
             {
                 foreach (int a in acoes)
                 {
@@ -2030,7 +2056,7 @@ namespace BotRpaUI.Views
                 {
                     string finalSerial = device.Serial;
 
-                    System.Threading.Tasks.Task.Run(() =>
+                    EnqueueDeviceCommand(finalSerial, "DESLIGAR", "Desligar", () =>
                     {
                         LogCallback callback = msg =>
                         {
@@ -2060,7 +2086,7 @@ namespace BotRpaUI.Views
                 {
                     string finalSerial = device.Serial;
 
-                    System.Threading.Tasks.Task.Run(() =>
+                    EnqueueDeviceCommand(finalSerial, "F6", "F6", () =>
                     {
                         LogCallback callback = msg =>
                         {
@@ -2090,7 +2116,7 @@ namespace BotRpaUI.Views
                 {
                     string finalSerial = device.Serial;
 
-                    System.Threading.Tasks.Task.Run(() =>
+                    EnqueueDeviceCommand(finalSerial, "F8", "F8", () =>
                     {
                         LogCallback callback = msg =>
                         {
@@ -2150,7 +2176,7 @@ namespace BotRpaUI.Views
                     string finalSenha = senha;
                     string finalMunicipio = municipio;
 
-                    System.Threading.Tasks.Task.Run(() =>
+                    EnqueueDeviceCommand(finalSerial, "F1", "F1 (Tab-Multi)", () =>
                     {
                         LogCallback callback = msg =>
                         {
@@ -2170,6 +2196,9 @@ namespace BotRpaUI.Views
 
         private void BtnStop_Click(object sender, RoutedEventArgs e)
         {
+            int pendentes = BotRpaUI.Core.DeviceCommandQueue.ClearAll();
+            if (pendentes > 0)
+                LogMessage($"[PARADO] {pendentes} comando(s) pendente(s) removido(s) da fila.");
             try { Engine_CancelAll(); } catch { }
             try { Engine_SetPaused(0); } catch { }
             _isPaused = false;
@@ -2295,7 +2324,7 @@ namespace BotRpaUI.Views
                     });
 
                     LogMessage($"[{finalSerial}] Iniciando Atualizacao M7...");
-                    System.Threading.Tasks.Task.Run(() =>
+                    EnqueueDeviceCommand(finalSerial, "F2", "F2 (M7)", () =>
                     {
                         Engine_ExecuteF2_TabMulti_Atualizar(finalSerial, finalApkPath, finalPacotePath, callback);
                         GC.KeepAlive(callback);
@@ -2323,7 +2352,7 @@ namespace BotRpaUI.Views
                     });
 
                     LogMessage($"[{finalSerial}] Iniciando Terminal M7...");
-                    System.Threading.Tasks.Task.Run(() =>
+                    EnqueueDeviceCommand(finalSerial, "TERMINAL", "Terminal (M7)", () =>
                     {
                         Engine_ExecuteF3_TabMulti_Terminal(finalSerial, callback);
                         GC.KeepAlive(callback);
@@ -2351,7 +2380,7 @@ namespace BotRpaUI.Views
                     });
 
                     LogMessage($"[{finalSerial}] Iniciando Desligamento M7...");
-                    System.Threading.Tasks.Task.Run(() =>
+                    EnqueueDeviceCommand(finalSerial, "DESLIGAR", "Desligar (M7)", () =>
                     {
                         Engine_ExecuteF4_TabMulti_Desligar(finalSerial, callback);
                         GC.KeepAlive(callback);
@@ -2404,7 +2433,7 @@ namespace BotRpaUI.Views
                     string finalSenha = senha;
                     string finalMunicipio = municipio;
 
-                    System.Threading.Tasks.Task.Run(() =>
+                    EnqueueDeviceCommand(finalSerial, "F5", "F5 (Tab-Multi)", () =>
                     {
                         LogCallback callback = msg =>
                         {
@@ -2567,8 +2596,9 @@ namespace BotRpaUI.Views
         {
             if (DateTime.Now.Subtract(_lastEscTime).TotalSeconds < 1.0)
             {
+                int pendentes = BotRpaUI.Core.DeviceCommandQueue.ClearAll();
                 Engine_CancelAll();
-                LogMessage("[ALERTA] PARADA GERAL ENVIADA (Duplo ESC)");
+                LogMessage($"[ALERTA] PARADA GERAL ENVIADA (Duplo ESC) — {pendentes} comando(s) pendente(s) removido(s).");
                 _isPaused = true;
             }
             else

@@ -30,6 +30,7 @@ namespace BotRpaUI.Core
         /// <summary>Serials cuja captura ja foi tentada + quando (para retry espacado).</summary>
         private static readonly Dictionary<string, DateTime> _ultimaTentativa = new Dictionary<string, DateTime>(StringComparer.OrdinalIgnoreCase);
         private static readonly object _lock = new object();
+        private static readonly object _capturaLock = new object();
 
         /// <summary>Intervalo minimo entre duas tentativas de captura do mesmo aparelho.</summary>
         private static readonly TimeSpan _intervaloRetry = TimeSpan.FromMinutes(5);
@@ -68,18 +69,21 @@ namespace BotRpaUI.Core
         {
             if (string.IsNullOrWhiteSpace(serial)) return string.Empty;
 
-            try
+            lock (_capturaLock)
             {
-                var buffer = new StringBuilder(64);
-                int ok = Engine_CapturarMAC(serial, buffer, buffer.Capacity);
-                if (ok != 1) return string.Empty;
+                try
+                {
+                    var buffer = new StringBuilder(64);
+                    int ok = Engine_CapturarMAC(serial, buffer, buffer.Capacity);
+                    if (ok != 1) return string.Empty;
 
-                string mac = buffer.ToString().Trim();
-                return MacValido(mac) ? mac : string.Empty;
-            }
-            catch
-            {
-                return string.Empty;
+                    string mac = buffer.ToString().Trim();
+                    return MacValido(mac) ? mac : string.Empty;
+                }
+                catch
+                {
+                    return string.Empty;
+                }
             }
         }
 

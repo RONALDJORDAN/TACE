@@ -340,6 +340,9 @@
                             <TextBlock Text="🗄️ Banco de Dados SQLite" Foreground="#FFFFFF" FontSize="18" FontWeight="Bold"/>
                             <TextBlock Text="Gerencie todos os tablets cadastrados na base. Clique duplo para editar ou utilize a barra de ações." Foreground="#85859E" FontSize="12" Margin="0,2,0,0"/>
                         </StackPanel>
+                        <Button Content="Registrar Aparelho" HorizontalAlignment="Right" VerticalAlignment="Center"
+                                Background="#4EDEA3" Foreground="#0B0B13" FontWeight="Bold" BorderThickness="0"
+                                Padding="14,7" Cursor="Hand" Click="BtnAbrirRegistroSerie_Click"/>
                     </Grid>
 
                     <!-- Barra de Busca + Filtros Rápidos (Pills) -->
@@ -759,6 +762,149 @@
         <!-- ========================================================================= -->
         <!-- MODAL OVERLAY DE CRIAÇÃO / EDIÇÃO DE DISPOSITIVO -->
         <!-- ========================================================================= -->
+        <Grid x:Name="PanelModalRegistroSerie" Grid.ColumnSpan="3" Background="#DD0B0B13" Visibility="Collapsed">
+            <Border Background="#151525" BorderBrush="#4EDEA3" BorderThickness="1.5" CornerRadius="12" Width="840" Height="590" VerticalAlignment="Center" HorizontalAlignment="Center" Padding="22">
+                <Border.Effect>
+                    <DropShadowEffect Color="#4EDEA3" BlurRadius="28" Opacity="0.28" ShadowDepth="0"/>
+                </Border.Effect>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0" Margin="0,0,0,10">
+                        <StackPanel>
+                            <TextBlock Text="REGISTRO EM SÉRIE DE APARELHOS" Foreground="#FFFFFF" FontSize="18" FontWeight="Bold"/>
+                            <TextBlock x:Name="TxtStatusRegistroSerie" Text="Monitorando tablets conectados..." Foreground="#85859E" FontSize="12" Margin="0,2,0,0"/>
+                        </StackPanel>
+                        <Border HorizontalAlignment="Right" VerticalAlignment="Center" Background="#0A0A0F" BorderBrush="#2A2A40" BorderThickness="1" CornerRadius="6" Padding="10,5">
+                            <TextBlock x:Name="TxtContadorRegistroSerie" Text="0 registrados" Foreground="#4EDEA3" FontSize="12" FontWeight="Bold"/>
+                        </Border>
+                    </Grid>
+
+                    <Border Grid.Row="1" Background="#0A0A0F" BorderBrush="#202035" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,0,0,10">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="1.2*"/>
+                                <ColumnDefinition Width="12"/>
+                                <ColumnDefinition Width="1.2*"/>
+                                <ColumnDefinition Width="12"/>
+                                <ColumnDefinition Width="1*"/>
+                                <ColumnDefinition Width="12"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="SERIAL DO APARELHO ATUAL" Foreground="#85859E" FontSize="10" FontWeight="Bold"/>
+                                <TextBlock x:Name="TxtRegistroSerial" Text="-" Foreground="#5EB1FF" FontFamily="Consolas" FontSize="13" FontWeight="SemiBold" Margin="0,3,0,0"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="MAC CAPTURADO" Foreground="#85859E" FontSize="10" FontWeight="Bold"/>
+                                <TextBlock x:Name="TxtRegistroMac" Text="-" Foreground="#4EDEA3" FontFamily="Consolas" FontSize="13" FontWeight="SemiBold" Margin="0,3,0,0"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="4">
+                                <TextBlock Text="Nº PATRIMÔNIO" Foreground="#85859E" FontSize="10" FontWeight="Bold"/>
+                                <Grid Margin="0,3,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Border Background="#1A1A2E" BorderBrush="#2A2A40" BorderThickness="1" CornerRadius="6,0,0,6" Padding="8,5">
+                                        <TextBlock Text="INV" Foreground="#FFB703" FontFamily="Consolas" FontWeight="Bold" FontSize="12"/>
+                                    </Border>
+                                    <TextBox x:Name="TxtRegistroPatrimonio" Grid.Column="1" Background="#0A0A0F" Foreground="#FFB703" FontFamily="Consolas" BorderBrush="#2A2A40" Padding="8,5" FontSize="12" IsEnabled="False" KeyDown="TxtRegistroPatrimonio_KeyDown" ToolTip="Digite apenas os numeros. Ex.: 425 -> INV425"/>
+                                </Grid>
+                            </StackPanel>
+                            <Button x:Name="BtnRegistrarPatrimonio" Grid.Column="6" Content="Registrar" Background="#4EDEA3" Foreground="#0B0B13" FontWeight="Bold" BorderThickness="0" Padding="14,7" Cursor="Hand" IsEnabled="False" VerticalAlignment="Bottom" Click="BtnRegistrarPatrimonio_Click"/>
+                        </Grid>
+                    </Border>
+
+                    <Grid Grid.Row="2">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="1.05*"/>
+                            <ColumnDefinition Width="12"/>
+                            <ColumnDefinition Width="1*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <Border Grid.Column="0" Background="#0A0A0F" BorderBrush="#202035" BorderThickness="1" CornerRadius="8" Padding="8">
+                            <DockPanel>
+                                <TextBlock DockPanel.Dock="Top" Text="TABLETS CAPTURADOS" Foreground="#8570E6" FontSize="10" FontWeight="Bold" Margin="2,0,0,6"/>
+                                <DataGrid x:Name="GridRegistroSerie" Style="{StaticResource DarkDataGrid}" ColumnHeaderStyle="{StaticResource DarkDataGridColumnHeader}" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" CanUserResizeRows="False" IsReadOnly="True" SelectionMode="Single" HeadersVisibility="Column" GridLinesVisibility="Horizontal" RowHeight="30">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Serial" Width="1.2*" Binding="{Binding Serial}">
+                                            <DataGridTextColumn.ElementStyle>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Foreground" Value="#5EB1FF"/>
+                                                    <Setter Property="FontFamily" Value="Consolas"/>
+                                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                                    <Setter Property="Margin" Value="6,0"/>
+                                                </Style>
+                                            </DataGridTextColumn.ElementStyle>
+                                        </DataGridTextColumn>
+                                        <DataGridTextColumn Header="MAC" Width="1.2*" Binding="{Binding MAC}">
+                                            <DataGridTextColumn.ElementStyle>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Foreground" Value="#4EDEA3"/>
+                                                    <Setter Property="FontFamily" Value="Consolas"/>
+                                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                                    <Setter Property="Margin" Value="6,0"/>
+                                                </Style>
+                                            </DataGridTextColumn.ElementStyle>
+                                        </DataGridTextColumn>
+                                        <DataGridTextColumn Header="Situação" Width="1*" Binding="{Binding Status}">
+                                            <DataGridTextColumn.ElementStyle>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Foreground" Value="#A1A1AA"/>
+                                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                                    <Setter Property="Margin" Value="6,0"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Registrado}" Value="True">
+                                                            <Setter Property="Foreground" Value="#4EDEA3"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </DataGridTextColumn.ElementStyle>
+                                        </DataGridTextColumn>
+                                        <DataGridTextColumn Header="Patrimônio" Width="0.9*" Binding="{Binding Patrimonio}">
+                                            <DataGridTextColumn.ElementStyle>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Foreground" Value="#FFB703"/>
+                                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                                    <Setter Property="Margin" Value="6,0"/>
+                                                </Style>
+                                            </DataGridTextColumn.ElementStyle>
+                                        </DataGridTextColumn>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </DockPanel>
+                        </Border>
+
+                        <Border Grid.Column="2" Background="#0A0A0F" BorderBrush="#202035" BorderThickness="1" CornerRadius="8" Padding="8">
+                            <DockPanel>
+                                <TextBlock DockPanel.Dock="Top" Text="LINHA DE COMANDOS / CAPTURA" Foreground="#8570E6" FontSize="10" FontWeight="Bold" Margin="2,0,0,6"/>
+                                <TextBox x:Name="TxtLogRegistroSerie" IsReadOnly="True" AcceptsReturn="True" FontFamily="Consolas" FontSize="11" Background="#07070B" Foreground="#4EDEA3" BorderBrush="#202035" BorderThickness="1" Padding="8" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" TextWrapping="NoWrap"/>
+                            </DockPanel>
+                        </Border>
+                    </Grid>
+
+                    <Grid Grid.Row="3" Margin="0,12,0,0">
+                        <StackPanel Orientation="Horizontal">
+                            <Button x:Name="BtnPularRegistro" Content="Pular Aparelho" Background="#2A2A40" Foreground="#FFB703" FontWeight="Bold" BorderThickness="1" BorderBrush="#FFB703" Padding="14,7" Cursor="Hand" IsEnabled="False" Click="BtnPularRegistro_Click"/>
+                            <Button Content="Reiniciar Captura" Background="#2A2A40" Foreground="#5EB1FF" FontWeight="Bold" BorderThickness="1" BorderBrush="#5EB1FF" Padding="14,7" Cursor="Hand" Margin="8,0,0,0" Click="BtnReiniciarCapturaRegistro_Click"/>
+                        </StackPanel>
+                        <Button Content="Fechar" HorizontalAlignment="Right" Background="#0A0A0F" Foreground="#E3E0F2" FontWeight="Bold" BorderThickness="1" BorderBrush="#2A2A40" Padding="18,7" Cursor="Hand" Click="BtnFecharRegistroSerie_Click"/>
+                    </Grid>
+
+                    <TextBlock Grid.Row="4" Text="O registro e feito um aparelho por vez. Conecte o tablet, aguarde o MAC e informe o patrimonio para gravar no banco."
+                               Foreground="#5A5A72" FontSize="11" Margin="0,10,0,0" TextWrapping="Wrap"/>
+                </Grid>
+            </Border>
+        </Grid>
+
         <Grid x:Name="PanelModalEditDevice" Grid.ColumnSpan="3" Background="#DD0B0B13" Visibility="Collapsed">
             <Border Background="#151525" BorderBrush="#513BA6" BorderThickness="1.5" CornerRadius="12" Width="460" VerticalAlignment="Center" HorizontalAlignment="Center" Padding="24">
                 <Border.Effect>

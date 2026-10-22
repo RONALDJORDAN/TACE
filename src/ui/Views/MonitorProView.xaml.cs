@@ -1139,6 +1139,25 @@ namespace BotRpaUI.Views
             }
         }
 
+        private void EnqueueDeviceCommand(string serial, string commandKey, string label, Action action)
+        {
+            if (!Dispatcher.CheckAccess())
+            {
+                Dispatcher.BeginInvoke(new Action(() => EnqueueDeviceCommand(serial, commandKey, label, action)));
+                return;
+            }
+
+            var result = DeviceCommandQueue.Enqueue(serial, commandKey, action);
+            if (result.Status == DeviceCommandQueue.EnqueueStatus.Duplicate)
+            {
+                LogMessage($"[{serial}] {label} ja esta em execucao ou na fila. Clique ignorado.");
+            }
+            else if (result.Status == DeviceCommandQueue.EnqueueStatus.Queued)
+            {
+                LogMessage($"[{serial}] {label} na fila (posicao {result.Position}).");
+            }
+        }
+
         private void EnsureDeviceTab(string serial)
         {
             if (_deviceLogBoxes.ContainsKey(serial)) return;
@@ -1428,7 +1447,7 @@ namespace BotRpaUI.Views
             foreach (var dev in completedDevices)
             {
                 string serial = dev.Serial;
-                Task.Run(() =>
+                EnqueueDeviceCommand(serial, "DESLIGAR", "Desligar (lote)", () =>
                 {
                     StringBuilder sb = new StringBuilder(512);
                     Engine_RunAdbShell(serial, "svc wifi disable && svc bluetooth disable && settings put secure location_mode 0 && reboot -p", sb, 512);
@@ -1456,6 +1475,9 @@ namespace BotRpaUI.Views
         {
             if (sender is Button btn && btn.Tag is string serial)
             {
+                int pendentes = DeviceCommandQueue.Clear(serial);
+                if (pendentes > 0)
+                    LogMessage($"[{serial}] {pendentes} comando(s) pendente(s) removido(s) da fila.");
                 Task.Run(() =>
                 {
                     StringBuilder sb = new StringBuilder(512);
@@ -1469,7 +1491,7 @@ namespace BotRpaUI.Views
         {
             if (sender is Button btn && btn.Tag is string serial)
             {
-                Task.Run(() =>
+                EnqueueDeviceCommand(serial, "DESLIGAR", "Desligar", () =>
                 {
                     StringBuilder sb = new StringBuilder(512);
                     Engine_RunAdbShell(serial, "svc wifi disable && svc bluetooth disable && reboot -p", sb, 512);
@@ -1531,7 +1553,7 @@ namespace BotRpaUI.Views
                 string serial = dev.Serial;
                 LogCallback cb = msg => Dispatcher.Invoke(() => LogMessage($"[{serial}] {msg}"));
 
-                Task.Run(() =>
+                EnqueueDeviceCommand(serial, "F1", "F1", () =>
                 {
                     bool isNokia = dev.Model.IndexOf("Nokia", StringComparison.OrdinalIgnoreCase) >= 0 || dev.Model.IndexOf("T20", StringComparison.OrdinalIgnoreCase) >= 0;
                     bool isM7 = dev.Model.IndexOf("Multilaser", StringComparison.OrdinalIgnoreCase) >= 0 || dev.Model.IndexOf("M7", StringComparison.OrdinalIgnoreCase) >= 0;
@@ -1558,7 +1580,7 @@ namespace BotRpaUI.Views
             {
                 string serial = dev.Serial;
                 LogCallback cb = msg => Dispatcher.Invoke(() => LogMessage($"[{serial}] {msg}"));
-                Task.Run(() =>
+                EnqueueDeviceCommand(serial, "F2", "F2", () =>
                 {
                     bool isNokia = dev.Model.IndexOf("Nokia", StringComparison.OrdinalIgnoreCase) >= 0 || dev.Model.IndexOf("T20", StringComparison.OrdinalIgnoreCase) >= 0;
                     bool isM7 = dev.Model.IndexOf("Multilaser", StringComparison.OrdinalIgnoreCase) >= 0 || dev.Model.IndexOf("M7", StringComparison.OrdinalIgnoreCase) >= 0;
@@ -1585,7 +1607,7 @@ namespace BotRpaUI.Views
             {
                 string serial = dev.Serial;
                 LogCallback cb = msg => Dispatcher.Invoke(() => LogMessage($"[{serial}] {msg}"));
-                Task.Run(() =>
+                EnqueueDeviceCommand(serial, "F3", "F3", () =>
                 {
                     bool isNokia = dev.Model.IndexOf("Nokia", StringComparison.OrdinalIgnoreCase) >= 0 || dev.Model.IndexOf("T20", StringComparison.OrdinalIgnoreCase) >= 0;
                     bool isM7 = dev.Model.IndexOf("Multilaser", StringComparison.OrdinalIgnoreCase) >= 0 || dev.Model.IndexOf("M7", StringComparison.OrdinalIgnoreCase) >= 0;
@@ -1611,7 +1633,7 @@ namespace BotRpaUI.Views
             {
                 string serial = dev.Serial;
                 LogCallback cb = msg => Dispatcher.Invoke(() => LogMessage($"[{serial}] {msg}"));
-                Task.Run(() =>
+                EnqueueDeviceCommand(serial, "TERMINAL", "Terminal", () =>
                 {
                     bool isM7 = dev.Model.IndexOf("Multilaser", StringComparison.OrdinalIgnoreCase) >= 0 || dev.Model.IndexOf("M7", StringComparison.OrdinalIgnoreCase) >= 0;
                     if (isM7)
@@ -1633,7 +1655,7 @@ namespace BotRpaUI.Views
             {
                 string serial = dev.Serial;
                 LogCallback cb = msg => Dispatcher.Invoke(() => LogMessage($"[{serial}] {msg}"));
-                Task.Run(() =>
+                EnqueueDeviceCommand(serial, "DESLIGAR", "Desligar", () =>
                 {
                     bool isM7 = dev.Model.IndexOf("Multilaser", StringComparison.OrdinalIgnoreCase) >= 0 || dev.Model.IndexOf("M7", StringComparison.OrdinalIgnoreCase) >= 0;
                     if (isM7)
@@ -1655,7 +1677,7 @@ namespace BotRpaUI.Views
             {
                 string serial = dev.Serial;
                 LogCallback cb = msg => Dispatcher.Invoke(() => LogMessage($"[{serial}] {msg}"));
-                Task.Run(() =>
+                EnqueueDeviceCommand(serial, "F6", "F6", () =>
                 {
                     Engine_ExecuteF6_Sincronizacao(serial, cb);
                     GC.KeepAlive(cb);
@@ -1673,7 +1695,7 @@ namespace BotRpaUI.Views
             {
                 string serial = dev.Serial;
                 LogCallback cb = msg => Dispatcher.Invoke(() => LogMessage($"[{serial}] {msg}"));
-                Task.Run(() =>
+                EnqueueDeviceCommand(serial, "F8", "F8", () =>
                 {
                     Engine_ExecuteF8_ActiveConnection(serial, cb);
                     GC.KeepAlive(cb);
@@ -1692,7 +1714,7 @@ namespace BotRpaUI.Views
             {
                 string serial = dev.Serial;
                 LogCallback cb = msg => Dispatcher.Invoke(() => LogMessage($"[{serial}] {msg}"));
-                Task.Run(() =>
+                EnqueueDeviceCommand(serial, "F1", "F1 (M7)", () =>
                 {
                     Engine_ExecuteF7_TabMulti(serial, data.apkPath, data.pacotePath, data.login, data.senha, data.municipio, cb);
                     GC.KeepAlive(cb);
@@ -1711,7 +1733,7 @@ namespace BotRpaUI.Views
             {
                 string serial = dev.Serial;
                 LogCallback cb = msg => Dispatcher.Invoke(() => LogMessage($"[{serial}] {msg}"));
-                Task.Run(() =>
+                EnqueueDeviceCommand(serial, "F2", "F2 (M7)", () =>
                 {
                     Engine_ExecuteF2_TabMulti_Atualizar(serial, data.apkPath, data.pacotePath, cb);
                     GC.KeepAlive(cb);
@@ -1729,7 +1751,7 @@ namespace BotRpaUI.Views
             {
                 string serial = dev.Serial;
                 LogCallback cb = msg => Dispatcher.Invoke(() => LogMessage($"[{serial}] {msg}"));
-                Task.Run(() =>
+                EnqueueDeviceCommand(serial, "TERMINAL", "Terminal (M7)", () =>
                 {
                     Engine_ExecuteF3_TabMulti_Terminal(serial, cb);
                     GC.KeepAlive(cb);
@@ -1747,7 +1769,7 @@ namespace BotRpaUI.Views
             {
                 string serial = dev.Serial;
                 LogCallback cb = msg => Dispatcher.Invoke(() => LogMessage($"[{serial}] {msg}"));
-                Task.Run(() =>
+                EnqueueDeviceCommand(serial, "DESLIGAR", "Desligar (M7)", () =>
                 {
                     Engine_ExecuteF4_TabMulti_Desligar(serial, cb);
                     GC.KeepAlive(cb);
@@ -1766,7 +1788,7 @@ namespace BotRpaUI.Views
             {
                 string serial = dev.Serial;
                 LogCallback cb = msg => Dispatcher.Invoke(() => LogMessage($"[{serial}] {msg}"));
-                Task.Run(() =>
+                EnqueueDeviceCommand(serial, "F1", "F1 (Nokia)", () =>
                 {
                     Engine_ExecuteF1_NokiaT20(serial, data.apkPath, data.pacotePath, data.wpPath, "br.com.yantec.innovava", data.login, data.senha, data.municipio, cb);
                     GC.KeepAlive(cb);
@@ -1785,7 +1807,7 @@ namespace BotRpaUI.Views
             {
                 string serial = dev.Serial;
                 LogCallback cb = msg => Dispatcher.Invoke(() => LogMessage($"[{serial}] {msg}"));
-                Task.Run(() =>
+                EnqueueDeviceCommand(serial, "F2", "F2 (Nokia)", () =>
                 {
                     Engine_ExecuteF2_NokiaT20(serial, data.apkPath, data.pacotePath, data.wpPath, "br.com.yantec.innovava", data.login, data.senha, data.municipio, cb);
                     GC.KeepAlive(cb);
@@ -1804,7 +1826,7 @@ namespace BotRpaUI.Views
             {
                 string serial = dev.Serial;
                 LogCallback cb = msg => Dispatcher.Invoke(() => LogMessage($"[{serial}] {msg}"));
-                Task.Run(() =>
+                EnqueueDeviceCommand(serial, "F3", "F3 (Nokia)", () =>
                 {
                     Engine_ExecuteF3_NokiaT20(serial, data.apkPath, data.pacotePath, "br.com.yantec.innovava", cb);
                     GC.KeepAlive(cb);
@@ -1814,6 +1836,9 @@ namespace BotRpaUI.Views
 
         public void BtnStop_Click(object sender, RoutedEventArgs e)
         {
+            int pendentes = DeviceCommandQueue.ClearAll();
+            if (pendentes > 0)
+                LogMessage($"[ALERTA] {pendentes} comando(s) pendente(s) removido(s) da fila.");
             try { Engine_CancelAll(); } catch { }
             LogMessage("[ALERTA] PARADA GERAL ACIONADA (Botão Parar) — encerrando processos em todos os aparelhos...");
             foreach (var d in _devicesList)
@@ -1846,7 +1871,15 @@ namespace BotRpaUI.Views
             LogCallback cb = msg => Dispatcher.Invoke(() => LogMessage($"[{serial}] {msg}"));
 
             LogMessage($"[{serial}] [PnP] Automação Plug & Play disparada...");
-            Task.Run(() =>
+            bool isNokiaAuto = dev.Model.IndexOf("Nokia", StringComparison.OrdinalIgnoreCase) >= 0 || dev.Model.IndexOf("T20", StringComparison.OrdinalIgnoreCase) >= 0;
+            bool isM7Auto = dev.Model.IndexOf("Multilaser", StringComparison.OrdinalIgnoreCase) >= 0 || dev.Model.IndexOf("M7", StringComparison.OrdinalIgnoreCase) >= 0;
+            string autoKey = isNokiaAuto
+                ? (action == 0 ? "F1" : action == 1 ? "F2" : "F3")
+                : isM7Auto
+                    ? (action == 0 ? "F1" : action == 1 ? "F2" : "DESLIGAR")
+                    : (action == 0 ? "F1" : action == 1 ? "F2" : action == 2 ? "F3" : action == 3 ? "DESLIGAR" : action == 4 ? "F6" : "F8");
+
+            EnqueueDeviceCommand(serial, autoKey, "Automacao PnP", () =>
             {
                 bool isNokia = dev.Model.IndexOf("Nokia", StringComparison.OrdinalIgnoreCase) >= 0 || dev.Model.IndexOf("T20", StringComparison.OrdinalIgnoreCase) >= 0;
                 bool isM7 = dev.Model.IndexOf("Multilaser", StringComparison.OrdinalIgnoreCase) >= 0 || dev.Model.IndexOf("M7", StringComparison.OrdinalIgnoreCase) >= 0;
@@ -1880,8 +1913,9 @@ namespace BotRpaUI.Views
         {
             if (DateTime.Now.Subtract(_lastEscTime).TotalSeconds < 1.0)
             {
+                int pendentes = DeviceCommandQueue.ClearAll();
                 Engine_CancelAll();
-                LogMessage("[ALERTA] PARADA GERAL ENVIADA (Duplo ESC)");
+                LogMessage($"[ALERTA] PARADA GERAL ENVIADA (Duplo ESC) — {pendentes} comando(s) pendente(s) removido(s).");
             }
             else
             {
