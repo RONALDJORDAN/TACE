@@ -296,12 +296,6 @@ namespace BotRpaUI.Views
             }
         }
 
-        private void BtnAtualizarMetricas_Click(object sender, RoutedEventArgs e)
-        {
-            AtualizarDashboardMetrics();
-            MessageBox.Show("Métricas e telemetria atualizadas com sucesso a partir do banco de dados!", "Métricas Atualizadas", MessageBoxButton.OK, MessageBoxImage.Information);
-        }
-
         // =========================================================================
         // SUBMÓDULO 2: BANCO DE DADOS DE DISPOSITIVOS
         // =========================================================================
@@ -589,7 +583,7 @@ namespace BotRpaUI.Views
             }
         }
 
-        private void BtnAbrirRegistroSerie_Click(object sender, RoutedEventArgs e)
+        private void BtnRegistrarAparelho_Click(object sender, RoutedEventArgs e)
         {
             if (PanelModalRegistroSerie.Visibility == Visibility.Visible) return;
 

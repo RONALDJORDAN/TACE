@@ -3,8 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Bot_RPA - Robotic Process Automation" Height="500" Width="800"
         Background="#0B0B13" WindowStartupLocation="CenterScreen"
-        FontFamily="Segoe UI" WindowStyle="None" AllowsTransparency="True"
-        Icon="pack://application:,,,/Assets/Icons/BotRPAui.ico">
+        FontFamily="Segoe UI" WindowStyle="None" AllowsTransparency="True">
     
     <Window.Resources>
         <!-- Estilo dos Cards (Hover e Transformação) -->

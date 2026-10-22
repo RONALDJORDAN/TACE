@@ -192,8 +192,7 @@
     - **`src/ui/Views/`**: Todas as janelas e telas organizadas (`MainWindow`, `WelcomeWindow`, `BrainVisualizerWindow`, `MonitorView`, `BotLearnView`, `ConfigView`, `RelatoriosView`, `MunicipiosWindow`).
     - Compilação do motor e interface validadas com sucesso em `registros/2026-08-06/08-24_Plataforma_InnovTech_DESKTOP_BUILD` e `08-25_Plataforma_InnovTech_DESKTOP_BUILD`.
   - **Diferenciação Visual Automática de Ícone por Ambiente de Execução:**
-    - **Ambiente de Teste/Desenvolvimento (`data\output\BotRPAui.exe`):** Ícone exclusivo **Azul Escuro** (`BotRPAui_Test_DarkBlue.ico`).
-    - **Ambiente de Release Portátil (`BotRPA_Release\BotRPAui.exe`):** Ícone oficial **Roxo** (`BotRPAui_Release_Purple.ico`).
+
     - Automação integrada aos scripts `scripts/build.bat` e `scripts/build_release.bat`. Validação de builds em `08-48_Plataforma_InnovTech_DESKTOP_BUILD` e `08-49_Plataforma_InnovTech_DESKTOP_BUILD`.
   - **Documentação Técnica em Markdown por Dispositivo (`docs/`):**
     - `docs/relatorio_funcoes_positivo_tab_vision_7.md`: Relatório completo das funções F1 a F8 do Positivo Tab Vision 7.

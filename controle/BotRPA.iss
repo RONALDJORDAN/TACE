@@ -17,7 +17,7 @@
 #define AppNameLower "bot_rpa"
 #define AppPublisher "Jordan R. Caraujo"
 #define AppExe "BotRPAui.exe"
-#define AppVersion "22.10.2026.0946"
+#define AppVersion "22.10.2026.1521"
 #define DataDirName "Bot_RPA"
 
 [Setup]
@@ -212,6 +212,7 @@ begin
     end;
   end;
 end;
+
 
 
 

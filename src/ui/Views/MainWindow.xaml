@@ -4,8 +4,7 @@
         Title="Bot_RPA - Robotic Process Automation" Height="760" Width="1240"
         Background="#0B0B13" WindowStartupLocation="CenterScreen"
         FontFamily="Segoe UI" WindowStyle="SingleBorderWindow" WindowState="Maximized"
-        PreviewKeyDown="Window_PreviewKeyDown"
-        Icon="pack://application:,,,/Assets/Icons/BotRPAui.ico">
+        PreviewKeyDown="Window_PreviewKeyDown">
     
     <Window.Resources>
         <!-- Estilo de Botão de Navegação com Efeito Pílula e Hover Suave Escuro -->

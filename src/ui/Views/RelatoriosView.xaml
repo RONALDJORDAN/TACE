@@ -183,7 +183,6 @@
                                 <TextBlock Text="Métricas &amp; Inteligência da Frota" Foreground="#FFFFFF" FontSize="20" FontWeight="Bold"/>
                                 <TextBlock Text="Visão executiva em tempo real do banco de dados e distribuição dos equipamentos homologados." Foreground="#85859E" FontSize="12" Margin="0,2,0,0"/>
                             </StackPanel>
-                            <Button Content="🔄 Atualizar Métricas" HorizontalAlignment="Right" VerticalAlignment="Center" Background="#0A0A0F" Foreground="#E3E0F2" BorderBrush="#2A2A40" BorderThickness="1" Padding="12,6" Cursor="Hand" Click="BtnAtualizarMetricas_Click"/>
                         </Grid>
 
                         <!-- Grade de 5 Cards KPIs no Topo -->
@@ -336,14 +335,14 @@
 
                     <!-- Cabeçalho -->
                     <Grid Grid.Row="0" Margin="0,0,0,12">
-                        <StackPanel>
-                            <TextBlock Text="🗄️ Banco de Dados SQLite" Foreground="#FFFFFF" FontSize="18" FontWeight="Bold"/>
-                            <TextBlock Text="Gerencie todos os tablets cadastrados na base. Clique duplo para editar ou utilize a barra de ações." Foreground="#85859E" FontSize="12" Margin="0,2,0,0"/>
-                        </StackPanel>
-                        <Button Content="Registrar Aparelho" HorizontalAlignment="Right" VerticalAlignment="Center"
-                                Background="#4EDEA3" Foreground="#0B0B13" FontWeight="Bold" BorderThickness="0"
-                                Padding="14,7" Cursor="Hand" Click="BtnAbrirRegistroSerie_Click"/>
-                    </Grid>
+                            <StackPanel>
+                                <TextBlock Text="🗄️ Banco de Dados SQLite" Foreground="#FFFFFF" FontSize="18" FontWeight="Bold"/>
+                                <TextBlock Text="Gerencie todos os tablets cadastrados na base. Clique duplo para editar ou utilize a barra de ações." Foreground="#85859E" FontSize="12" Margin="0,2,0,0"/>
+                            </StackPanel>
+                            <Button x:Name="BtnRegistrarAparelho" Content="Registrar Aparelho" HorizontalAlignment="Right" VerticalAlignment="Center"
+                                    Background="#4EDEA3" Foreground="#0B0B13" FontWeight="Bold" BorderThickness="0"
+                                    CornerRadius="6" Padding="14,7" Cursor="Hand" Click="BtnRegistrarAparelho_Click"/>
+                        </Grid>
 
                     <!-- Barra de Busca + Filtros Rápidos (Pills) -->
                     <Grid Grid.Row="1" Margin="0,0,0,12">
@@ -400,17 +399,6 @@
                               CellEditEnding="GridBancoDados_CellEditEnding"
                               SelectionChanged="GridBancoDados_SelectionChanged">
                         <DataGrid.Columns>
-                            <!-- ID -->
-                            <DataGridTextColumn Header="#" Width="60" Binding="{Binding ID}" IsReadOnly="True">
-                                <DataGridTextColumn.ElementStyle>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="Foreground" Value="#513BA6"/>
-                                        <Setter Property="FontWeight" Value="Bold"/>
-                                        <Setter Property="VerticalAlignment" Value="Center"/>
-                                    </Style>
-                                </DataGridTextColumn.ElementStyle>
-                            </DataGridTextColumn>
-
                             <!-- Nº de Patrimônio (edição manual inline) -->
                             <DataGridTextColumn Header="Nº Patrimônio" Width="140" Binding="{Binding Patrimonio, UpdateSourceTrigger=PropertyChanged}" IsReadOnly="False">
                                 <DataGridTextColumn.ElementStyle>
