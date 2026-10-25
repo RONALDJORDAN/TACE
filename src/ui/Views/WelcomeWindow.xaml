@@ -4,7 +4,7 @@
         Title="Bot_RPA - Robotic Process Automation" Height="500" Width="800"
         Background="#0B0B13" WindowStartupLocation="CenterScreen"
         FontFamily="Segoe UI" WindowStyle="None" AllowsTransparency="True">
-    
+
     <Window.Resources>
         <!-- Estilo dos Cards (Hover e Transformação) -->
         <Style x:Key="CardStyle" TargetType="Border">
@@ -55,7 +55,7 @@
         <Storyboard x:Key="WindowLoadAnimation">
             <!-- Fade in da janela inteira -->
             <DoubleAnimation Storyboard.TargetName="MainBorder" Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.8"/>
-            
+
             <!-- Cascata dos cards -->
             <!-- Card 1 -->
             <DoubleAnimation Storyboard.TargetName="Card1" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.5" BeginTime="0:0:0.3"/>
@@ -95,7 +95,7 @@
             <Grid Grid.Row="0" Background="#151525" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
                 <Border CornerRadius="15,15,0,0" />
                 <TextBlock Text="Bot_RPA - Robotic Process Automation" Foreground="#E3E0F2" FontWeight="SemiBold" VerticalAlignment="Center" Margin="15,10"/>
-                <Button Content="✕" HorizontalAlignment="Right" VerticalAlignment="Top" Width="40" Height="30" 
+                <Button Content="X" HorizontalAlignment="Right" VerticalAlignment="Top" Width="40" Height="30"
                         Background="Transparent" Foreground="#E3E0F2" BorderThickness="0" Cursor="Hand" Click="BtnClose_Click">
                     <Button.Style>
                         <Style TargetType="Button">
@@ -129,7 +129,6 @@
                 <!-- Card 1 -->
                 <Border x:Name="Card1" Grid.Column="0" Style="{StaticResource CardStyle}">
                     <StackPanel VerticalAlignment="Center">
-                        <TextBlock Text="⚙️" FontSize="48" HorizontalAlignment="Center" Margin="0,0,0,15"/>
                         <TextBlock Text="Gestão do Aparelho" Foreground="#513BA6" FontWeight="Bold" FontSize="18" HorizontalAlignment="Center" Margin="0,0,0,10"/>
                         <TextBlock Text="Automação avançada para tablets e totens, direto no hardware sem depender de internet." Foreground="#A1A1AA" TextWrapping="Wrap" TextAlignment="Center"/>
                     </StackPanel>
@@ -138,16 +137,14 @@
                 <!-- Card 2 -->
                 <Border x:Name="Card2" Grid.Column="1" Style="{StaticResource CardStyle}">
                     <StackPanel VerticalAlignment="Center">
-                        <TextBlock Text="📊" FontSize="48" HorizontalAlignment="Center" Margin="0,0,0,15"/>
                         <TextBlock Text="Gestão Dinâmica" Foreground="#4EDEA3" FontWeight="Bold" FontSize="18" HorizontalAlignment="Center" Margin="0,0,0,10"/>
-                        <TextBlock Text="Banco de dados SQLite embutido, com emissão de relatórios, CSV e Etiquetas QR Code." Foreground="#A1A1AA" TextWrapping="Wrap" TextAlignment="Center"/>
+                            <TextBlock Text="Banco de dados embutido, com emissão de relatórios, CSV e Etiquetas QR Code." Foreground="#A1A1AA" TextWrapping="Wrap" TextAlignment="Center"/>
                     </StackPanel>
                 </Border>
 
                 <!-- Card 3 -->
                 <Border x:Name="Card3" Grid.Column="2" Style="{StaticResource CardStyle}">
                     <StackPanel VerticalAlignment="Center">
-                        <TextBlock Text="🚀" FontSize="48" HorizontalAlignment="Center" Margin="0,0,0,15"/>
                         <TextBlock Text="Plug &amp; Play" Foreground="#FFD666" FontWeight="Bold" FontSize="18" HorizontalAlignment="Center" Margin="0,0,0,10"/>
                         <TextBlock Text="Sistema assíncrono e autocontido. Todas as ferramentas necessárias já estão incluídas!" Foreground="#A1A1AA" TextWrapping="Wrap" TextAlignment="Center"/>
                     </StackPanel>
@@ -156,7 +153,7 @@
 
             <!-- Rodapé com Botão e Loading -->
             <StackPanel Grid.Row="2" Margin="0,0,0,30" HorizontalAlignment="Center">
-                <Button x:Name="BtnIniciar" Content="INICIAR CONFIGURAÇÃO" Foreground="White" FontWeight="Bold" FontSize="16" 
+                <Button x:Name="BtnIniciar" Content="INICIAR CONFIGURAÇÃO" Foreground="White" FontWeight="Bold" FontSize="16"
                         Width="250" Height="45" Cursor="Hand" Click="BtnIniciar_Click">
                     <Button.Style>
                         <Style TargetType="Button">

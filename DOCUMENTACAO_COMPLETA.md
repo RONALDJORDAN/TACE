@@ -212,30 +212,19 @@ Concentra 100% dos executáveis e utilitários externos (não versionados no Git
 | `mingw64/` | Toolchain GCC MinGW64 (somente desenvolvimento, NÃO vai para o Release). |
 | `capturamac/` | Ferramenta autônoma em C + CMD para captura de MAC Wi-Fi (fonte versionada, saídas ignoradas). |
 
-### 3.3 `scripts/` — Automação de build e DevOps
+### 3.3 `scripts/scripts de controle/` — Ferramentas de administração unificadas
 | Arquivo | Propósito |
 |---------|-----------|
-| `build.bat` | Compila o motor C (`BotEngine.dll`) via GCC e a UI C# via `dotnet publish` (self-contained). Gera `data/output/`. Gera registro de auditoria em `registros/`. |
-| `build_release.bat` | Gera a Release portátil PnP em `BotRPA_Release/` (ícone roxo, todas as ferramentas, sem mingw64). |
-| `build_installer.bat` | Build de instalador. |
-| `apply_ota_update.bat` | Script de atualização OTA executado no PC do usuário (taskkill, extração ZIP, detecção de exe). |
-| `install_dependencies.bat` | Provisiona dependências automaticamente. |
-| `setup_adb.bat` | Configura o ADB. |
-| `monitor_tela.bat` | Grava fluxo manual via ADB em tempo real. |
-| `gravar_fluxo_manual.ps1` | Gravação de fluxo manual (PowerShell). |
-| `analise_xml.ps1` | Análise de dumps XML. |
-| `show_zip_node.ps1` | Exibe nós ZIP. |
-| `convert.py` | Conversão de arquivos. |
-| `testes/` | Utilitários de testes operacionais e bancada (`listar_dispositivos`, `obter_mac`, `test_dll_mac`, etc.). |
+| `ControleGeral.bat` | Script único de controle: `[1]` Build TESTE (GCC + dotnet, `data/output/`), `[2]` Build RELEASE (pacote PnP `BotRPA_Release/`), `[3]` Build INSTALADOR (Inno Setup), `[4]` Dependências (GCC + .NET 8), `[5]` Download ADB, `[6]` Monitor de tela, `[7]` Ferramentas Dev, `[8]` Ajuda. Modo direto: `ControleGeral.bat 1..8` ou `build \| release \| installer \| deps \| adb \| monitor \| tools`. Mostra status de GCC/dotnet e versão no menu. |
+| `BotRPA.iss` / `InstallerAssets/` | Script e assets (ícones do wizard, termo de uso) exigidos fisicamente pelo Inno Setup na opção `[3]`. |
 
-### 3.4 `controle/` — Ferramentas de administração (somente dev, fora da Release)
+### 3.4 `scripts/scripts de teste/` — Ferramentas de teste operacional
 | Arquivo | Propósito |
 |---------|-----------|
-| `Build.ps1` / `Build.bat` | Painel interativo colorido: `[1] Build TESTE` → `data/output/`, `[2] Build FINAL` → `BotRPA_Release/`, `[0] Sair`. Detecção de GCC/dotnet, validação de artefatos, transcript de log. |
-| `Terminal.ps1` / `Terminal.bat` | REPL `BotRPA>` com funções admin: `ajuda`, `build teste`, `build final`, `versao`, `dispositivos`, `ota`, `deps`, `limpar`, `sair`. |
-| `Atualizacao.bat` / `Atualizacao.ps1` | Geração de pacote OTA com número de versão (`DD.MM.YYYY.HHMM`), compilação C + C#, grava `config/version.txt`, empacota `.zip` para envio via Firebase. |
-| `BotRPA.iss` | Script do Inno Setup para instalador. |
-| `BotRPA_Release_*.zip` | Pacotes de distribuição versionados. |
+| `monitor_tela.bat` | Monitor contínuo de tela via ADB (XML + screenshots). |
+| `gravar_fluxo_manual.ps1` | Gravação de fluxo manual passo a passo (PowerShell). |
+| `analise_xml.ps1` | Análise de dumps XML. |
+| `show_zip_node.ps1` | Exibe nós clicáveis de um dump XML. |
 
 ### 3.5 `data/` — Dados de execução e bancos locais (gitignorado)
 | Subpasta/Arquivo | Propósito |
@@ -260,14 +249,14 @@ Concentra 100% dos executáveis e utilitários externos (não versionados no Git
 | `relatorio_funcoes_multilaser_tabmulti_m7.md` | Relatório detalhado F1-F4 do TabMulti M7. |
 | `relatorio_funcoes_nokia_t20.md` | Relatório detalhado F1-F3 do Nokia T20. |
 
-### 3.7 `registros/` — Logs de auditoria de build (Regra de Ouro #2)
-Padrão: `registros/YYYY-MM-DD/HH-MM_Plataforma_BotRPA_DESKTOP_BUILD`. Cada build gera uma pasta com `build.log` (hashes SHA-256, checklist de conteúdo, schema do banco). Logs de execução de dispositivo (`*_execucao.log`, `*.log`) são ignorados pelo Git; apenas auditorias de build permanecem rastreáveis.
+### 3.7 `docs/registros/` — Logs de auditoria de build (Regra de Ouro #2)
+Padrão: `docs/registros/YYYY-MM-DD/HH-MM_Plataforma_BotRPA_DESKTOP_BUILD`. Cada build gera uma pasta com `build.log` (hashes SHA-256, checklist de conteúdo, schema do banco). Logs de execução de dispositivo (`*_execucao.log`, `*.log`) são ignorados pelo Git; apenas auditorias de build permanecem rastreáveis.
 
 ### 3.8 `logs/` — Logs de execução local (gitignorado)
 Logs de execução do motor e da UI. Nunca versionados.
 
 ### 3.9 `BotRPA_Release/` — Release portátil PnP (gitignorado)
-Pacote de distribuição para o usuário final. Contém: `BotRPAui.exe`, `BotEngine.dll`, `config/`, `tools/` (platform-tools, reverse_tethering, mac_address_finder.apk), `scripts/apply_ota_update.bat`, `data/` (banco, inputs), `Arquivos/`, `logs/`, `registros/`. **Sem** `tools/mingw64`.
+Pacote de distribuição para o usuário final. Contém: `BotRPAui.exe`, `BotEngine.dll`, `config/`, `tools/` (platform-tools, reverse_tethering, mac_address_finder.apk), `scripts/apply_ota_update.bat`, `data/` (banco, inputs), `Arquivos/`, `logs/`, `docs/registros/`. **Sem** `tools/mingw64`.
 
 ### 3.10 `data/output/` — Binários de dev/teste (gitignorado)
 `BotEngine.dll` (397-414KB) e `BotRPAui.exe` (~185-194MB, self-contained .NET 8).
@@ -338,15 +327,15 @@ Pacote de distribuição para o usuário final. Contém: `BotRPAui.exe`, `BotEng
 ## 7. BUILD E DEVOPS
 
 ### 7.1 Scripts de build
-- `scripts/build.bat` — Modo TESTE (ícone azul escuro), gera `data/output/`.
-- `scripts/build_release.bat` — Modo RELEASE (ícone roxo), gera `BotRPA_Release/`.
-- `controle/Build.ps1` / `Build.bat` — Painel interativo TESTE/FINAL.
+- `scripts/scripts de controle/ControleGeral.bat 1` — Modo TESTE (ícone azul escuro), gera `data/output/`.
+- `scripts/scripts de controle/ControleGeral.bat 2` — Modo RELEASE (ícone roxo), gera `BotRPA_Release/`.
+- `scripts/scripts de controle/ControleGeral.bat 3` — Build INSTALADOR (Inno Setup, gera setup.exe a partir de `BotRPA_Release/`).
 
 ### 7.2 Política de build (Regra de Ouro #4)
-- Ao término de edições em C ou C#, é **obrigatório** rodar `scripts/build.bat`.
+- Ao término de edições em C ou C#, é **obrigatório** rodar `scripts/scripts de controle/ControleGeral.bat 1`.
 - Resultado exigido: **Zero Errors e Zero Warnings**.
 - Versão gerada: `DD.MM.YYYY.HHMM` em `config/version.txt`.
-- Registro de auditoria em `registros/YYYY-MM-DD/HH-MM_Plataforma_BotRPA_DESKTOP_BUILD`.
+- Registro de auditoria em `docs/registros/YYYY-MM-DD/HH-MM_Plataforma_BotRPA_DESKTOP_BUILD`.
 
 ### 7.3 Diretriz de build
 > Conforme registrado em `memoria_bot_rpa.md` (2026-09-03 22:00): **Não executar nenhum comando de compilação ou script de build a menos que o usuário dê a ordem explícita.**
@@ -357,9 +346,9 @@ Pacote de distribuição para o usuário final. Contém: `BotRPAui.exe`, `BotEng
 
 1. **Checklist inicial:** Ler `memoria_bot_rpa.md` e confirmar contexto antes de qualquer modificação.
 2. **Isolamento estrito por equipamento/modelo:** Alterações em um modelo (ex: F1 Vision 7) devem ocorrer **estritamente** no arquivo correspondente (`f1_vision_tab7.c`), com **zero efeito colateral** nos demais modelos.
-3. **Rastreabilidade:** Toda alteração deve ser registrada em `memoria_bot_rpa.md` em ordem cronológica. Logs de build em `registros/`. Commits em Conventional Commits (`feat:`, `fix:`, `refactor:`, `docs:`, `style:`).
+3. **Rastreabilidade:** Toda alteração deve ser registrada em `memoria_bot_rpa.md` em ordem cronológica. Logs de build em `docs/registros/`. Commits em Conventional Commits (`feat:`, `fix:`, `refactor:`, `docs:`, `style:`).
 4. **Organização limpa de pastas:** Zero poluição na raiz. Binários em `data/output/` ou `BotRPA_Release/`. Configurações em `config/`. Ferramentas em `tools/`.
-5. **Política de Zero Warning & Build Obrigatório:** `scripts/build.bat` após edições.
+5. **Política de Zero Warning & Build Obrigatório:** `scripts/scripts de controle/ControleGeral.bat 1` após edições em C/C#.
 
 ---
 
@@ -376,7 +365,7 @@ Pacote de distribuição para o usuário final. Contém: `BotRPAui.exe`, `BotEng
 ## 10. ESTADO ATUAL DO PROJETO
 
 - Última versão: `21.10.2026.0826` (`config/version.txt`)
-- Último build FINAL: `20.10.2026.1843` (Release PnP, SHA-256 disponível em `registros/2026-10-20/18-43/`)
+- Último build FINAL: `20.10.2026.1843` (Release PnP, SHA-256 disponível em `docs/registros/2026-10-20/18-43_Plataforma_BotRPA_DESKTOP_BUILD/`)
 - Banco: 433 dispositivos, IDs contíguos 1..433, coluna `Patrimonio` vazia (a preencher manualmente)
 - BotLearn: modo Estático (aprendizado desligado)
 - OTA: público só-leitura via `ota/manifest` (precisa de Firebase rules públicas)

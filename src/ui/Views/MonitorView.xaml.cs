@@ -100,6 +100,20 @@ namespace BotRpaUI.Views
             }
         }
 
+        private string _usbPort = string.Empty;
+        public string UsbPort
+        {
+            get => _usbPort;
+            set
+            {
+                _usbPort = value;
+                OnPropertyChanged(nameof(UsbPort));
+                OnPropertyChanged(nameof(UsbPortExibicao));
+            }
+        }
+
+        public string UsbPortExibicao => BotRpaUI.Core.UsbPortNameService.ObterExibicao(_usbPort);
+
         private string _battery = string.Empty;
         public string Battery { 
             get => _battery; 
@@ -680,6 +694,8 @@ namespace BotRpaUI.Views
             public string imei;
             [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)]
             public string mac;
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)]
+            public string usb_port;
             public int authorized;
         }
 
@@ -974,6 +990,10 @@ namespace BotRpaUI.Views
                             }
                             string androidVer = (dev.authorized == 1 && !string.IsNullOrEmpty(dev.android_version)) ? $"Android {dev.android_version}" : "---";
 
+                            string usbPort = dev.usb_port ?? string.Empty;
+                            if (string.IsNullOrWhiteSpace(usbPort) && dev.authorized == 1 && !string.IsNullOrWhiteSpace(serial))
+                                usbPort = BotRpaUI.Core.UsbPortResolver.ObterPorta(serial);
+
                             // Registra no banco SQLite para manter permanentemente para o futuro
                             if (dev.authorized == 1)
                             {
@@ -1007,6 +1027,7 @@ namespace BotRpaUI.Views
                                 Model = model,
                                 Manufacturer = dev.manufacturer,
                                 MAC = mac,
+                                UsbPort = usbPort,
                                 Battery = dev.battery,
                                 AndroidVersion = androidVer,
                                 Status = dev.authorized == 1 ? "Pronto" : "Pendente",
@@ -1093,6 +1114,7 @@ namespace BotRpaUI.Views
                                 existing.Manufacturer = nd.Manufacturer;
                                 existing.Battery = nd.Battery;
                                 existing.AndroidVersion = nd.AndroidVersion;
+                                existing.UsbPort = nd.UsbPort;
                                 if (!string.IsNullOrEmpty(nd.MAC) && nd.MAC != "N/A" && nd.MAC != "---" && nd.MAC != "02:00:00:00:00:00")
                                 {
                                     existing.MAC = nd.MAC;
@@ -1107,7 +1129,7 @@ namespace BotRpaUI.Views
                             // Atualiza a porcentagem de bateria no GlobalProgressPanel se a label existir
                             if (_deviceProgressSerialLabels.ContainsKey(nd.Serial))
                             {
-                                string battInfo = string.IsNullOrEmpty(nd.Battery) || nd.Battery == "---" ? "" : $" 🔋 {nd.Battery}";
+                                string battInfo = string.IsNullOrEmpty(nd.Battery) || nd.Battery == "---" ? "" : $"Bateria: {nd.Battery}";
                                 _deviceProgressSerialLabels[nd.Serial].Text = $"[{nd.Serial}]{battInfo}";
                             }
                         }
@@ -1210,7 +1232,7 @@ namespace BotRpaUI.Views
             string batteryText = "";
             foreach (var d in _devicesList) {
                 if (d.Serial == serial) {
-                    batteryText = $" 🔋 {d.Battery}";
+                    batteryText = $"Bateria: {d.Battery}";
                     break;
                 }
             }
@@ -1295,7 +1317,7 @@ namespace BotRpaUI.Views
                     foreach (var d in _devicesList) {
                         if (d.Serial == serial) {
                             if (_deviceProgressSerialLabels.ContainsKey(serial)) {
-                                _deviceProgressSerialLabels[serial].Text = $"[{serial}] 🔋 {d.Battery}";
+                                _deviceProgressSerialLabels[serial].Text = $"[{serial}]  {d.Battery}";
                             }
                             break;
                         }
@@ -1432,7 +1454,7 @@ namespace BotRpaUI.Views
             {
                 if (targetSerial != null)
                 {
-                    string dir = System.IO.Path.Combine(BotRpaUI.Core.PathHelper.GetRootDirectory(), "registros", DateTime.Now.ToString("yyyy-MM-dd"));
+                    string dir = System.IO.Path.Combine(BotRpaUI.Core.PathHelper.GetRegistrosDirectory(), DateTime.Now.ToString("yyyy-MM-dd"));
                     if (!System.IO.Directory.Exists(dir)) System.IO.Directory.CreateDirectory(dir);
                     string logFile = System.IO.Path.Combine(dir, $"{targetSerial}_execucao.log");
                     System.IO.File.AppendAllText(logFile, $"[{DateTime.Now:HH:mm:ss}] {displayMsg}\n");
@@ -1670,7 +1692,7 @@ namespace BotRpaUI.Views
 
             if (TxtGestaoStatus != null)
                 TxtGestaoStatus.Text = "Pronto. Selecione uma opção acima ou informe comandos em lote.";
-            LogMessage("\n[📱 Submódulo de Gestão do Aparelho Ativado]");
+            LogMessage("\n[Submódulo de Gestão do Aparelho Ativado]");
         }
 
         private void BtnSairGestao_Click(object sender, RoutedEventArgs e)
@@ -1684,7 +1706,7 @@ namespace BotRpaUI.Views
             if (CardAutoConectar != null) CardAutoConectar.Visibility = Visibility.Visible;
             if (CardAutoF4 != null) CardAutoF4.Visibility = Visibility.Collapsed;
 
-            LogMessage("[📱 Submódulo de Gestão do Aparelho Fechado - Histórico restaurado]");
+            LogMessage("[Submódulo de Gestão do Aparelho Fechado - Histórico restaurado]");
         }
 
         private void BtnGestaoAction_Click(object sender, RoutedEventArgs e)
@@ -1695,7 +1717,7 @@ namespace BotRpaUI.Views
                 if (!string.IsNullOrEmpty(tag))
                 {
                     if (TxtGestaoStatus != null)
-                        TxtGestaoStatus.Text = $"⚡ Disparando ação [{tag}] para os dispositivos...";
+                        TxtGestaoStatus.Text = $"Disparando ação [{tag}] para os dispositivos...";
                     ExecuteF4Command(tag);
                 }
             }
@@ -1707,7 +1729,7 @@ namespace BotRpaUI.Views
             if (string.IsNullOrEmpty(cmd)) return;
 
             if (TxtGestaoStatus != null)
-                TxtGestaoStatus.Text = $"⚡ Executando lote [{cmd}]...";
+                TxtGestaoStatus.Text = $"Executando lote [{cmd}]...";
             ExecuteF4Command(cmd);
             TxtGestaoBatchInput.Clear();
         }
@@ -1804,7 +1826,7 @@ namespace BotRpaUI.Views
             if (sender is Button btn && btn.Tag is string seq && !string.IsNullOrWhiteSpace(seq))
             {
                 if (TxtGestaoStatus != null)
-                    TxtGestaoStatus.Text = $"⚡ Aplicando perfil [{seq}]...";
+                    TxtGestaoStatus.Text = $"Aplicando perfil [{seq}]...";
                 ExecuteF4Command(seq);
             }
         }
@@ -1871,7 +1893,7 @@ namespace BotRpaUI.Views
                 if (!int.TryParse(part.Trim(), out int acao) || acao < 1 || acao > 12)
                 {
                     LogMessage($"[Erro] Comando inválido: '{part}'. Digite números de 1 a 12 (ex: 11, 12, ou 5,7).");
-                    if (TxtGestaoStatus != null) TxtGestaoStatus.Text = $"⚠️ Comando inválido: '{part}'. Use números de 1 a 12.";
+                    if (TxtGestaoStatus != null) TxtGestaoStatus.Text = $"Comando inválido: '{part}'. Use números de 1 a 12.";
                     return;
                 }
                 acoes.Add(acao);
@@ -1881,7 +1903,7 @@ namespace BotRpaUI.Views
             if (targetDevices.Count == 0)
             {
                 LogMessage("[Erro] Nenhum aparelho conectado para receber o comando.");
-                if (TxtGestaoStatus != null) TxtGestaoStatus.Text = "⚠️ Nenhum aparelho conectado para receber o comando.";
+                if (TxtGestaoStatus != null) TxtGestaoStatus.Text = "Nenhum aparelho conectado para receber o comando.";
                 return;
             }
 
@@ -1892,7 +1914,7 @@ namespace BotRpaUI.Views
             }
 
             if (TxtGestaoStatus != null)
-                TxtGestaoStatus.Text = $"✔ Disparando comando [{cmd}] para {targetDevices.Count} aparelho(s)...";
+                TxtGestaoStatus.Text = $"Disparando comando [{cmd}] para {targetDevices.Count} aparelho(s)...";
 
             foreach (var device in targetDevices)
             {
@@ -1936,7 +1958,7 @@ namespace BotRpaUI.Views
             if (idx < 0 || idx >= _municipiosArray.Length)
             {
                 LogMessage("[Erro] Selecione um município no menu superior antes de definir o Wallpaper.");
-                if (TxtGestaoStatus != null) TxtGestaoStatus.Text = "⚠️ Selecione um município no menu superior antes de definir Wallpaper.";
+                if (TxtGestaoStatus != null) TxtGestaoStatus.Text = "Selecione um município no menu superior antes de definir Wallpaper.";
                 return false;
             }
 
@@ -1944,7 +1966,7 @@ namespace BotRpaUI.Views
             if (string.IsNullOrEmpty(wpPath))
             {
                 LogMessage("[Erro] O município selecionado não possui um Wallpaper configurado.");
-                if (TxtGestaoStatus != null) TxtGestaoStatus.Text = "⚠️ O município selecionado não possui Wallpaper configurado.";
+                if (TxtGestaoStatus != null) TxtGestaoStatus.Text = "O município selecionado não possui Wallpaper configurado.";
                 return false;
             }
 
@@ -1957,7 +1979,7 @@ namespace BotRpaUI.Views
             if (!System.IO.File.Exists(wpPath))
             {
                 LogMessage($"[Erro] Arquivo de Wallpaper não encontrado fisicamente em: {wpPath}");
-                if (TxtGestaoStatus != null) TxtGestaoStatus.Text = $"⚠️ Arquivo de Wallpaper não encontrado: {wpPath}";
+                if (TxtGestaoStatus != null) TxtGestaoStatus.Text = $"Arquivo de Wallpaper não encontrado: {wpPath}";
                 return false;
             }
 
@@ -2024,7 +2046,7 @@ namespace BotRpaUI.Views
 
             LogMessage($"[{finalSerial}] Automação F4 ativada! Executando subfunção [{cmd}] automaticamente...");
             if (TxtGestaoStatus != null)
-                TxtGestaoStatus.Text = $"✔ Automação F4 [{cmd}] disparada para {finalSerial}.";
+                TxtGestaoStatus.Text = $"Automação F4 [{cmd}] disparada para {finalSerial}.";
 
             EnqueueDeviceCommand(finalSerial, $"F4:{cmd}", $"F4 [{cmd}] (automatico)", () =>
             {

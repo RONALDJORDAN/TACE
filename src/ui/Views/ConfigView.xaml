@@ -110,13 +110,11 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
-                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
                 <!-- Cabeçalho do Menu -->
                 <StackPanel Grid.Row="0" Margin="0,0,0,20">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="6,4,0,10">
-                        <TextBlock Text="⚙️" FontSize="20" VerticalAlignment="Center" Margin="0,0,10,0"/>
                         <TextBlock Text="Configurações" Foreground="#FFFFFF" FontSize="16" FontWeight="Black" VerticalAlignment="Center"/>
                     </StackPanel>
                     <Separator Background="#23233A" Margin="0,5,0,5"/>
@@ -125,20 +123,12 @@
 
                 <!-- Botões de Submódulos -->
                 <StackPanel Grid.Row="1">
-                    <Button x:Name="BtnSubGeral" Content="🎛️  1. Sistema &amp; Controle" Style="{StaticResource SideMenuButton}" Click="BtnSubGeral_Click" Foreground="#4EDEA3" Background="#2A2A40"/>
-                    <Button x:Name="BtnSubAparelhos" Content="📱  2. Aparelhos Suportados" Style="{StaticResource SideMenuButton}" Click="BtnSubAparelhos_Click"/>
-                    <Button x:Name="BtnSubRede" Content="🌐  3. Rede &amp; Tethering" Style="{StaticResource SideMenuButton}" Click="BtnSubRede_Click"/>
-                    <Button x:Name="BtnSubDados" Content="💾  4. Backup &amp; Gestão" Style="{StaticResource SideMenuButton}" Click="BtnSubDados_Click"/>
-                    <Button x:Name="BtnSubBibliotecas" Content="📚  5. Tecnologias &amp; Licença" Style="{StaticResource SideMenuButton}" Click="BtnSubBibliotecas_Click"/>
+                    <Button x:Name="BtnSubGeral" Content="1. Sistema &amp; Controle" Style="{StaticResource SideMenuButton}" Click="BtnSubGeral_Click" Foreground="#4EDEA3" Background="#2A2A40"/>
+                    <Button x:Name="BtnSubAparelhos" Content="2. Aparelhos Suportados" Style="{StaticResource SideMenuButton}" Click="BtnSubAparelhos_Click"/>
+                    <Button x:Name="BtnSubRede" Content="3. Rede &amp; Tethering" Style="{StaticResource SideMenuButton}" Click="BtnSubRede_Click"/>
+                    <Button x:Name="BtnSubDados" Content="4. Backup &amp; Gestão" Style="{StaticResource SideMenuButton}" Click="BtnSubDados_Click"/>
+                    <Button x:Name="BtnSubBibliotecas" Content="5. Tecnologias &amp; Licença" Style="{StaticResource SideMenuButton}" Click="BtnSubBibliotecas_Click"/>
                 </StackPanel>
-
-                <!-- Rodapé informativo do Menu -->
-                <Border Grid.Row="2" Background="#0A0A0F" CornerRadius="8" Padding="10" BorderBrush="#202035" BorderThickness="1">
-                    <StackPanel>
-                        <TextBlock Text="Bot_RPA Engine: Ativo" Foreground="#4EDEA3" FontSize="11" FontWeight="Bold"/>
-                        <TextBlock Text="MinGW64 GCC Nativo C" Foreground="#85859E" FontSize="10" Margin="0,2,0,0"/>
-                    </StackPanel>
-                </Border>
             </Grid>
         </Border>
 
@@ -187,7 +177,6 @@
                                                 <RowDefinition Height="*"/>
                                             </Grid.RowDefinitions>
                                             <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-                                                <TextBlock Text="📟" FontSize="18" Margin="0,0,8,0" VerticalAlignment="Center"/>
                                                 <TextBlock Text="Monitor Clássico (ADB)" Foreground="#FFFFFF" FontSize="13" FontWeight="Bold" VerticalAlignment="Center"/>
                                                 <Border x:Name="BadgeClassicActive" Margin="10,0,0,0" Background="#0A1E2B" BorderBrush="#00E5FF" BorderThickness="1" CornerRadius="4" Padding="6,2" VerticalAlignment="Center" Visibility="Visible">
                                                     <TextBlock Text="ATIVO" Foreground="#00E5FF" FontSize="9" FontWeight="Black"/>
@@ -205,7 +194,6 @@
                                                 <RowDefinition Height="*"/>
                                             </Grid.RowDefinitions>
                                             <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-                                                <TextBlock Text="⚡" FontSize="18" Margin="0,0,8,0" VerticalAlignment="Center"/>
                                                 <TextBlock Text="Monitor Pro (Grid)" Foreground="#FFFFFF" FontSize="13" FontWeight="Bold" VerticalAlignment="Center"/>
                                                 <Border x:Name="BadgeProActive" Margin="10,0,0,0" Background="#2B0A1E" BorderBrush="#FF007F" BorderThickness="1" CornerRadius="4" Padding="6,2" VerticalAlignment="Center" Visibility="Collapsed">
                                                     <TextBlock Text="ATIVO" Foreground="#FF007F" FontSize="9" FontWeight="Black"/>
@@ -285,19 +273,15 @@
                         <Border Style="{StaticResource CardStyle}">
                             <Grid>
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
-                                <Border Background="#1A1A2E" CornerRadius="8" Padding="12" Margin="0,0,16,0" BorderBrush="#00F5D4" BorderThickness="1">
-                                    <TextBlock Text="📱" FontSize="28" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                                </Border>
-                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <StackPanel VerticalAlignment="Center">
                                     <TextBlock Text="Positivo Tab Vision 7 (T307G)" Foreground="#00F5D4" FontSize="16" FontWeight="Bold"/>
                                     <TextBlock Text="Módulos Suportados: [F1], [F2], [F3], [F4], [F5], [F6], [F8]" Foreground="#E3E0F2" FontSize="12" Margin="0,4,0,0"/>
                                     <TextBlock Text="Engine: C Nativo (v7_pipeline.c) | Chipset: Allwinner A133" Foreground="#85859E" FontSize="11" Margin="0,2,0,0"/>
                                 </StackPanel>
-                                <CheckBox Grid.Column="2" x:Name="ToggleDeviceVision7" Content="Monitorar" Style="{StaticResource ToggleSwitchStyle}" IsChecked="True" Checked="ToggleDevice_Changed" Unchecked="ToggleDevice_Changed" VerticalAlignment="Center"/>
+                                <CheckBox Grid.Column="1" x:Name="ToggleDeviceVision7" Content="Monitorar" Style="{StaticResource ToggleSwitchStyle}" IsChecked="True" Checked="ToggleDevice_Changed" Unchecked="ToggleDevice_Changed" VerticalAlignment="Center"/>
                             </Grid>
                         </Border>
 
@@ -305,19 +289,15 @@
                         <Border Style="{StaticResource CardStyle}">
                             <Grid>
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
-                                <Border Background="#1A1A2E" CornerRadius="8" Padding="12" Margin="0,0,16,0" BorderBrush="#FFB703" BorderThickness="1">
-                                    <TextBlock Text="📱" FontSize="28" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                                </Border>
-                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <StackPanel VerticalAlignment="Center">
                                     <TextBlock Text="Multilaser TabMulti M7 (m7_MULTI)" Foreground="#FFB703" FontSize="16" FontWeight="Bold"/>
                                     <TextBlock Text="Módulos Suportados: [F1], [F2], [F3], [F4], [F5]" Foreground="#E3E0F2" FontSize="12" Margin="0,4,0,0"/>
                                     <TextBlock Text="Engine: C Nativo (m7_pipeline.c) | Suporte Multi-Launcher" Foreground="#85859E" FontSize="11" Margin="0,2,0,0"/>
                                 </StackPanel>
-                                <CheckBox Grid.Column="2" x:Name="ToggleDeviceTabMulti" Content="Monitorar" Style="{StaticResource ToggleSwitchStyle}" IsChecked="True" Checked="ToggleDevice_Changed" Unchecked="ToggleDevice_Changed" VerticalAlignment="Center"/>
+                                <CheckBox Grid.Column="1" x:Name="ToggleDeviceTabMulti" Content="Monitorar" Style="{StaticResource ToggleSwitchStyle}" IsChecked="True" Checked="ToggleDevice_Changed" Unchecked="ToggleDevice_Changed" VerticalAlignment="Center"/>
                             </Grid>
                         </Border>
 
@@ -325,19 +305,15 @@
                         <Border Style="{StaticResource CardStyle}">
                             <Grid>
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
-                                <Border Background="#1A1A2E" CornerRadius="8" Padding="12" Margin="0,0,16,0" BorderBrush="#D2BBFF" BorderThickness="1">
-                                    <TextBlock Text="📱" FontSize="28" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                                </Border>
-                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <StackPanel VerticalAlignment="Center">
                                     <TextBlock Text="Nokia T20 (Android 11)" Foreground="#D2BBFF" FontSize="16" FontWeight="Bold"/>
                                     <TextBlock Text="Módulos Suportados: [F1], [F2], [F3] (Pipeline Especial Android 11)" Foreground="#E3E0F2" FontSize="12" Margin="0,4,0,0"/>
                                     <TextBlock Text="Engine: C Nativo (t20_pipeline.c) | Compatibilidade com Scoped Storage" Foreground="#85859E" FontSize="11" Margin="0,2,0,0"/>
                                 </StackPanel>
-                                <CheckBox Grid.Column="2" x:Name="ToggleDeviceNokiaT20" Content="Monitorar" Style="{StaticResource ToggleSwitchStyle}" IsChecked="True" Checked="ToggleDevice_Changed" Unchecked="ToggleDevice_Changed" VerticalAlignment="Center"/>
+                                <CheckBox Grid.Column="1" x:Name="ToggleDeviceNokiaT20" Content="Monitorar" Style="{StaticResource ToggleSwitchStyle}" IsChecked="True" Checked="ToggleDevice_Changed" Unchecked="ToggleDevice_Changed" VerticalAlignment="Center"/>
                             </Grid>
                         </Border>
 
@@ -417,13 +393,13 @@
                                         <TextBlock Text="Diagnóstico de Estabilidade de Conexão" Foreground="#FFFFFF" FontSize="15" FontWeight="Bold"/>
                                         <TextBlock Text="Executa um ping de diagnóstico e latência avaliando a conexão (Escala de 1 a 10)." Foreground="#85859E" FontSize="12" Margin="0,4,0,0" TextWrapping="Wrap"/>
                                     </StackPanel>
-                                    <Button Grid.Column="1" x:Name="BtnTesteVelocidade" Content="🚀 Iniciar Teste" Background="#2A2A40" Foreground="#5EB1FF" BorderThickness="1" BorderBrush="#5EB1FF" Padding="16,8" Cursor="Hand" FontWeight="Bold" FontSize="13" Click="BtnTesteVelocidade_Click" VerticalAlignment="Center"/>
+                                    <Button Grid.Column="1" x:Name="BtnTesteVelocidade" Content="Iniciar Teste" Background="#2A2A40" Foreground="#5EB1FF" BorderThickness="1" BorderBrush="#5EB1FF" Padding="16,8" Cursor="Hand" FontWeight="Bold" FontSize="13" Click="BtnTesteVelocidade_Click" VerticalAlignment="Center"/>
                                 </Grid>
 
                                 <!-- Indicador de Pontos -->
                                 <StackPanel>
                                     <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                                        <TextBlock Text="Qualidade da Conexão: " Foreground="#85859E" FontSize="12"/>
+                                        <TextBlock Text="Qualidade da Conexão:" Foreground="#85859E" FontSize="12"/>
                                         <TextBlock x:Name="TxtResultadoTeste" Text="Aguardando teste..." Foreground="#4EDEA3" FontSize="12" FontWeight="Bold"/>
                                     </StackPanel>
                                     <ItemsControl x:Name="SpeedScoreItems">
@@ -465,7 +441,7 @@
                                     <TextBlock Text="Exportar Pacote (Backup Completo)" Foreground="#4EDEA3" FontSize="15" FontWeight="Bold"/>
                                     <TextBlock Text="Comprime todo o ambiente (bot_database.db, configurações e logs) em um único arquivo .zip." Foreground="#85859E" FontSize="12" Margin="0,4,0,0" TextWrapping="Wrap"/>
                                 </StackPanel>
-                                <Button Grid.Column="1" x:Name="BtnExportar" Content="⬇ Exportar" Background="#2A2A40" Foreground="#4EDEA3" BorderThickness="1" BorderBrush="#4EDEA3" Padding="18,8" Cursor="Hand" FontWeight="Bold" FontSize="13" Click="BtnExportar_Click" VerticalAlignment="Center"/>
+                                <Button Grid.Column="1" x:Name="BtnExportar" Content="Exportar" Background="#2A2A40" Foreground="#4EDEA3" BorderThickness="1" BorderBrush="#4EDEA3" Padding="18,8" Cursor="Hand" FontWeight="Bold" FontSize="13" Click="BtnExportar_Click" VerticalAlignment="Center"/>
                             </Grid>
                         </Border>
 
@@ -480,7 +456,7 @@
                                     <TextBlock Text="Importar Pacote de Backup (.zip)" Foreground="#D2BBFF" FontSize="15" FontWeight="Bold"/>
                                     <TextBlock Text="Restaura a base de dados local a partir de um backup anterior." Foreground="#85859E" FontSize="12" Margin="0,4,0,0" TextWrapping="Wrap"/>
                                 </StackPanel>
-                                <Button Grid.Column="1" x:Name="BtnImportar" Content="⬆ Importar" Background="#513BA6" Foreground="#FFFFFF" BorderThickness="0" Padding="18,8" Cursor="Hand" FontWeight="Bold" FontSize="13" Click="BtnImportar_Click" VerticalAlignment="Center"/>
+                                <Button Grid.Column="1" x:Name="BtnImportar" Content="Importar" Background="#513BA6" Foreground="#FFFFFF" BorderThickness="0" Padding="18,8" Cursor="Hand" FontWeight="Bold" FontSize="13" Click="BtnImportar_Click" VerticalAlignment="Center"/>
                             </Grid>
                         </Border>
 
@@ -507,9 +483,6 @@
                         <Border Style="{StaticResource CardStyle}">
                             <StackPanel>
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                                    <Border Background="#1A1A2E" CornerRadius="6" Padding="8" Margin="0,0,12,0" BorderBrush="#8570E6" BorderThickness="1">
-                                        <TextBlock Text="📦" FontSize="18"/>
-                                    </Border>
                                     <StackPanel VerticalAlignment="Center">
                                         <TextBlock Text="QRCoder (v1.8.0)" Foreground="#5EB1FF" FontSize="15" FontWeight="Bold"/>
                                         <TextBlock Text="Framework Nativo C# (GDI+ / System.Drawing)" Foreground="#85859E" FontSize="11"/>
@@ -522,9 +495,6 @@
                         <Border Style="{StaticResource CardStyle}">
                             <StackPanel>
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                                    <Border Background="#1A1A2E" CornerRadius="6" Padding="8" Margin="0,0,12,0" BorderBrush="#00F5D4" BorderThickness="1">
-                                        <TextBlock Text="⚡" FontSize="18"/>
-                                    </Border>
                                     <StackPanel VerticalAlignment="Center">
                                         <TextBlock Text="MinGW-w64 GCC Compiler" Foreground="#00F5D4" FontSize="15" FontWeight="Bold"/>
                                         <TextBlock Text="Compilação Nativa em C Puro (Win64 Fast-Track)" Foreground="#85859E" FontSize="11"/>

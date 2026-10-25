@@ -78,6 +78,17 @@ namespace BotRpaUI.Core
             return resolved;
         }
 
+        /// <summary>
+        /// Pasta central de registros e auditorias (builds e execucoes).
+        /// Fica dentro de docs/ para manter todo o historico documentado.
+        /// </summary>
+        public static string GetRegistrosDirectory()
+        {
+            string dir = Path.Combine(GetRootDirectory(), "docs", "registros");
+            try { Directory.CreateDirectory(dir); } catch { }
+            return dir;
+        }
+
         /// <summary>Testa se e possivel gravar um arquivo na pasta informada.</summary>
         private static bool IsDirectoryWritable(string dir)
         {

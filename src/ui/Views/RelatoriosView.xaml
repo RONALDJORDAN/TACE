@@ -65,6 +65,52 @@
             </Setter>
         </Style>
 
+        <!-- Botões arredondados da barra de ações e do módulo de exportação -->
+        <Style x:Key="RoundedActionButton" TargetType="Button">
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="6" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Opacity" Value="0.85"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="bd" Property="Opacity" Value="0.7"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="ExportTabButton" TargetType="Button">
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Padding" Value="14,7"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="5" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Opacity" Value="0.9"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <!-- Estilo do DataGrid Dark -->
         <Style x:Key="DarkDataGrid" TargetType="DataGrid">
             <Setter Property="Background" Value="#0A0A0F"/>
@@ -137,13 +183,11 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
-                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
                 <!-- Cabeçalho do Menu -->
                 <StackPanel Grid.Row="0" Margin="0,0,0,20">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="6,4,0,10">
-                        <TextBlock Text="📊" FontSize="20" VerticalAlignment="Center" Margin="0,0,10,0"/>
                         <TextBlock Text="Relatórios &amp; Hub" Foreground="#FFFFFF" FontSize="16" FontWeight="Black" VerticalAlignment="Center"/>
                     </StackPanel>
                     <Separator Background="#23233A" Margin="0,5,0,5"/>
@@ -152,19 +196,11 @@
 
                 <!-- 4 Botões de Submódulos -->
                 <StackPanel Grid.Row="1">
-                    <Button x:Name="BtnSubMetricas" Content="📊  1. Métricas &amp; Dashboard" Style="{StaticResource SideMenuButton}" Click="BtnSubMetricas_Click" Foreground="#4EDEA3" Background="#2A2A40"/>
-                    <Button x:Name="BtnSubBancoDados" Content="🗄️  2. Banco de Dados" Style="{StaticResource SideMenuButton}" Click="BtnSubBancoDados_Click"/>
-                    <Button x:Name="BtnSubRegistros" Content="📝  3. Registros &amp; Auditoria" Style="{StaticResource SideMenuButton}" Click="BtnSubRegistros_Click"/>
-                    <Button x:Name="BtnSubExportacao" Content="📤  4. Exportação de Dados" Style="{StaticResource SideMenuButton}" Click="BtnSubExportacao_Click"/>
+                    <Button x:Name="BtnSubMetricas" Content="1. Métricas &amp; Dashboard" Style="{StaticResource SideMenuButton}" Click="BtnSubMetricas_Click" Foreground="#4EDEA3" Background="#2A2A40"/>
+                    <Button x:Name="BtnSubBancoDados" Content="2. Banco de Dados" Style="{StaticResource SideMenuButton}" Click="BtnSubBancoDados_Click"/>
+                    <Button x:Name="BtnSubRegistros" Content="3. Registros &amp; Auditoria" Style="{StaticResource SideMenuButton}" Click="BtnSubRegistros_Click"/>
+                    <Button x:Name="BtnSubExportacao" Content="4. Exportação de Dados" Style="{StaticResource SideMenuButton}" Click="BtnSubExportacao_Click"/>
                 </StackPanel>
-
-                <!-- Rodapé informativo do Menu -->
-                <Border Grid.Row="2" Background="#0A0A0F" CornerRadius="8" Padding="10" BorderBrush="#202035" BorderThickness="1">
-                    <StackPanel>
-                        <TextBlock Text="Banco SQLite Conectado" Foreground="#4EDEA3" FontSize="11" FontWeight="Bold"/>
-                        <TextBlock x:Name="TxtMiniStatusDb" Text="0 aparelhos registrados" Foreground="#85859E" FontSize="10" Margin="0,2,0,0"/>
-                    </StackPanel>
-                </Border>
             </Grid>
         </Border>
 
@@ -244,7 +280,7 @@
                             <!-- Coluna 1: Distribuição Proporcional por Fabricante -->
                             <Border Grid.Column="0" Background="#0D0D18" CornerRadius="10" Padding="16" BorderBrush="#23233A" BorderThickness="1">
                                 <StackPanel>
-                                    <TextBlock Text="📈 Distribuição Proporcional da Frota" Foreground="#E3E0F2" FontSize="14" FontWeight="Bold" Margin="0,0,0,14"/>
+                                    <TextBlock Text="Distribuição Proporcional da Frota" Foreground="#E3E0F2" FontSize="14" FontWeight="Bold" Margin="0,0,0,14"/>
 
                                     <!-- Barra Positivo -->
                                     <Grid Margin="0,0,0,10">
@@ -290,7 +326,7 @@
                             <!-- Coluna 2: Saúde do Cadastro & Último Registro -->
                             <Border Grid.Column="2" Background="#0D0D18" CornerRadius="10" Padding="16" BorderBrush="#23233A" BorderThickness="1">
                                 <StackPanel>
-                                    <TextBlock Text="🔍 Integridade &amp; Telemetria dos Dados" Foreground="#E3E0F2" FontSize="14" FontWeight="Bold" Margin="0,0,0,14"/>
+                                    <TextBlock Text="Integridade &amp; Telemetria dos Dados" Foreground="#E3E0F2" FontSize="14" FontWeight="Bold" Margin="0,0,0,14"/>
 
                                     <Grid Margin="0,0,0,12">
                                         <Grid.ColumnDefinitions>
@@ -336,12 +372,25 @@
                     <!-- Cabeçalho -->
                     <Grid Grid.Row="0" Margin="0,0,0,12">
                             <StackPanel>
-                                <TextBlock Text="🗄️ Banco de Dados SQLite" Foreground="#FFFFFF" FontSize="18" FontWeight="Bold"/>
+                                <TextBlock Text="Banco de Dados" Foreground="#FFFFFF" FontSize="18" FontWeight="Bold"/>
                                 <TextBlock Text="Gerencie todos os tablets cadastrados na base. Clique duplo para editar ou utilize a barra de ações." Foreground="#85859E" FontSize="12" Margin="0,2,0,0"/>
                             </StackPanel>
                             <Button x:Name="BtnRegistrarAparelho" Content="Registrar Aparelho" HorizontalAlignment="Right" VerticalAlignment="Center"
                                     Background="#4EDEA3" Foreground="#0B0B13" FontWeight="Bold" BorderThickness="0"
-                                    CornerRadius="6" Padding="14,7" Cursor="Hand" Click="BtnRegistrarAparelho_Click"/>
+                                    Padding="16,8" Cursor="Hand" Click="BtnRegistrarAparelho_Click">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="8" Padding="{TemplateBinding Padding}">
+                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="bd" Property="Opacity" Value="0.85"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
                         </Grid>
 
                     <!-- Barra de Busca + Filtros Rápidos (Pills) -->
@@ -360,7 +409,6 @@
                                     <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Text="🔍" FontSize="13" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="#A1A1AA"/>
                                 <TextBox x:Name="TxtBuscaBD" Grid.Column="1" Background="Transparent" BorderThickness="0" 
                                          Foreground="#E3E0F2" FontSize="12" VerticalAlignment="Center"
                                          ToolTip="Buscar por nº de patrimônio (INV), serial, MAC, marca ou modelo"
@@ -374,9 +422,9 @@
                         <!-- Botões de Filtro Rápido por Modelo -->
                         <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
                             <Button x:Name="BtnFiltroTodos" Content="Todos" Style="{StaticResource FilterPillButton}" Click="BtnFiltroTodos_Click" Background="#513BA6" Foreground="#FFFFFF" BorderBrush="#8570E6"/>
-                            <Button x:Name="BtnFiltroVision7" Content="📱 Positivo Vision 7" Style="{StaticResource FilterPillButton}" Click="BtnFiltroVision7_Click"/>
-                            <Button x:Name="BtnFiltroMultiM7" Content="📱 Multilaser M7" Style="{StaticResource FilterPillButton}" Click="BtnFiltroMultiM7_Click"/>
-                            <Button x:Name="BtnFiltroNokiaT20" Content="📱 Nokia T20" Style="{StaticResource FilterPillButton}" Click="BtnFiltroNokiaT20_Click"/>
+                            <Button x:Name="BtnFiltroVision7" Content="Positivo Vision 7" Style="{StaticResource FilterPillButton}" Click="BtnFiltroVision7_Click"/>
+                            <Button x:Name="BtnFiltroMultiM7" Content="Multilaser M7" Style="{StaticResource FilterPillButton}" Click="BtnFiltroMultiM7_Click"/>
+                            <Button x:Name="BtnFiltroNokiaT20" Content="Nokia T20" Style="{StaticResource FilterPillButton}" Click="BtnFiltroNokiaT20_Click"/>
                         </StackPanel>
 
                         <!-- Contador de Registros -->
@@ -399,6 +447,20 @@
                               CellEditEnding="GridBancoDados_CellEditEnding"
                               SelectionChanged="GridBancoDados_SelectionChanged">
                         <DataGrid.Columns>
+                            <!-- ID alinhado ao número de patrimônio -->
+                            <DataGridTextColumn Header="ID" Width="70" Binding="{Binding ID}" IsReadOnly="True">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="#00E5FF"/>
+                                        <Setter Property="FontFamily" Value="Consolas"/>
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="Margin" Value="8,0"/>
+                                        <Setter Property="ToolTip" Value="ID alinhado ao número do patrimônio. Ao editar o patrimônio, o sistema realoca o registro."/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+
                             <!-- Nº de Patrimônio (edição manual inline) -->
                             <DataGridTextColumn Header="Nº Patrimônio" Width="140" Binding="{Binding Patrimonio, UpdateSourceTrigger=PropertyChanged}" IsReadOnly="False">
                                 <DataGridTextColumn.ElementStyle>
@@ -407,7 +469,7 @@
                                         <Setter Property="FontWeight" Value="SemiBold"/>
                                         <Setter Property="VerticalAlignment" Value="Center"/>
                                         <Setter Property="Margin" Value="8,0"/>
-                                        <Setter Property="ToolTip" Value="Clique na celula e digite o numero de patrimonio. Click duplo abre a edicao completa."/>
+                                        <Setter Property="ToolTip" Value="Clique na célula e digite o número de patrimônio. Clique duplo abre a edição completa."/>
                                     </Style>
                                 </DataGridTextColumn.ElementStyle>
                                 <DataGridTextColumn.EditingElementStyle>
@@ -489,10 +551,10 @@
 
                         <!-- Botões CRUD -->
                         <StackPanel Grid.Column="1" Orientation="Horizontal">
-                            <Button Content="➕ Novo" Background="#513BA6" Foreground="#FFFFFF" FontWeight="Bold" BorderThickness="0" Padding="12,6" Width="85" Cursor="Hand" Click="BtnNovoDispositivo_Click"/>
-                            <Button Content="✏️ Editar" Background="#2A2A40" Foreground="#5EB1FF" FontWeight="Bold" BorderThickness="1" BorderBrush="#5EB1FF" Padding="12,6" Width="90" Cursor="Hand" Margin="6,0,0,0" Click="BtnEditarDispositivo_Click"/>
-                            <Button Content="🗑️ Excluir" Background="#E63946" Foreground="#FFFFFF" FontWeight="Bold" BorderThickness="0" Padding="12,6" Width="90" Cursor="Hand" Margin="6,0,0,0" Click="BtnExcluir_Click"/>
-                            <Button Content="📊 Excel" Background="#0A0A0F" Foreground="#E3E0F2" BorderBrush="#2A2A40" BorderThickness="1" Padding="12,6" Width="80" Cursor="Hand" Margin="6,0,0,0" Click="BtnExportarExcel_Click"/>
+                            <Button Content="Novo" Style="{StaticResource RoundedActionButton}" Background="#513BA6" Foreground="#FFFFFF" BorderThickness="0" Width="85" Click="BtnNovoDispositivo_Click"/>
+                            <Button Content="Editar" Style="{StaticResource RoundedActionButton}" Background="#2A2A40" Foreground="#5EB1FF" BorderThickness="1" BorderBrush="#5EB1FF" Width="90" Margin="6,0,0,0" Click="BtnEditarDispositivo_Click"/>
+                            <Button Content="Excluir" Style="{StaticResource RoundedActionButton}" Background="#E63946" Foreground="#FFFFFF" BorderThickness="0" Width="90" Margin="6,0,0,0" Click="BtnExcluir_Click"/>
+                            <Button Content="Excel" Style="{StaticResource RoundedActionButton}" Background="#0A0A0F" Foreground="#E3E0F2" BorderBrush="#2A2A40" BorderThickness="1" Width="80" Margin="6,0,0,0" Click="BtnExportarExcelBanco_Click"/>
                         </StackPanel>
                     </Grid>
                 </Grid>
@@ -511,12 +573,12 @@
                     <!-- Cabeçalho -->
                     <Grid Grid.Row="0" Margin="0,0,0,12">
                         <StackPanel>
-                            <TextBlock Text="📝 Central de Registros &amp; Auditoria de Builds" Foreground="#FFFFFF" FontSize="18" FontWeight="Bold"/>
-                            <TextBlock Text="Histórico completo de auditoria gravado no sistema (/registros). Selecione um registro para inspecionar o log." Foreground="#85859E" FontSize="12" Margin="0,2,0,0"/>
+                            <TextBlock Text="Central de Registros &amp; Auditoria de Builds" Foreground="#FFFFFF" FontSize="18" FontWeight="Bold"/>
+                            <TextBlock Text="Histórico completo de auditoria gravado no sistema (/docs/registros). Selecione um registro para inspecionar o log." Foreground="#85859E" FontSize="12" Margin="0,2,0,0"/>
                         </StackPanel>
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                            <Button Content="🔄 Recarregar" Background="#0A0A0F" Foreground="#E3E0F2" BorderBrush="#2A2A40" BorderThickness="1" Padding="10,5" Cursor="Hand" Click="BtnRecarregarLogs_Click" Margin="0,0,6,0"/>
-                            <Button Content="📁 Abrir Pasta no Explorer" Background="#0A0A0F" Foreground="#4EDEA3" BorderBrush="#4EDEA3" BorderThickness="1" Padding="10,5" Cursor="Hand" Click="BtnAbrirPastaRegistros_Click"/>
+                            <Button Content="Recarregar" Style="{StaticResource RoundedActionButton}" Background="#0A0A0F" Foreground="#E3E0F2" BorderBrush="#2A2A40" BorderThickness="1" Padding="10,5" Click="BtnRecarregarLogs_Click" Margin="0,0,6,0"/>
+                            <Button Content="Abrir Pasta no Explorer" Style="{StaticResource RoundedActionButton}" Background="#0A0A0F" Foreground="#4EDEA3" BorderBrush="#4EDEA3" BorderThickness="1" Padding="10,5" Click="BtnAbrirPastaRegistros_Click"/>
                         </StackPanel>
                     </Grid>
 
@@ -563,8 +625,8 @@
                                 <Grid Grid.Row="0" Margin="0,0,0,8">
                                     <TextBlock x:Name="TxtLogHeaderTitle" Text="Selecione um registro ao lado para visualizar" Foreground="#8570E6" FontSize="12" FontWeight="Bold" VerticalAlignment="Center"/>
                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                                        <Button Content="📋 Copiar Log" Background="#151525" Foreground="#E3E0F2" BorderBrush="#2A2A40" BorderThickness="1" Padding="8,3" FontSize="11" Cursor="Hand" Click="BtnCopiarLog_Click" Margin="0,0,6,0"/>
-                                        <Button Content="📄 Bloco de Notas" Background="#151525" Foreground="#E3E0F2" BorderBrush="#2A2A40" BorderThickness="1" Padding="8,3" FontSize="11" Cursor="Hand" Click="BtnAbrirBlocoNotas_Click"/>
+                                        <Button Content="Copiar Log" Background="#151525" Foreground="#E3E0F2" BorderBrush="#2A2A40" BorderThickness="1" Padding="8,3" FontSize="11" Cursor="Hand" Click="BtnCopiarLog_Click" Margin="0,0,6,0"/>
+                                        <Button Content="Bloco de Notas" Background="#151525" Foreground="#E3E0F2" BorderBrush="#2A2A40" BorderThickness="1" Padding="8,3" FontSize="11" Cursor="Hand" Click="BtnAbrirBlocoNotas_Click"/>
                                     </StackPanel>
                                 </Grid>
 
@@ -591,15 +653,15 @@
                     <!-- Cabeçalho com Segmented Pill (Relatório de Dados vs Tags QR) -->
                     <Grid Grid.Row="0" Margin="0,0,0,14">
                         <StackPanel>
-                            <TextBlock Text="📤 Central de Exportação &amp; Documentos" Foreground="#FFFFFF" FontSize="18" FontWeight="Bold"/>
+                            <TextBlock Text="Central de Exportação &amp; Documentos" Foreground="#FFFFFF" FontSize="18" FontWeight="Bold"/>
                             <TextBlock Text="Emissão de relatórios em PDF formatado, planilhas e geração de etiquetas patrimoniais com QR Code." Foreground="#85859E" FontSize="12" Margin="0,2,0,0"/>
                         </StackPanel>
 
                         <!-- Alternador de Abas Internas -->
                         <Border HorizontalAlignment="Right" VerticalAlignment="Center" Background="#0A0A0F" CornerRadius="6" Padding="3" BorderBrush="#23233A" BorderThickness="1">
                             <StackPanel Orientation="Horizontal">
-                                <Button x:Name="BtnTabRelDados" Content="📄 Relatório de Dados" Padding="12,5" Click="BtnTabRelDados_Click" Background="#513BA6" Foreground="#FFFFFF" FontWeight="Bold" FontSize="12" Cursor="Hand"/>
-                                <Button x:Name="BtnTabRelQRCode" Content="🏷️ Tags QR Code" Padding="12,5" Click="BtnTabRelQRCode_Click" Background="Transparent" Foreground="#85859E" FontWeight="Bold" FontSize="12" Cursor="Hand"/>
+                                <Button x:Name="BtnTabRelDados" Content="Relatório de Dados" Style="{StaticResource ExportTabButton}" Click="BtnTabRelDados_Click" Background="#513BA6" Foreground="#FFFFFF"/>
+                                <Button x:Name="BtnTabRelQRCode" Content="Tags QR Code" Style="{StaticResource ExportTabButton}" Click="BtnTabRelQRCode_Click" Background="Transparent" Foreground="#85859E"/>
                             </StackPanel>
                         </Border>
                     </Grid>
@@ -607,31 +669,43 @@
                     <!-- CONTEÚDO 1: RELATÓRIO DE DADOS (PDF & EXCEL) -->
                     <Grid x:Name="SubPanelRelDados" Grid.Row="1" Visibility="Visible">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="15"/>
+                            <ColumnDefinition Width="1.15*"/>
+                            <ColumnDefinition Width="14"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
 
                         <!-- Lado Esquerdo: Busca e Seleção Múltipla -->
-                        <Border Grid.Column="0" Background="#0A0A0F" BorderBrush="#202035" BorderThickness="1" CornerRadius="8" Padding="14">
+                        <Border Grid.Column="0" Background="#0A0A0F" BorderBrush="#202035" BorderThickness="1" CornerRadius="10" Padding="16">
                             <Grid>
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="*"/>
+                                    <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
 
-                                <TextBlock Text="Buscar &amp; Selecionar Aparelhos:" Foreground="#A1A1AA" FontSize="12" FontWeight="SemiBold" Margin="0,0,0,4"/>
-                                <TextBox x:Name="TxtBuscaAparelho" Grid.Row="1" Background="#151525" Foreground="#E3E0F2" BorderBrush="#513BA6" Padding="8,6" TextChanged="TxtBuscaAparelho_TextChanged" Margin="0,0,0,8" FontSize="12"/>
+                                <Grid Grid.Row="0" Margin="0,0,0,10">
+                                    <StackPanel>
+                                        <TextBlock Text="1. Fonte de dados" Foreground="#FFFFFF" FontSize="14" FontWeight="Bold"/>
+                                        <TextBlock Text="Busque e marque os aparelhos que deseja incluir." Foreground="#85859E" FontSize="11" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                    <Border HorizontalAlignment="Right" VerticalAlignment="Top" Background="#151525" BorderBrush="#2A2A40" BorderThickness="1" CornerRadius="12" Padding="10,4">
+                                        <TextBlock x:Name="LblQtdSelecionados" Text="0 selecionado(s)" Foreground="#4EDEA3" FontSize="11" FontWeight="Bold"/>
+                                    </Border>
+                                </Grid>
+
+                                <TextBlock Grid.Row="1" Text="BUSCAR APARELHO" Foreground="#85859E" FontSize="10" FontWeight="Bold" Margin="0,0,0,4"/>
+                                <TextBox x:Name="TxtBuscaAparelho" Grid.Row="2" Background="#151525" Foreground="#E3E0F2" BorderBrush="#513BA6" BorderThickness="1" Padding="9,7" TextChanged="TxtBuscaAparelho_TextChanged" Margin="0,0,0,9" FontSize="12" ToolTip="Buscar por modelo, serial ou MAC"/>
 
                                 <!-- Lista com CheckBoxes -->
-                                <ListView x:Name="ListBuscaAparelhos" Grid.Row="2" Background="#151525" BorderBrush="#202035" BorderThickness="1" Foreground="#E3E0F2">
+                                <ListView x:Name="ListBuscaAparelhos" Grid.Row="3" Background="#151525" BorderBrush="#202035" BorderThickness="1" Foreground="#E3E0F2">
                                     <ListView.View>
                                         <GridView>
                                             <GridViewColumn Width="38">
                                                 <GridViewColumn.Header>
-                                                    <CheckBox x:Name="ChkSelecionarTodos" Click="ChkSelecionarTodos_Click" ToolTip="Selecionar Todos"/>
+                                                    <CheckBox x:Name="ChkSelecionarTodos" Click="ChkSelecionarTodos_Click" ToolTip="Selecionar todos os aparelhos exibidos"/>
                                                 </GridViewColumn.Header>
                                                 <GridViewColumn.CellTemplate>
                                                     <DataTemplate>
@@ -639,108 +713,216 @@
                                                     </DataTemplate>
                                                 </GridViewColumn.CellTemplate>
                                             </GridViewColumn>
-                                            <GridViewColumn Header="Modelo" DisplayMemberBinding="{Binding Dispositivo.MarcaModelo}" Width="110"/>
-                                            <GridViewColumn Header="Serial" DisplayMemberBinding="{Binding Dispositivo.Serial}" Width="110"/>
-                                            <GridViewColumn Header="MAC" DisplayMemberBinding="{Binding Dispositivo.MAC}" Width="120"/>
+                                            <GridViewColumn Header="ID" DisplayMemberBinding="{Binding Dispositivo.ID}" Width="48"/>
+                                            <GridViewColumn Header="Patrimônio" DisplayMemberBinding="{Binding Dispositivo.Patrimonio}" Width="85"/>
+                                            <GridViewColumn Header="Modelo" DisplayMemberBinding="{Binding Dispositivo.MarcaModelo}" Width="115"/>
+                                            <GridViewColumn Header="Serial" DisplayMemberBinding="{Binding Dispositivo.Serial}" Width="105"/>
+                                            <GridViewColumn Header="MAC" DisplayMemberBinding="{Binding Dispositivo.MAC}" Width="115"/>
                                         </GridView>
                                     </ListView.View>
                                 </ListView>
 
                                 <!-- Botões Rápidos de Seleção em Lote -->
-                                <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="0,8,0,0">
-                                    <Button Content="Selecionar Todos" Background="#151525" Foreground="#E3E0F2" BorderBrush="#2A2A40" BorderThickness="1" Padding="8,4" FontSize="11" Cursor="Hand" Click="BtnSelecionarTodos_Click" Margin="0,0,6,0"/>
-                                    <Button Content="Inverter" Background="#151525" Foreground="#E3E0F2" BorderBrush="#2A2A40" BorderThickness="1" Padding="8,4" FontSize="11" Cursor="Hand" Click="BtnInverterSelecao_Click" Margin="0,0,6,0"/>
-                                    <Button Content="Limpar" Background="#151525" Foreground="#FF5C5C" BorderBrush="#2A2A40" BorderThickness="1" Padding="8,4" FontSize="11" Cursor="Hand" Click="BtnLimparSelecao_Click"/>
+                                <StackPanel Grid.Row="4" Orientation="Horizontal" Margin="0,9,0,0">
+                                    <Button Content="Selecionar Todos" Style="{StaticResource RoundedActionButton}" Background="#151525" Foreground="#E3E0F2" BorderBrush="#2A2A40" BorderThickness="1" Padding="9,5" FontSize="10" FontWeight="SemiBold" Click="BtnSelecionarTodos_Click" Margin="0,0,6,0"/>
+                                    <Button Content="Inverter" Style="{StaticResource RoundedActionButton}" Background="#151525" Foreground="#E3E0F2" BorderBrush="#2A2A40" BorderThickness="1" Padding="9,5" FontSize="10" FontWeight="SemiBold" Click="BtnInverterSelecao_Click" Margin="0,0,6,0"/>
+                                    <Button Content="Limpar" Style="{StaticResource RoundedActionButton}" Background="#151525" Foreground="#FF5C5C" BorderBrush="#2A2A40" BorderThickness="1" Padding="9,5" FontSize="10" FontWeight="SemiBold" Click="BtnLimparSelecao_Click"/>
                                 </StackPanel>
+                                <TextBlock Grid.Row="5" Text="A busca define o escopo de 'Toda a base'." Foreground="#5A5A72" FontSize="10" Margin="0,6,0,0"/>
                             </Grid>
                         </Border>
 
-                        <!-- Lado Direito: Carrinho de Selecionados e Botões de Emissão -->
-                        <Border Grid.Column="2" Background="#0A0A0F" BorderBrush="#202035" BorderThickness="1" CornerRadius="8" Padding="14">
-                            <Grid>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="*"/>
-                                    <RowDefinition Height="Auto"/>
-                                </Grid.RowDefinitions>
+                        <!-- Lado Direito: Escopo, Formatos e Revisão da Seleção -->
+                        <Border Grid.Column="2" Background="#0A0A0F" BorderBrush="#202035" BorderThickness="1" CornerRadius="10" Padding="16">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                                <StackPanel>
+                                    <TextBlock Text="2. Formato de saída" Foreground="#FFFFFF" FontSize="14" FontWeight="Bold"/>
+                                    <TextBlock Text="Escolha o escopo e o formato desejado." Foreground="#85859E" FontSize="11" Margin="0,2,0,0"/>
 
-                                <TextBlock x:Name="LblQtdSelecionados" Text="0 aparelhos selecionados" Foreground="#4EDEA3" FontWeight="Bold" FontSize="13" Margin="0,0,0,2"/>
-                                <TextBlock Text="Deixe a seleção vazia para emitir todos os registros da base automaticamente." Foreground="#85859E" FontSize="11" Margin="0,0,0,8" Grid.Row="1"/>
+                                    <Border Background="#151525" BorderBrush="#23233A" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,12,0,0">
+                                        <StackPanel>
+                                            <TextBlock Text="ESCOPO DA EXPORTAÇÃO" Foreground="#8570E6" FontSize="10" FontWeight="Bold"/>
+                                            <RadioButton x:Name="RdoEscopoSelecionados" GroupName="EscopoRelatorio" Content="Somente os selecionados" IsChecked="True" Foreground="#E3E0F2" FontSize="12" Margin="0,8,0,0"/>
+                                            <RadioButton x:Name="RdoEscopoCompleto" GroupName="EscopoRelatorio" Content="Toda a base (respeita a busca)" Foreground="#A1A1AA" FontSize="12" Margin="0,6,0,0"/>
+                                        </StackPanel>
+                                    </Border>
 
-                                <ListView x:Name="ListSelecionados" Grid.Row="2" Background="#151525" BorderBrush="#202035" BorderThickness="1" Foreground="#E3E0F2" Margin="0,0,0,12">
-                                    <ListView.View>
-                                        <GridView>
-                                            <GridViewColumn Header="Modelo" DisplayMemberBinding="{Binding Dispositivo.MarcaModelo}" Width="120"/>
-                                            <GridViewColumn Header="Serial" DisplayMemberBinding="{Binding Dispositivo.Serial}" Width="120"/>
-                                            <GridViewColumn Width="40">
-                                                <GridViewColumn.CellTemplate>
-                                                    <DataTemplate>
-                                                        <Button Content="✕" Background="Transparent" Foreground="#FF5C5C" FontWeight="Bold" BorderThickness="0" Cursor="Hand" Click="BtnRemoverSelecionado_Click"/>
-                                                    </DataTemplate>
-                                                </GridViewColumn.CellTemplate>
-                                            </GridViewColumn>
-                                        </GridView>
-                                    </ListView.View>
-                                </ListView>
+                                    <!-- Card PDF -->
+                                    <Border Background="#151525" BorderBrush="#23233A" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,10,0,0">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Border Background="#1A1A2E" BorderBrush="#513BA6" BorderThickness="1" CornerRadius="8" Width="46" Height="46" VerticalAlignment="Center">
+                                                <TextBlock Text="PDF" Foreground="#8570E6" FontSize="12" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                            <StackPanel Grid.Column="1" Margin="12,0" VerticalAlignment="Center">
+                                                <TextBlock Text="Relatório PDF A4" Foreground="#FFFFFF" FontSize="12" FontWeight="SemiBold"/>
+                                                <TextBlock Text="Tabela formatada. Imprima ou salve via Microsoft Print to PDF." Foreground="#85859E" FontSize="10" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                            </StackPanel>
+                                            <Button Grid.Column="2" Content="Gerar" Style="{StaticResource RoundedActionButton}" Background="#4EDEA3" Foreground="#0B0B13" BorderThickness="0" FontSize="10" Padding="12,6" VerticalAlignment="Center" Click="BtnEmitirRelDadosPDF_Click"/>
+                                        </Grid>
+                                    </Border>
 
-                                <!-- Botões de Emissão -->
-                                <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right">
-                                    <Button Content="🖨️ Emitir PDF A4" Background="#4EDEA3" Foreground="#0B0B13" FontWeight="Bold" BorderThickness="0" Padding="14,8" Cursor="Hand" Click="BtnEmitirRelDadosPDF_Click" Margin="0,0,8,0"/>
-                                    <Button Content="📊 Planilha Excel" Background="#0A0A0F" Foreground="#E3E0F2" BorderBrush="#513BA6" BorderThickness="1" Padding="14,8" Cursor="Hand" Click="BtnExportarExcel_Click"/>
+                                    <!-- Card Excel / CSV -->
+                                    <Border Background="#151525" BorderBrush="#23233A" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,10,0,0">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Border Background="#1A1A2E" BorderBrush="#4EDEA3" BorderThickness="1" CornerRadius="8" Width="46" Height="46" VerticalAlignment="Center">
+                                                <TextBlock Text="CSV" Foreground="#4EDEA3" FontSize="12" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                            <StackPanel Grid.Column="1" Margin="12,0" VerticalAlignment="Center">
+                                                <TextBlock Text="Planilha Excel / CSV" Foreground="#FFFFFF" FontSize="12" FontWeight="SemiBold"/>
+                                                <TextBlock Text="Campos separados por ponto e vírgula, prontos para abrir no Excel." Foreground="#85859E" FontSize="10" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                            </StackPanel>
+                                            <Button Grid.Column="2" Content="Exportar" Style="{StaticResource RoundedActionButton}" Background="#0A0A0F" Foreground="#E3E0F2" BorderBrush="#513BA6" BorderThickness="1" FontSize="10" Padding="12,6" VerticalAlignment="Center" Click="BtnExportarExcel_Click"/>
+                                        </Grid>
+                                    </Border>
+
+                                    <!-- Card QR Code -->
+                                    <Border Background="#151525" BorderBrush="#23233A" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,10,0,0">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Border Background="#1A1A2E" BorderBrush="#FFB703" BorderThickness="1" CornerRadius="8" Width="46" Height="46" VerticalAlignment="Center">
+                                                <TextBlock Text="QR" Foreground="#FFB703" FontSize="13" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                            <StackPanel Grid.Column="1" Margin="12,0" VerticalAlignment="Center">
+                                                <TextBlock Text="Etiquetas QR Code" Foreground="#FFFFFF" FontSize="12" FontWeight="SemiBold"/>
+                                                <TextBlock Text="Folha 60 x 30 mm com QR por aparelho para inventário físico." Foreground="#85859E" FontSize="10" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                            </StackPanel>
+                                            <Button Grid.Column="2" Content="Abrir" Style="{StaticResource RoundedActionButton}" Background="#151525" Foreground="#FFB703" BorderBrush="#2A2A40" BorderThickness="1" FontSize="10" Padding="12,6" VerticalAlignment="Center" Click="BtnIrParaTags_Click"/>
+                                        </Grid>
+                                    </Border>
+
+                                    <!-- Revisão da seleção -->
+                                    <Border Background="#151525" BorderBrush="#23233A" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,10,0,0">
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="*"/>
+                                            </Grid.RowDefinitions>
+                                            <Grid Grid.Row="0" Margin="0,0,0,7">
+                                                <TextBlock Text="Revisar seleção" Foreground="#FFFFFF" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                                <Button Content="Limpar" Style="{StaticResource RoundedActionButton}" Background="Transparent" Foreground="#FF5C5C" BorderThickness="0" FontSize="10" Padding="6,2" HorizontalAlignment="Right" Click="BtnLimparSelecao_Click"/>
+                                            </Grid>
+                                            <ListView x:Name="ListSelecionados" Grid.Row="1" Height="120" Background="#0A0A0F" BorderBrush="#202035" BorderThickness="1" Foreground="#E3E0F2">
+                                                <ListView.View>
+                                                    <GridView>
+                                                        <GridViewColumn Header="ID" DisplayMemberBinding="{Binding Dispositivo.ID}" Width="44"/>
+                                                        <GridViewColumn Header="Patrimônio" DisplayMemberBinding="{Binding Dispositivo.Patrimonio}" Width="82"/>
+                                                        <GridViewColumn Header="Modelo" DisplayMemberBinding="{Binding Dispositivo.MarcaModelo}" Width="110"/>
+                                                        <GridViewColumn Width="34">
+                                                            <GridViewColumn.CellTemplate>
+                                                                <DataTemplate>
+                                                                    <Button Content="X" Background="Transparent" Foreground="#FF5C5C" FontWeight="Bold" BorderThickness="0" Cursor="Hand" Click="BtnRemoverSelecionado_Click"/>
+                                                                </DataTemplate>
+                                                            </GridViewColumn.CellTemplate>
+                                                        </GridViewColumn>
+                                                    </GridView>
+                                                </ListView.View>
+                                            </ListView>
+                                        </Grid>
+                                    </Border>
                                 </StackPanel>
-                            </Grid>
+                            </ScrollViewer>
                         </Border>
                     </Grid>
 
                     <!-- CONTEÚDO 2: RELATÓRIO DE TAGS QR CODE -->
                     <Grid x:Name="SubPanelRelQRCode" Grid.Row="1" Visibility="Collapsed">
-                        <Border Background="#0A0A0F" BorderBrush="#202035" BorderThickness="1" CornerRadius="10" Padding="20">
-                            <StackPanel>
-                                <TextBlock Text="Geração de Etiquetas Patrimoniais Térmicas (6cm x 3cm)" Foreground="#E3E0F2" FontSize="15" FontWeight="Bold" Margin="0,0,0,4"/>
-                                <TextBlock Text="Formato de impressão em etiqueta contínua: QR Code em alta definição contendo Serial + MAC + Fabricante à esquerda e dados técnicos à direita." Foreground="#85859E" FontSize="12" Margin="0,0,0,15" TextWrapping="Wrap"/>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="1.05*"/>
+                            <ColumnDefinition Width="14"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
 
-                                <!-- Card de Preview Visual da Etiqueta -->
-                                <Border Background="#151525" CornerRadius="8" Padding="15" Margin="0,0,0,20" BorderBrush="#23233A" BorderThickness="1">
+                        <!-- Prévia e especificações -->
+                        <Border Grid.Column="0" Background="#0A0A0F" BorderBrush="#202035" BorderThickness="1" CornerRadius="10" Padding="18">
+                            <StackPanel>
+                                <TextBlock Text="Prévia da etiqueta patrimonial" Foreground="#FFFFFF" FontSize="14" FontWeight="Bold"/>
+                                <TextBlock Text="Formato de 60 mm x 30 mm, pronto para impressão em folha A4." Foreground="#85859E" FontSize="11" Margin="0,2,0,0"/>
+
+                                <Border Background="#151525" CornerRadius="8" Padding="16" Margin="0,14,0,0" BorderBrush="#23233A" BorderThickness="1">
                                     <StackPanel>
-                                        <TextBlock Text="Prévia da Etiqueta (Dimensões Reais: 60mm x 30mm):" Foreground="#A1A1AA" FontSize="11" Margin="0,0,0,8"/>
-                                        <Border BorderBrush="#513BA6" BorderThickness="1" CornerRadius="6" Width="260" Height="120" HorizontalAlignment="Left" Background="#0B0B13">
+                                        <Border BorderBrush="#513BA6" BorderThickness="1" CornerRadius="8" Width="330" Height="165" HorizontalAlignment="Center" Background="#FFFFFF">
                                             <Grid>
                                                 <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="110"/>
+                                                    <ColumnDefinition Width="150"/>
                                                     <ColumnDefinition Width="*"/>
                                                 </Grid.ColumnDefinitions>
-                                                <!-- QR Lado Esquerdo -->
-                                                <Border Grid.Column="0" Background="#111120" CornerRadius="6,0,0,6">
+                                                <Border Grid.Column="0" Background="#F4F2FF" CornerRadius="8,0,0,8">
                                                     <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                                                        <Border Background="#1E1E30" Width="70" Height="70" CornerRadius="4">
-                                                            <TextBlock Text="QR CODE" Foreground="#8570E6" FontSize="10" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                        <Border Background="#FFFFFF" BorderBrush="#513BA6" BorderThickness="1" Width="96" Height="96" CornerRadius="4">
+                                                            <TextBlock Text="QR" Foreground="#513BA6" FontSize="22" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                                         </Border>
-                                                        <TextBlock Text="Bot_RPA" Foreground="#85859E" FontSize="8" Margin="0,3,0,0" HorizontalAlignment="Center"/>
+                                                        <TextBlock Text="Bot_RPA" Foreground="#513BA6" FontSize="9" FontWeight="Bold" Margin="0,4,0,0"/>
                                                     </StackPanel>
                                                 </Border>
-                                                <!-- Dados Lado Direito -->
-                                                <Border Grid.Column="1" BorderBrush="#202035" BorderThickness="1,0,0,0" Padding="8,4">
+                                                <Border Grid.Column="1" Padding="12,10">
                                                     <StackPanel VerticalAlignment="Center">
-                                                        <TextBlock Text="MOD: Tab Vision 7" Foreground="#FFFFFF" FontSize="8.5" FontWeight="Bold"/>
-                                                        <TextBlock Text="N/S: T30764..." Foreground="#5EB1FF" FontSize="8" FontFamily="Consolas" Margin="0,2,0,0"/>
-                                                        <TextBlock Text="MAC: AA:BB:CC:DD" Foreground="#4EDEA3" FontSize="8" FontFamily="Consolas" Margin="0,2,0,0"/>
-                                                        <Border Background="#513BA6" CornerRadius="2" Padding="4,1" Margin="0,4,0,0" HorizontalAlignment="Left">
-                                                            <TextBlock Text="Plataforma Bot_RPA" Foreground="#FFFFFF" FontSize="7" FontWeight="Bold"/>
-                                                        </Border>
+                                                        <TextBlock Text="PATRIMÔNIO" Foreground="#6B6B7B" FontSize="8" FontWeight="Bold"/>
+                                                        <TextBlock Text="INV 0436" Foreground="#111111" FontSize="17" FontWeight="Bold"/>
+                                                        <TextBlock Text="Tab Vision 7" Foreground="#222222" FontSize="10" FontWeight="SemiBold" Margin="0,5,0,0"/>
+                                                        <TextBlock Text="S/N: T30764..." Foreground="#333333" FontSize="8.5" FontFamily="Consolas" Margin="0,3,0,0"/>
+                                                        <TextBlock Text="MAC: AA:BB:CC:DD" Foreground="#333333" FontSize="8.5" FontFamily="Consolas" Margin="0,2,0,0"/>
                                                     </StackPanel>
                                                 </Border>
                                             </Grid>
                                         </Border>
+                                        <TextBlock Text="O QR contém ID, patrimônio, modelo, serial e MAC para leitura rápida no inventário." Foreground="#85859E" FontSize="10" TextWrapping="Wrap" Margin="0,12,0,0" TextAlignment="Center"/>
                                     </StackPanel>
                                 </Border>
 
-                                <!-- Botões de Ação para Tags QR -->
-                                <StackPanel Orientation="Horizontal">
-                                    <Button Content="🖨️ Imprimir Tags QR Code" Background="#513BA6" Foreground="#FFFFFF" FontWeight="Bold" BorderThickness="0" Padding="18,10" Cursor="Hand" Click="BtnGerarEtiquetas_Click" Margin="0,0,10,0"/>
-                                    <Button Content="🏷️ Filtrar por Modelo p/ Tags" Background="#0A0A0F" Foreground="#E3E0F2" BorderBrush="#2A2A40" BorderThickness="1" Padding="16,10" Cursor="Hand" Click="BtnFiltrarParaTags_Click"/>
-                                </StackPanel>
+                                <Border Background="#151525" CornerRadius="8" Padding="14" Margin="0,12,0,0" BorderBrush="#23233A" BorderThickness="1">
+                                    <StackPanel>
+                                        <TextBlock Text="COMO FUNCIONA" Foreground="#8570E6" FontSize="10" FontWeight="Bold" Margin="0,0,0,6"/>
+                                        <TextBlock Text="1. Escolha o lote ao lado." Foreground="#A1A1AA" FontSize="11" Margin="0,0,0,4"/>
+                                        <TextBlock Text="2. Os QR Codes são gerados em PNG dentro de uma pasta do lote." Foreground="#A1A1AA" FontSize="11" Margin="0,0,0,4"/>
+                                        <TextBlock Text="3. A folha HTML abre no navegador pronta para imprimir ou salvar em PDF." Foreground="#A1A1AA" FontSize="11"/>
+                                    </StackPanel>
+                                </Border>
                             </StackPanel>
+                        </Border>
+
+                        <!-- Configuração do lote -->
+                        <Border Grid.Column="2" Background="#0A0A0F" BorderBrush="#202035" BorderThickness="1" CornerRadius="10" Padding="16">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                                <StackPanel>
+                                    <TextBlock Text="Configurar lote de etiquetas" Foreground="#FFFFFF" FontSize="14" FontWeight="Bold"/>
+                                    <TextBlock Text="Defina quais aparelhos entram no lote." Foreground="#85859E" FontSize="11" Margin="0,2,0,0"/>
+
+                                    <Border Background="#151525" BorderBrush="#23233A" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,12,0,0">
+                                        <StackPanel>
+                                            <TextBlock Text="ESCOPO DO LOTE" Foreground="#8570E6" FontSize="10" FontWeight="Bold"/>
+                                            <RadioButton x:Name="RdoTagSelecionados" GroupName="EscopoTags" Content="Somente os selecionados" Foreground="#E3E0F2" FontSize="12" Margin="0,8,0,0"/>
+                                            <RadioButton x:Name="RdoTagCompleto" GroupName="EscopoTags" Content="Toda a base (respeita a busca)" IsChecked="True" Foreground="#A1A1AA" FontSize="12" Margin="0,6,0,0"/>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <Border Background="#151525" BorderBrush="#23233A" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,10,0,0">
+                                        <StackPanel>
+                                            <TextBlock Text="O QUE SERÁ GERADO" Foreground="#8570E6" FontSize="10" FontWeight="Bold" Margin="0,0,0,6"/>
+                                            <TextBlock Text="Uma pasta com QR Codes em PNG." Foreground="#A1A1AA" FontSize="11" Margin="0,0,0,4"/>
+                                            <TextBlock Text="Uma folha A4 pronta para impressão." Foreground="#A1A1AA" FontSize="11" Margin="0,0,0,4"/>
+                                            <TextBlock Text="Etiquetas de 60 mm x 30 mm em até 24 por folha." Foreground="#A1A1AA" FontSize="11"/>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <Button Content="Gerar Etiquetas QR Code" Style="{StaticResource RoundedActionButton}" Background="#513BA6" Foreground="#FFFFFF" BorderThickness="0" Padding="14,9" FontSize="12" HorizontalAlignment="Stretch" Margin="0,12,0,0" Click="BtnGerarEtiquetas_Click"/>
+                                    <Button Content="Selecionar aparelhos" Style="{StaticResource RoundedActionButton}" Background="#151525" Foreground="#E3E0F2" BorderBrush="#2A2A40" BorderThickness="1" Padding="14,8" FontSize="11" HorizontalAlignment="Stretch" Margin="0,8,0,0" Click="BtnFiltrarParaTags_Click"/>
+                                    <TextBlock Text="A folha é aberta automaticamente no navegador padrão." Foreground="#5A5A72" FontSize="10" TextWrapping="Wrap" Margin="0,10,0,0"/>
+                                </StackPanel>
+                            </ScrollViewer>
                         </Border>
                     </Grid>
                 </Grid>
@@ -751,7 +933,7 @@
         <!-- MODAL OVERLAY DE CRIAÇÃO / EDIÇÃO DE DISPOSITIVO -->
         <!-- ========================================================================= -->
         <Grid x:Name="PanelModalRegistroSerie" Grid.ColumnSpan="3" Background="#DD0B0B13" Visibility="Collapsed">
-            <Border Background="#151525" BorderBrush="#4EDEA3" BorderThickness="1.5" CornerRadius="12" Width="840" Height="590" VerticalAlignment="Center" HorizontalAlignment="Center" Padding="22">
+            <Border Background="#151525" BorderBrush="#4EDEA3" BorderThickness="1.5" CornerRadius="12" Width="960" Height="590" VerticalAlignment="Center" HorizontalAlignment="Center" Padding="22">
                 <Border.Effect>
                     <DropShadowEffect Color="#4EDEA3" BlurRadius="28" Opacity="0.28" ShadowDepth="0"/>
                 </Border.Effect>
@@ -812,7 +994,7 @@
 
                     <Grid Grid.Row="2">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="1.05*"/>
+                            <ColumnDefinition Width="1.5*"/>
                             <ColumnDefinition Width="12"/>
                             <ColumnDefinition Width="1*"/>
                         </Grid.ColumnDefinitions>
@@ -820,34 +1002,53 @@
                         <Border Grid.Column="0" Background="#0A0A0F" BorderBrush="#202035" BorderThickness="1" CornerRadius="8" Padding="8">
                             <DockPanel>
                                 <TextBlock DockPanel.Dock="Top" Text="TABLETS CAPTURADOS" Foreground="#8570E6" FontSize="10" FontWeight="Bold" Margin="2,0,0,6"/>
-                                <DataGrid x:Name="GridRegistroSerie" Style="{StaticResource DarkDataGrid}" ColumnHeaderStyle="{StaticResource DarkDataGridColumnHeader}" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" CanUserResizeRows="False" IsReadOnly="True" SelectionMode="Single" HeadersVisibility="Column" GridLinesVisibility="Horizontal" RowHeight="30">
+                                <DataGrid x:Name="GridRegistroSerie" Style="{StaticResource DarkDataGrid}" ColumnHeaderStyle="{StaticResource DarkDataGridColumnHeader}" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" CanUserResizeRows="False" IsReadOnly="False" SelectionMode="Single" HeadersVisibility="Column" GridLinesVisibility="Horizontal" RowHeight="32">
                                     <DataGrid.Columns>
-                                        <DataGridTextColumn Header="Serial" Width="1.2*" Binding="{Binding Serial}">
+                                        <DataGridTemplateColumn Header="Sel." Width="44">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <CheckBox IsChecked="{Binding Selecionado, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="Marque para registrar este aparelho em lote"/>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                        <DataGridTemplateColumn Header="Porta USB" Width="84">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock Text="{Binding PortaUsbExibicao}" Foreground="#C9A7FF" FontFamily="Consolas" FontSize="10" VerticalAlignment="Center" Margin="4,0" ToolTip="{Binding PortaUsb}"/>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                        <DataGridTextColumn Header="Serial" Width="1*" MinWidth="82" IsReadOnly="True" Binding="{Binding Serial}">
                                             <DataGridTextColumn.ElementStyle>
                                                 <Style TargetType="TextBlock">
                                                     <Setter Property="Foreground" Value="#5EB1FF"/>
                                                     <Setter Property="FontFamily" Value="Consolas"/>
+                                                    <Setter Property="FontSize" Value="10"/>
                                                     <Setter Property="VerticalAlignment" Value="Center"/>
-                                                    <Setter Property="Margin" Value="6,0"/>
+                                                    <Setter Property="Margin" Value="4,0"/>
+                                                    <Setter Property="ToolTip" Value="{Binding Serial}"/>
                                                 </Style>
                                             </DataGridTextColumn.ElementStyle>
                                         </DataGridTextColumn>
-                                        <DataGridTextColumn Header="MAC" Width="1.2*" Binding="{Binding MAC}">
+                                        <DataGridTextColumn Header="MAC" Width="0.95*" MinWidth="88" IsReadOnly="True" Binding="{Binding MAC}">
                                             <DataGridTextColumn.ElementStyle>
                                                 <Style TargetType="TextBlock">
                                                     <Setter Property="Foreground" Value="#4EDEA3"/>
                                                     <Setter Property="FontFamily" Value="Consolas"/>
+                                                    <Setter Property="FontSize" Value="9"/>
                                                     <Setter Property="VerticalAlignment" Value="Center"/>
-                                                    <Setter Property="Margin" Value="6,0"/>
+                                                    <Setter Property="Margin" Value="4,0"/>
+                                                    <Setter Property="ToolTip" Value="{Binding MAC}"/>
                                                 </Style>
                                             </DataGridTextColumn.ElementStyle>
                                         </DataGridTextColumn>
-                                        <DataGridTextColumn Header="Situação" Width="1*" Binding="{Binding Status}">
+                                        <DataGridTextColumn Header="Situação" Width="0.85*" MinWidth="70" IsReadOnly="True" Binding="{Binding Status}">
                                             <DataGridTextColumn.ElementStyle>
                                                 <Style TargetType="TextBlock">
                                                     <Setter Property="Foreground" Value="#A1A1AA"/>
+                                                    <Setter Property="FontSize" Value="10"/>
                                                     <Setter Property="VerticalAlignment" Value="Center"/>
-                                                    <Setter Property="Margin" Value="6,0"/>
+                                                    <Setter Property="Margin" Value="4,0"/>
                                                     <Style.Triggers>
                                                         <DataTrigger Binding="{Binding Registrado}" Value="True">
                                                             <Setter Property="Foreground" Value="#4EDEA3"/>
@@ -856,16 +1057,13 @@
                                                 </Style>
                                             </DataGridTextColumn.ElementStyle>
                                         </DataGridTextColumn>
-                                        <DataGridTextColumn Header="Patrimônio" Width="0.9*" Binding="{Binding Patrimonio}">
-                                            <DataGridTextColumn.ElementStyle>
-                                                <Style TargetType="TextBlock">
-                                                    <Setter Property="Foreground" Value="#FFB703"/>
-                                                    <Setter Property="FontWeight" Value="SemiBold"/>
-                                                    <Setter Property="VerticalAlignment" Value="Center"/>
-                                                    <Setter Property="Margin" Value="6,0"/>
-                                                </Style>
-                                            </DataGridTextColumn.ElementStyle>
-                                        </DataGridTextColumn>
+                                        <DataGridTemplateColumn Header="Patrimônio" Width="0.9*" MinWidth="72">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <TextBox Text="{Binding Patrimonio, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Background="#141425" Foreground="#FFB703" BorderBrush="#2A2A40" FontFamily="Consolas" FontSize="10" FontWeight="SemiBold" Padding="4,1" Margin="3,0" VerticalAlignment="Center" ToolTip="Digite apenas os numeros. Ex.: 425 -> INV425"/>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
                                     </DataGrid.Columns>
                                 </DataGrid>
                             </DockPanel>
@@ -883,11 +1081,13 @@
                         <StackPanel Orientation="Horizontal">
                             <Button x:Name="BtnPularRegistro" Content="Pular Aparelho" Background="#2A2A40" Foreground="#FFB703" FontWeight="Bold" BorderThickness="1" BorderBrush="#FFB703" Padding="14,7" Cursor="Hand" IsEnabled="False" Click="BtnPularRegistro_Click"/>
                             <Button Content="Reiniciar Captura" Background="#2A2A40" Foreground="#5EB1FF" FontWeight="Bold" BorderThickness="1" BorderBrush="#5EB1FF" Padding="14,7" Cursor="Hand" Margin="8,0,0,0" Click="BtnReiniciarCapturaRegistro_Click"/>
+                            <Button Content="Nomear Portas" Background="#2A2A40" Foreground="#C9A7FF" FontWeight="Bold" BorderThickness="1" BorderBrush="#8570E6" Padding="14,7" Cursor="Hand" Margin="8,0,0,0" Click="BtnNomearPortas_Click"/>
+                            <Button x:Name="BtnRegistrarSelecionados" Content="Registrar Selecionados" Background="#4EDEA3" Foreground="#0B0B13" FontWeight="Bold" BorderThickness="0" Padding="16,7" Cursor="Hand" Margin="8,0,0,0" Click="BtnRegistrarSelecionados_Click"/>
                         </StackPanel>
                         <Button Content="Fechar" HorizontalAlignment="Right" Background="#0A0A0F" Foreground="#E3E0F2" FontWeight="Bold" BorderThickness="1" BorderBrush="#2A2A40" Padding="18,7" Cursor="Hand" Click="BtnFecharRegistroSerie_Click"/>
                     </Grid>
 
-                    <TextBlock Grid.Row="4" Text="O registro e feito um aparelho por vez. Conecte o tablet, aguarde o MAC e informe o patrimonio para gravar no banco."
+                    <TextBlock Grid.Row="4" Text="Para registrar varios tablets de uma vez, marque a coluna Sel., informe o patrimonio de cada linha e clique em Registrar Selecionados. O campo acima continua valendo para o registro individual."
                                Foreground="#5A5A72" FontSize="11" Margin="0,10,0,0" TextWrapping="Wrap"/>
                 </Grid>
             </Border>
@@ -899,7 +1099,7 @@
                     <DropShadowEffect Color="#513BA6" BlurRadius="25" Opacity="0.35" ShadowDepth="0"/>
                 </Border.Effect>
                 <StackPanel>
-                    <TextBlock x:Name="TxtModalTitulo" Text="➕ Adicionar Novo Dispositivo" Foreground="#FFFFFF" FontSize="18" FontWeight="Bold" Margin="0,0,0,16"/>
+                    <TextBlock x:Name="TxtModalTitulo" Text="+ Adicionar Novo Dispositivo" Foreground="#FFFFFF" FontSize="18" FontWeight="Bold" Margin="0,0,0,16"/>
 
                     <TextBlock Text="Nº de Patrimônio (somente números):" Foreground="#A1A1AA" FontSize="11" Margin="0,0,0,4"/>
                     <Grid Margin="0,0,0,10">
@@ -910,7 +1110,7 @@
                         <Border Background="#1A1A2E" BorderBrush="#2A2A40" BorderThickness="1" CornerRadius="6,0,0,6" Padding="10,6">
                             <TextBlock Text="INV" Foreground="#FFB703" FontFamily="Consolas" FontWeight="Bold" FontSize="12"/>
                         </Border>
-                        <TextBox x:Name="TxtModalPatrimonio" Grid.Column="1" Background="#0A0A0F" Foreground="#FFB703" FontFamily="Consolas" BorderBrush="#2A2A40" Padding="8,6" FontSize="12" ToolTip="Digite apenas os números. Ex.: 425 → INV425"/>
+                        <TextBox x:Name="TxtModalPatrimonio" Grid.Column="1" Background="#0A0A0F" Foreground="#FFB703" FontFamily="Consolas" BorderBrush="#2A2A40" Padding="8,6" FontSize="12" ToolTip="Digite apenas os números. Ex.: 425 -> INV425"/>
                     </Grid>
 
                     <TextBlock Text="Fabricante:" Foreground="#A1A1AA" FontSize="11" Margin="0,0,0,4"/>
@@ -926,8 +1126,8 @@
                     <TextBox x:Name="TxtModalMAC" Background="#0A0A0F" Foreground="#4EDEA3" FontFamily="Consolas" BorderBrush="#2A2A40" Padding="8,6" Margin="0,0,0,18" FontSize="12"/>
 
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                        <Button Content="✕ Cancelar" Background="Transparent" Foreground="#A1A1AA" BorderThickness="0" Padding="14,6" Cursor="Hand" Margin="0,0,8,0" Click="BtnModalCancelar_Click"/>
-                        <Button Content="💾 Salvar Dispositivo" Background="#4EDEA3" Foreground="#0B0B13" FontWeight="Bold" BorderThickness="0" Padding="16,6" Cursor="Hand" Click="BtnModalSalvar_Click"/>
+                        <Button Content="Cancelar" Background="Transparent" Foreground="#A1A1AA" BorderThickness="0" Padding="14,6" Cursor="Hand" Margin="0,0,8,0" Click="BtnModalCancelar_Click"/>
+                        <Button Content="Salvar Dispositivo" Background="#4EDEA3" Foreground="#0B0B13" FontWeight="Bold" BorderThickness="0" Padding="16,6" Cursor="Hand" Click="BtnModalSalvar_Click"/>
                     </StackPanel>
                 </StackPanel>
             </Border>

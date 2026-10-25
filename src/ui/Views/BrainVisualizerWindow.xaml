@@ -8,7 +8,7 @@
         Loaded="Window_Loaded"
         KeyDown="Window_KeyDown"
         MouseWheel="Window_MouseWheel">
-    
+
     <Window.Resources>
         <!-- ESTILO FILTRO ALL (TODOS) -->
         <Style x:Key="CyberFilterAllStyle" TargetType="RadioButton">
@@ -240,7 +240,7 @@
                 </TransformGroup>
             </Canvas.RenderTransform>
         </Canvas>
-        
+
         <!-- Header Flutuante Unificado Cyber Space (Sem Sobreposição) -->
         <StackPanel x:Name="TopHeaderPanel" VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0,20,0,0" MouseLeftButtonDown="TopHeaderPanel_MouseLeftButtonDown">
             <Border Padding="18,10" Background="#151525" CornerRadius="12" BorderBrush="#513BA6" BorderThickness="1.5">
@@ -249,7 +249,6 @@
                 </Border.Effect>
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                     <!-- Título e Subtítulo -->
-                    <TextBlock Text="🧠" FontSize="22" VerticalAlignment="Center" Margin="0,0,10,0"/>
                     <StackPanel VerticalAlignment="Center" Margin="0,0,18,0">
                         <TextBlock Text="BOTAI 2.0 — REDE NEURAL 3D" Foreground="#FFFFFF" FontWeight="Black" FontSize="14"/>
                         <TextBlock Text="Topologia Holográfica e Matriz de Heurísticas" Foreground="#00E5FF" FontSize="10" FontWeight="SemiBold"/>
@@ -263,42 +262,42 @@
                         <Border Background="#0B0B13" CornerRadius="8" Padding="10,5" Margin="0,0,6,0" BorderBrush="#2A2A40" BorderThickness="1"
                                 ToolTip="Total de nós neurais ativos na topologia 3D">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="NÓS NEURAIS: " Foreground="#A1A1AA" FontSize="10" FontWeight="Bold"/>
+                                <TextBlock Text="NÓS NEURAIS:" Foreground="#A1A1AA" FontSize="10" FontWeight="Bold"/>
                                 <TextBlock x:Name="TxtTotalNodes" Text="0" Foreground="#FFFFFF" FontWeight="Black" FontSize="11"/>
                             </StackPanel>
                         </Border>
                         <Border Background="#0B0B13" CornerRadius="8" Padding="10,5" Margin="0,0,6,0" BorderBrush="#2A2A40" BorderThickness="1"
                                 ToolTip="Caminhos de transmissão e sinapses interligadas">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="SINAPSES ATIVAS: " Foreground="#A1A1AA" FontSize="10" FontWeight="Bold"/>
+                                <TextBlock Text="SINAPSES ATIVAS:" Foreground="#A1A1AA" FontSize="10" FontWeight="Bold"/>
                                 <TextBlock x:Name="TxtTotalStrategies" Text="0" Foreground="#00F5D4" FontWeight="Black" FontSize="11"/>
                             </StackPanel>
                         </Border>
                         <Border Background="#0B0B13" CornerRadius="8" Padding="10,5" Margin="0,0,6,0" BorderBrush="#2A2A40" BorderThickness="1"
                                 ToolTip="Total de regras e seletores de tela aprendidos pelo BotAI">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="REGRAS ATIVAS: " Foreground="#A1A1AA" FontSize="10" FontWeight="Bold"/>
+                                <TextBlock Text="REGRAS ATIVAS:" Foreground="#A1A1AA" FontSize="10" FontWeight="Bold"/>
                                 <TextBlock x:Name="TxtTotalRules" Text="0" Foreground="#D2BBFF" FontWeight="Black" FontSize="11"/>
                             </StackPanel>
                         </Border>
                         <Border Background="#0B0B13" CornerRadius="8" Padding="10,5" Margin="0,0,6,0" BorderBrush="#2A2A40" BorderThickness="1"
                                 ToolTip="Total de coeficientes de ponderação heurística, scores de confiança e tolerâncias dinâmicas carregadas em memória.">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="PESOS SINÁPTICOS: " Foreground="#A1A1AA" FontSize="10" FontWeight="Bold"/>
+                                <TextBlock Text="PESOS SINÁPTICOS:" Foreground="#A1A1AA" FontSize="10" FontWeight="Bold"/>
                                 <TextBlock x:Name="TxtTotalParameters" Text="0" Foreground="#FFB703" FontWeight="Black" FontSize="11"/>
                             </StackPanel>
                         </Border>
                         <Border Background="#0B0B13" CornerRadius="8" Padding="10,5" Margin="0,0,6,0" BorderBrush="#2A2A40" BorderThickness="1"
                                 ToolTip="Dispositivos Android conectados via USB e monitorados em tempo real">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="DISPOSITIVOS: " Foreground="#A1A1AA" FontSize="10" FontWeight="Bold"/>
+                                <TextBlock Text="DISPOSITIVOS:" Foreground="#A1A1AA" FontSize="10" FontWeight="Bold"/>
                                 <TextBlock x:Name="TxtActiveDevices" Text="0" Foreground="#4EDEA3" FontWeight="Black" FontSize="11"/>
                             </StackPanel>
                         </Border>
                         <Border Background="#0B0B13" CornerRadius="8" Padding="10,5" BorderBrush="#2A2A40" BorderThickness="1"
                                 ToolTip="Taxa global de assertividade das operações heurísticas">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="ASSERTIVIDADE: " Foreground="#A1A1AA" FontSize="10" FontWeight="Bold"/>
+                                <TextBlock Text="ASSERTIVIDADE:" Foreground="#A1A1AA" FontSize="10" FontWeight="Bold"/>
                                 <TextBlock x:Name="TxtGlobalAccuracy" Text="0%" Foreground="#00E5FF" FontWeight="Black" FontSize="11"/>
                             </StackPanel>
                         </Border>
@@ -310,15 +309,15 @@
                     <!-- Filtros por Perfil de Hardware -->
                     <Border Background="#0B0B13" CornerRadius="8" Padding="4" BorderBrush="#2A2A40" BorderThickness="1">
                         <StackPanel Orientation="Horizontal">
-                            <RadioButton x:Name="BtnFilterAll" Content="🌐 TODOS" Style="{StaticResource CyberFilterAllStyle}" 
+                            <RadioButton x:Name="BtnFilterAll" Content="TODOS" Style="{StaticResource CyberFilterAllStyle}"
                                          IsChecked="True" Click="Filter_Click" Tag="ALL" ToolTip="Exibir todas as estratégias e nós"/>
-                            <RadioButton x:Name="BtnFilterV7" Content="📱 VISION 7 (V7)" Style="{StaticResource CyberFilterV7Style}" 
+                            <RadioButton x:Name="BtnFilterV7" Content="VISION 7 (V7)" Style="{StaticResource CyberFilterV7Style}"
                                          Click="Filter_Click" Tag="V7" ToolTip="Filtrar alvos do Positivo Tab Vision 7"/>
-                            <RadioButton x:Name="BtnFilterM7" Content="📱 TABMULTI M7" Style="{StaticResource CyberFilterM7Style}" 
+                            <RadioButton x:Name="BtnFilterM7" Content="TABMULTI M7" Style="{StaticResource CyberFilterM7Style}"
                                          Click="Filter_Click" Tag="M7" ToolTip="Filtrar alvos do Multilaser TabMulti M7"/>
-                            <RadioButton x:Name="BtnFilterT20" Content="📱 NOKIA T20" Style="{StaticResource CyberFilterT20Style}" 
+                            <RadioButton x:Name="BtnFilterT20" Content="NOKIA T20" Style="{StaticResource CyberFilterT20Style}"
                                          Click="Filter_Click" Tag="T20" ToolTip="Filtrar alvos do Nokia T20"/>
-                            <RadioButton x:Name="BtnFilterGeneral" Content="🖥️ GERAL" Style="{StaticResource CyberFilterGeneralStyle}" 
+                            <RadioButton x:Name="BtnFilterGeneral" Content="GERAL" Style="{StaticResource CyberFilterGeneralStyle}"
                                          Click="Filter_Click" Tag="F1" ToolTip="Filtrar alvos do motor padrão Multilaser"/>
                         </StackPanel>
                     </Border>
@@ -328,16 +327,15 @@
             <!-- Barra de Filtro de Tags 3D Interativa + Busca viva -->
             <Border Margin="0,8,0,0" HorizontalAlignment="Center" Background="#151525" CornerRadius="10" BorderBrush="#2A2A40" BorderThickness="1" Padding="12,5">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock Text="🏷️ FILTRO DE TAGS:" Foreground="#A1A1AA" FontSize="10" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,12,0"/>
-                    <CheckBox x:Name="ChkTagCore" Content="⚡ Núcleo" IsChecked="True" Click="TagFilter_Click" Style="{StaticResource CyberTagCheckStyle}" Margin="0,0,10,0"/>
-                    <CheckBox x:Name="ChkTagTargets" Content="🎯 Alvos" IsChecked="True" Click="TagFilter_Click" Style="{StaticResource CyberTagCheckStyle}" Margin="0,0,10,0"/>
-                    <CheckBox x:Name="ChkTagCognitive" Content="🧠 Cognitivos" IsChecked="True" Click="TagFilter_Click" Style="{StaticResource CyberTagCheckStyle}" Margin="0,0,10,0"/>
-                    <CheckBox x:Name="ChkTagStrategies" Content="⚡ Heurísticas" IsChecked="False" Click="TagFilter_Click" Style="{StaticResource CyberTagCheckStyle}" Margin="0,0,10,0"/>
-                    <CheckBox x:Name="ChkTagMicro" Content="🔹 Relés" IsChecked="False" Click="TagFilter_Click" Style="{StaticResource CyberTagCheckStyle}" Margin="0,0,12,0"/>
+                    <TextBlock Text="FILTRO DE TAGS:" Foreground="#A1A1AA" FontSize="10" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                    <CheckBox x:Name="ChkTagCore" Content="Núcleo" IsChecked="True" Click="TagFilter_Click" Style="{StaticResource CyberTagCheckStyle}" Margin="0,0,10,0"/>
+                    <CheckBox x:Name="ChkTagTargets" Content="Alvos" IsChecked="True" Click="TagFilter_Click" Style="{StaticResource CyberTagCheckStyle}" Margin="0,0,10,0"/>
+                    <CheckBox x:Name="ChkTagCognitive" Content="Cognitivos" IsChecked="True" Click="TagFilter_Click" Style="{StaticResource CyberTagCheckStyle}" Margin="0,0,10,0"/>
+                    <CheckBox x:Name="ChkTagStrategies" Content="Heurísticas" IsChecked="False" Click="TagFilter_Click" Style="{StaticResource CyberTagCheckStyle}" Margin="0,0,10,0"/>
+                    <CheckBox x:Name="ChkTagMicro" Content="Relés" IsChecked="False" Click="TagFilter_Click" Style="{StaticResource CyberTagCheckStyle}" Margin="0,0,12,0"/>
                     <Rectangle Width="1" Height="14" Fill="#2A2A40" Margin="0,0,10,0"/>
                     <Button x:Name="BtnToggleAllTags" Content="TODAS ON/OFF" Click="BtnToggleAllTags_Click" Style="{StaticResource MiniTagBtnStyle}"/>
                     <Rectangle Width="1" Height="14" Fill="#2A2A40" Margin="10,0,10,0"/>
-                    <TextBlock Text="🔍" FontSize="11" Foreground="#8570E6" VerticalAlignment="Center" Margin="0,0,6,0"/>
                     <TextBox x:Name="SearchBox" Width="170" Background="#0B0B13" Foreground="#FFFFFF" BorderBrush="#2A2A40" FontSize="11" VerticalAlignment="Center" Padding="6,3" TextChanged="SearchBox_TextChanged" ToolTip="Buscar por alvo ou query (ex: v7_, email, Entrar)"/>
                 </StackPanel>
             </Border>
@@ -347,7 +345,7 @@
         <Border x:Name="LegendPanel" VerticalAlignment="Bottom" HorizontalAlignment="Left" Margin="30,0,0,30" Padding="15" Background="#151525" CornerRadius="10" BorderBrush="#2A2A40" BorderThickness="1">
             <StackPanel>
                 <TextBlock Text="SAÚDE DAS SINAPSES" Foreground="#A1A1AA" FontWeight="Bold" FontSize="10" Margin="0,0,0,10"/>
-                
+
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
                     <Ellipse Width="10" Height="10" Fill="#4EDEA3" Margin="0,0,8,0"/>
                     <TextBlock Text="Alta Confiança (Score &gt; 50)" Foreground="#E3E0F2" FontSize="11"/>
@@ -370,22 +368,22 @@
         <!-- Dicas Visuais de Navegação de Rodapé (Centro Inferior) -->
         <Border x:Name="FooterTipsPanel" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,25" Padding="16,7" Background="#151525" CornerRadius="20" BorderBrush="#513BA6" BorderThickness="1">
             <StackPanel Orientation="Horizontal">
-                <TextBlock Text="🖱️ Scroll: Zoom  |  🖐️ Arraste: Rotacionar Esfera 3D (360°)  |  🎯 Clique: Inspecionar  |  👁️ H: Ocultar UI  |  ⌨️ ESC: Fechar" Foreground="#8570E6" FontSize="11" FontWeight="SemiBold"/>
+                <TextBlock Text="Scroll: Zoom | Arraste: Rotacionar Esfera 3D (360°) | Clique: Inspecionar | H: Ocultar UI | ESC: Fechar" Foreground="#8570E6" FontSize="11" FontWeight="SemiBold"/>
             </StackPanel>
         </Border>
 
         <!-- Controles de NAVEGAÇÃO / ZOOM (Canto Inferior Direito) -->
         <Border x:Name="ZoomControlsPanel" VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="0,0,30,30" Padding="8" Background="#151525" CornerRadius="10" BorderBrush="#2A2A40" BorderThickness="1">
             <StackPanel Orientation="Horizontal">
-                <Button Content="➕" Width="32" Height="32" Background="#2A2A40" Foreground="#FFFFFF" FontWeight="Bold" BorderThickness="0" Cursor="Hand" Click="BtnZoomIn_Click" ToolTip="Aumentar Zoom"/>
-                <Button Content="➖" Width="32" Height="32" Background="#2A2A40" Foreground="#FFFFFF" FontWeight="Bold" BorderThickness="0" Cursor="Hand" Click="BtnZoomOut_Click" Margin="6,0,0,0" ToolTip="Reduzir Zoom"/>
-                <Button Content="🎯 RESET" Height="32" Padding="10,0" Background="#513BA6" Foreground="#FFFFFF" FontWeight="Bold" FontSize="11" BorderThickness="0" Cursor="Hand" Click="BtnResetZoom_Click" Margin="6,0,0,0" ToolTip="Resetar Posição e Zoom"/>
-                <Button Content="👁️ HUD" Height="32" Padding="10,0" Background="#2A2A40" Foreground="#00E5FF" FontWeight="Bold" FontSize="11" BorderThickness="0" Cursor="Hand" Click="BtnToggleUI_Click" Margin="6,0,0,0" ToolTip="Ocultar / Mostrar interface (Atalho: H)"/>
+                <Button Content="+" Width="32" Height="32" Background="#2A2A40" Foreground="#FFFFFF" FontWeight="Bold" BorderThickness="0" Cursor="Hand" Click="BtnZoomIn_Click" ToolTip="Aumentar Zoom"/>
+                <Button Content="-" Width="32" Height="32" Background="#2A2A40" Foreground="#FFFFFF" FontWeight="Bold" BorderThickness="0" Cursor="Hand" Click="BtnZoomOut_Click" Margin="6,0,0,0" ToolTip="Reduzir Zoom"/>
+                <Button Content="RESET" Height="32" Padding="10,0" Background="#513BA6" Foreground="#FFFFFF" FontWeight="Bold" FontSize="11" BorderThickness="0" Cursor="Hand" Click="BtnResetZoom_Click" Margin="6,0,0,0" ToolTip="Resetar Posição e Zoom"/>
+                <Button Content="HUD" Height="32" Padding="10,0" Background="#2A2A40" Foreground="#00E5FF" FontWeight="Bold" FontSize="11" BorderThickness="0" Cursor="Hand" Click="BtnToggleUI_Click" Margin="6,0,0,0" ToolTip="Ocultar / Mostrar interface (Atalho: H)"/>
             </StackPanel>
         </Border>
 
         <!-- Botão Flutuante para Restaurar a UI quando Oculta -->
-        <Button x:Name="BtnFloatingShowUI" Content="👁️ MOSTRAR INTERFACE (H)" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="30,30,0,0" Padding="14,8"
+        <Button x:Name="BtnFloatingShowUI" Content="MOSTRAR INTERFACE (H)" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="30,30,0,0" Padding="14,8"
                 Background="#151525" Foreground="#00E5FF" FontWeight="Bold" FontSize="11" BorderBrush="#513BA6" BorderThickness="1.5" Cursor="Hand" Click="BtnToggleUI_Click" Visibility="Collapsed">
             <Button.Resources>
                 <Style TargetType="Border">
@@ -413,7 +411,7 @@
                 <StackPanel Grid.Row="0">
                     <Grid>
                         <TextBlock Text="INSPEÇÃO DE NÓ NEURAL" Foreground="#513BA6" FontWeight="Black" FontSize="11"/>
-                        <Button Content="✕" HorizontalAlignment="Right" Background="Transparent" Foreground="#A1A1AA" FontSize="14" FontWeight="Bold" BorderThickness="0" Cursor="Hand" Click="BtnCloseInspector_Click"/>
+                        <Button Content="X" HorizontalAlignment="Right" Background="Transparent" Foreground="#A1A1AA" FontSize="14" FontWeight="Bold" BorderThickness="0" Cursor="Hand" Click="BtnCloseInspector_Click"/>
                     </Grid>
                     <TextBlock x:Name="InspectorTitle" Text="Nome do Nó" Foreground="#FFFFFF" FontWeight="Bold" FontSize="18" Margin="0,6,0,2" TextWrapping="Wrap"/>
                     <TextBlock x:Name="InspectorSubtitle" Text="Categoria / Módulo" Foreground="#4EDEA3" FontSize="12" FontWeight="SemiBold" Margin="0,0,0,12"/>
@@ -426,7 +424,7 @@
                             <StackPanel>
                                 <Grid Margin="0,0,0,4">
                                     <TextBlock Text="QUERY DO SELETOR:" Foreground="#A1A1AA" FontSize="10" FontWeight="Bold" HorizontalAlignment="Left"/>
-                                    <Button x:Name="BtnCopyQuery" Content="📋 COPIAR" Click="BtnCopyQuery_Click"
+                                    <Button x:Name="BtnCopyQuery" Content="COPIAR" Click="BtnCopyQuery_Click"
                                             Background="#2A2A40" Foreground="#5EB1FF" FontSize="9" FontWeight="Bold"
                                             BorderThickness="0" Padding="6,2" HorizontalAlignment="Right" Cursor="Hand" ToolTip="Copiar seletor para a área de transferência"/>
                                 </Grid>
@@ -487,7 +485,7 @@
         </Border>
 
         <!-- Botão Fechar Janela (Canto Superior Direito) -->
-        <Button Content="✕" Width="40" Height="40" 
+        <Button Content="X" Width="40" Height="40"
                 VerticalAlignment="Top" HorizontalAlignment="Right" Margin="0,30,30,0"
                 Background="#2A2A40" Foreground="#FFFFFF" FontSize="16" FontWeight="Bold"
                 BorderThickness="0" Cursor="Hand" Click="BtnClose_Click">

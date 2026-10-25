@@ -35,7 +35,7 @@ int check_adb_availability() {
 char* execute_adb_devices() {
     int adb_status = check_adb_availability();
     if (adb_status == 0) {
-        printf("ERRO: ADB nao encontrado. Por favor, execute o script scripts\\setup_adb.bat\n");
+        printf("ERRO: ADB nao encontrado. Por favor, execute: scripts\\scripts de controle\\ControleGeral.bat 5\n");
         return NULL;
     }
 

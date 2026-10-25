@@ -27,7 +27,7 @@ namespace BotRpaUI.Core
 
             if (!valor.All(char.IsDigit))
             {
-                erro = $"Digite apenas números. O prefixo {Prefixo} é automático. Exemplo: 425 → {Prefixo}425.";
+                erro = $"Digite apenas números. O prefixo {Prefixo} é automático. Exemplo: 425 -> {Prefixo}425.";
                 return false;
             }
 
@@ -49,6 +49,18 @@ namespace BotRpaUI.Core
             string digitos = new string((entrada ?? string.Empty).Where(char.IsDigit).ToArray());
             if (long.TryParse(digitos, out long numero)) return numero;
             return long.MaxValue - 1;
+        }
+
+        /// <summary>
+        /// Extrai o numero do patrimonio para uso como ID alinhado.
+        /// Retorna 0 quando nao ha um numero valido maior que zero.
+        /// </summary>
+        public static int ExtrairIdNumerico(string entrada)
+        {
+            if (string.IsNullOrWhiteSpace(entrada)) return 0;
+
+            string digitos = new string((entrada ?? string.Empty).Where(char.IsDigit).ToArray());
+            return int.TryParse(digitos, out int numero) && numero > 0 ? numero : 0;
         }
     }
 }

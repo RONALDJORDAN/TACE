@@ -22,7 +22,7 @@ Antes de realizar qualquer modificação no repositório:
 
 ## 📝 3. Regra de Ouro #2 - Rastreabilidade e Histórico Obrigatório de Ajustes
 - **Registro de Memória:** Toda e qualquer alteração de código, refatoração, ajuste técnico ou nova funcionalidade DEVE ser registrada e detalhada em ordem cronológica no arquivo [memoria_bot_rpa.md](file:///c:/PROJETOS/Bot_RPA/memoria%20de%20desenvolvimento/memoria_bot_rpa.md).
-- **Logs de Auditoria de Build:** Todas as compilações realizadas devem registrar um histórico no padrão `registros/YYYY-MM-DD/HH-MM_Plataforma_BotRPA_DESKTOP_BUILD`.
+- **Logs de Auditoria de Build:** Todas as compilações realizadas devem registrar um histórico no padrão `docs/registros/YYYY-MM-DD/HH-MM_Plataforma_BotRPA_DESKTOP_BUILD`.
 - **Versionamento Git:** commits devem seguir o padrão Conventional Commits (`feat:`, `fix:`, `refactor:`, `docs:`, `style:`).
 
 ---
@@ -35,7 +35,8 @@ Antes de realizar qualquer modificação no repositório:
   - Raiz: apenas `.gitignore`, `README.md`, `AGENTS.md`, `memoria_bot_rpa.md`, pastas do projeto e dot-configs locais (`compile_commands.json`, `.clangd` — ignorados pelo Git). **Nunca** binários (`*.dll`, `*.exe`) nem CSVs/TXTs soltos na raiz.
   - Binários de dev/teste: `data/output/` (`BotEngine.dll`, `BotRPAui.exe`).
   - Release portátil PnP: `BotRPA_Release/`.
-  - Ferramentas de administração (somente dev, fora da Release): `controle/` (`Build.ps1` + `Build.bat` = painel Teste/Final, `Terminal.ps1` + `Terminal.bat` = REPL admin).
+  - Ferramentas de administração (somente dev, fora da Release): `scripts/scripts de controle/` — **ControleGeral.bat único** (menus 1-8), mais os assets do instalador `BotRPA.iss` + `InstallerAssets/`.
+  - Ferramentas de teste operacional: `scripts/scripts de teste/` (monitoramento ADB, gravador de fluxo, análise XML).
   - Documentação viva: `docs/plano_melhorias.md` (fases e checkboxes) + `memoria_bot_rpa.md` (histórico cronológico).
   - `municipios.csv`: seed versionado em `config/municipios.csv`; em runtime o motor C lê o CSV ao lado do executável (`exe_dir\municipios.csv`, ex: `data/output/municipios.csv`).
   - Versão oficial: `config/version.txt` (exibida pela UI via `AppInfo`).
@@ -43,4 +44,4 @@ Antes de realizar qualquer modificação no repositório:
 ---
 
 ## ⚡ 5. Regra de Ouro #4 - Política de Zero Warning & Build Obrigatório
-- Ao término de edições nos arquivos em C ou C#, é **obrigatório** rodar o script de compilação `scripts/build.bat` para validar a ausência de erros e warnings.
+- Ao término de edições nos arquivos em C ou C#, é **obrigatório** rodar o script de compilação `scripts/scripts de controle/ControleGeral.bat 1` (Build TESTE) para validar a ausência de erros e warnings.

@@ -18,6 +18,7 @@ typedef struct {
     char battery[16];
     char imei[MAX_IMEI];
     char mac[MAX_MAC];
+    char usb_port[32]; // porta fisica USB reportada pelo ADB (ex.: "1-4.2")
     int  authorized; // 1 = device, 0 = unauthorized/offline
 } AdbDevice;
 

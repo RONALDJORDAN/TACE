@@ -130,11 +130,11 @@ namespace BotRpaUI.Views
         {
             get
             {
-                if (Score == 0 && Hits == 0 && Misses == 0) return "⚪ Não testada";
-                if (Score >= 80) return "⬆ Excelente";
-                if (Score > 0)   return "⬌ Boa";
-                if (Score <= -80) return "⛔ Não utilizar";
-                return "⚠ Ruim";
+                if (Score == 0 && Hits == 0 && Misses == 0) return "Não testada";
+                if (Score >= 80) return "Excelente";
+                if (Score > 0)   return "Boa";
+                if (Score <= -80) return "Não utilizar";
+                return "Ruim";
             }
         }
 
@@ -144,12 +144,12 @@ namespace BotRpaUI.Views
         {
             get
             {
-                if (string.IsNullOrEmpty(HistoryRaw)) return "⚪⚪⚪⚪⚪";
+                if (string.IsNullOrEmpty(HistoryRaw)) return "-----";
                 string res = "";
                 foreach (char c in HistoryRaw)
                 {
-                    if (c == '1') res += "🟢 ";
-                    else if (c == '0') res += "🔴 ";
+                    if (c == '1') res += "1";
+                    else if (c == '0') res += "0";
                 }
                 return res.TrimEnd();
             }
@@ -227,26 +227,16 @@ namespace BotRpaUI.Views
                 int mode = 0;
                 try { mode = Engine_Learn_GetActiveMode(); }
                 catch { mode = BotRpaUI.Core.SettingsManager.AiLearnActive ? 1 : 0; }
-                if (TxtIaMode == null || BadgeIaMode == null || DotIaMode == null) return;
-                if (mode == 1)
+                if (TxtIaSubtitle != null)
+                    TxtIaSubtitle.Text = mode == 1
+                        ? "Mecanismo de IA adaptativa com Centroid Matching, resolução multi-fallback e proteção contra drift de tela."
+                        : "Seletores determinísticos versionados — aprendizado desligado, sem persistência (recomendado produção).";
+                if (BtnResetDB != null)
                 {
-                    TxtIaMode.Text = "IA ATIVA v2.0 (APRENDENDO)";
-                    TxtIaMode.Foreground = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#00E5FF"));
-                    DotIaMode.Fill = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#00E5FF"));
-                    BadgeIaMode.Background = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#0A2235"));
-                    BadgeIaMode.BorderBrush = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#00E5FF"));
-                    if (TxtIaSubtitle != null) TxtIaSubtitle.Text = "Mecanismo de IA adaptativa com Centroid Matching, resolução multi-fallback e proteção contra drift de tela.";
-                    if (BtnResetDB != null) { BtnResetDB.IsEnabled = true; BtnResetDB.ToolTip = "Apaga o histórico de aprendizado persistido e volta ao seed."; }
-                }
-                else
-                {
-                    TxtIaMode.Text = "IA ESTÁTICA v2.0 (DETERMINÍSTICA)";
-                    TxtIaMode.Foreground = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#4EDEA3"));
-                    DotIaMode.Fill = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#4EDEA3"));
-                    BadgeIaMode.Background = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#12251B"));
-                    BadgeIaMode.BorderBrush = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#4EDEA3"));
-                    if (TxtIaSubtitle != null) TxtIaSubtitle.Text = "Seletores determinísticos versionados — aprendizado desligado, sem persistência (recomendado produção).";
-                    if (BtnResetDB != null) { BtnResetDB.IsEnabled = false; BtnResetDB.ToolTip = "Modo Estático: sem histórico persistido — nada a resetar. Ative o modo ATIVO nas Configurações para aprender."; }
+                    BtnResetDB.IsEnabled = mode == 1;
+                    BtnResetDB.ToolTip = mode == 1
+                        ? "Apaga o histórico de aprendizado persistido e volta ao seed."
+                        : "Modo Estático: sem histórico persistido — nada a resetar. Ative o modo ATIVO nas Configurações para aprender.";
                 }
             }
             catch { }
@@ -409,7 +399,7 @@ namespace BotRpaUI.Views
 
             // Cancela qualquer confirmação dupla pendente ao recarregar
             _resetPrimarioConfirmado = false;
-            BtnResetDB.Content = "🗑  RESETAR BANCO BotLearn";
+            BtnResetDB.Content = "RESETAR BANCO BotLearn";
 
             // Atualiza também a lista de backups
             CarregarBackups();
@@ -451,7 +441,6 @@ namespace BotRpaUI.Views
             var cvs = new CollectionViewSource { Source = _strategies };
             cvs.GroupDescriptions.Add(new PropertyGroupDescription("Categoria"));
             ListStrategies.ItemsSource = cvs.View;
-            LblTotalStrategies.Text = $"{_strategies.Count} estratégias";
         }
 
         // Formata o ID técnico do elemento para exibição amigável
@@ -459,30 +448,30 @@ namespace BotRpaUI.Views
         {
             return id switch
             {
-                "campo_email"             => "📧 E-mail do Aplicador",
-                "campo_senha"             => "🔒 Senha do Aplicador",
-                "botao_entrar"            => "▶ Botão Entrar",
-                "spinner_municipio"       => "📍 Gaveta de Município",
-                "botao_importar_zip"      => "📦 Opção Importar ZIP",
-                "f1_btn_procurar_arquivo" => "📁 Botão Procurar Arquivo ZIP",
-                "f1_btn_avaliacoes"        => "📑 Pasta Avaliações",
-                "f7_spinner_municipio"    => "📍 Gaveta de Município (M7)",
-                "f7_campo_email"          => "📧 E-mail do Aplicador (M7)",
-                "f7_campo_senha"          => "🔒 Senha do Aplicador (M7)",
-                "f7_botao_entrar"         => "▶ Botão Entrar (M7)",
-                "f7_btn_procurar_arquivo" => "📁 Botão Procurar Arquivo ZIP (M7)",
-                "v7_spinner_municipio"    => "📍 Gaveta de Município (V7)",
-                "v7_campo_email"          => "📧 E-mail do Aplicador (V7)",
-                "v7_campo_senha"          => "🔒 Senha do Aplicador (V7)",
-                "v7_botao_entrar"         => "▶ Botão Entrar (V7)",
-                "v7_botao_importar_zip"   => "📦 Opção Importar ZIP (V7)",
-                "v7_btn_procurar_arquivo" => "📁 Botão Procurar Arquivo ZIP (V7)",
-                "v7_btn_sincronizar_agora" => "🔄 Botão Sincronizar Agora (V7)",
-                "t20_spinner_municipio"   => "📍 Gaveta de Município (T20)",
-                "t20_campo_email"         => "📧 E-mail do Aplicador (T20)",
-                "t20_campo_senha"         => "🔒 Senha do Aplicador (T20)",
-                "t20_botao_entrar"        => "▶ Botão Entrar (T20)",
-                "f6_btn_sincronizar_agora" => "🔄 Botão Sincronizar Agora",
+                "campo_email"             => "E-mail do Aplicador",
+                "campo_senha"             => "Senha do Aplicador",
+                "botao_entrar"            => "Botão Entrar",
+                "spinner_municipio"       => "Gaveta de Município",
+                "botao_importar_zip"      => "Opção Importar ZIP",
+                "f1_btn_procurar_arquivo" => "Botão Procurar Arquivo ZIP",
+                "f1_btn_avaliacoes"        => "Pasta Avaliações",
+                "f7_spinner_municipio"    => "Gaveta de Município (M7)",
+                "f7_campo_email"          => "E-mail do Aplicador (M7)",
+                "f7_campo_senha"          => "Senha do Aplicador (M7)",
+                "f7_botao_entrar"         => "Botão Entrar (M7)",
+                "f7_btn_procurar_arquivo" => "Botão Procurar Arquivo ZIP (M7)",
+                "v7_spinner_municipio"    => "Gaveta de Município (V7)",
+                "v7_campo_email"          => "E-mail do Aplicador (V7)",
+                "v7_campo_senha"          => "Senha do Aplicador (V7)",
+                "v7_botao_entrar"         => "Botão Entrar (V7)",
+                "v7_botao_importar_zip"   => "Opção Importar ZIP (V7)",
+                "v7_btn_procurar_arquivo" => "Botão Procurar Arquivo ZIP (V7)",
+                "v7_btn_sincronizar_agora" => "Botão Sincronizar Agora (V7)",
+                "t20_spinner_municipio"   => "Gaveta de Município (T20)",
+                "t20_campo_email"         => "E-mail do Aplicador (T20)",
+                "t20_campo_senha"         => "Senha do Aplicador (T20)",
+                "t20_botao_entrar"        => "Botão Entrar (T20)",
+                "f6_btn_sincronizar_agora" => "Botão Sincronizar Agora",
                 _                         => id
             };
         }
@@ -541,14 +530,6 @@ namespace BotRpaUI.Views
             };
         }
 
-        // ============================================================
-        // Botão Atualizar — recarrega dados da DLL
-        // ============================================================
-        private void BtnAtualizar_Click(object sender, RoutedEventArgs e)
-        {
-            CarregarDados();
-        }
-
         private void BtnMapeamento_Click(object sender, RoutedEventArgs e)
         {
             BrainVisualizerWindow visualizer = new BrainVisualizerWindow();
@@ -563,8 +544,8 @@ namespace BotRpaUI.Views
 
         // ============================================================
         // Reset com Confirmação DUPLA
-        // Clique 1 → muda o botão para "TEM CERTEZA?"
-        // Clique 2 → executa o reset e recarrega
+        // Clique 1 -> muda o botão para "TEM CERTEZA?"
+        // Clique 2 -> executa o reset e recarrega
         // Qualquer outro clique na UI cancela a confirmação pendente
         // ============================================================
         private void BtnResetDB_Click(object sender, RoutedEventArgs e)
@@ -573,7 +554,7 @@ namespace BotRpaUI.Views
             {
                 // === PRIMEIRA CONFIRMAÇÃO ===
                 _resetPrimarioConfirmado = true;
-                BtnResetDB.Content = "⚠  CONFIRMAR RESET? (clique novamente)";
+                BtnResetDB.Content = "CONFIRMAR RESET? (clique novamente)";
 
                 // Timer de 5 segundos: se não confirmar, cancela automaticamente
                 var timer = new System.Windows.Threading.DispatcherTimer
@@ -586,7 +567,7 @@ namespace BotRpaUI.Views
                     if (_resetPrimarioConfirmado)
                     {
                         _resetPrimarioConfirmado = false;
-                        BtnResetDB.Content = "🗑  RESETAR BANCO BotLearn";
+                        BtnResetDB.Content = "RESETAR BANCO BotLearn";
                     }
                 };
                 timer.Start();
@@ -630,7 +611,7 @@ namespace BotRpaUI.Views
                 {
                     // Cancelou na segunda confirmação
                     _resetPrimarioConfirmado = false;
-                    BtnResetDB.Content = "🗑  RESETAR BANCO BotLearn";
+                    BtnResetDB.Content = "RESETAR BANCO BotLearn";
                 }
             }
         }
@@ -654,7 +635,7 @@ namespace BotRpaUI.Views
                     {
                         MessageBox.Show(
                             "Backup restaurado com sucesso na pasta de dados.\n\n" +
-                            "⚠ IMPORTANTE: Para que o motor nativo (BotEngine.dll) recarregue " +
+                            "IMPORTANTE: Para que o motor nativo (BotEngine.dll) recarregue " +
                             "as informações na memória, por favor, REINICIE o aplicativo.",
                             "Restauração Concluída", MessageBoxButton.OK, MessageBoxImage.Information);
                     }

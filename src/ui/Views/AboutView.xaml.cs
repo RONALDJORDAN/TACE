@@ -9,13 +9,6 @@ namespace BotRpaUI.Views
         public AboutView()
         {
             InitializeComponent();
-            
-            // Define a versão atualizada no rodapé do menu lateral
-            try
-            {
-                TxtAboutVersion.Text = $"v{Core.AppInfo.CurrentVersion}";
-            }
-            catch { }
         }
 
         private void BtnSubGuia_Click(object sender, RoutedEventArgs e)

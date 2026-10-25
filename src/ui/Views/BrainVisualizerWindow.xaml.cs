@@ -252,11 +252,11 @@ namespace BotRpaUI.Views
                 try
                 {
                     Clipboard.SetText(InspectorQueryText.Text);
-                    BtnCopyQuery.Content = "✓ COPIADO!";
+                    BtnCopyQuery.Content = "COPIADO!";
                     var timer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromSeconds(1.5) };
                     timer.Tick += (s, args) =>
                     {
-                        BtnCopyQuery.Content = "📋 COPIAR";
+                        BtnCopyQuery.Content = "COPIAR";
                         timer.Stop();
                     };
                     timer.Start();
@@ -437,7 +437,7 @@ namespace BotRpaUI.Views
                 BorderThickness = new Thickness(2.8),
                 CornerRadius = new CornerRadius(46),
                 Cursor = Cursors.Hand,
-                ToolTip = "⚡ Reator Central BotAI 2.0 (Núcleo Maciço — Clique para Inspecionar)"
+                ToolTip = "Reator Central BotAI 2.0 (Núcleo Maciço — Clique para Inspecionar)"
             };
 
             // Anel Interno de Fusão Quântica
@@ -454,15 +454,6 @@ namespace BotRpaUI.Views
             {
                 HorizontalAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center
-            };
-
-            TextBlock coreIcon = new TextBlock
-            {
-                Text = "⚡",
-                Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#00F5D4")),
-                FontSize = 13,
-                FontWeight = FontWeights.Black,
-                HorizontalAlignment = HorizontalAlignment.Center
             };
 
             TextBlock coreTitle = new TextBlock
@@ -503,7 +494,6 @@ namespace BotRpaUI.Views
             };
             coreBadge.Child = coreBadgeTxt;
 
-            coreContent.Children.Add(coreIcon);
             coreContent.Children.Add(coreTitle);
             coreContent.Children.Add(coreVer);
             coreContent.Children.Add(coreBadge);
@@ -530,7 +520,7 @@ namespace BotRpaUI.Views
             };
             TextBlock coreFloatingBadgeTxt = new TextBlock
             {
-                Text = "⚡ REATOR CENTRAL BOTAI 2.0",
+                Text = "REATOR CENTRAL BOTAI 2.0",
                 Foreground = Brushes.White,
                 FontWeight = FontWeights.Black,
                 FontSize = 9.5
@@ -740,18 +730,18 @@ namespace BotRpaUI.Views
             // ------------------------------------------------------------
             var cognitiveNodes = new (string Name, string Role, string Details, string Symbol)[]
             {
-                ("Centroid Matcher", "Motor de Centróide Determinístico", "Calcula o centroide exato de toque em botões e gavetas dinâmicas com desvio nulo.", "🎯"),
-                ("Fuzzy Resolver", "Normalizador Fuzzy & Tolerância", "Ajusta desvios sutis de texto, pontuação e espaços em seletores.", "🔍"),
-                ("Anti-Drift Shield", "Guardião Anti-Desvio de Interface", "Bloqueia disparos incorretos caso a tela sofra reordenação inesperada.", "🛡️"),
-                ("FastCache Router", "Roteador de Acesso Rápido", "Resolução direta em memória RAM de coordenadas de alta frequência.", "⚡"),
-                ("Hierarchy Scanner", "Varredura de Árvore UIAutomator", "Analisa hierarquia pai-filho e nós adjacentes na árvore de acessibilidade XML.", "🌲"),
-                ("Diacritic Normalizer", "Normalizador de Acentuação", "Equipara caracteres Unicode e ASCII (ex: Município vs Municipio).", "🔤"),
-                ("Latency Compensator", "Compensador de Latência Android", "Ajusta temporizações dinâmicas de acordo com a carga do processador do tablet.", "⏱️"),
-                ("Adaptive Learner", "Otimizador de Pesos Heurísticos", "Promove estratégias comprovadas (+5 pts) e penaliza rotas obsoletas (-15 pts).", "📈"),
-                ("Context Analyzer", "Analista de Contexto Operacional", "Valida a presença da janela correta antes de liberar o acionamento do alvo.", "🌐"),
-                ("Fallback Provider", "Provedor Multi-Estratégia", "Oferece rotas alternativas em milissegundos se o primeiro seletor falhar.", "🔄"),
-                ("Resource Extractor", "Extrator de IDs e Propriedades", "Lê resource-id, class name, bounds e content-desc em alta velocidade.", "📦"),
-                ("Zero-Drift Sensor", "Sensor de Estabilidade de Tela", "Garante que elementos em movimento pararam antes da interação de clique.", "⚓")
+                ("Centroid Matcher", "Motor de Centróide Determinístico", "Calcula o centroide exato de toque em botões e gavetas dinâmicas com desvio nulo.", ""),
+                ("Fuzzy Resolver", "Normalizador Fuzzy & Tolerância", "Ajusta desvios sutis de texto, pontuação e espaços em seletores.", ""),
+                ("Anti-Drift Shield", "Guardião Anti-Desvio de Interface", "Bloqueia disparos incorretos caso a tela sofra reordenação inesperada.", ""),
+                ("FastCache Router", "Roteador de Acesso Rápido", "Resolução direta em memória RAM de coordenadas de alta frequência.", ""),
+                ("Hierarchy Scanner", "Varredura de Árvore UIAutomator", "Analisa hierarquia pai-filho e nós adjacentes na árvore de acessibilidade XML.", ""),
+                ("Diacritic Normalizer", "Normalizador de Acentuação", "Equipara caracteres Unicode e ASCII (ex: Município vs Municipio).", ""),
+                ("Latency Compensator", "Compensador de Latência Android", "Ajusta temporizações dinâmicas de acordo com a carga do processador do tablet.", ""),
+                ("Adaptive Learner", "Otimizador de Pesos Heurísticos", "Promove estratégias comprovadas (+5 pts) e penaliza rotas obsoletas (-15 pts).", ""),
+                ("Context Analyzer", "Analista de Contexto Operacional", "Valida a presença da janela correta antes de liberar o acionamento do alvo.", ""),
+                ("Fallback Provider", "Provedor Multi-Estratégia", "Oferece rotas alternativas em milissegundos se o primeiro seletor falhar.", ""),
+                ("Resource Extractor", "Extrator de IDs e Propriedades", "Lê resource-id, class name, bounds e content-desc em alta velocidade.", ""),
+                ("Zero-Drift Sensor", "Sensor de Estabilidade de Tela", "Garante que elementos em movimento pararam antes da interação de clique.", "")
             };
 
             double cogRadius = sphereRadius * 0.61;
@@ -816,7 +806,7 @@ namespace BotRpaUI.Views
                 };
                 TextBlock cogBadgeTxt = new TextBlock
                 {
-                    Text = $"{cog.Symbol} {cog.Name}",
+                    Text = string.IsNullOrWhiteSpace(cog.Symbol) ? cog.Name : $"{cog.Symbol} {cog.Name}",
                     Foreground = Brushes.White,
                     FontWeight = FontWeights.SemiBold,
                     FontSize = 9
@@ -1254,30 +1244,30 @@ namespace BotRpaUI.Views
         {
             return targetId switch
             {
-                "v7_spinner_municipio"     => "📍 Gaveta Município (V7)",
-                "v7_campo_email"           => "📧 E-mail Aplicador (V7)",
-                "v7_campo_senha"           => "🔒 Senha Aplicador (V7)",
-                "v7_botao_entrar"          => "▶ Botão Entrar (V7)",
-                "v7_botao_importar_zip"    => "📦 Menu Importar (V7)",
-                "v7_btn_procurar_arquivo"  => "📁 Procurar ZIP (V7)",
-                "v7_btn_sincronizar_agora" => "🔄 Sincronizar (V7)",
-                "f7_spinner_municipio"     => "📍 Gaveta Município (M7)",
-                "f7_campo_email"           => "📧 E-mail Aplicador (M7)",
-                "f7_campo_senha"           => "🔒 Senha Aplicador (M7)",
-                "f7_botao_entrar"          => "▶ Botão Entrar (M7)",
-                "f7_btn_procurar_arquivo"  => "📁 Procurar ZIP (M7)",
-                "t20_spinner_municipio"    => "📍 Gaveta Município (T20)",
-                "t20_campo_email"          => "📧 E-mail Aplicador (T20)",
-                "t20_campo_senha"          => "🔒 Senha Aplicador (T20)",
-                "t20_botao_entrar"         => "▶ Botão Entrar (T20)",
-                "t20_botao_importar_zip"   => "📦 Menu Importar (T20)",
-                "t20_btn_procurar_arquivo" => "📁 Procurar ZIP (T20)",
-                "spinner_municipio"        => "📍 Gaveta Município (F1)",
-                "campo_email"              => "📧 E-mail Aplicador (F1)",
-                "campo_senha"              => "🔒 Senha Aplicador (F1)",
-                "botao_entrar"             => "▶ Botão Entrar (F1)",
-                "botao_importar_zip"       => "📦 Menu Importar (F1)",
-                "f1_btn_procurar_arquivo"  => "📁 Procurar ZIP (F1)",
+                "v7_spinner_municipio"     => "Gaveta Município (V7)",
+                "v7_campo_email"           => "E-mail Aplicador (V7)",
+                "v7_campo_senha"           => "Senha Aplicador (V7)",
+                "v7_botao_entrar"          => "Botão Entrar (V7)",
+                "v7_botao_importar_zip"    => "Menu Importar (V7)",
+                "v7_btn_procurar_arquivo"  => "Procurar ZIP (V7)",
+                "v7_btn_sincronizar_agora" => "Sincronizar (V7)",
+                "f7_spinner_municipio"     => "Gaveta Município (M7)",
+                "f7_campo_email"           => "E-mail Aplicador (M7)",
+                "f7_campo_senha"           => "Senha Aplicador (M7)",
+                "f7_botao_entrar"          => "Botão Entrar (M7)",
+                "f7_btn_procurar_arquivo"  => "Procurar ZIP (M7)",
+                "t20_spinner_municipio"    => "Gaveta Município (T20)",
+                "t20_campo_email"          => "E-mail Aplicador (T20)",
+                "t20_campo_senha"          => "Senha Aplicador (T20)",
+                "t20_botao_entrar"         => "Botão Entrar (T20)",
+                "t20_botao_importar_zip"   => "Menu Importar (T20)",
+                "t20_btn_procurar_arquivo" => "Procurar ZIP (T20)",
+                "spinner_municipio"        => "Gaveta Município (F1)",
+                "campo_email"              => "E-mail Aplicador (F1)",
+                "campo_senha"              => "Senha Aplicador (F1)",
+                "botao_entrar"             => "Botão Entrar (F1)",
+                "botao_importar_zip"       => "Menu Importar (F1)",
+                "f1_btn_procurar_arquivo"  => "Procurar ZIP (F1)",
                 _                          => targetId
             };
         }

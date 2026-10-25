@@ -87,8 +87,8 @@ src/ui/Resources/temp/
 # --------------------------------------------------------------------------
 # Logs de execucao de dispositivo (locais — nunca versionar)
 logs/
-registros/*/*_execucao.log
-registros/**/*.log
+docs/registros/*/*_execucao.log
+docs/registros/**/*.log
 
 # --------------------------------------------------------------------------
 # 5. Dados locais, bancos e relatorios dinamicos
@@ -152,3 +152,11 @@ $RECYCLE.BIN/
 *.xml
 !login_live.xml
 !login_app.xml
+
+# Ferramentas auxiliares e capturamac
+tools/capturamac/platform-tools/
+tools/capturamac/*.exe
+tools/capturamac/*.csv
+tools/capturamac/*.txt
+tools/qrcode_generator/teste.png
+

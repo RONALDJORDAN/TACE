@@ -232,7 +232,7 @@ namespace BotRpaUI
                 this.WindowState = WindowState.Maximized;
                 _isFullScreen = true;
 
-                if (BtnToggleFullScreen != null) BtnToggleFullScreen.Content = "🗗 Restaurar";
+                if (BtnToggleFullScreen != null) BtnToggleFullScreen.Content = "Restaurar";
             }
             else
             {
@@ -242,7 +242,7 @@ namespace BotRpaUI
                 this.WindowState = _previousWindowState;
                 _isFullScreen = false;
 
-                if (BtnToggleFullScreen != null) BtnToggleFullScreen.Content = "⛶ F11";
+                if (BtnToggleFullScreen != null) BtnToggleFullScreen.Content = "F11";
             }
         }
 

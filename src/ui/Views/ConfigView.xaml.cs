@@ -178,7 +178,7 @@ namespace BotRpaUI.Views
                 CardInterfaceClassic.BorderThickness = new Thickness(1);
                 BadgeClassicActive.Visibility = Visibility.Collapsed;
 
-                TxtInterfaceActiveIndicator.Text = "Modo Atual: ⚡ Monitor Pro";
+                TxtInterfaceActiveIndicator.Text = "Modo Atual: Monitor Pro";
                 TxtInterfaceActiveIndicator.Foreground = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#FF007F"));
             }
             else
@@ -193,7 +193,7 @@ namespace BotRpaUI.Views
                 CardInterfacePro.BorderThickness = new Thickness(1);
                 BadgeProActive.Visibility = Visibility.Collapsed;
 
-                TxtInterfaceActiveIndicator.Text = "Modo Atual: 📟 Clássico";
+                TxtInterfaceActiveIndicator.Text = "Modo Atual: Clássico";
                 TxtInterfaceActiveIndicator.Foreground = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#00E5FF"));
             }
         }
@@ -367,7 +367,7 @@ namespace BotRpaUI.Views
                         using (ZipArchive archive = ZipFile.Open(targetFile, ZipArchiveMode.Create))
                         {
                             string[] folders = { 
-                                "registros", 
+                                @"docs\registros", 
                                 "registros_de_dispositivos", 
                                 @"data\input\municipios",
                                 @"data\input\apps"

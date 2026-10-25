@@ -42,11 +42,43 @@ namespace BotRpaUI.Views
         private string _mac = string.Empty;
         private string _status = "Aguardando";
         private string _patrimonio = string.Empty;
+        private string _portaUsb = string.Empty;
         private bool _registrado;
+        private bool _selecionado;
 
         public string Serial { get; set; } = string.Empty;
         public string Modelo { get; set; } = string.Empty;
         public string Fabricante { get; set; } = string.Empty;
+
+        public bool Selecionado
+        {
+            get => _selecionado;
+            set
+            {
+                if (_selecionado == value) return;
+                _selecionado = value;
+                OnPropertyChanged(nameof(Selecionado));
+            }
+        }
+
+        public string PortaUsb
+        {
+            get => _portaUsb;
+            set
+            {
+                if (_portaUsb == value) return;
+                _portaUsb = value;
+                OnPropertyChanged(nameof(PortaUsb));
+                OnPropertyChanged(nameof(PortaUsbExibicao));
+            }
+        }
+
+        public string PortaUsbExibicao => BotRpaUI.Core.UsbPortNameService.ObterExibicao(_portaUsb);
+
+        public void NotificarPortaUsb()
+        {
+            OnPropertyChanged(nameof(PortaUsbExibicao));
+        }
 
         public string MAC
         {
@@ -118,6 +150,7 @@ namespace BotRpaUI.Views
         private readonly ObservableCollection<RegistroAparelhoItem> _registroAparelhos = new ObservableCollection<RegistroAparelhoItem>();
         private readonly System.Collections.Generic.Dictionary<string, DateTime> _registroUltimaTentativaMac = new System.Collections.Generic.Dictionary<string, DateTime>(StringComparer.OrdinalIgnoreCase);
         private readonly System.Collections.Generic.HashSet<string> _registroPulados = new System.Collections.Generic.HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        private readonly System.Collections.Generic.HashSet<string> _registroDesligamentosSolicitados = new System.Collections.Generic.HashSet<string>(StringComparer.OrdinalIgnoreCase);
         private System.Windows.Threading.DispatcherTimer? _registroTimer;
         private System.Threading.CancellationTokenSource? _registroCts;
         private RegistroAparelhoItem? _registroAtual;
@@ -265,7 +298,7 @@ namespace BotRpaUI.Views
                 if (TxtIntegridadeMac != null) TxtIntegridadeMac.Text = $"{comMac}/{total} ({percMac:F1}%)";
 
                 // Contagem de Registros de Auditoria
-                string rootPath = Path.Combine(BotRpaUI.Core.PathHelper.GetRootDirectory(), "registros");
+                string rootPath = BotRpaUI.Core.PathHelper.GetRegistrosDirectory();
                 int totalLogs = 0;
                 if (Directory.Exists(rootPath))
                 {
@@ -287,8 +320,6 @@ namespace BotRpaUI.Views
                         TxtUltimoDispositivo.Text = "Nenhum dispositivo cadastrado.";
                 }
 
-                if (TxtMiniStatusDb != null)
-                    TxtMiniStatusDb.Text = $"{total} aparelhos registrados";
             }
             catch (Exception ex)
             {
@@ -415,7 +446,7 @@ namespace BotRpaUI.Views
         private void BtnNovoDispositivo_Click(object sender, RoutedEventArgs e)
         {
             _editingDeviceId = 0;
-            TxtModalTitulo.Text = "➕ Adicionar Novo Dispositivo";
+            TxtModalTitulo.Text = "Adicionar Novo Dispositivo";
             TxtModalPatrimonio.Text = "";
             TxtModalFabricante.Text = "Positivo";
             TxtModalModelo.Text = "Tab Vision 7 (T307G)";
@@ -434,7 +465,7 @@ namespace BotRpaUI.Views
             }
 
             _editingDeviceId = selectedItem.ID;
-            TxtModalTitulo.Text = $"✏️ Editar Dispositivo #{selectedItem.ID}";
+            TxtModalTitulo.Text = $"Editar Dispositivo #{selectedItem.ID}";
             TxtModalPatrimonio.Text = SomenteDigitosPatrimonio(selectedItem.Patrimonio);
             TxtModalFabricante.Text = selectedItem.Fabricante;
             TxtModalModelo.Text = selectedItem.Modelo;
@@ -518,16 +549,13 @@ namespace BotRpaUI.Views
                 }
                 else
                 {
-                    var todos = BotRpaUI.Core.SQLiteDatabaseManager.LerTodos();
-                    var item = todos.Find(d => d.ID == _editingDeviceId);
-                    if (item != null)
+                    bool atualizado = BotRpaUI.Core.SQLiteDatabaseManager.AtualizarDispositivo(
+                        _editingDeviceId, serial, fabricante, modelo, mac, patrimonio);
+                    if (!atualizado)
                     {
-                        item.Serial = serial;
-                        item.Fabricante = fabricante;
-                        item.Modelo = modelo;
-                        item.MAC = mac;
-                        item.Patrimonio = patrimonio;
-                        BotRpaUI.Core.SQLiteDatabaseManager.SalvarTodos(todos);
+                        MessageBox.Show("Não foi possível salvar o dispositivo. Verifique se o patrimônio, serial ou MAC já pertencem a outro registro.",
+                            "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
+                        return;
                     }
                 }
 
@@ -589,6 +617,7 @@ namespace BotRpaUI.Views
 
             _registroAparelhos.Clear();
             _registroPulados.Clear();
+            _registroDesligamentosSolicitados.Clear();
             _registroUltimaTentativaMac.Clear();
             _registroAtual = null;
             _registroUltimoTotalConectados = -1;
@@ -630,13 +659,14 @@ namespace BotRpaUI.Views
             }
 
             _registroAtual = null;
+            _registroDesligamentosSolicitados.Clear();
             try { PanelModalRegistroSerie.Visibility = Visibility.Collapsed; } catch { }
         }
 
         private async void RegistroTimer_Tick(object? sender, EventArgs e)
         {
             var cts = _registroCts;
-            if (_registroProcessando || _registroAtual != null || cts == null || cts.IsCancellationRequested) return;
+            if (_registroProcessando || cts == null || cts.IsCancellationRequested) return;
 
             _registroProcessando = true;
             try
@@ -690,6 +720,10 @@ namespace BotRpaUI.Views
                 if (!BotRpaUI.Core.MacCaptureService.MacValido(mac) && registroSerial != null && BotRpaUI.Core.MacCaptureService.MacValido(registroSerial.MAC))
                     mac = registroSerial.MAC;
 
+                string portaUsb = dev.usb_port ?? string.Empty;
+                if (string.IsNullOrWhiteSpace(portaUsb))
+                    portaUsb = BotRpaUI.Core.UsbPortResolver.ObterPorta(dev.serial);
+
                 string patrimonio = string.Empty;
                 if (registroSerial != null && !string.IsNullOrWhiteSpace(registroSerial.Patrimonio))
                     patrimonio = registroSerial.Patrimonio;
@@ -707,6 +741,7 @@ namespace BotRpaUI.Views
                     Modelo = dev.model ?? string.Empty,
                     Fabricante = dev.manufacturer ?? string.Empty,
                     MAC = mac,
+                    PortaUsb = portaUsb,
                     PatrimonioExistente = patrimonio
                 });
             }
@@ -716,6 +751,10 @@ namespace BotRpaUI.Views
 
         private void AtualizarGridRegistro(System.Collections.Generic.List<DispositivoConectadoRegistro> conectados)
         {
+            var conectadosAgora = new System.Collections.Generic.HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var conectado in conectados) conectadosAgora.Add(conectado.Serial);
+            _registroDesligamentosSolicitados.RemoveWhere(s => !conectadosAgora.Contains(s));
+
             foreach (var conectado in conectados)
             {
                 var item = _registroAparelhos.FirstOrDefault(x => string.Equals(x.Serial, conectado.Serial, StringComparison.OrdinalIgnoreCase));
@@ -727,15 +766,17 @@ namespace BotRpaUI.Views
                         Modelo = conectado.Modelo,
                         Fabricante = conectado.Fabricante,
                         MAC = conectado.MAC,
+                        PortaUsb = conectado.PortaUsb,
                         Status = BotRpaUI.Core.MacCaptureService.MacValido(conectado.MAC) ? "Aguardando" : "Aguardando MAC"
                     };
                     _registroAparelhos.Add(item);
-                    RegistroLog($"CONECTADO | S/N: {conectado.Serial} | MAC: {(BotRpaUI.Core.MacCaptureService.MacValido(conectado.MAC) ? conectado.MAC : "pendente")}");
+                    RegistroLog($"CONECTADO | S/N: {conectado.Serial} | USB: {BotRpaUI.Core.UsbPortNameService.ObterExibicaoComPorta(conectado.PortaUsb)} | MAC: {(BotRpaUI.Core.MacCaptureService.MacValido(conectado.MAC) ? conectado.MAC : "pendente")}");
                 }
                 else
                 {
                     if (!string.IsNullOrWhiteSpace(conectado.Modelo)) item.Modelo = conectado.Modelo;
                     if (!string.IsNullOrWhiteSpace(conectado.Fabricante)) item.Fabricante = conectado.Fabricante;
+                    if (!string.IsNullOrWhiteSpace(conectado.PortaUsb)) item.PortaUsb = conectado.PortaUsb;
 
                     if (BotRpaUI.Core.MacCaptureService.MacValido(conectado.MAC) && !string.Equals(item.MAC, conectado.MAC, StringComparison.OrdinalIgnoreCase))
                     {
@@ -750,7 +791,15 @@ namespace BotRpaUI.Views
                     item.Patrimonio = conectado.PatrimonioExistente;
                     item.Status = "Ja cadastrado";
                     RegistroLog($"JA CADASTRADO | S/N: {conectado.Serial} | MAC: {(string.IsNullOrWhiteSpace(item.MAC) ? "pendente" : item.MAC)} | Patrimonio: {conectado.PatrimonioExistente}");
+                    SolicitarDesligamento(item);
                 }
+            }
+
+            foreach (var item in _registroAparelhos)
+            {
+                if (!item.Registrado) continue;
+                if (item.Status != "Desligado" && item.Status != "Falha ao desligar") continue;
+                if (conectadosAgora.Contains(item.Serial)) SolicitarDesligamento(item);
             }
 
             if (_registroUltimoTotalConectados != conectados.Count)
@@ -788,6 +837,7 @@ namespace BotRpaUI.Views
                         item.Registrado = true;
                         item.Patrimonio = alvo.Patrimonio;
                         item.Status = "Ja cadastrado";
+                        SolicitarDesligamento(item);
                         continue;
                     }
 
@@ -838,6 +888,7 @@ namespace BotRpaUI.Views
                     item.Patrimonio = alvoMac.Patrimonio;
                     item.Status = "Ja cadastrado";
                     RegistroLog($"JA CADASTRADO | S/N: {item.Serial} | MAC: {mac} | Patrimonio: {alvoMac.Patrimonio}");
+                    SolicitarDesligamento(item);
                     continue;
                 }
 
@@ -854,6 +905,38 @@ namespace BotRpaUI.Views
                 return (DateTime.Now - ultima) >= TimeSpan.FromSeconds(12);
 
             return true;
+        }
+
+        private void SolicitarDesligamento(RegistroAparelhoItem item)
+        {
+            if (item == null || string.IsNullOrWhiteSpace(item.Serial)) return;
+
+            string serial = item.Serial.Trim();
+            if (!_registroDesligamentosSolicitados.Add(serial)) return;
+
+            item.Status = "Desligando...";
+            RegistroLog($"DESLIGANDO | S/N: {serial} | USB: {BotRpaUI.Core.UsbPortNameService.ObterExibicaoComPorta(item.PortaUsb)}");
+
+            _ = System.Threading.Tasks.Task.Run(() =>
+            {
+                string resposta = string.Empty;
+                try
+                {
+                    var buffer = new System.Text.StringBuilder(1024);
+                    MonitorView.Engine_RunAdbShell(serial, "reboot -p", buffer, 1024);
+                    resposta = (buffer.ToString() ?? string.Empty).Trim();
+                }
+                catch (Exception ex)
+                {
+                    resposta = "ERRO: " + ex.Message;
+                }
+
+                Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    item.Status = resposta.StartsWith("ERRO", StringComparison.OrdinalIgnoreCase) ? "Falha ao desligar" : "Desligado";
+                    RegistroLog($"DESLIGAMENTO | S/N: {serial} | {(string.IsNullOrWhiteSpace(resposta) ? "comando enviado" : resposta)}");
+                }));
+            });
         }
 
         private void SelecionarAparelhoParaPatrimonio(RegistroAparelhoItem item)
@@ -907,6 +990,7 @@ namespace BotRpaUI.Views
             item.Registrado = true;
             item.Status = "Registrado";
             RegistroLog($"REGISTRADO | S/N: {item.Serial} | MAC: {item.MAC} | Patrimonio: {patrimonio}");
+            SolicitarDesligamento(item);
 
             _registroAtual = null;
             TxtRegistroPatrimonio.Clear();
@@ -920,6 +1004,115 @@ namespace BotRpaUI.Views
 
             BotRpaUI.Core.SQLiteDatabaseManager.InvalidarCache();
             LoadBancoDadosDedicado();
+            Dispatcher.BeginInvoke(new Action(() => RegistroTimer_Tick(null, EventArgs.Empty)));
+        }
+
+        private void BtnNomearPortas_Click(object sender, RoutedEventArgs e)
+        {
+            var portas = new System.Collections.Generic.Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var item in _registroAparelhos)
+            {
+                if (string.IsNullOrWhiteSpace(item.PortaUsb) || item.PortaUsb == "N/A") continue;
+                string detalhe = string.IsNullOrWhiteSpace(item.Modelo)
+                    ? $"S/N {item.Serial}"
+                    : $"S/N {item.Serial} - {item.Modelo}";
+                portas[item.PortaUsb] = detalhe;
+            }
+
+            var janela = new UsbPortNamingWindow(portas);
+            var owner = Window.GetWindow(this);
+            if (owner != null) janela.Owner = owner;
+
+            if (janela.ShowDialog() != true) return;
+
+            foreach (var item in _registroAparelhos) item.NotificarPortaUsb();
+            RegistroLog("Nomes das portas USB atualizados.");
+        }
+
+        private void BtnRegistrarSelecionados_Click(object sender, RoutedEventArgs e)
+        {
+            var selecionados = _registroAparelhos.Where(x => x.Selecionado && !x.Registrado).ToList();
+            if (selecionados.Count == 0)
+            {
+                MessageBox.Show("Marque ao menos um aparelho na coluna Sel. e informe o patrimonio.", "Registro em lote", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var normalizados = new System.Collections.Generic.Dictionary<RegistroAparelhoItem, string>();
+            var usados = new System.Collections.Generic.HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var item in selecionados)
+            {
+                string entrada = (item.Patrimonio ?? string.Empty).Trim();
+                if (string.IsNullOrWhiteSpace(entrada))
+                {
+                    MessageBox.Show($"Informe o patrimonio do aparelho S/N {item.Serial}.", "Patrimonio obrigatorio", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                if (!BotRpaUI.Core.PatrimonioHelper.TryNormalizar(entrada, out string patrimonio, out string erro))
+                {
+                    MessageBox.Show($"{erro} (S/N {item.Serial})", "Patrimonio invalido", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                if (!usados.Add(patrimonio))
+                {
+                    MessageBox.Show($"O patrimonio {patrimonio} foi informado para mais de um aparelho.", "Patrimonio repetido", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                normalizados[item] = patrimonio;
+            }
+
+            int registrados = 0;
+            var falhas = new System.Collections.Generic.List<string>();
+
+            foreach (var item in selecionados)
+            {
+                string patrimonio = normalizados[item];
+                bool salvo = BotRpaUI.Core.SQLiteDatabaseManager.RegistrarComPatrimonio(
+                    item.Serial, item.Fabricante, item.Modelo, item.MAC, patrimonio);
+
+                if (!salvo)
+                {
+                    item.Status = "Erro ao registrar";
+                    falhas.Add($"{item.Serial} ({patrimonio})");
+                    RegistroLog($"ERRO REGISTRO | S/N: {item.Serial} | USB: {BotRpaUI.Core.UsbPortNameService.ObterExibicaoComPorta(item.PortaUsb)} | Patrimonio: {patrimonio}");
+                    continue;
+                }
+
+                item.Patrimonio = patrimonio;
+                item.Registrado = true;
+                item.Status = "Registrado";
+                item.Selecionado = false;
+                registrados++;
+                RegistroLog($"REGISTRADO EM LOTE | S/N: {item.Serial} | USB: {BotRpaUI.Core.UsbPortNameService.ObterExibicaoComPorta(item.PortaUsb)} | MAC: {(BotRpaUI.Core.MacCaptureService.MacValido(item.MAC) ? item.MAC : "nao capturado")} | Patrimonio: {patrimonio}");
+                SolicitarDesligamento(item);
+
+                if (ReferenceEquals(_registroAtual, item))
+                    _registroAtual = null;
+            }
+
+            if (_registroAtual == null)
+            {
+                TxtRegistroPatrimonio.Clear();
+                TxtRegistroPatrimonio.IsEnabled = false;
+                BtnRegistrarPatrimonio.IsEnabled = false;
+                BtnPularRegistro.IsEnabled = false;
+                TxtRegistroSerial.Text = "-";
+                TxtRegistroMac.Text = "-";
+            }
+
+            AtualizarContadorRegistro();
+            TxtStatusRegistroSerie.Text = $"{registrados} aparelho(s) registrado(s) nesta operacao. {falhas.Count} falha(s).";
+            BotRpaUI.Core.SQLiteDatabaseManager.InvalidarCache();
+            LoadBancoDadosDedicado();
+
+            if (falhas.Count == 0)
+                MessageBox.Show($"{registrados} aparelho(s) registrado(s) com sucesso.", "Registro em lote", MessageBoxButton.OK, MessageBoxImage.Information);
+            else
+                MessageBox.Show($"{registrados} registrado(s) e {falhas.Count} falha(s):{Environment.NewLine}{string.Join(Environment.NewLine, falhas)}", "Registro em lote", MessageBoxButton.OK, MessageBoxImage.Warning);
+
             Dispatcher.BeginInvoke(new Action(() => RegistroTimer_Tick(null, EventArgs.Empty)));
         }
 
@@ -946,6 +1139,7 @@ namespace BotRpaUI.Views
         private void BtnReiniciarCapturaRegistro_Click(object sender, RoutedEventArgs e)
         {
             _registroPulados.Clear();
+            _registroDesligamentosSolicitados.Clear();
             _registroUltimaTentativaMac.Clear();
             _registroAtual = null;
 
@@ -1005,6 +1199,7 @@ namespace BotRpaUI.Views
             public string Modelo { get; set; } = string.Empty;
             public string Fabricante { get; set; } = string.Empty;
             public string MAC { get; set; } = string.Empty;
+            public string PortaUsb { get; set; } = string.Empty;
             public string PatrimonioExistente { get; set; } = string.Empty;
         }
 
@@ -1016,7 +1211,7 @@ namespace BotRpaUI.Views
             try
             {
                 _registrosList.Clear();
-                string rootPath = Path.Combine(BotRpaUI.Core.PathHelper.GetRootDirectory(), "registros");
+                string rootPath = BotRpaUI.Core.PathHelper.GetRegistrosDirectory();
 
                 if (!Directory.Exists(rootPath))
                 {
@@ -1082,7 +1277,7 @@ namespace BotRpaUI.Views
             try
             {
                 _currentSelectedLogPath = reg.FullPath;
-                TxtLogHeaderTitle.Text = $"📄 {reg.Nome} ({reg.Data})";
+                TxtLogHeaderTitle.Text = $"{reg.Nome} ({reg.Data})";
 
                 if (Directory.Exists(reg.FullPath))
                 {
@@ -1147,7 +1342,7 @@ namespace BotRpaUI.Views
 
         private void BtnAbrirPastaRegistros_Click(object sender, RoutedEventArgs e)
         {
-            string rootPath = Path.Combine(BotRpaUI.Core.PathHelper.GetRootDirectory(), "registros");
+            string rootPath = BotRpaUI.Core.PathHelper.GetRegistrosDirectory();
             if (!Directory.Exists(rootPath)) Directory.CreateDirectory(rootPath);
             System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("explorer.exe", rootPath) { UseShellExecute = true });
         }
@@ -1181,6 +1376,11 @@ namespace BotRpaUI.Views
 
             SubPanelRelDados.Visibility = Visibility.Collapsed;
             SubPanelRelQRCode.Visibility = Visibility.Visible;
+        }
+
+        private void BtnIrParaTags_Click(object sender, RoutedEventArgs e)
+        {
+            BtnTabRelQRCode_Click(sender, e);
         }
 
         private void LoadRelatorioDados()
@@ -1303,8 +1503,49 @@ namespace BotRpaUI.Views
         {
             if (LblQtdSelecionados != null)
             {
-                LblQtdSelecionados.Text = $"{_listaSelecionados.Count} aparelho(s) selecionado(s)";
+                LblQtdSelecionados.Text = _listaSelecionados.Count == 1
+                    ? "1 selecionado"
+                    : $"{_listaSelecionados.Count} selecionados";
             }
+        }
+
+        private System.Collections.Generic.List<BotRpaUI.Core.DispositivoDB>? ObterListaExportacao(bool somenteSelecionados, bool avisarVazio)
+        {
+            var lista = new System.Collections.Generic.List<BotRpaUI.Core.DispositivoDB>();
+
+            if (somenteSelecionados)
+            {
+                foreach (var item in _listaSelecionados)
+                    lista.Add(item.Dispositivo);
+            }
+            else
+            {
+                var fonte = ListBuscaAparelhos.ItemsSource as System.Collections.Generic.IEnumerable<DispositivoSelecionavel>
+                            ?? _listaCompletaSelecionaveis;
+
+                foreach (var item in fonte)
+                {
+                    if (item?.Dispositivo == null) continue;
+                    if (lista.Any(d => d.ID == item.Dispositivo.ID)) continue;
+                    lista.Add(item.Dispositivo);
+                }
+            }
+
+            if (lista.Count == 0 && avisarVazio)
+            {
+                if (somenteSelecionados)
+                    MessageBox.Show("Nenhum aparelho selecionado. Marque ao menos um aparelho ou escolha a opção \"Toda a base\".", "Seleção vazia", MessageBoxButton.OK, MessageBoxImage.Information);
+                else
+                    MessageBox.Show("Nenhum aparelho encontrado para exportar.", "Aviso", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return null;
+            }
+
+            return lista;
+        }
+
+        private static string Csv(string? valor)
+        {
+            return "\"" + (valor ?? string.Empty).Replace("\"", "\"\"") + "\"";
         }
 
         // =========================================================================
@@ -1314,24 +1555,9 @@ namespace BotRpaUI.Views
         {
             try
             {
-                var lista = new System.Collections.Generic.List<BotRpaUI.Core.DispositivoDB>();
-                
-                if (_listaSelecionados.Count > 0)
-                {
-                    foreach (var ds in _listaSelecionados) lista.Add(ds.Dispositivo);
-                }
-                else
-                {
-                    var res = MessageBox.Show("Nenhum aparelho selecionado na lista. Deseja emitir o relatório contendo toda a base de dados?", "Emissão Completa", MessageBoxButton.YesNo, MessageBoxImage.Question);
-                    if (res != MessageBoxResult.Yes) return;
-                    lista = BotRpaUI.Core.SQLiteDatabaseManager.LerTodos();
-                }
-
-                if (lista.Count == 0)
-                {
-                    MessageBox.Show("Nenhum dado encontrado para emitir.", "Aviso", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
+                bool somenteSelecionados = RdoEscopoSelecionados?.IsChecked == true;
+                var lista = ObterListaExportacao(somenteSelecionados, true);
+                if (lista == null) return;
 
                 PrintDialog pd = new PrintDialog();
                 if (pd.ShowDialog() != true) return;
@@ -1352,7 +1578,7 @@ namespace BotRpaUI.Views
                 doc.Blocks.Add(title);
 
                 // Subtítulo
-                string strFiltro = _listaSelecionados.Count > 0 ? "Seleção Personalizada" : "Base Completa";
+                string strFiltro = somenteSelecionados ? "Seleção Personalizada" : "Base Completa";
                 var sub = new System.Windows.Documents.Paragraph(new System.Windows.Documents.Run($"Filtro: {strFiltro} | Total: {lista.Count} dispositivo(s) | Emitido em: {DateTime.Now:dd/MM/yyyy HH:mm}"))
                 {
                     FontSize = 10,
@@ -1364,7 +1590,8 @@ namespace BotRpaUI.Views
 
                 // Tabela de Dados
                 var table = new System.Windows.Documents.Table();
-                double[] widths = { 40, 160, 140, 140, 110 };                foreach (var w in widths) table.Columns.Add(new System.Windows.Documents.TableColumn { Width = new GridLength(w) });
+                double[] widths = { 40, 160, 140, 140, 110 };
+                foreach (var w in widths) table.Columns.Add(new System.Windows.Documents.TableColumn { Width = new GridLength(w) });
 
                 var rg = new System.Windows.Documents.TableRowGroup();
                 table.RowGroups.Add(rg);
@@ -1404,7 +1631,7 @@ namespace BotRpaUI.Views
                 doc.Blocks.Add(table);
 
                 // Rodapé
-                var footer = new System.Windows.Documents.Paragraph(new System.Windows.Documents.Run($"Bot_RPA Bot_RPA — Gerado automaticamente em {DateTime.Now:dd/MM/yyyy HH:mm:ss}"))
+                var footer = new System.Windows.Documents.Paragraph(new System.Windows.Documents.Run($"Plataforma Bot_RPA — Gerado automaticamente em {DateTime.Now:dd/MM/yyyy HH:mm:ss}"))
                 {
                     FontSize = 8.5,
                     Foreground = Brushes.Gray,
@@ -1428,15 +1655,24 @@ namespace BotRpaUI.Views
         {
             try
             {
-                var lista = new System.Collections.Generic.List<BotRpaUI.Core.DispositivoDB>();
-                if (_listaSelecionados.Count > 0)
-                {
-                    foreach (var s in _listaSelecionados) lista.Add(s.Dispositivo);
-                }
-                else
-                {
-                    lista = BotRpaUI.Core.SQLiteDatabaseManager.LerTodos();
-                }
+                bool somenteSelecionados = RdoEscopoSelecionados?.IsChecked == true;
+                var lista = ObterListaExportacao(somenteSelecionados, true);
+                if (lista == null) return;
+
+                await ExportarCsvAsync(lista);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Erro ao exportar planilha: " + ex.Message, "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private async void BtnExportarExcelBanco_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var lista = (GridBancoDados.ItemsSource as System.Collections.Generic.IEnumerable<BotRpaUI.Core.DispositivoDB>)?.ToList()
+                            ?? new System.Collections.Generic.List<BotRpaUI.Core.DispositivoDB>(_bancoDadosCache);
 
                 if (lista.Count == 0)
                 {
@@ -1444,29 +1680,35 @@ namespace BotRpaUI.Views
                     return;
                 }
 
-                var sfd = new Microsoft.Win32.SaveFileDialog
-                {
-                    Filter = "Planilha CSV (*.csv)|*.csv|Arquivo de Texto (*.txt)|*.txt",
-                    FileName = $"Relatorio_Dispositivos_{DateTime.Now:yyyyMMdd_HHmm}.csv"
-                };
-
-                if (sfd.ShowDialog() == true)
-                {
-                    var sb = new System.Text.StringBuilder();
-                    sb.AppendLine("ID;Patrimonio;Fabricante_Modelo;Serial;MAC_Address");
-                    foreach (var d in lista)
-                    {
-                        sb.AppendLine($"{d.ID};\"{d.Patrimonio}\";\"{d.MarcaModelo}\";\"{d.Serial}\";\"{d.MAC}\"");
-                    }
-
-                    await File.WriteAllTextAsync(sfd.FileName, sb.ToString(), System.Text.Encoding.UTF8);
-                    MessageBox.Show($"Exportação concluída com sucesso!\nArquivo: {sfd.FileName}", "Exportação Excel", MessageBoxButton.OK, MessageBoxImage.Information);
-                }
+                await ExportarCsvAsync(lista);
             }
             catch (Exception ex)
             {
                 MessageBox.Show("Erro ao exportar planilha: " + ex.Message, "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+        }
+
+        private async System.Threading.Tasks.Task ExportarCsvAsync(System.Collections.Generic.List<BotRpaUI.Core.DispositivoDB> lista)
+        {
+            var sfd = new Microsoft.Win32.SaveFileDialog
+            {
+                Filter = "Planilha CSV (*.csv)|*.csv|Todos os arquivos (*.*)|*.*",
+                DefaultExt = ".csv",
+                AddExtension = true,
+                FileName = $"Relatorio_Dispositivos_{DateTime.Now:yyyyMMdd_HHmm}.csv"
+            };
+
+            if (sfd.ShowDialog() != true) return;
+
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine("ID;Patrimonio;Fabricante;Modelo;Serial;MAC");
+            foreach (var d in lista)
+            {
+                sb.AppendLine($"{d.ID};{Csv(d.Patrimonio)};{Csv(d.Fabricante)};{Csv(d.Modelo)};{Csv(d.Serial)};{Csv(d.MAC)}");
+            }
+
+            await File.WriteAllTextAsync(sfd.FileName, sb.ToString(), new System.Text.UTF8Encoding(true));
+            MessageBox.Show($"Exportação concluída com sucesso!\nArquivo: {sfd.FileName}", "Exportação Excel", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         // =========================================================================
@@ -1476,21 +1718,83 @@ namespace BotRpaUI.Views
         {
             try
             {
-                var lista = BotRpaUI.Core.SQLiteDatabaseManager.LerTodos();
-                if (lista.Count == 0)
+                bool somenteSelecionados = RdoTagSelecionados?.IsChecked == true;
+                var lista = ObterListaExportacao(somenteSelecionados, true);
+                if (lista == null || lista.Count == 0) return;
+
+                string outDir = Path.Combine(
+                    BotRpaUI.Core.PathHelper.GetRootDirectory(),
+                    "data", "output", "etiquetas",
+                    $"Lote_{DateTime.Now:yyyyMMdd_HHmmss}");
+
+                Directory.CreateDirectory(outDir);
+
+                var sb = new System.Text.StringBuilder();
+                sb.AppendLine("<!DOCTYPE html>");
+                sb.AppendLine("<html lang=\"pt-BR\"><head><meta charset=\"utf-8\">");
+                sb.AppendLine("<title>Etiquetas QR Code - Bot_RPA</title>");
+                sb.AppendLine("<style>");
+                sb.AppendLine("@page { size: A4; margin: 7mm; }");
+                sb.AppendLine("* { box-sizing: border-box; }");
+                sb.AppendLine("body { margin: 0; background: #f0f0f0; font-family: 'Segoe UI', Arial, sans-serif; }");
+                sb.AppendLine(".sheet { display: grid; grid-template-columns: repeat(3, 60mm); gap: 4mm; padding: 4mm; }");
+                sb.AppendLine(".label { width: 60mm; height: 30mm; background: #fff; border: 1px solid #b8b8b8; display: flex; overflow: hidden; page-break-inside: avoid; }");
+                sb.AppendLine(".qr { width: 30mm; height: 30mm; padding: 2mm; flex: 0 0 30mm; }");
+                sb.AppendLine(".qr img { width: 100%; height: 100%; image-rendering: pixelated; }");
+                sb.AppendLine(".info { flex: 1; padding: 2mm 2mm 2mm 0; display: flex; flex-direction: column; justify-content: center; min-width: 0; }");
+                sb.AppendLine(".brand { font-size: 6pt; color: #513BA6; font-weight: 700; letter-spacing: .4px; }");
+                sb.AppendLine(".pat { font-size: 11pt; font-weight: 700; color: #111; margin: .6mm 0; }");
+                sb.AppendLine(".mod { font-size: 6.5pt; font-weight: 600; color: #222; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }");
+                sb.AppendLine(".meta { font-size: 5.5pt; color: #444; font-family: Consolas, monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }");
+                sb.AppendLine("@media print { body { background: #fff; } .sheet { padding: 0; } .label { border: 1px dashed #c8c8c8; } }");
+                sb.AppendLine("</style></head><body><div class=\"sheet\">");
+
+                using (var qrGenerator = new QRCoder.QRCodeGenerator())
                 {
-                    MessageBox.Show("Nenhum aparelho cadastrado para gerar etiquetas.", "Aviso", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
+                    for (int i = 0; i < lista.Count; i++)
+                    {
+                        var d = lista[i];
+                        string patrimonio = string.IsNullOrWhiteSpace(d.Patrimonio) ? "-" : d.Patrimonio;
+                        string modelo = string.IsNullOrWhiteSpace(d.MarcaModelo) ? "-" : d.MarcaModelo;
+                        string serial = string.IsNullOrWhiteSpace(d.Serial) ? "-" : d.Serial;
+                        string mac = string.IsNullOrWhiteSpace(d.MAC) ? "-" : d.MAC;
+
+                        string payload = $"BOTRPA|ID={d.ID}|PAT={patrimonio}|MOD={modelo}|SN={serial}|MAC={mac}";
+                        using (var qrData = qrGenerator.CreateQrCode(payload, QRCoder.QRCodeGenerator.ECCLevel.Q))
+                        {
+                            var png = new QRCoder.PngByteQRCode(qrData).GetGraphic(12);
+                            string imgName = $"qr_{i + 1:D4}.png";
+                            File.WriteAllBytes(Path.Combine(outDir, imgName), png);
+
+                            sb.AppendLine("<div class=\"label\">");
+                            sb.AppendLine($"<div class=\"qr\"><img src=\"{imgName}\" alt=\"QR\"></div>");
+                            sb.AppendLine("<div class=\"info\">");
+                            sb.AppendLine("<div class=\"brand\">BOT_RPA · PATRIMÔNIO</div>");
+                            sb.AppendLine($"<div class=\"pat\">{System.Net.WebUtility.HtmlEncode(patrimonio)}</div>");
+                            sb.AppendLine($"<div class=\"mod\">{System.Net.WebUtility.HtmlEncode(modelo)}</div>");
+                            sb.AppendLine($"<div class=\"meta\">S/N: {System.Net.WebUtility.HtmlEncode(serial)}</div>");
+                            sb.AppendLine($"<div class=\"meta\">MAC: {System.Net.WebUtility.HtmlEncode(mac)}</div>");
+                            sb.AppendLine("</div></div>");
+                        }
+                    }
                 }
 
-                // Cria pasta de saída
-                string outDir = Path.Combine(BotRpaUI.Core.PathHelper.GetRootDirectory(), "data", "output", "etiquetas");
-                if (!Directory.Exists(outDir)) Directory.CreateDirectory(outDir);
+                sb.AppendLine("</div></body></html>");
 
-                string pdfFile = Path.Combine(outDir, $"Etiquetas_QR_{DateTime.Now:yyyyMMdd_HHmm}.pdf");
-                
-                // Dispara gerador em segundo plano
-                MessageBox.Show($"As etiquetas patrimoniais serão geradas em formato contínuo (6cm x 3cm) em:\n{pdfFile}", "Geração de Etiquetas", MessageBoxButton.OK, MessageBoxImage.Information);
+                string htmlPath = Path.Combine(outDir, "etiquetas.html");
+                File.WriteAllText(htmlPath, sb.ToString(), new System.Text.UTF8Encoding(true));
+
+                MessageBox.Show(
+                    $"Etiquetas geradas para {lista.Count} aparelho(s).\nPasta: {outDir}\n\nA folha será aberta no navegador para impressão.",
+                    "Etiquetas QR Code",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = htmlPath,
+                    UseShellExecute = true
+                });
             }
             catch (Exception ex)
             {
@@ -1500,8 +1804,13 @@ namespace BotRpaUI.Views
 
         private void BtnFiltrarParaTags_Click(object sender, RoutedEventArgs e)
         {
-            SetActiveSubMenu(BtnSubBancoDados, PanelBancoDados);
-            MessageBox.Show("Utilize os filtros rápidos de modelo no Banco de Dados para selecionar o lote que deseja etiquetar.", "Filtrar para Etiquetas", MessageBoxButton.OK, MessageBoxImage.Information);
+            BtnTabRelDados_Click(sender, e);
+
+            if (TxtBuscaAparelho != null)
+            {
+                TxtBuscaAparelho.Focus();
+                TxtBuscaAparelho.SelectAll();
+            }
         }
 
         // =========================================================================

@@ -2,6 +2,8 @@
  *  - Sobe o servidor adb automaticamente se estiver desligado.
  *  - Executa o adb com CreateProcess RETO (sem cmd/_popen), igual ao motor
  *    nativo: o "2>/dev/null" e passado ao shell DO APARELHO, nao ao Windows.
+ *  - Plug-and-play: usa o adb portatil em .\platform-tools, o SDK do PC,
+ *    a variavel ADB_EXE ou o adb do PATH. Nao depende do diretorio atual.
  *  - Resolve caminhos (adb/CSV/log) a partir da pasta do EXE (independe cwd).
  *  - Captura: leitura direta; se falhar, liga o Wi-Fi, poll de 500 ms ate 10 s,
  *    desliga ao final SOMENTE se fomos nos que ligamos.
@@ -41,6 +43,7 @@ typedef struct {
 static char g_adb[MAX_PATH] = {0};   /* caminho absoluto do adb.exe */
 static char g_csv[MAX_PATH] = {0};   /* capturamac_resultado.csv absoluto */
 static char g_log[MAX_PATH] = {0};   /* log.txt absoluto */
+static char g_base[MAX_PATH] = {0};  /* pasta do capturamac.exe, com barra final */
 
 static int  adb_run(const char *args, char *out, size_t outsz);
 static void trimsz(char *s);
@@ -175,29 +178,80 @@ static void log_linha(const char *fmt, ...) {
     fclose(f);
 }
 
-/* Caminhos ancorados na pasta do EXE: nunca mais falha por causa do cwd */
+static int adb_valido(const char *caminho) {
+    char full[MAX_PATH];
+    DWORD attr;
+    if (!caminho || !caminho[0]) return 0;
+    if (!GetFullPathNameA(caminho, MAX_PATH, full, NULL)) return 0;
+    attr = GetFileAttributesA(full);
+    if (attr == INVALID_FILE_ATTRIBUTES || (attr & FILE_ATTRIBUTE_DIRECTORY)) return 0;
+    snprintf(g_adb, sizeof(g_adb), "%s", full);
+    return 1;
+}
+
+static int subir_pasta(char *dir) {
+    size_t n = strlen(dir);
+    char *slash;
+    while (n > 0 && (dir[n-1] == '\\' || dir[n-1] == '/')) dir[--n] = '\0';
+    slash = strrchr(dir, '\\');
+    if (!slash) return 0;
+    *(slash + 1) = '\0';
+    return 1;
+}
+
+/* Caminhos ancorados na pasta do EXE: nunca mais falha por causa do cwd.
+ * Ordem: adb portatil -> SDK/Android do PC -> PATH. */
 static void resolver_caminhos(void) {
     char exe[MAX_PATH] = {0};
-    GetModuleFileNameA(NULL, exe, MAX_PATH);
-    char *slash = strrchr(exe, '\\');
-    if (slash) *(slash + 1) = '\0'; else strcpy(exe, ".\\");
-
+    char dir[MAX_PATH] = {0};
+    char *slash;
     const char *cands[] = {
-        "..\\platform-tools\\adb.exe",            /* exe em tools\capturamac */
-        "..\\..\\tools\\platform-tools\\adb.exe", /* exe pendurado mais fundo */
-        "platform-tools\\adb.exe",
-        "..\\tools\\platform-tools\\adb.exe"
+        "platform-tools\\adb.exe",   /* pacote portatil dentro de tools\capturamac */
+        "adb.exe",                   /* adb copiado ao lado do capturamac.exe */
+        "tools\\platform-tools\\adb.exe"
     };
-    for (int i = 0; i < (int)(sizeof(cands)/sizeof(cands[0])); i++) {
-        char full[MAX_PATH];
-        char tal[MAX_PATH];
-        snprintf(full, MAX_PATH, "%s%s", exe, cands[i]);
-        GetFullPathNameA(full, MAX_PATH, tal, NULL);
-        if (GetFileAttributesA(tal) != INVALID_FILE_ATTRIBUTES) {
-            strcpy(g_adb, tal);
-            break;
+    const char *sdkVars[] = { "ANDROID_HOME", "ANDROID_SDK_ROOT" };
+
+    GetModuleFileNameA(NULL, exe, MAX_PATH);
+    slash = strrchr(exe, '\\');
+    if (slash) *(slash + 1) = '\0'; else strcpy(exe, ".\\");
+    snprintf(dir, sizeof(dir), "%s", exe);
+    snprintf(g_base, sizeof(g_base), "%s", exe);
+
+    adb_valido(getenv("ADB_EXE"));
+
+    for (int nivel = 0; !g_adb[0] && nivel < 8; nivel++) {
+        for (int i = 0; !g_adb[0] && i < (int)(sizeof(cands)/sizeof(cands[0])); i++) {
+            char full[MAX_PATH];
+            snprintf(full, sizeof(full), "%s%s", dir, cands[i]);
+            adb_valido(full);
+        }
+        if (g_adb[0] || !subir_pasta(dir)) break;
+    }
+
+    for (int i = 0; !g_adb[0] && i < (int)(sizeof(sdkVars)/sizeof(sdkVars[0])); i++) {
+        const char *sdk = getenv(sdkVars[i]);
+        if (sdk && sdk[0]) {
+            char full[MAX_PATH];
+            snprintf(full, sizeof(full), "%s\\platform-tools\\adb.exe", sdk);
+            adb_valido(full);
         }
     }
+
+    if (!g_adb[0]) {
+        const char *local = getenv("LOCALAPPDATA");
+        if (local && local[0]) {
+            char full[MAX_PATH];
+            snprintf(full, sizeof(full), "%s\\Android\\Sdk\\platform-tools\\adb.exe", local);
+            adb_valido(full);
+        }
+    }
+
+    if (!g_adb[0]) {
+        char found[MAX_PATH];
+        if (SearchPathA(NULL, "adb.exe", NULL, MAX_PATH, found, NULL)) adb_valido(found);
+    }
+
     snprintf(g_csv, MAX_PATH, "%scapturamac_resultado.csv", exe);
     snprintf(g_log, MAX_PATH, "%slog.txt", exe);
 }
@@ -389,9 +443,11 @@ static void capturar_dispositivo(const char *serial) {
     int st = wifi_state(serial);
     if (st >= 0) {
         printf("       %sWi-Fi: %s%s\n", COR_AZUL, st ? "ligado" : "desligado", COR_RESET);
+    } else {
+        printf("       %sWi-Fi: estado desconhecido (leitura direta)%s\n", COR_AMARELO, COR_RESET);
     }
-    int desligamos = (st != 1);
-    if (st == 0) {
+    int ligamos = (st == 0);
+    if (ligamos) {
         printf("       %sWi-Fi desligado, ligando...%s\n", COR_AMARELO, COR_RESET);
         wifi_set(serial, 1);
         Sleep(2500);   /* tempo para a interface wlan0 subir (sem bombardeio) */
@@ -399,7 +455,7 @@ static void capturar_dispositivo(const char *serial) {
 
     int ok = read_mac_once(serial, mac, sizeof(mac));
 
-    for (int t = 0; !ok && t < 10 && desligamos; t++) {
+    for (int t = 0; !ok && t < 10 && ligamos; t++) {
         Sleep(700);
         ok = leitura_rapida(serial, mac, sizeof(mac));
     }
@@ -424,7 +480,7 @@ static void capturar_dispositivo(const char *serial) {
     }
 
     /* restaura estado original: so desliga se foi nos que ligamos */
-    if (desligamos) {
+    if (ligamos) {
         /* o aparelho pode ter saido (USB instavel): confere ainda existe */
         Device d[1];
         int existe = 0;
@@ -616,14 +672,29 @@ static int menu(void) {
     }
 }
 
+static void mostrar_adb_ausente(void) {
+    printf("\n");
+    printf("   %sERRO: adb.exe nao encontrado.%s\n", COR_VERMELHO, COR_RESET);
+    printf("   Pasta do capturamac: %s\n", g_base);
+    printf("   O pacote portatil deve conter: platform-tools\\adb.exe\n");
+    printf("   Tambem vale: adb.exe ao lado do capturamac.exe, Android SDK\n");
+    printf("   (ANDROID_HOME/ANDROID_SDK_ROOT), variavel ADB_EXE ou adb no PATH.\n");
+    log_linha("ERRO: adb.exe nao encontrado (base=%s)", g_base);
+}
+
 int main(int argc, char **argv) {
     setvbuf(stdout, NULL, _IONBF, 0);
     habilitar_cores();
     resolver_caminhos();
 
     if (argc > 1 && strcmp(argv[1], "--test") == 0) {
-        printf("adb: %s\n", g_adb);
+        printf("base: %s\n", g_base);
+        printf("adb: %s\n", g_adb[0] ? g_adb : "(nao encontrado)");
         printf("csv: %s\n", g_csv);
+        if (!g_adb[0]) {
+            mostrar_adb_ausente();
+            return 1;
+        }
         char raw[BUF * 4] = {0};
         int rc = adb_run("devices -l", raw, sizeof(raw));
         printf("adb_run rc=%d bytes=%llu\n", rc, (unsigned long long)strlen(raw));
@@ -633,6 +704,11 @@ int main(int argc, char **argv) {
         printf("dispositivos: %d\n", n);
         for (int i = 0; i < n; i++) printf("  %s\n", devs[i].serial);
         return 0;
+    }
+
+    if (!g_adb[0]) {
+        mostrar_adb_ausente();
+        return 1;
     }
 
     /* Sobe o servidor adb ANTES de qualquer uso (idempotente, rapido) */

@@ -72,13 +72,13 @@
 
 - [ ] **🟢 Endurecer scripts de build — esforço P**
   Problema: `build.bat` ignora erro do `gcc`; `Atualizacao.ps1` sem error handling;
-  paths WinGet com hash frágeis. (O `controle/Build.ps1` já mitiga por fora com
+  paths WinGet com hash frágeis. (O `scripts/scripts de controle/Build.ps1` já mitiga por fora com
   checagem de artefatos.)
   Proposta: fail-fast interno + unificar os 3 scripts no `Build.ps1` como orquestrador
   canônico.   (Correção `wmic` → `Get-Date` feita em 24/09/2026.)
 
 - [x] **🟢 Terminal de controle — implementado 25/09/2026**
-  `controle/Terminal.ps1` + `Terminal.bat`: REPL `BotRPA>` com `ajuda`, `build teste`,
+  `scripts/scripts de controle/Terminal.ps1` + `Terminal.bat`: REPL `BotRPA>` com `ajuda`, `build teste`,
   `build final`, `versao`, `dispositivos` (adb), `ota`, `deps`, `limpar`, `sair`.
   Testado funcionalmente (sintaxe 0 erros, comandos leitura/ajuda validados).
 
@@ -94,7 +94,7 @@
   Proposta: reescrever espelhando o mapa do `AGENTS.md`.
 
 - [ ] **🟢 Rotação de logs/registros — esforço P**
-  Problema: só o BotLearn tem rotação (3 dias); `logs/` e `registros/` crescem sem limite.
+  Problema: só o BotLearn tem rotação (3 dias); `logs/` e `docs/registros/` crescem sem limite.
   Proposta: retenção de 30 dias no startup.
 
 - [ ] **🟢 Binários fora do Git — esforço P**
@@ -111,7 +111,7 @@
 ## Apêndice — NÃO mexer (acertos estruturais)
 
 Isolamento por modelo como princípio · política zero-warnings · auditoria em
-`registros/` · SHA-256 no OTA · Fast UI parser em RAM · SQLite local como fonte da
+`docs/registros/` · SHA-256 no OTA · Fast UI parser em RAM · SQLite local como fonte da
 verdade operacional.
 
 ## Backlog operacional herdado

@@ -86,8 +86,8 @@
                 </Grid>
 
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                    <Button Content="🗑 Excluir" Background="#0A0A0F" Foreground="#FFB3AD" BorderBrush="#FFB3AD" BorderThickness="1" Padding="15,5" Margin="0,0,10,0" Click="BtnExcluir_Click"/>
-                    <Button Content="💾 Salvar Alterações" Background="#4EDEA3" Foreground="#0B0B13" FontWeight="Bold" BorderThickness="0" Padding="15,5" Click="BtnSalvar_Click"/>
+                    <Button Content="Excluir" Background="#0A0A0F" Foreground="#FFB3AD" BorderBrush="#FFB3AD" BorderThickness="1" Padding="15,5" Margin="0,0,10,0" Click="BtnExcluir_Click"/>
+                    <Button Content="Salvar Alterações" Background="#4EDEA3" Foreground="#0B0B13" FontWeight="Bold" BorderThickness="0" Padding="15,5" Click="BtnSalvar_Click"/>
                 </StackPanel>
             </StackPanel>
         </Border>

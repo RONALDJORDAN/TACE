@@ -183,7 +183,7 @@
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
                                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                            <TextBlock Text="⚡ Disparos Recentes (Audit Trail):" Foreground="#9C8BE0" FontSize="11" FontWeight="Bold" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                            <TextBlock Text="Disparos Recentes (Audit Trail):" Foreground="#9C8BE0" FontSize="11" FontWeight="Bold" Margin="0,0,10,0" VerticalAlignment="Center"/>
                                             <TextBlock Text="{Binding HistoryVisual}" FontSize="15" VerticalAlignment="Center"/>
                                         </StackPanel>
                                         <TextBlock Grid.Column="1" Text="{Binding RawTargetId, StringFormat='ID Técnico: {0}'}" Foreground="#6E6E82" FontSize="11" FontFamily="Consolas" VerticalAlignment="Center"/>
@@ -231,7 +231,7 @@
     </UserControl.Resources>
 
     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-        <Grid Margin="16">
+        <Grid Margin="0">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>  <!-- 0: Header -->
                 <RowDefinition Height="Auto"/>  <!-- 1: BotAI 2.0 Heuristic Lab & Inspector -->
@@ -246,47 +246,27 @@
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <!-- Linha 0: selos + ações -->
+                    <!-- Linha 0: título + ação -->
                     <Grid Grid.Row="0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
 
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <Border Background="#2D1F5E" CornerRadius="6" Padding="8,3" Margin="0,0,10,0">
-                                <TextBlock Text="BOT_RPA COGNITIVE PLATFORM" Foreground="#00E5FF" FontSize="10" FontWeight="Black"/>
-                            </Border>
-                            <Border x:Name="BadgeIaMode" Background="#12251B" BorderBrush="#4EDEA3" BorderThickness="1" CornerRadius="6" Padding="8,3">
-                                <StackPanel Orientation="Horizontal">
-                                    <Ellipse x:Name="DotIaMode" Width="7" Height="7" Fill="#4EDEA3" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                                    <TextBlock x:Name="TxtIaMode" Text="IA ESTÁTICA v2.0" Foreground="#4EDEA3" FontSize="10" FontWeight="Bold"/>
-                                </StackPanel>
-                            </Border>
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="BotAI 2.0" Foreground="#FFFFFF" FontSize="26" FontWeight="Black"/>
+                            <TextBlock Text="— Matriz Neural &amp; Heurística" Foreground="#D2BBFF" FontSize="26" FontWeight="SemiBold"/>
                         </StackPanel>
 
-                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                            <Button x:Name="BtnMapeamento" Content="🧠 REDE NEURAL 3D"
-                                    Style="{StaticResource NeuralBtnStyle}" Margin="0,0,10,0"
-                                    Click="BtnMapeamento_Click"/>
-
-                            <Button x:Name="BtnAtualizar" Content="↻ RECALIBRAR DADOS"
-                                    Style="{StaticResource PrimaryBtn}"
-                                    Click="BtnAtualizar_Click"/>
-                        </StackPanel>
+                        <Button x:Name="BtnMapeamento" Grid.Column="1" Content="REDE NEURAL 3D"
+                                Style="{StaticResource NeuralBtnStyle}" VerticalAlignment="Center" Margin="16,0,0,0"
+                                Click="BtnMapeamento_Click"/>
                     </Grid>
 
-                    <!-- Linha 1: título -->
-                    <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,10,0,0" VerticalAlignment="Center">
-                        <TextBlock Text="BotAI 2.0" Foreground="#FFFFFF" FontSize="26" FontWeight="Black"/>
-                        <TextBlock Text=" — Matriz Neural &amp; Heurística" Foreground="#D2BBFF" FontSize="26" FontWeight="SemiBold"/>
-                    </StackPanel>
-
-                    <!-- Linha 2: subtítulo por modo -->
-                    <TextBlock x:Name="TxtIaSubtitle" Grid.Row="2" Text="Mecanismo de IA adaptativa com Centroid Matching, resolução multi-fallback e proteção contra drift de tela."
+                    <!-- Linha 1: subtítulo por modo -->
+                    <TextBlock x:Name="TxtIaSubtitle" Grid.Row="1" Text="Mecanismo de IA adaptativa com Centroid Matching, resolução multi-fallback e proteção contra drift de tela."
                                Foreground="#8E8EA0" FontSize="12" Margin="0,4,0,0"/>
                 </Grid>
             </Border>
@@ -307,11 +287,7 @@
                         </Grid.ColumnDefinitions>
                         
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <TextBlock Text="⚡" FontSize="14" Foreground="#00E5FF" Margin="0,0,8,0" VerticalAlignment="Center"/>
                             <TextBlock Text="BotAI 2.0 Heuristic Lab &amp; Element Inspector" Foreground="#E2DDFE" FontSize="13" FontWeight="Bold" VerticalAlignment="Center"/>
-                            <Border Background="#1C1838" CornerRadius="6" Padding="6,2" Margin="10,0,0,0" BorderBrush="#513BA6" BorderThickness="1">
-                                <TextBlock Text="SIMULAÇÃO AO VIVO" Foreground="#00E5FF" FontSize="9" FontWeight="Bold"/>
-                            </Border>
                         </StackPanel>
 
                         <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
@@ -331,11 +307,11 @@
                             <StackPanel Grid.Column="0">
                                 <TextBlock x:Name="TxtSimTargetId" Text="ALVO: Carregando..." Foreground="#4EDEA3" FontWeight="Bold" FontSize="11" Margin="0,0,0,4"/>
                                 <StackPanel Orientation="Horizontal" Margin="0,2">
-                                    <TextBlock Text="Rota Primária (Centroid): " Foreground="#8570E6" FontSize="11" FontWeight="SemiBold"/>
+                                    <TextBlock Text="Rota Primária (Centroid):" Foreground="#8570E6" FontSize="11" FontWeight="SemiBold"/>
                                     <TextBlock x:Name="TxtSimPrimary" Text="Aguardando seleção..." Foreground="#FFFFFF" FontSize="11" FontFamily="Consolas"/>
                                 </StackPanel>
                                 <StackPanel Orientation="Horizontal" Margin="0,2">
-                                    <TextBlock Text="Rota Fallback Segura: " Foreground="#8E8EA0" FontSize="11" FontWeight="SemiBold"/>
+                                    <TextBlock Text="Rota Fallback Segura:" Foreground="#8E8EA0" FontSize="11" FontWeight="SemiBold"/>
                                     <TextBlock x:Name="TxtSimFallback1" Text="Calculando..." Foreground="#A3A3C2" FontSize="11" FontFamily="Consolas"/>
                                 </StackPanel>
                             </StackPanel>
@@ -369,15 +345,12 @@
                         
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                             <TextBlock Text="Matriz de Heurísticas por Elemento de UI" Foreground="#FFFFFF" FontSize="15" FontWeight="Bold"/>
-                            <Border Background="#251B4E" CornerRadius="6" Padding="8,2" Margin="10,0,0,0" BorderBrush="#513BA6" BorderThickness="1">
-                                <TextBlock x:Name="LblTotalStrategies" Text="-- estratégias" Foreground="#00E5FF" FontSize="11" FontWeight="Bold"/>
-                            </Border>
                         </StackPanel>
 
                         <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                             <TextBlock Text="Heurísticas agrupadas por etapa e ordenadas por score" Foreground="#6E6E82" FontSize="11" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                            <Button Content="＋ Todas" Style="{StaticResource PrimaryBtn}" Padding="8,3" FontSize="10" Margin="0,0,6,0" Click="BtnExpandAllGroups_Click" ToolTip="Expande todas as etapas"/>
-                            <Button Content="－ Todas" Style="{StaticResource PrimaryBtn}" Padding="8,3" FontSize="10" Click="BtnCollapseAllGroups_Click" ToolTip="Recolhe todas as etapas"/>
+                            <Button Content="+ Todas" Style="{StaticResource PrimaryBtn}" Padding="8,3" FontSize="10" Margin="0,0,6,0" Click="BtnExpandAllGroups_Click" ToolTip="Expande todas as etapas"/>
+                            <Button Content="- Todas" Style="{StaticResource PrimaryBtn}" Padding="8,3" FontSize="10" Click="BtnCollapseAllGroups_Click" ToolTip="Recolhe todas as etapas"/>
                         </StackPanel>
                     </Grid>
 
@@ -390,11 +363,11 @@
 
                         <!-- Filtros por Modelo -->
                         <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                            <RadioButton x:Name="TabAll" Content="🌐 TODOS" Style="{StaticResource ModelTabStyle}" IsChecked="True" Click="FilterModel_Click" Tag="ALL"/>
-                            <RadioButton x:Name="TabVision7" Content="📱 POSITIVO V7" Style="{StaticResource ModelTabStyle}" Click="FilterModel_Click" Tag="V7"/>
-                            <RadioButton x:Name="TabMultiM7" Content="📱 TABMULTI M7" Style="{StaticResource ModelTabStyle}" Click="FilterModel_Click" Tag="M7"/>
-                            <RadioButton x:Name="TabNokiaT20" Content="📱 NOKIA T20" Style="{StaticResource ModelTabStyle}" Click="FilterModel_Click" Tag="T20"/>
-                            <RadioButton x:Name="TabGeral" Content="🖥️ GERAL" Style="{StaticResource ModelTabStyle}" Click="FilterModel_Click" Tag="F1"/>
+                            <RadioButton x:Name="TabAll" Content="TODOS" Style="{StaticResource ModelTabStyle}" IsChecked="True" Click="FilterModel_Click" Tag="ALL"/>
+                            <RadioButton x:Name="TabVision7" Content="POSITIVO V7" Style="{StaticResource ModelTabStyle}" Click="FilterModel_Click" Tag="V7"/>
+                            <RadioButton x:Name="TabMultiM7" Content="TABMULTI M7" Style="{StaticResource ModelTabStyle}" Click="FilterModel_Click" Tag="M7"/>
+                            <RadioButton x:Name="TabNokiaT20" Content="NOKIA T20" Style="{StaticResource ModelTabStyle}" Click="FilterModel_Click" Tag="T20"/>
+                            <RadioButton x:Name="TabGeral" Content="GERAL" Style="{StaticResource ModelTabStyle}" Click="FilterModel_Click" Tag="F1"/>
                         </StackPanel>
 
                         <!-- Campo de Busca em Tempo Real -->
@@ -404,7 +377,6 @@
                                     <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Text="🔍" FontSize="11" Foreground="#8570E6" VerticalAlignment="Center" Margin="0,0,6,0"/>
                                 <TextBox x:Name="TxtSearchStrategy" Grid.Column="1" Background="Transparent" Foreground="#FFFFFF" BorderThickness="0"
                                          FontSize="11" VerticalAlignment="Center" TextChanged="TxtSearchStrategy_TextChanged"
                                          ToolTip="Filtrar por elemento, query ou categoria..."/>
@@ -438,7 +410,6 @@
                                                                         <ColumnDefinition Width="Auto"/>
                                                                     </Grid.ColumnDefinitions>
                                                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                                        <TextBlock Text="📁 " FontSize="12" VerticalAlignment="Center"/>
                                                                         <TextBlock Text="{Binding Name}" Foreground="#C5B8F8" FontWeight="Bold" FontSize="12" VerticalAlignment="Center"/>
                                                                     </StackPanel>
 
@@ -508,7 +479,7 @@
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
                         <StackPanel>
-                            <TextBlock Text="📦 Submódulo de Backups Automáticos (BotAI 2.0)" Foreground="#4EDEA3" FontSize="13" FontWeight="Bold"/>
+                            <TextBlock Text="Submódulo de Backups Automáticos (BotAI 2.0)" Foreground="#4EDEA3" FontSize="13" FontWeight="Bold"/>
                             <TextBlock Text="Rotatividade automática mantendo os últimos 3 dias para restauração instantânea de emergência." Foreground="#8E8EA0" FontSize="11" Margin="0,2,0,0"/>
                         </StackPanel>
                         <Border Grid.Column="1" Background="#12251B" BorderBrush="#4EDEA3" BorderThickness="1" CornerRadius="6" Padding="6,2">
@@ -553,14 +524,13 @@
 
                     <StackPanel Grid.Column="0" VerticalAlignment="Center">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="⚠" Foreground="#FF4C4C" FontSize="14" Margin="0,0,6,0" VerticalAlignment="Center"/>
                             <TextBlock Text="ZONA DE SEGURANÇA — RESET DO BANCO COGNITIVO BOTAI 2.0" Foreground="#FF4C4C" FontSize="12" FontWeight="Bold" VerticalAlignment="Center"/>
                         </StackPanel>
                         <TextBlock Text="Apaga os históricos dinâmicos e restaura instantaneamente todas as heurísticas para o Seed Determinístico Compilado na DLL."
                                    Foreground="#A37070" FontSize="11" Margin="0,4,0,0" TextWrapping="Wrap"/>
                     </StackPanel>
 
-                    <Button x:Name="BtnResetDB" Grid.Column="1" Content="🗑  RESETAR BANCO BotLearn"
+                    <Button x:Name="BtnResetDB" Grid.Column="1" Content="RESETAR BANCO BotLearn"
                             Style="{StaticResource DangerBtn}" VerticalAlignment="Center"
                             Margin="16,0,0,0" Click="BtnResetDB_Click"/>
                 </Grid>

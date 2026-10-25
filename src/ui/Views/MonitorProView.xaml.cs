@@ -405,14 +405,14 @@ namespace BotRpaUI.Views
                 {
                     TxtApkNamePro.Text = Path.GetFileName(fullApk);
                     TxtApkNamePro.Foreground = Brushes.White;
-                    IconApkPro.Text = "✔";
+                    IconApkPro.Text = "OK";
                     IconApkPro.Foreground = HexBrush("#4EDEA3");
                 }
                 else
                 {
                     TxtApkNamePro.Text = "Ausente";
                     TxtApkNamePro.Foreground = HexBrush("#7A7A8A");
-                    IconApkPro.Text = "✖";
+                    IconApkPro.Text = "X";
                     IconApkPro.Foreground = HexBrush("#FF4D4D");
                 }
 
@@ -422,14 +422,14 @@ namespace BotRpaUI.Views
                 {
                     TxtPacoteNamePro.Text = Path.GetFileName(fullPacote);
                     TxtPacoteNamePro.Foreground = Brushes.White;
-                    IconPacotePro.Text = "✔";
+                    IconPacotePro.Text = "OK";
                     IconPacotePro.Foreground = HexBrush("#4EDEA3");
                 }
                 else
                 {
                     TxtPacoteNamePro.Text = "Não definido";
                     TxtPacoteNamePro.Foreground = HexBrush("#7A7A8A");
-                    IconPacotePro.Text = "✖";
+                    IconPacotePro.Text = "X";
                     IconPacotePro.Foreground = HexBrush("#FF4D4D");
                 }
 
@@ -446,14 +446,14 @@ namespace BotRpaUI.Views
                 {
                     TxtWpNamePro.Text = Path.GetFileName(fullWp);
                     TxtWpNamePro.Foreground = Brushes.White;
-                    IconWpPro.Text = "✔";
+                    IconWpPro.Text = "OK";
                     IconWpPro.Foreground = HexBrush("#4EDEA3");
                 }
                 else
                 {
                     TxtWpNamePro.Text = "Padrão";
                     TxtWpNamePro.Foreground = HexBrush("#7A7A8A");
-                    IconWpPro.Text = "✔";
+                    IconWpPro.Text = "OK";
                     IconWpPro.Foreground = HexBrush("#4EDEA3");
                 }
             }
@@ -910,11 +910,11 @@ namespace BotRpaUI.Views
             if (totalSessions > 0)
             {
                 double rate = (_totalSuccessCount / (double)totalSessions) * 100.0;
-                TxtKpiSuccessRate.Text = $" ({rate:F0}% OK)";
+                TxtKpiSuccessRate.Text = $"({rate:F0}% OK)";
             }
             else
             {
-                TxtKpiSuccessRate.Text = " (100% OK)";
+                TxtKpiSuccessRate.Text = "(100% OK)";
             }
 
             // Meta de Produção + ETA real
@@ -927,7 +927,7 @@ namespace BotRpaUI.Views
             int faltam = Math.Max(0, _metaTotal - _totalSuccessCount);
             if (faltam <= 0)
             {
-                TxtMetaRestante.Text = "meta batida ✔";
+                TxtMetaRestante.Text = "meta batida";
                 try { TxtMetaRestante.ToolTip = "Meta do lote concluída."; } catch { }
             }
             else if (throughput > 0)
@@ -1162,7 +1162,7 @@ namespace BotRpaUI.Views
         {
             if (_deviceLogBoxes.ContainsKey(serial)) return;
 
-            var tab = new TabItem { Header = $"📱 {serial}" };
+            var tab = new TabItem { Header = $"{serial}" };
             var box = new TextBox
             {
                 Background = HexBrush("#0A0A0F"),
@@ -1193,7 +1193,7 @@ namespace BotRpaUI.Views
             {
                 dev.Status = "Concluído";
                 dev.StatusColor = "#4EDEA3";
-                dev.CurrentStep = "Concluído ✔";
+                dev.CurrentStep = "Concluído";
                 dev.ProgressValue = 100;
                 ExecutionProgressPro.Value = 100;
                 LblProgressPro.Text = "100%";
@@ -1218,7 +1218,7 @@ namespace BotRpaUI.Views
             {
                 dev.Status = "Erro";
                 dev.StatusColor = "#FF4D4D";
-                dev.CurrentStep = "Falha ✖";
+                dev.CurrentStep = "Falha";
 
                 if (_deviceStopwatches.TryGetValue(serial, out var sw))
                 {

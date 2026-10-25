@@ -102,8 +102,8 @@ namespace BotRpaUI.Core
                     cmd.ExecuteNonQuery();
                 }
 
-                // Garante o schema canonico (Patrimonio apos ID, sem DataRegistro)
-                // e a numeracao contigua de IDs (1..N, sem lacunas).
+                // Garante o schema canonico (Patrimonio apos ID, sem DataRegistro).
+                // Os IDs existentes sao preservados e alinhados ao patrimonio.
                 GarantirEsquemaDispositivos(connection);
 
                 if (isNew)
@@ -129,9 +129,8 @@ namespace BotRpaUI.Core
         };
 
         /// <summary>
-        /// Garante o formato do banco e a integridade da sequencia de IDs.
-        /// 1) Migra o schema legado (com DataRegistro) para o schema atual (com Patrimonio).
-        /// 2) Renumera os IDs de forma contigua (1..N), eliminando lacunas de deletoes antigas.
+        /// Garante o formato do banco (schema canonico com Patrimonio).
+        /// Os IDs sao preservados: eles representam o numero de patrimonio alinhado.
         /// </summary>
         private static void GarantirEsquemaDispositivos(SqliteConnection connection)
         {
@@ -147,27 +146,7 @@ namespace BotRpaUI.Core
                     colunasAtuais.Contains("DataRegistro", StringComparer.OrdinalIgnoreCase) ||
                     !colunasAtuais.Contains("Patrimonio", StringComparer.OrdinalIgnoreCase);
 
-                bool precisaRenumerar = false;
-                if (!precisaMigrarSchema)
-                {
-                    long total = 0; long maxId = 0;
-                    using (var cmd = connection.CreateCommand())
-                    {
-                        cmd.CommandText = "SELECT COUNT(*), IFNULL(MAX(ID), 0) FROM Dispositivos;";
-                        using (var reader = cmd.ExecuteReader())
-                        {
-                            if (reader.Read())
-                            {
-                                total = reader.GetInt64(0);
-                                maxId = reader.GetInt64(1);
-                            }
-                        }
-                    }
-                    // Sequencia contigua esperada: o maior ID deve igualar a quantidade de linhas.
-                    precisaRenumerar = total > 0 && maxId != total;
-                }
-
-                if (precisaMigrarSchema || precisaRenumerar)
+                if (precisaMigrarSchema)
                 {
                     RecriarTabelaDispositivos(connection);
                 }
@@ -250,9 +229,8 @@ namespace BotRpaUI.Core
         }
 
         /// <summary>
-        /// Recria a tabela Dispositivos copiando os dados existentes (na ordem atual de ID)
-        /// e reatribuindo IDs contiguos a partir de 1. Colunas legadas sao descartadas
-        /// e colunas ausentes recebem valor vazio.
+        /// Recria a tabela Dispositivos copiando os dados existentes e preservando os IDs.
+        /// Colunas legadas sao descartadas e colunas ausentes recebem valor vazio.
         /// </summary>
         private static void RecriarTabelaDispositivos(SqliteConnection connection)
         {
@@ -297,13 +275,12 @@ namespace BotRpaUI.Core
                         cmd.ExecuteNonQuery();
                     }
 
-                    string listaColunas = string.Join(", ", COLUNAS_DISPOSITIVOS);
-                    string listaValores = string.Join(", ", expressoes);
+                    string listaColunas = "ID, " + string.Join(", ", COLUNAS_DISPOSITIVOS);
+                    string listaValores = "ID, " + string.Join(", ", expressoes);
 
                     using (var cmd = connection.CreateCommand())
                     {
                         cmd.Transaction = transaction;
-                        // Sem a coluna ID: o SQLite atribui IDs contiguos 1..N na ordem de insercao.
                         cmd.CommandText = $"INSERT INTO Dispositivos__novo ({listaColunas}) SELECT {listaValores} FROM Dispositivos ORDER BY ID ASC;";
                         cmd.ExecuteNonQuery();
                     }
@@ -327,8 +304,11 @@ namespace BotRpaUI.Core
                         cmd.Transaction = transaction;
                         try
                         {
-                            // Reseta o autoincrement para que o proximo registro use max(ID)+1.
-                            cmd.CommandText = "DELETE FROM sqlite_sequence WHERE name = 'Dispositivos';";
+                            // Mantem o autoincrement acima do maior ID preservado.
+                            cmd.CommandText = @"
+                                DELETE FROM sqlite_sequence WHERE name IN ('Dispositivos', 'Dispositivos__novo');
+                                INSERT INTO sqlite_sequence (name, seq)
+                                SELECT 'Dispositivos', IFNULL(MAX(ID), 0) FROM Dispositivos;";
                             cmd.ExecuteNonQuery();
                         }
                         catch { }
@@ -768,7 +748,8 @@ namespace BotRpaUI.Core
         }
 
         /// <summary>
-        /// Atualiza somente o numero de patrimonio de um dispositivo (edicao rapida na grade).
+        /// Atualiza o numero de patrimonio e alinha o ID ao numero informado.
+        /// Se o ID de destino estiver ocupado, o ocupante e movido para um ID livre.
         /// </summary>
         public static bool AtualizarPatrimonio(int id, string patrimonio)
         {
@@ -779,16 +760,161 @@ namespace BotRpaUI.Core
                 using (var connection = new SqliteConnection(_connectionString))
                 {
                     connection.Open();
-                    var cmd = connection.CreateCommand();
-                    cmd.CommandText = "UPDATE Dispositivos SET Patrimonio = $patrimonio WHERE ID = $id";
-                    cmd.Parameters.AddWithValue("$patrimonio", normalizado);
-                    cmd.Parameters.AddWithValue("$id", id);
-                    cmd.ExecuteNonQuery();
+                    using (var transaction = connection.BeginTransaction())
+                    {
+                        try
+                        {
+                            int idDestino = PatrimonioHelper.ExtrairIdNumerico(normalizado);
+                            int idFinal = ResolverIdDestino(connection, transaction, id, idDestino);
+
+                            var cmd = connection.CreateCommand();
+                            cmd.Transaction = transaction;
+                            cmd.CommandText = "UPDATE Dispositivos SET Patrimonio = $patrimonio, ID = $novoId WHERE ID = $id";
+                            cmd.Parameters.AddWithValue("$patrimonio", normalizado);
+                            cmd.Parameters.AddWithValue("$novoId", idFinal);
+                            cmd.Parameters.AddWithValue("$id", id);
+
+                            if (cmd.ExecuteNonQuery() == 0)
+                            {
+                                transaction.Rollback();
+                                return false;
+                            }
+
+                            SincronizarSequenciaId(connection, transaction);
+                            transaction.Commit();
+                        }
+                        catch
+                        {
+                            try { transaction.Rollback(); } catch { }
+                            return false;
+                        }
+                    }
                 }
                 SincronizarCsv();
                 return true;
             }
             catch { return false; }
+        }
+
+        /// <summary>
+        /// Atualiza os dados completos do dispositivo e alinha o ID ao patrimonio informado.
+        /// </summary>
+        public static bool AtualizarDispositivo(int id, string serial, string fabricante, string modelo, string mac, string patrimonio)
+        {
+            if (string.IsNullOrWhiteSpace(serial)) return false;
+            if (!PatrimonioHelper.TryNormalizar(patrimonio, out string normalizado, out _)) return false;
+
+            try
+            {
+                using (var connection = new SqliteConnection(_connectionString))
+                {
+                    connection.Open();
+                    using (var transaction = connection.BeginTransaction())
+                    {
+                        try
+                        {
+                            int idDestino = PatrimonioHelper.ExtrairIdNumerico(normalizado);
+                            int idFinal = ResolverIdDestino(connection, transaction, id, idDestino);
+
+                            var cmd = connection.CreateCommand();
+                            cmd.Transaction = transaction;
+                            cmd.CommandText = @"
+                                UPDATE Dispositivos SET
+                                    Patrimonio = $patrimonio,
+                                    Serial = $serial,
+                                    Fabricante = $fabricante,
+                                    Modelo = $modelo,
+                                    MAC = $mac,
+                                    ID = $novoId
+                                WHERE ID = $id";
+                            cmd.Parameters.AddWithValue("$patrimonio", normalizado);
+                            cmd.Parameters.AddWithValue("$serial", serial);
+                            cmd.Parameters.AddWithValue("$fabricante", fabricante ?? string.Empty);
+                            cmd.Parameters.AddWithValue("$modelo", modelo ?? string.Empty);
+                            cmd.Parameters.AddWithValue("$mac", mac ?? string.Empty);
+                            cmd.Parameters.AddWithValue("$novoId", idFinal);
+                            cmd.Parameters.AddWithValue("$id", id);
+
+                            if (cmd.ExecuteNonQuery() == 0)
+                            {
+                                transaction.Rollback();
+                                return false;
+                            }
+
+                            SincronizarSequenciaId(connection, transaction);
+                            transaction.Commit();
+                        }
+                        catch
+                        {
+                            try { transaction.Rollback(); } catch { }
+                            return false;
+                        }
+                    }
+                }
+                SincronizarCsv();
+                return true;
+            }
+            catch { return false; }
+        }
+
+        /// <summary>
+        /// Resolve conflitos de ID movendo o registro ocupante para o proximo ID livre.
+        /// Retorna o ID final que o registro editado deve assumir.
+        /// </summary>
+        private static int ResolverIdDestino(SqliteConnection connection, SqliteTransaction transaction, int idAtual, int idDestino)
+        {
+            if (idDestino <= 0 || idDestino == idAtual) return idAtual;
+
+            bool ocupado;
+            using (var check = connection.CreateCommand())
+            {
+                check.Transaction = transaction;
+                check.CommandText = "SELECT COUNT(*) FROM Dispositivos WHERE ID = $destino AND ID <> $atual;";
+                check.Parameters.AddWithValue("$destino", idDestino);
+                check.Parameters.AddWithValue("$atual", idAtual);
+                ocupado = Convert.ToInt64(check.ExecuteScalar() ?? 0L) > 0;
+            }
+
+            if (!ocupado) return idDestino;
+
+            long maxId;
+            using (var maxCmd = connection.CreateCommand())
+            {
+                maxCmd.Transaction = transaction;
+                maxCmd.CommandText = "SELECT IFNULL(MAX(ID), 0) FROM Dispositivos;";
+                maxId = Convert.ToInt64(maxCmd.ExecuteScalar() ?? 0L);
+            }
+
+            if (maxId >= int.MaxValue) throw new InvalidOperationException("Limite de IDs atingido.");
+
+            int idLivre = (int)maxId + 1;
+            using (var mover = connection.CreateCommand())
+            {
+                mover.Transaction = transaction;
+                mover.CommandText = "UPDATE Dispositivos SET ID = $livre WHERE ID = $destino;";
+                mover.Parameters.AddWithValue("$livre", idLivre);
+                mover.Parameters.AddWithValue("$destino", idDestino);
+                mover.ExecuteNonQuery();
+            }
+            return idDestino;
+        }
+
+        private static void SincronizarSequenciaId(SqliteConnection connection, SqliteTransaction transaction)
+        {
+            try
+            {
+                using (var cmd = connection.CreateCommand())
+                {
+                    cmd.Transaction = transaction;
+                    cmd.CommandText = @"
+                        UPDATE sqlite_sequence
+                        SET seq = (SELECT IFNULL(MAX(ID), 0) FROM Dispositivos)
+                        WHERE name = 'Dispositivos'
+                          AND seq < (SELECT IFNULL(MAX(ID), 0) FROM Dispositivos);";
+                    cmd.ExecuteNonQuery();
+                }
+            }
+            catch { }
         }
 
         public static void Excluir(int id)
@@ -802,9 +928,6 @@ namespace BotRpaUI.Core
                     cmd.CommandText = "DELETE FROM Dispositivos WHERE ID = $id";
                     cmd.Parameters.AddWithValue("$id", id);
                     cmd.ExecuteNonQuery();
-
-                    // Reaproveita a mesma conexao para renumerar os IDs, mantendo a sequencia contigua 1..N.
-                    RecriarTabelaDispositivos(connection);
                 }
             }
             catch { }

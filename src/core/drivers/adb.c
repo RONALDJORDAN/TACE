@@ -448,7 +448,7 @@ int adb_get_mac(const char* serial, char* out_mac, int max_len) {
 }
 
 int adb_list_devices(AdbDevice* devices, int max_devices) {
-    char* out = adb_exec("devices");
+    char* out = adb_exec("devices -l");
     if (!out) return 0;
 
     int count = 0;
@@ -468,6 +468,22 @@ int adb_list_devices(AdbDevice* devices, int max_devices) {
             memset(d, 0, sizeof(AdbDevice));
             strncpy(d->serial, serial, MAX_SERIAL - 1);
             d->authorized = (strcmp(status, "device") == 0) ? 1 : 0;
+
+            /* Em "adb devices -l" a porta fisica aparece como "usb:1-4.2".
+               Guardamos apenas o caminho da porta para exibir na UI. */
+            const char* usb_tag = strstr(line, "usb:");
+            if (usb_tag) {
+                usb_tag += 4;
+                size_t usb_len = 0;
+                while (usb_tag[usb_len] && usb_tag[usb_len] != ' ' &&
+                       usb_tag[usb_len] != '\t' && usb_tag[usb_len] != '\r' &&
+                       usb_tag[usb_len] != '\n' && usb_len < sizeof(d->usb_port) - 1) {
+                    d->usb_port[usb_len] = usb_tag[usb_len];
+                    usb_len++;
+                }
+                d->usb_port[usb_len] = '\0';
+            }
+
             if (d->authorized) {
                 /* --- OTIMIZACAO: 1 unico processo ADB para coletar todos os dados --- */
                 /* Antes: 6 processos sequenciais (~3-4s por dispositivo)             */

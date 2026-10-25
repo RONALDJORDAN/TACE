@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              Background="#0B0B13"
              FontFamily="Segoe UI">
-    
+
     <UserControl.Resources>
         <!-- Estilos de Botões de Ação Pro -->
         <Style x:Key="ProActionButton" TargetType="Button">
@@ -17,8 +17,8 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="border" Background="{TemplateBinding Background}" 
-                                BorderBrush="{TemplateBinding BorderBrush}" 
+                        <Border x:Name="border" Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="1.2" CornerRadius="6">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
@@ -110,9 +110,9 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="border" Background="{TemplateBinding Background}" 
-                                BorderBrush="{TemplateBinding BorderBrush}" 
-                                BorderThickness="{TemplateBinding BorderThickness}" 
+                        <Border x:Name="border" Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
                                 CornerRadius="5" Padding="{TemplateBinding Padding}">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
@@ -140,8 +140,8 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="border" Background="{TemplateBinding Background}" 
-                                BorderBrush="{TemplateBinding BorderBrush}" 
+                        <Border x:Name="border" Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="1" CornerRadius="4" Padding="{TemplateBinding Padding}">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
@@ -185,16 +185,11 @@
                 <!-- KPI 1: Dispositivos Ativos -->
                 <Border Grid.Column="0" Background="#0D0D18" CornerRadius="6" Padding="10,6" Margin="0,0,6,0" BorderBrush="#23233A" BorderThickness="1">
                     <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Text="📱" FontSize="18" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <StackPanel VerticalAlignment="Center">
                             <TextBlock Text="DISPOSITIVOS USB" Foreground="#8A8A9E" FontSize="9" FontWeight="Bold"/>
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock x:Name="TxtKpiActiveDevices" Text="0" Foreground="#00E5FF" FontSize="15" FontWeight="Bold" FontFamily="Consolas"/>
-                                <TextBlock Text=" Ativos" Foreground="#A1A1AA" FontSize="10" VerticalAlignment="Bottom" Margin="4,0,0,2"/>
+                                <TextBlock Text="Ativos" Foreground="#A1A1AA" FontSize="10" VerticalAlignment="Bottom" Margin="4,0,0,2"/>
                             </StackPanel>
                         </StackPanel>
                     </Grid>
@@ -203,16 +198,11 @@
                 <!-- KPI 2: Tempo Médio de Ciclo -->
                 <Border Grid.Column="1" Background="#0D0D18" CornerRadius="6" Padding="10,6" Margin="0,0,6,0" BorderBrush="#23233A" BorderThickness="1">
                     <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Text="⏱️" FontSize="18" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <StackPanel VerticalAlignment="Center">
                             <TextBlock Text="TEMPO MÉDIO / TAB" Foreground="#8A8A9E" FontSize="9" FontWeight="Bold"/>
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock x:Name="TxtKpiAvgTime" Text="--s" Foreground="#4EDEA3" FontSize="15" FontWeight="Bold" FontFamily="Consolas"/>
-                                <TextBlock Text=" p/ ciclo" Foreground="#A1A1AA" FontSize="10" VerticalAlignment="Bottom" Margin="4,0,0,2"/>
+                                <TextBlock Text="p/ ciclo" Foreground="#A1A1AA" FontSize="10" VerticalAlignment="Bottom" Margin="4,0,0,2"/>
                             </StackPanel>
                         </StackPanel>
                     </Grid>
@@ -221,16 +211,11 @@
                 <!-- KPI 3: Ritmo Estimado (Throughput) -->
                 <Border Grid.Column="2" Background="#0D0D18" CornerRadius="6" Padding="10,6" Margin="0,0,6,0" BorderBrush="#23233A" BorderThickness="1">
                     <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Text="📈" FontSize="18" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <StackPanel VerticalAlignment="Center">
                             <TextBlock Text="RITMO ESTIMADO" Foreground="#8A8A9E" FontSize="9" FontWeight="Bold"/>
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock x:Name="TxtKpiThroughput" Text="0" Foreground="#FFD666" FontSize="15" FontWeight="Bold" FontFamily="Consolas"/>
-                                <TextBlock Text=" tabs / hora" Foreground="#A1A1AA" FontSize="10" VerticalAlignment="Bottom" Margin="4,0,0,2"/>
+                                <TextBlock Text="tabs / hora" Foreground="#A1A1AA" FontSize="10" VerticalAlignment="Bottom" Margin="4,0,0,2"/>
                             </StackPanel>
                         </StackPanel>
                     </Grid>
@@ -239,16 +224,11 @@
                 <!-- KPI 4: Concluídos na Sessão -->
                 <Border Grid.Column="3" Background="#0D0D18" CornerRadius="6" Padding="10,6" Margin="0,0,6,0" BorderBrush="#23233A" BorderThickness="1">
                     <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Text="✅" FontSize="18" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <StackPanel VerticalAlignment="Center">
                             <TextBlock Text="EFICIÊNCIA SESSÃO" Foreground="#8A8A9E" FontSize="9" FontWeight="Bold"/>
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock x:Name="TxtKpiCompletedCount" Text="0" Foreground="#4EDEA3" FontSize="15" FontWeight="Bold" FontFamily="Consolas"/>
-                                <TextBlock x:Name="TxtKpiSuccessRate" Text=" (100% OK)" Foreground="#A1A1AA" FontSize="10" VerticalAlignment="Bottom" Margin="4,0,0,2"/>
+                                <TextBlock x:Name="TxtKpiSuccessRate" Text="(100% OK)" Foreground="#A1A1AA" FontSize="10" VerticalAlignment="Bottom" Margin="4,0,0,2"/>
                             </StackPanel>
                         </StackPanel>
                     </Grid>
@@ -257,12 +237,7 @@
                 <!-- KPI 5: Meta de Produção da Bancada -->
                 <Border Grid.Column="4" Background="#0D0D18" CornerRadius="6" Padding="10,6" BorderBrush="#23233A" BorderThickness="1">
                     <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Text="🎯" FontSize="18" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <StackPanel VerticalAlignment="Center">
                             <Grid Margin="0,0,0,2">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
@@ -276,7 +251,7 @@
                                 <Button x:Name="BtnMetaMinus" Content="−" Width="22" Height="18" FontSize="11" FontWeight="Bold" Background="#0A0A0F" Foreground="#D2BBFF" BorderBrush="#23233A" BorderThickness="1" Cursor="Hand" Click="BtnMetaMinus_Click" ToolTip="Diminuir meta (-10, Shift = -1)"/>
                                 <TextBox x:Name="TxtMetaEdit" Width="52" Height="18" Margin="4,0,4,0" Background="#0A0A0F" Foreground="#00E5FF" BorderBrush="#23233A" BorderThickness="1" FontSize="10" FontWeight="Bold" FontFamily="Consolas" TextAlignment="Center" VerticalContentAlignment="Center" Text="100" LostFocus="TxtMetaEdit_LostFocus" KeyDown="TxtMetaEdit_KeyDown" ToolTip="Digite a nova meta e pressione Enter. Salva em config/settings.json"/>
                                 <Button x:Name="BtnMetaPlus" Content="+" Width="22" Height="18" FontSize="11" FontWeight="Bold" Background="#0A0A0F" Foreground="#D2BBFF" BorderBrush="#23233A" BorderThickness="1" Cursor="Hand" Click="BtnMetaPlus_Click" ToolTip="Aumentar meta (+10, Shift = +1)"/>
-                                <Button x:Name="BtnMetaReset" Content="↺" Width="26" Height="18" Margin="4,0,0,0" FontSize="11" FontWeight="Bold" Background="#0A0A0F" Foreground="#FFD666" BorderBrush="#FFD666" BorderThickness="1" Cursor="Hand" Click="BtnMetaReset_Click" ToolTip="Zerar contadores da sessão (concluídos/falhas/tempo). Mantém a meta."/>
+                                <Button x:Name="BtnMetaReset" Content="Zerar" Width="Auto" Height="18" Padding="6,0" Margin="4,0,0,0" FontSize="9" FontWeight="Bold" Background="#0A0A0F" Foreground="#FFD666" BorderBrush="#FFD666" BorderThickness="1" Cursor="Hand" Click="BtnMetaReset_Click" ToolTip="Zerar contadores da sessão (concluídos/falhas/tempo). Mantém a meta."/>
                                 <TextBlock x:Name="TxtMetaRestante" Text="faltam 100" Foreground="#8A8A9E" FontSize="9" FontWeight="SemiBold" VerticalAlignment="Center" Margin="6,0,0,0" ToolTip="Quanto falta para bater a meta"/>
                             </StackPanel>
                         </StackPanel>
@@ -322,7 +297,7 @@
                             <!-- Alternador de Densidade (2C, 3C, 4C) -->
                             <Border x:Name="DensityPanel" Background="#0D0D18" CornerRadius="5" Padding="2" Margin="0,0,6,0" BorderBrush="#23233A" BorderThickness="1" Visibility="Collapsed">
                                 <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="Grid: " Foreground="#8A8A9E" FontSize="10" FontWeight="Bold" VerticalAlignment="Center" Margin="4,0,2,0"/>
+                                    <TextBlock Text="Grid:" Foreground="#8A8A9E" FontSize="10" FontWeight="Bold" VerticalAlignment="Center" Margin="4,0,2,0"/>
                                     <Button x:Name="BtnDensity2" Content="2C" Style="{StaticResource ViewModeToggleStyle}" Click="BtnDensity2_Click"/>
                                     <Button x:Name="BtnDensity3" Content="3C" Style="{StaticResource ViewModeToggleStyle}" Click="BtnDensity3_Click"/>
                                     <Button x:Name="BtnDensity4" Content="4C" Style="{StaticResource ViewModeToggleStyle}" Click="BtnDensity4_Click"/>
@@ -332,15 +307,15 @@
                             <!-- Alternador Lista vs Cards -->
                             <Border Background="#0D0D18" CornerRadius="5" Padding="2" BorderBrush="#23233A" BorderThickness="1">
                                 <StackPanel Orientation="Horizontal">
-                                    <Button x:Name="BtnViewList" Content="📑 Lista" Style="{StaticResource ViewModeToggleStyle}" Click="BtnViewList_Click"/>
-                                    <Button x:Name="BtnViewGrid" Content="🔲 Cards" Style="{StaticResource ViewModeToggleStyle}" Click="BtnViewGrid_Click"/>
+                                    <Button x:Name="BtnViewList" Content="Lista" Style="{StaticResource ViewModeToggleStyle}" Click="BtnViewList_Click"/>
+                                    <Button x:Name="BtnViewGrid" Content="Cards" Style="{StaticResource ViewModeToggleStyle}" Click="BtnViewGrid_Click"/>
                                 </StackPanel>
                             </Border>
                         </StackPanel>
                     </Grid>
 
                     <!-- Modo 1: Lista Detalhada Compacta -->
-                    <ListView x:Name="ListDevicesPro" Grid.Row="1" Background="#0A0A0F" Foreground="#E3E0F2" BorderBrush="#2A2A40" BorderThickness="1" 
+                    <ListView x:Name="ListDevicesPro" Grid.Row="1" Background="#0A0A0F" Foreground="#E3E0F2" BorderBrush="#2A2A40" BorderThickness="1"
                               ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Auto">
                         <ListView.View>
                             <GridView>
@@ -398,9 +373,9 @@
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
                                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                                <Button Content="▶" Style="{StaticResource MiniCardButtonStyle}" Foreground="#4EDEA3" BorderBrush="#4EDEA3" Width="26" Click="BtnCardRun_Click" Tag="{Binding Serial}" ToolTip="Iniciar automação neste tablet"/>
-                                                <Button Content="🛑" Style="{StaticResource MiniCardButtonStyle}" Foreground="#FF6B6B" BorderBrush="#FF6B6B" Width="26" Click="BtnCardStop_Click" Tag="{Binding Serial}" ToolTip="Parar processos"/>
-                                                <Button Content="🔌" Style="{StaticResource MiniCardButtonStyle}" Foreground="#FFD666" BorderBrush="#FFD666" Width="26" Click="BtnCardShutdown_Click" Tag="{Binding Serial}" ToolTip="Desligar aparelho"/>
+                                                <Button Content="Rodar" Style="{StaticResource MiniCardButtonStyle}" Foreground="#4EDEA3" BorderBrush="#4EDEA3" FontSize="9" Padding="5,0" Width="Auto" Click="BtnCardRun_Click" Tag="{Binding Serial}" ToolTip="Iniciar automação neste tablet"/>
+                                                <Button Content="Parar" Style="{StaticResource MiniCardButtonStyle}" Foreground="#FF6B6B" BorderBrush="#FF6B6B" FontSize="9" Padding="5,0" Width="Auto" Click="BtnCardStop_Click" Tag="{Binding Serial}" ToolTip="Parar processos"/>
+                                                <Button Content="Desligar" Style="{StaticResource MiniCardButtonStyle}" Foreground="#FFD666" BorderBrush="#FFD666" FontSize="9" Padding="5,0" Width="Auto" Click="BtnCardShutdown_Click" Tag="{Binding Serial}" ToolTip="Desligar aparelho"/>
                                             </StackPanel>
                                         </DataTemplate>
                                     </GridViewColumn.CellTemplate>
@@ -479,7 +454,6 @@
                                                 </Grid.ColumnDefinitions>
                                                 <TextBlock Text="{Binding Serial}" Foreground="#8A8A9E" FontFamily="Consolas" FontSize="10"/>
                                                 <StackPanel Grid.Column="1" Orientation="Horizontal">
-                                                    <TextBlock Text="🔋 " FontSize="9"/>
                                                     <TextBlock Text="{Binding Battery}" Foreground="#4EDEA3" FontWeight="Bold" FontSize="10"/>
                                                 </StackPanel>
                                             </Grid>
@@ -497,9 +471,9 @@
                                                     <ColumnDefinition Width="*"/>
                                                     <ColumnDefinition Width="*"/>
                                                 </Grid.ColumnDefinitions>
-                                                <Button Grid.Column="0" Content="▶ Rodar" Style="{StaticResource MiniCardButtonStyle}" Foreground="#4EDEA3" BorderBrush="#4EDEA3" Click="BtnCardRun_Click" Tag="{Binding Serial}"/>
-                                                <Button Grid.Column="1" Content="🛑 Parar" Style="{StaticResource MiniCardButtonStyle}" Foreground="#FF6B6B" BorderBrush="#FF6B6B" Click="BtnCardStop_Click" Tag="{Binding Serial}"/>
-                                                <Button Grid.Column="2" Content="🔌 Desligar" Style="{StaticResource MiniCardButtonStyle}" Foreground="#FFD666" BorderBrush="#FFD666" Click="BtnCardShutdown_Click" Tag="{Binding Serial}"/>
+                                                <Button Grid.Column="0" Content="Rodar" Style="{StaticResource MiniCardButtonStyle}" Foreground="#4EDEA3" BorderBrush="#4EDEA3" Click="BtnCardRun_Click" Tag="{Binding Serial}"/>
+                                                <Button Grid.Column="1" Content="Parar" Style="{StaticResource MiniCardButtonStyle}" Foreground="#FF6B6B" BorderBrush="#FF6B6B" Click="BtnCardStop_Click" Tag="{Binding Serial}"/>
+                                                <Button Grid.Column="2" Content="Desligar" Style="{StaticResource MiniCardButtonStyle}" Foreground="#FFD666" BorderBrush="#FFD666" Click="BtnCardShutdown_Click" Tag="{Binding Serial}"/>
                                             </Grid>
                                         </Grid>
                                     </Border>
@@ -535,10 +509,23 @@
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
-                                    <ComboBox x:Name="ComboMunicipiosPro" Height="24" Background="#513BA6" Foreground="#FFFFFF" BorderBrush="#8570E6" 
+                                    <ComboBox x:Name="ComboMunicipiosPro" Height="24" Background="#513BA6" Foreground="#FFFFFF" BorderBrush="#8570E6"
                                               FontSize="11" SelectionChanged="ComboMunicipiosPro_SelectionChanged"/>
-                                    <Button Grid.Column="1" Content="⚙ Gerenciar" Background="#0A0A0F" Foreground="#4EDEA3" BorderBrush="#2A2A40" BorderThickness="1" 
-                                            Margin="6,0,0,0" Padding="8,0" FontSize="10" Cursor="Hand" Click="BtnGerenciarMunicipios_Click"/>
+                                    <Button Grid.Column="1" Content="Gerenciar" Background="#0A0A0F" Foreground="#4EDEA3" BorderBrush="#2A2A40" BorderThickness="1"
+                                            Margin="6,0,0,0" Padding="8,0" FontSize="10" Cursor="Hand" Click="BtnGerenciarMunicipios_Click">
+                                        <Button.Template>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border x:Name="bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="5" Padding="{TemplateBinding Padding}">
+                                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="bd" Property="Background" Value="#1D1D30"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Button.Template>
+                                    </Button>
                                 </Grid>
 
                                 <!-- Badges Compactos de Arquivos -->
@@ -552,8 +539,8 @@
                                     <!-- Badge APK -->
                                     <Border Grid.Column="0" Background="#151525" CornerRadius="4" Padding="5,2" Margin="0,0,2,0">
                                         <StackPanel Orientation="Horizontal">
-                                            <TextBlock x:Name="IconApkPro" Text="✔" Foreground="#4EDEA3" FontSize="9" FontWeight="Bold" Margin="0,0,3,0"/>
-                                            <TextBlock Text="APK: " Foreground="#8570E6" FontSize="9" FontWeight="Bold"/>
+                                            <TextBlock x:Name="IconApkPro" Text="OK" Foreground="#4EDEA3" FontSize="9" FontWeight="Bold" Margin="0,0,3,0"/>
+                                            <TextBlock Text="APK:" Foreground="#8570E6" FontSize="9" FontWeight="Bold"/>
                                             <TextBlock x:Name="TxtApkNamePro" Text="..." Foreground="#A1A1AA" FontSize="9" TextTrimming="CharacterEllipsis"/>
                                         </StackPanel>
                                     </Border>
@@ -561,8 +548,8 @@
                                     <!-- Badge Pacote ZIP -->
                                     <Border Grid.Column="1" Background="#151525" CornerRadius="4" Padding="5,2" Margin="2,0,2,0">
                                         <StackPanel Orientation="Horizontal">
-                                            <TextBlock x:Name="IconPacotePro" Text="✔" Foreground="#4EDEA3" FontSize="9" FontWeight="Bold" Margin="0,0,3,0"/>
-                                            <TextBlock Text="ZIP: " Foreground="#8570E6" FontSize="9" FontWeight="Bold"/>
+                                            <TextBlock x:Name="IconPacotePro" Text="OK" Foreground="#4EDEA3" FontSize="9" FontWeight="Bold" Margin="0,0,3,0"/>
+                                            <TextBlock Text="ZIP:" Foreground="#8570E6" FontSize="9" FontWeight="Bold"/>
                                             <TextBlock x:Name="TxtPacoteNamePro" Text="..." Foreground="#A1A1AA" FontSize="9" TextTrimming="CharacterEllipsis"/>
                                         </StackPanel>
                                     </Border>
@@ -570,8 +557,8 @@
                                     <!-- Badge Wallpaper -->
                                     <Border Grid.Column="2" Background="#151525" CornerRadius="4" Padding="5,2" Margin="2,0,0,0">
                                         <StackPanel Orientation="Horizontal">
-                                            <TextBlock x:Name="IconWpPro" Text="✔" Foreground="#4EDEA3" FontSize="9" FontWeight="Bold" Margin="0,0,3,0"/>
-                                            <TextBlock Text="WP: " Foreground="#8570E6" FontSize="9" FontWeight="Bold"/>
+                                            <TextBlock x:Name="IconWpPro" Text="OK" Foreground="#4EDEA3" FontSize="9" FontWeight="Bold" Margin="0,0,3,0"/>
+                                            <TextBlock Text="WP:" Foreground="#8570E6" FontSize="9" FontWeight="Bold"/>
                                             <TextBlock x:Name="TxtWpNamePro" Text="..." Foreground="#A1A1AA" FontSize="9" TextTrimming="CharacterEllipsis"/>
                                         </StackPanel>
                                     </Border>
@@ -599,7 +586,6 @@
                                 <!-- Live Gnirehtet Status -->
                                 <Border Grid.Column="2" Background="#151525" CornerRadius="4" Padding="6,2" Margin="6,0,0,0">
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="🌐 " FontSize="9"/>
                                         <TextBlock x:Name="TxtGnirehtetStatus" Text="Gnirehtet: Ativo" Foreground="#00E5FF" FontWeight="Bold" FontSize="9"/>
                                     </StackPanel>
                                 </Border>
@@ -613,7 +599,7 @@
                                     <ColumnDefinition Width="1.4*"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
-                                <Button x:Name="BtnRunAll" Content="⚡ EXECUTAR EM TODOS" Background="#2D1F5E" Foreground="#4EDEA3" BorderBrush="#4EDEA3" 
+                                <Button x:Name="BtnRunAll" Content="EXECUTAR EM TODOS" Background="#2D1F5E" Foreground="#4EDEA3" BorderBrush="#4EDEA3"
                                         BorderThickness="1" Height="26" FontSize="10" FontWeight="Bold" Cursor="Hand" Margin="0,0,4,0" Click="BtnRunAll_Click">
                                     <Button.Resources>
                                         <Style TargetType="Border">
@@ -621,7 +607,7 @@
                                         </Style>
                                     </Button.Resources>
                                 </Button>
-                                <Button x:Name="BtnShutdownCompleted" Grid.Column="1" Content="🔌 Desligar Concluídos" Background="#1A1A2E" Foreground="#FFD666" BorderBrush="#FFD666" 
+                                <Button x:Name="BtnShutdownCompleted" Grid.Column="1" Content="Desligar Concluídos" Background="#1A1A2E" Foreground="#FFD666" BorderBrush="#FFD666"
                                         BorderThickness="1" Height="26" FontSize="10" FontWeight="Bold" Cursor="Hand" Margin="4,0,0,0" Click="BtnShutdownCompleted_Click">
                                     <Button.Resources>
                                         <Style TargetType="Border">
@@ -674,7 +660,7 @@
                                     <Button Grid.Row="1" Grid.Column="0" Content="[F5] Desligar" Style="{StaticResource ProF5Style}" Click="BtnF5_Click"/>
                                     <Button Grid.Row="1" Grid.Column="1" Content="[F6] Sync" Style="{StaticResource ProF6Style}" Click="BtnF6_Click"/>
                                     <Button Grid.Row="1" Grid.Column="2" Content="[F8] Gnirehtet" Style="{StaticResource ProF8Style}" Click="BtnF8_Click"/>
-                                    <Button Grid.Row="1" Grid.Column="3" Content="🛑 Parar" Style="{StaticResource ProStopStyle}" Click="BtnStop_Click"/>
+                                    <Button Grid.Row="1" Grid.Column="3" Content="Parar" Style="{StaticResource ProStopStyle}" Click="BtnStop_Click"/>
                                 </Grid>
 
                                 <!-- Painel Ações: Multilaser TabMulti M7 -->
@@ -693,7 +679,7 @@
                                     <Button Grid.Column="1" Content="[F2] Atualizar" Style="{StaticResource ProF2Style}" Click="BtnM7_F2_Click"/>
                                     <Button Grid.Column="2" Content="[F3] Terminal" Style="{StaticResource ProF4Style}" Click="BtnM7_F3_Click"/>
                                     <Button Grid.Column="3" Content="[F4] Desligar" Style="{StaticResource ProF5Style}" Click="BtnM7_F4_Click"/>
-                                    <Button Grid.Column="4" Content="🛑 Parar" Style="{StaticResource ProStopStyle}" Click="BtnStop_Click"/>
+                                    <Button Grid.Column="4" Content="Parar" Style="{StaticResource ProStopStyle}" Click="BtnStop_Click"/>
                                 </Grid>
 
                                 <!-- Painel Ações: Nokia T20 -->
@@ -710,7 +696,7 @@
                                     <Button Grid.Column="0" Content="[F1] Sinc+Instal" Style="{StaticResource ProF1Style}" Click="BtnNokiaF1_Click"/>
                                     <Button Grid.Column="1" Content="[F2] Reinstalar" Style="{StaticResource ProF2Style}" Click="BtnNokiaF2_Click"/>
                                     <Button Grid.Column="2" Content="[F3] Atualizar" Style="{StaticResource ProF3Style}" Click="BtnNokiaF3_Click"/>
-                                    <Button Grid.Column="3" Content="🛑 Parar" Style="{StaticResource ProStopStyle}" Click="BtnStop_Click"/>
+                                    <Button Grid.Column="3" Content="Parar" Style="{StaticResource ProStopStyle}" Click="BtnStop_Click"/>
                                 </Grid>
                             </Grid>
                         </Border>
@@ -752,9 +738,9 @@
                         <Border Background="#0D0D18" CornerRadius="5" Padding="2" BorderBrush="#23233A" BorderThickness="1">
                             <StackPanel Orientation="Horizontal">
                                 <Button x:Name="BtnFilterAll" Content="Todos" Style="{StaticResource ViewModeToggleStyle}" Click="BtnFilterAll_Click"/>
-                                <Button x:Name="BtnFilterSuccess" Content="🟢 Sucessos" Style="{StaticResource ViewModeToggleStyle}" Click="BtnFilterSuccess_Click"/>
-                                <Button x:Name="BtnFilterError" Content="🔴 Falhas" Style="{StaticResource ViewModeToggleStyle}" Click="BtnFilterError_Click"/>
-                                <Button x:Name="BtnFilterSteps" Content="⚡ Etapas" Style="{StaticResource ViewModeToggleStyle}" Click="BtnFilterSteps_Click"/>
+                                <Button x:Name="BtnFilterSuccess" Content="Sucessos" Style="{StaticResource ViewModeToggleStyle}" Click="BtnFilterSuccess_Click"/>
+                                <Button x:Name="BtnFilterError" Content="Falhas" Style="{StaticResource ViewModeToggleStyle}" Click="BtnFilterError_Click"/>
+                                <Button x:Name="BtnFilterSteps" Content="Etapas" Style="{StaticResource ViewModeToggleStyle}" Click="BtnFilterSteps_Click"/>
                             </StackPanel>
                         </Border>
                     </StackPanel>
@@ -764,22 +750,21 @@
                         <!-- Busca em Tempo Real Expandida -->
                         <Border Background="#0D0D18" CornerRadius="5" Padding="6,2" Margin="0,0,6,0" BorderBrush="#23233A" BorderThickness="1">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="🔍 " Foreground="#8A8A9E" FontSize="10" VerticalAlignment="Center"/>
-                                <TextBox x:Name="TxtLogFilterPro" Width="140" Background="Transparent" Foreground="#E3E0F2" BorderThickness="0" 
+                                <TextBox x:Name="TxtLogFilterPro" Width="140" Background="Transparent" Foreground="#E3E0F2" BorderThickness="0"
                                          FontSize="10" VerticalAlignment="Center" TextChanged="TxtLogFilterPro_TextChanged" ToolTip="Filtrar mensagens de log em tempo real"/>
                             </StackPanel>
                         </Border>
 
                         <!-- Botão Copiar Tudo -->
-                        <Button Content="📋 Copiar" Background="#0A0A0F" Foreground="#D2BBFF" BorderBrush="#513BA6" BorderThickness="1" 
+                        <Button Content="Copiar" Background="#0A0A0F" Foreground="#D2BBFF" BorderBrush="#513BA6" BorderThickness="1"
                                 Padding="8,2" FontSize="10" FontWeight="Bold" Margin="0,0,4,0" Click="BtnCopyLog_Click" ToolTip="Copiar todo o log exibido"/>
 
                         <!-- Botão Exportar Log -->
-                        <Button Content="💾 Exportar" Background="#0A0A0F" Foreground="#00E5FF" BorderBrush="#00E5FF" BorderThickness="1" 
+                        <Button Content="Exportar" Background="#0A0A0F" Foreground="#00E5FF" BorderBrush="#00E5FF" BorderThickness="1"
                                 Padding="8,2" FontSize="10" FontWeight="Bold" Margin="0,0,4,0" Click="BtnExportLog_Click" ToolTip="Salvar histórico da sessão em arquivo de texto"/>
-                        
+
                         <!-- Botão Limpar -->
-                        <Button Content="🗑️ Limpar" Background="#0A0A0F" Foreground="#E3E0F2" BorderBrush="#8570E6" BorderThickness="1" 
+                        <Button Content="Limpar" Background="#0A0A0F" Foreground="#E3E0F2" BorderBrush="#8570E6" BorderThickness="1"
                                 Padding="8,2" FontSize="10" Click="BtnClearLogPro_Click" ToolTip="Limpar console"/>
                     </StackPanel>
                 </Grid>
@@ -811,7 +796,7 @@
                         </Style>
                     </TabControl.Resources>
                     <TabItem Header="Global (Sistema)">
-                        <TextBox x:Name="TxtLogGlobalPro" Background="#0A0A0F" Foreground="#4EDEA3" BorderBrush="Transparent" BorderThickness="0" 
+                        <TextBox x:Name="TxtLogGlobalPro" Background="#0A0A0F" Foreground="#4EDEA3" BorderBrush="Transparent" BorderThickness="0"
                                  FontFamily="Consolas, Cascadia Code, Courier New" FontSize="11.5" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" IsReadOnly="True"
                                  Padding="8,8,8,8" Margin="0,2,0,0" Text="[00:00:00] Bot_RPA RPA Studio (Layout Pro) inicializado. Monitorando portas ADB...&#x0a;"/>
                     </TabItem>

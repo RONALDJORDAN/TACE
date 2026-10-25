@@ -73,7 +73,7 @@
                         <Border.Effect>
                             <DropShadowEffect Color="#513BA6" BlurRadius="12" Opacity="0.65" ShadowDepth="0"/>
                         </Border.Effect>
-                        <TextBlock Text="⚡" FontSize="18" Foreground="#00E5FF" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <TextBlock Text="BR" Foreground="#FFFFFF" FontWeight="Black" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
                     <StackPanel VerticalAlignment="Center">
                         <TextBlock Text="BOT_RPA" Foreground="#FFFFFF" FontWeight="Black" FontSize="13"/>
@@ -84,12 +84,12 @@
 
                 <!-- 2. Módulos de Navegação Central -->
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Button x:Name="BtnMenuMonitor" Content="📟 Monitor ADB" Style="{StaticResource NavTabButtonStyle}" Click="MenuMonitor_Click"/>
-                    <Button x:Name="BtnMenuMonitorPro" Content="⚡ Monitor Pro" Style="{StaticResource NavTabButtonStyle}" Click="MenuMonitorPro_Click"/>
-                    <Button x:Name="BtnMenuLearn" Content="🧠 BotAI 2.0" Style="{StaticResource NavTabButtonStyle}" Click="MenuLearn_Click"/>
-                    <Button x:Name="BtnMenuRelatorios" Content="📊 Gestão" Style="{StaticResource NavTabButtonStyle}" Click="MenuRelatorios_Click"/>
-                    <Button x:Name="BtnMenuConfig" Content="⚙ Configurações" Style="{StaticResource NavTabButtonStyle}" Click="MenuConfig_Click"/>
-                    <Button x:Name="BtnMenuSobre" Content="ℹ Sobre" Style="{StaticResource NavTabButtonStyle}" Click="MenuSobre_Click"/>
+                    <Button x:Name="BtnMenuMonitor" Content="Monitor ADB" Style="{StaticResource NavTabButtonStyle}" Click="MenuMonitor_Click"/>
+                    <Button x:Name="BtnMenuMonitorPro" Content="Monitor Pro" Style="{StaticResource NavTabButtonStyle}" Click="MenuMonitorPro_Click"/>
+                    <Button x:Name="BtnMenuLearn" Content="BotAI 2.0" Style="{StaticResource NavTabButtonStyle}" Click="MenuLearn_Click"/>
+                    <Button x:Name="BtnMenuRelatorios" Content="Gestão" Style="{StaticResource NavTabButtonStyle}" Click="MenuRelatorios_Click"/>
+                    <Button x:Name="BtnMenuConfig" Content="Configurações" Style="{StaticResource NavTabButtonStyle}" Click="MenuConfig_Click"/>
+                    <Button x:Name="BtnMenuSobre" Content="Sobre" Style="{StaticResource NavTabButtonStyle}" Click="MenuSobre_Click"/>
                 </StackPanel>
 
                 <!-- 3. Telemetria e Status ao Vivo (Direita) -->
@@ -109,7 +109,6 @@
                     <!-- Badge Tablets USB Conectados (oculto por configuracao) -->
                     <Border Visibility="Collapsed" Background="#16182E" BorderBrush="#3B4272" BorderThickness="1" CornerRadius="6" Padding="8,4" Margin="0,0,8,0" VerticalAlignment="Center">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <TextBlock Text="📱" FontSize="10" Margin="0,0,5,0" VerticalAlignment="Center"/>
                             <TextBlock x:Name="TxtHeaderDeviceCount" Text="0 Tablets" Foreground="#00E5FF" FontSize="10" FontWeight="Bold" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Border>
@@ -120,7 +119,7 @@
                     </Border>
 
                     <!-- Botão Tela Cheia (oculto por configuracao) -->
-                    <Button Visibility="Collapsed" x:Name="BtnToggleFullScreen" Content="⛶ F11" Style="{StaticResource NavTabButtonStyle}" Padding="9,4" Margin="0,0,8,0" Click="BtnToggleFullScreen_Click" ToolTip="Alternar Tela Cheia (F11)"/>
+                    <Button Visibility="Collapsed" x:Name="BtnToggleFullScreen" Content="F11" Style="{StaticResource NavTabButtonStyle}" Padding="9,4" Margin="0,0,8,0" Click="BtnToggleFullScreen_Click" ToolTip="Alternar Tela Cheia (F11)"/>
 
                     <!-- Versão Oficial -->
                     <Border Background="#1A1A2E" BorderBrush="#513BA6" BorderThickness="1" CornerRadius="6" Padding="9,4" VerticalAlignment="Center">

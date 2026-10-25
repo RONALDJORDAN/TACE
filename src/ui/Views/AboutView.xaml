@@ -77,13 +77,11 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
-                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
                 <!-- Cabeçalho do Menu -->
                 <StackPanel Grid.Row="0" Margin="0,0,0,20">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="6,4,0,10">
-                        <TextBlock Text="ℹ️" FontSize="20" VerticalAlignment="Center" Margin="0,0,10,0"/>
                         <TextBlock Text="Sobre &amp; Ajuda" Foreground="#FFFFFF" FontSize="16" FontWeight="Black" VerticalAlignment="Center"/>
                     </StackPanel>
                     <Separator Background="#23233A" Margin="0,5,0,5"/>
@@ -92,18 +90,10 @@
 
                 <!-- Botões de Submódulos -->
                 <StackPanel Grid.Row="1">
-                    <Button x:Name="BtnSubGuia" Content="🗺️  1. Guia de Módulos" Style="{StaticResource SideMenuButton}" Click="BtnSubGuia_Click" Foreground="#4EDEA3" Background="#2A2A40"/>
-                    <Button x:Name="BtnSubFaq" Content="❓  2. Dúvidas e FAQ" Style="{StaticResource SideMenuButton}" Click="BtnSubFaq_Click"/>
-                    <Button x:Name="BtnSubArquitetura" Content="🛡️  3. Arquitetura &amp; Licença" Style="{StaticResource SideMenuButton}" Click="BtnSubArquitetura_Click"/>
+                    <Button x:Name="BtnSubGuia" Content="1. Guia de Módulos" Style="{StaticResource SideMenuButton}" Click="BtnSubGuia_Click" Foreground="#4EDEA3" Background="#2A2A40"/>
+                    <Button x:Name="BtnSubFaq" Content="2. Dúvidas e FAQ" Style="{StaticResource SideMenuButton}" Click="BtnSubFaq_Click"/>
+                    <Button x:Name="BtnSubArquitetura" Content="3. Arquitetura &amp; Licença" Style="{StaticResource SideMenuButton}" Click="BtnSubArquitetura_Click"/>
                 </StackPanel>
-
-                <!-- Rodapé informativo do Menu -->
-                <Border Grid.Row="2" Background="#0A0A0F" CornerRadius="8" Padding="10" BorderBrush="#202035" BorderThickness="1">
-                    <StackPanel>
-                        <TextBlock Text="Plataforma Bot_RPA" Foreground="#4EDEA3" FontSize="11" FontWeight="Bold"/>
-                        <TextBlock x:Name="TxtAboutVersion" Text="v18.08.2026.1724" Foreground="#85859E" FontSize="10" FontFamily="Consolas" Margin="0,2,0,0"/>
-                    </StackPanel>
-                </Border>
             </Grid>
         </Border>
 
@@ -116,24 +106,17 @@
             <Border x:Name="PanelGuia" Background="#151525" CornerRadius="12" Padding="20" BorderBrush="#23233A" BorderThickness="1" Visibility="Visible">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel>
-                        <TextBlock Text="🗺️ Mapa de Módulos — O que procurar e onde encontrar" Style="{StaticResource CategoryTitle}"/>
+                        <TextBlock Text="Mapa de Módulos — O que procurar e onde encontrar" Style="{StaticResource CategoryTitle}"/>
                         <TextBlock Text="Visão rápida de todas as esteiras e ferramentas disponíveis na Plataforma Bot_RPA." Style="{StaticResource CategoryDesc}"/>
 
                         <!-- Módulo 1: Monitor ADB USB -->
                         <Border Style="{StaticResource CardStyle}">
                             <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <Border Background="#1A1A2E" CornerRadius="8" Padding="12" Margin="0,0,16,0" BorderBrush="#00F5D4" BorderThickness="1">
-                                    <TextBlock Text="📱" FontSize="28" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                                </Border>
-                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <StackPanel VerticalAlignment="Center">
                                     <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
                                         <TextBlock Text="1. Monitor ADB (USB)" Foreground="#FFFFFF" FontSize="15" FontWeight="Bold"/>
                                         <Border Background="#064E3B" CornerRadius="4" Padding="6,2" Margin="10,0,0,0">
-                                            <TextBlock Text="Menu Superior ➔ 'Monitor ADB (USB)'" Foreground="#00F5D4" FontSize="10" FontWeight="Bold"/>
+                                            <TextBlock Text="Menu Superior -> 'Monitor ADB (USB)'" Foreground="#00F5D4" FontSize="10" FontWeight="Bold"/>
                                         </Border>
                                     </StackPanel>
                                     <TextBlock Text="• O que é: O centro de comando principal para provisionamento de múltiplos tablets simultâneos via cabo USB." Foreground="#E3E0F2" FontSize="12" TextWrapping="Wrap" Margin="0,2,0,4"/>
@@ -145,18 +128,11 @@
                         <!-- Módulo 2: BotLearn IA -->
                         <Border Style="{StaticResource CardStyle}">
                             <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <Border Background="#1A1A2E" CornerRadius="8" Padding="12" Margin="0,0,16,0" BorderBrush="#00E5FF" BorderThickness="1">
-                                    <TextBlock Text="⚡" FontSize="28" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                                </Border>
-                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <StackPanel VerticalAlignment="Center">
                                     <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
                                         <TextBlock Text="2. BotLearn IA (Mapeamento Visual)" Foreground="#FFFFFF" FontSize="15" FontWeight="Bold"/>
                                         <Border Background="#102530" CornerRadius="4" Padding="6,2" Margin="10,0,0,0">
-                                            <TextBlock Text="Menu Superior ➔ '⚡ BotLearn IA'" Foreground="#00E5FF" FontSize="10" FontWeight="Bold"/>
+                                            <TextBlock Text="Menu Superior -> 'BotLearn IA'" Foreground="#00E5FF" FontSize="10" FontWeight="Bold"/>
                                         </Border>
                                     </StackPanel>
                                     <TextBlock Text="• O que é: Módulo inteligente que inspeciona a interface do tablet, capturando a tela e a árvore UI XML." Foreground="#E3E0F2" FontSize="12" TextWrapping="Wrap" Margin="0,2,0,4"/>
@@ -168,18 +144,11 @@
                         <!-- Módulo 3: Relatórios e Registros -->
                         <Border Style="{StaticResource CardStyle}">
                             <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <Border Background="#1A1A2E" CornerRadius="8" Padding="12" Margin="0,0,16,0" BorderBrush="#4EDEA3" BorderThickness="1">
-                                    <TextBlock Text="📊" FontSize="28" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                                </Border>
-                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <StackPanel VerticalAlignment="Center">
                                     <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
                                         <TextBlock Text="3. Relatórios &amp; Hub de Auditoria" Foreground="#FFFFFF" FontSize="15" FontWeight="Bold"/>
                                         <Border Background="#0D2E1A" CornerRadius="4" Padding="6,2" Margin="10,0,0,0">
-                                            <TextBlock Text="Menu Superior ➔ 'Relatórios e Registros'" Foreground="#4EDEA3" FontSize="10" FontWeight="Bold"/>
+                                            <TextBlock Text="Menu Superior -> 'Relatórios e Registros'" Foreground="#4EDEA3" FontSize="10" FontWeight="Bold"/>
                                         </Border>
                                     </StackPanel>
                                     <TextBlock Text="• O que é: Central de dados dividida em 4 submódulos: Métricas/Dashboard, Banco de Dados, Auditoria/Logs e Exportação." Foreground="#E3E0F2" FontSize="12" TextWrapping="Wrap" Margin="0,2,0,4"/>
@@ -191,18 +160,11 @@
                         <!-- Módulo 4: Configurações -->
                         <Border Style="{StaticResource CardStyle}">
                             <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <Border Background="#1A1A2E" CornerRadius="8" Padding="12" Margin="0,0,16,0" BorderBrush="#8570E6" BorderThickness="1">
-                                    <TextBlock Text="⚙️" FontSize="28" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                                </Border>
-                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <StackPanel VerticalAlignment="Center">
                                     <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
                                         <TextBlock Text="4. Configurações Globais" Foreground="#FFFFFF" FontSize="15" FontWeight="Bold"/>
                                         <Border Background="#2A174E" CornerRadius="4" Padding="6,2" Margin="10,0,0,0">
-                                            <TextBlock Text="Menu Superior ➔ 'Configurações'" Foreground="#D2BBFF" FontSize="10" FontWeight="Bold"/>
+                                            <TextBlock Text="Menu Superior -> 'Configurações'" Foreground="#D2BBFF" FontSize="10" FontWeight="Bold"/>
                                         </Border>
                                     </StackPanel>
                                     <TextBlock Text="• O que é: Painel administrativo para ativar/desativar modelos de tablets, gerenciar backups .zip e configurar a interface de monitoramento." Foreground="#E3E0F2" FontSize="12" TextWrapping="Wrap" Margin="0,2,0,4"/>
@@ -219,13 +181,13 @@
             <Border x:Name="PanelFaq" Background="#151525" CornerRadius="12" Padding="20" BorderBrush="#23233A" BorderThickness="1" Visibility="Collapsed">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel>
-                        <TextBlock Text="❓ Perguntas Frequentes &amp; Resolução de Problemas (FAQ)" Style="{StaticResource CategoryTitle}"/>
+                        <TextBlock Text="Perguntas Frequentes &amp; Resolução de Problemas (FAQ)" Style="{StaticResource CategoryTitle}"/>
                         <TextBlock Text="Respostas diretas para as situações mais comuns encontradas durante o provisionamento na bancada." Style="{StaticResource CategoryDesc}"/>
 
                         <!-- FAQ 1 -->
                         <Border Style="{StaticResource CardStyle}">
                             <StackPanel>
-                                <TextBlock Text="🔌 1. Conectei o tablet via cabo USB, mas ele aparece como 'Pendente' ou 'Desconhecido'. O que fazer?" Foreground="#FFD666" FontSize="14" FontWeight="Bold" Margin="0,0,0,6"/>
+                                <TextBlock Text="1. Conectei o tablet via cabo USB, mas ele aparece como 'Pendente' ou 'Desconhecido'. O que fazer?" Foreground="#FFD666" FontSize="14" FontWeight="Bold" Margin="0,0,0,6"/>
                                 <TextBlock Text="• Causa: O tablet está aguardando a permissão de Depuração USB na tela." Foreground="#E3E0F2" FontSize="12" Margin="0,0,0,4"/>
                                 <TextBlock Text="• Solução: Olhe para a tela do tablet, marque a caixinha 'Sempre permitir a partir deste computador' e toque em 'Permitir'. O status no Bot_RPA mudará para 'Pronto' imediatamente." Foreground="#85859E" FontSize="12" TextWrapping="Wrap"/>
                             </StackPanel>
@@ -234,7 +196,7 @@
                         <!-- FAQ 2 -->
                         <Border Style="{StaticResource CardStyle}">
                             <StackPanel>
-                                <TextBlock Text="🛑 2. O processo travou ou o tablet começou a executar algo incorreto. Como interromper na hora?" Foreground="#FF6B6B" FontSize="14" FontWeight="Bold" Margin="0,0,0,6"/>
+                                <TextBlock Text="2. O processo travou ou o tablet começou a executar algo incorreto. Como interromper na hora?" Foreground="#FF6B6B" FontSize="14" FontWeight="Bold" Margin="0,0,0,6"/>
                                 <TextBlock Text="• Solução: Pressione a tecla ESC ou a tecla ESPAÇO no teclado. O sistema envia uma Parada de Emergência Global para todos os dispositivos conectados, cancelando os subprocessos." Foreground="#85859E" FontSize="12" TextWrapping="Wrap"/>
                             </StackPanel>
                         </Border>
@@ -242,16 +204,16 @@
                         <!-- FAQ 3 -->
                         <Border Style="{StaticResource CardStyle}">
                             <StackPanel>
-                                <TextBlock Text="📁 3. Onde coloco os APKs, Pacotes ZIP e papéis de parede dos novos municípios?" Foreground="#00F5D4" FontSize="14" FontWeight="Bold" Margin="0,0,0,6"/>
-                                <TextBlock Text="• Local: Coloque os arquivos dentro da pasta /data/input/apps/ e vincule os nomes no arquivo /config/municipios.csv ou clique no botão '⚙ Gerenciar' na tela do Monitor ADB." Foreground="#85859E" FontSize="12" TextWrapping="Wrap"/>
+                                <TextBlock Text="3. Onde coloco os APKs, Pacotes ZIP e papéis de parede dos novos municípios?" Foreground="#00F5D4" FontSize="14" FontWeight="Bold" Margin="0,0,0,6"/>
+                                <TextBlock Text="• Local: Coloque os arquivos dentro da pasta /data/input/apps/ e vincule os nomes no arquivo /config/municipios.csv ou clique no botão 'Gerenciar' na tela do Monitor ADB." Foreground="#85859E" FontSize="12" TextWrapping="Wrap"/>
                             </StackPanel>
                         </Border>
 
                         <!-- FAQ 4 -->
                         <Border Style="{StaticResource CardStyle}">
                             <StackPanel>
-                                <TextBlock Text="🖥️ 4. Como alternar para Tela Cheia no Bot_RPA?" Foreground="#5EB1FF" FontSize="14" FontWeight="Bold" Margin="0,0,0,6"/>
-                                <TextBlock Text="• Atalho: Pressione a tecla F11 a qualquer momento ou clique no botão '⛶ F11' no canto superior direito para expandir para 100% da tela." Foreground="#85859E" FontSize="12" TextWrapping="Wrap"/>
+                                <TextBlock Text="4. Como alternar para Tela Cheia no Bot_RPA?" Foreground="#5EB1FF" FontSize="14" FontWeight="Bold" Margin="0,0,0,6"/>
+                                <TextBlock Text="• Atalho: Pressione a tecla F11 a qualquer momento ou clique no botão 'F11' no canto superior direito para expandir para 100% da tela." Foreground="#85859E" FontSize="12" TextWrapping="Wrap"/>
                             </StackPanel>
                         </Border>
                     </StackPanel>
@@ -264,7 +226,7 @@
             <Border x:Name="PanelArquitetura" Background="#151525" CornerRadius="12" Padding="20" BorderBrush="#23233A" BorderThickness="1" Visibility="Collapsed">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel>
-                        <TextBlock Text="🛡️ Arquitetura do Sistema &amp; Licenciamento" Style="{StaticResource CategoryTitle}"/>
+                        <TextBlock Text="Arquitetura do Sistema &amp; Licenciamento" Style="{StaticResource CategoryTitle}"/>
                         <TextBlock Text="Detalhes técnicos de governança, isolamento de hardware e propriedade intelectual." Style="{StaticResource CategoryDesc}"/>
 
                         <Border Style="{StaticResource CardStyle}">

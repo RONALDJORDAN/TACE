@@ -132,7 +132,7 @@
         </Style>
     </UserControl.Resources>
 
-    <Grid Margin="12">
+    <Grid Margin="0">
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
@@ -155,12 +155,8 @@
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                <TextBlock Text="📱" FontSize="14" Margin="0,0,8,0" VerticalAlignment="Center"/>
                                 <TextBlock Text="Aparelhos Conectados" Foreground="#E2DDFE" FontSize="14" FontWeight="Bold" VerticalAlignment="Center"/>
                             </StackPanel>
-                            <Border Grid.Column="1" Background="#1D1A38" CornerRadius="8" Padding="7,2" BorderBrush="#41307A" BorderThickness="1">
-                                <TextBlock Text="ADB LIVE" Foreground="#00E5FF" FontSize="10" FontWeight="Bold"/>
-                            </Border>
                         </Grid>
                         
                         <!-- Lista de Aparelhos Conectados -->
@@ -168,7 +164,7 @@
                             <ListView.View>
                                 <GridView>
                                     <!-- Modelo -->
-                                    <GridViewColumn Header="Modelo" Width="105">
+                                    <GridViewColumn Header="Modelo" Width="82">
                                         <GridViewColumn.CellTemplate>
                                             <DataTemplate>
                                                 <TextBlock Text="{Binding ModeloExibicao}" Foreground="#E3E0F2" FontWeight="SemiBold" FontSize="11" VerticalAlignment="Center"/>
@@ -176,8 +172,17 @@
                                         </GridViewColumn.CellTemplate>
                                     </GridViewColumn>
 
+                                    <!-- Porta USB fisica reportada pelo ADB -->
+                                    <GridViewColumn Header="Porta USB" Width="68">
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding UsbPortExibicao}" Foreground="#C9A7FF" FontFamily="Consolas" FontSize="11" VerticalAlignment="Center" ToolTip="{Binding UsbPort}"/>
+                                            </DataTemplate>
+                                        </GridViewColumn.CellTemplate>
+                                    </GridViewColumn>
+
                                     <!-- Número de Série -->
-                                    <GridViewColumn Header="Número de Série" Width="150">
+                                    <GridViewColumn Header="Número de Série" Width="112">
                                         <GridViewColumn.CellTemplate>
                                             <DataTemplate>
                                                 <TextBlock Text="{Binding Serial}" Foreground="#5EB1FF" FontFamily="Consolas" FontSize="11" VerticalAlignment="Center"/>
@@ -186,7 +191,7 @@
                                     </GridViewColumn>
 
                                     <!-- MAC Wi-Fi -->
-                                    <GridViewColumn Header="MAC Wi-Fi" Width="130">
+                                    <GridViewColumn Header="MAC Wi-Fi" Width="110">
                                         <GridViewColumn.CellTemplate>
                                             <DataTemplate>
                                                 <TextBlock Text="{Binding MACExibicao}" Foreground="#4EDEA3" FontFamily="Consolas" FontSize="11" VerticalAlignment="Center"/>
@@ -224,7 +229,7 @@
                         <!-- Automação ao Conectar (oculto enquanto o painel F4 estiver ativo) -->
                         <Border x:Name="CardAutoConectar" Background="#0C0C16" CornerRadius="8" Padding="10,8" Margin="0,0,0,10" BorderBrush="#222236" BorderThickness="1">
                             <StackPanel>
-                                <TextBlock Text="⚡ Automação ao Conectar" Foreground="#D2BBFF" FontSize="12" FontWeight="Bold" Margin="0,0,0,6"/>
+                                <TextBlock Text="Automação ao Conectar" Foreground="#D2BBFF" FontSize="12" FontWeight="Bold" Margin="0,0,0,6"/>
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto"/>
@@ -247,7 +252,6 @@
                         <Border x:Name="CardAutoF4" Background="#141126" CornerRadius="8" Padding="10,8" Margin="0,0,0,10" BorderBrush="#513BA6" BorderThickness="1" Visibility="Collapsed">
                             <StackPanel>
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-                                    <TextBlock Text="⚡" Foreground="#00E5FF" FontSize="12" Margin="0,0,6,0" VerticalAlignment="Center"/>
                                     <TextBlock Text="Automação F4 ao Conectar" Foreground="#D2BBFF" FontSize="12" FontWeight="Bold" VerticalAlignment="Center"/>
                                 </StackPanel>
                                 <Grid>
@@ -278,14 +282,27 @@
                         </Border>
                         
                         <!-- Seletor de Município -->
-                        <TextBlock Text="🏛️ Município de Operação" Foreground="#D2BBFF" FontSize="12" FontWeight="Bold" Margin="0,0,0,6"/>
+                        <TextBlock Text="Município de Operação" Foreground="#D2BBFF" FontSize="12" FontWeight="Bold" Margin="0,0,0,6"/>
                         <Grid Margin="0,0,0,10">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
                             <ComboBox x:Name="ComboMunicipios" Height="32" Background="#281B54" Foreground="#FFFFFF" BorderBrush="#513BA6" SelectionChanged="ComboMunicipios_SelectionChanged" FontSize="12" FontWeight="SemiBold"/>
-                            <Button x:Name="BtnGerenciarMunicipios" Grid.Column="1" Content="⚙ Gerenciar" Background="#11111E" Foreground="#4EDEA3" BorderBrush="#2D2D45" BorderThickness="1" Margin="8,0,0,0" Padding="12,0" Cursor="Hand" Click="BtnGerenciarMunicipios_Click" FontWeight="Bold" FontSize="11"/>
+                            <Button x:Name="BtnGerenciarMunicipios" Grid.Column="1" Content="Gerenciar" Background="#11111E" Foreground="#4EDEA3" BorderBrush="#2D2D45" BorderThickness="1" Margin="8,0,0,0" Padding="12,0" Cursor="Hand" Click="BtnGerenciarMunicipios_Click" FontWeight="Bold" FontSize="11">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border x:Name="bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="6" Padding="{TemplateBinding Padding}">
+                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="bd" Property="Background" Value="#1D1D30"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
                         </Grid>
 
                         <!-- Card Estilizado de Arquivos do Município -->
@@ -296,7 +313,7 @@
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="📁 Arquivos do Município" Foreground="#D2BBFF" FontSize="12" FontWeight="Bold"/>
+                                    <TextBlock Text="Arquivos do Município" Foreground="#D2BBFF" FontSize="12" FontWeight="Bold"/>
                                     <TextBlock Text="VALIDADOS" Foreground="#4EDEA3" FontSize="10" FontWeight="Bold" Grid.Column="1"/>
                                 </Grid>
                                 
@@ -307,9 +324,9 @@
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="APK: " Foreground="#8570E6" FontWeight="SemiBold" FontSize="11" VerticalAlignment="Center"/>
+                                    <TextBlock Text="APK:" Foreground="#8570E6" FontWeight="SemiBold" FontSize="11" VerticalAlignment="Center"/>
                                     <TextBlock x:Name="TxtApkName" Grid.Column="1" Text="Nenhum APK Encontrado" Foreground="#A1A1AA" FontSize="11" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
-                                    <TextBlock x:Name="IconApkCheck" Grid.Column="2" Text="✔" Foreground="#4EDEA3" FontWeight="Bold" FontSize="12" Margin="6,0,0,0" VerticalAlignment="Center" Visibility="Collapsed"/>
+                                    <TextBlock x:Name="IconApkCheck" Grid.Column="2" Text="OK" Foreground="#4EDEA3" FontWeight="Bold" FontSize="12" Margin="6,0,0,0" VerticalAlignment="Center" Visibility="Collapsed"/>
                                 </Grid>
 
                                 <!-- Linha Pacote ZIP -->
@@ -319,9 +336,9 @@
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="Pacote: " Foreground="#8570E6" FontWeight="SemiBold" FontSize="11" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Pacote:" Foreground="#8570E6" FontWeight="SemiBold" FontSize="11" VerticalAlignment="Center"/>
                                     <TextBlock x:Name="TxtPacoteName" Grid.Column="1" Text="Não definido" Foreground="#A1A1AA" FontSize="11" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
-                                    <TextBlock x:Name="IconPacoteCheck" Grid.Column="2" Text="✔" Foreground="#4EDEA3" FontWeight="Bold" FontSize="12" Margin="6,0,0,0" VerticalAlignment="Center" Visibility="Collapsed"/>
+                                    <TextBlock x:Name="IconPacoteCheck" Grid.Column="2" Text="OK" Foreground="#4EDEA3" FontWeight="Bold" FontSize="12" Margin="6,0,0,0" VerticalAlignment="Center" Visibility="Collapsed"/>
                                 </Grid>
 
                                 <!-- Linha Wallpaper -->
@@ -331,9 +348,9 @@
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="Wallpaper: " Foreground="#8570E6" FontWeight="SemiBold" FontSize="11" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Wallpaper:" Foreground="#8570E6" FontWeight="SemiBold" FontSize="11" VerticalAlignment="Center"/>
                                     <TextBlock x:Name="TxtWallpaperName" Grid.Column="1" Text="Padrão" Foreground="#A1A1AA" FontSize="11" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
-                                    <TextBlock x:Name="IconWpCheck" Grid.Column="2" Text="✔" Foreground="#4EDEA3" FontWeight="Bold" FontSize="12" Margin="6,0,0,0" VerticalAlignment="Center" Visibility="Collapsed"/>
+                                    <TextBlock x:Name="IconWpCheck" Grid.Column="2" Text="OK" Foreground="#4EDEA3" FontWeight="Bold" FontSize="12" Margin="6,0,0,0" VerticalAlignment="Center" Visibility="Collapsed"/>
                                 </Grid>
                             </StackPanel>
                         </Border>
@@ -363,11 +380,7 @@
                             </Grid.ColumnDefinitions>
                             
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                <TextBlock Text="⚡" FontSize="14" Foreground="#00E5FF" Margin="0,0,8,0" VerticalAlignment="Center"/>
                                 <TextBlock Text="Histórico de Execução" Foreground="#E2DDFE" FontSize="14" FontWeight="Bold" VerticalAlignment="Center"/>
-                                <Border Background="#1C1836" CornerRadius="6" Padding="7,2" Margin="10,0,0,0" BorderBrush="#513BA6" BorderThickness="1">
-                                    <TextBlock Text="LOGS EM TEMPO REAL" Foreground="#4EDEA3" FontSize="10" FontWeight="Bold"/>
-                                </Border>
                             </StackPanel>
                             
                             <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
@@ -448,11 +461,8 @@
                                 </Grid.ColumnDefinitions>
 
                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                    <Border Width="38" Height="38" CornerRadius="8" Background="#281A54" BorderBrush="#513BA6" BorderThickness="1.5" Margin="0,0,12,0">
-                                        <TextBlock Text="📱" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                    </Border>
                                     <StackPanel VerticalAlignment="Center">
-                                        <TextBlock Text="GESTÃO DO APPARELHO" Foreground="#FFFFFF" FontSize="14" FontWeight="Bold"/>
+                                        <TextBlock Text="GESTÃO DO APARELHO" Foreground="#FFFFFF" FontSize="14" FontWeight="Bold"/>
                                         <TextBlock Text="Hardware, aplicativos, rede e personalização do tablet" Foreground="#9C8BE0" FontSize="11" FontWeight="SemiBold"/>
                                     </StackPanel>
                                 </StackPanel>
@@ -465,7 +475,6 @@
                                         </Style>
                                     </Button.Resources>
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                        <TextBlock Text="✕" Foreground="#FF4D4D" FontWeight="Black" FontSize="13" Margin="0,0,8,0"/>
                                         <TextBlock Text="Sair da Gestão do Aparelho" Foreground="#FFFFFF" FontWeight="Bold" FontSize="12"/>
                                     </StackPanel>
                                 </Button>
@@ -481,7 +490,6 @@
                                 </Grid.ColumnDefinitions>
                                 <Button Grid.Column="0" Tag="11,1,2,5,10" Click="BtnGestaoProfile_Click" Height="42" Margin="0,0,5,0" Background="#281A54" BorderBrush="#00E5FF" BorderThickness="1.5" Cursor="Hand" ToolTip="Blindagem + camera + config + modo restrito + barra, em sequencia">
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center">
-                                        <TextBlock Text="🛡️" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
                                         <StackPanel VerticalAlignment="Center">
                                             <TextBlock Text="Blindar Tudo" Foreground="#FFFFFF" FontWeight="Bold" FontSize="12"/>
                                             <TextBlock Text="perfil completo em 1 clique" Foreground="#00E5FF" FontSize="9"/>
@@ -490,7 +498,6 @@
                                 </Button>
                                 <Button Grid.Column="1" Tag="12,3,4,6" Click="BtnGestaoProfile_Click" Height="42" Margin="5,0,0,0" Background="#143024" BorderBrush="#4EDEA3" BorderThickness="1.5" Cursor="Hand" ToolTip="Reativa apps + libera camera, config e modo restrito, em sequencia">
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center">
-                                        <TextBlock Text="🔄" FontSize="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
                                         <StackPanel VerticalAlignment="Center">
                                             <TextBlock Text="Restaurar Tudo" Foreground="#FFFFFF" FontWeight="Bold" FontSize="12"/>
                                             <TextBlock Text="desfaz tudo em 1 clique" Foreground="#4EDEA3" FontSize="9"/>
@@ -518,7 +525,6 @@
 
                                     <Border Grid.Row="0" Background="#141126" CornerRadius="8" Padding="10,7" Margin="0,0,0,8" BorderBrush="#513BA6" BorderThickness="1">
                                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                            <TextBlock Text="🔒" FontSize="14" Margin="0,0,8,0" VerticalAlignment="Center"/>
                                             <TextBlock Text="CONTROLE DE ACESSO" Foreground="#D2BBFF" FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
                                         </StackPanel>
                                     </Border>
@@ -533,7 +539,7 @@
                                                         <ColumnDefinition Width="Auto"/>
                                                     </Grid.ColumnDefinitions>
                                                     <StackPanel VerticalAlignment="Center">
-                                                        <TextBlock Text="📷 Câmera" Foreground="#FFFFFF" FontWeight="Bold" FontSize="11"/>
+                                                        <TextBlock Text="Câmera" Foreground="#FFFFFF" FontWeight="Bold" FontSize="11"/>
                                                         <TextBlock Text="Bloqueia os aplicativos de foto e vídeo" Foreground="#85859E" FontSize="9" Margin="0,2,0,0"/>
                                                     </StackPanel>
                                                     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
@@ -551,7 +557,7 @@
                                                         <ColumnDefinition Width="Auto"/>
                                                     </Grid.ColumnDefinitions>
                                                     <StackPanel VerticalAlignment="Center">
-                                                        <TextBlock Text="⚙️ Configurações" Foreground="#FFFFFF" FontWeight="Bold" FontSize="11"/>
+                                                        <TextBlock Text="Configurações" Foreground="#FFFFFF" FontWeight="Bold" FontSize="11"/>
                                                         <TextBlock Text="Restringe o menu de Configurações do sistema" Foreground="#85859E" FontSize="9" Margin="0,2,0,0"/>
                                                     </StackPanel>
                                                     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
@@ -569,7 +575,7 @@
                                                         <ColumnDefinition Width="Auto"/>
                                                     </Grid.ColumnDefinitions>
                                                     <StackPanel VerticalAlignment="Center">
-                                                        <TextBlock Text="🛑 Modo Restrito" Foreground="#FFFFFF" FontWeight="Bold" FontSize="11"/>
+                                                        <TextBlock Text="Modo Restrito" Foreground="#FFFFFF" FontWeight="Bold" FontSize="11"/>
                                                         <TextBlock Text="Trava conjunta em Câmera + Configurações" Foreground="#85859E" FontSize="9" Margin="0,2,0,0"/>
                                                     </StackPanel>
                                                     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
@@ -582,7 +588,6 @@
                                             <!-- SEPARADOR DE GRUPO -->
                                             <Border Background="#141126" CornerRadius="8" Padding="10,7" Margin="0,4,0,8" BorderBrush="#513BA6" BorderThickness="1">
                                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                    <TextBlock Text="🛡️" FontSize="14" Margin="0,0,8,0" VerticalAlignment="Center"/>
                                                     <TextBlock Text="APLICATIVOS" Foreground="#D2BBFF" FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
                                                 </StackPanel>
                                             </Border>
@@ -595,7 +600,7 @@
                                                         <ColumnDefinition Width="Auto"/>
                                                     </Grid.ColumnDefinitions>
                                                     <StackPanel VerticalAlignment="Center">
-                                                        <TextBlock Text="🛡️ Blindagem de Apps" Foreground="#FFFFFF" FontWeight="Bold" FontSize="11"/>
+                                                        <TextBlock Text="Blindagem de Apps" Foreground="#FFFFFF" FontWeight="Bold" FontSize="11"/>
                                                         <TextBlock Text="Desativa e remove bloatwares do sistema" Foreground="#85859E" FontSize="9" Margin="0,2,0,0"/>
                                                     </StackPanel>
                                                     <Button Grid.Column="1" Tag="11" Click="BtnGestaoAction_Click" Content="Aplicar" Width="76" Height="28" Background="#281A54" Foreground="#FFFFFF" BorderBrush="#00E5FF" BorderThickness="1" Cursor="Hand" FontWeight="Bold" FontSize="10" VerticalAlignment="Center"/>
@@ -610,7 +615,7 @@
                                                         <ColumnDefinition Width="Auto"/>
                                                     </Grid.ColumnDefinitions>
                                                     <StackPanel VerticalAlignment="Center">
-                                                        <TextBlock Text="🔄 Restauração" Foreground="#FFFFFF" FontWeight="Bold" FontSize="11"/>
+                                                        <TextBlock Text="Restauração" Foreground="#FFFFFF" FontWeight="Bold" FontSize="11"/>
                                                         <TextBlock Text="Reativa todos os pacotes do sistema" Foreground="#85859E" FontSize="9" Margin="0,2,0,0"/>
                                                     </StackPanel>
                                                     <Button Grid.Column="1" Tag="12" Click="BtnGestaoAction_Click" Content="Reativar" Width="76" Height="28" Background="#143024" Foreground="#FFFFFF" BorderBrush="#4EDEA3" BorderThickness="1" Cursor="Hand" FontWeight="Bold" FontSize="10" VerticalAlignment="Center"/>
@@ -631,8 +636,7 @@
 
                                     <Border Grid.Row="0" Background="#141126" CornerRadius="8" Padding="10,7" Margin="0,0,0,8" BorderBrush="#513BA6" BorderThickness="1">
                                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                            <TextBlock Text="🎨" FontSize="14" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                                            <TextBlock Text="PERSONIZAÇÃO E REDE" Foreground="#D2BBFF" FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
+                                            <TextBlock Text="PERSONALIZAÇÃO E REDE" Foreground="#D2BBFF" FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
                                         </StackPanel>
                                     </Border>
 
@@ -646,7 +650,7 @@
                                                         <ColumnDefinition Width="Auto"/>
                                                     </Grid.ColumnDefinitions>
                                                     <StackPanel VerticalAlignment="Center">
-                                                        <TextBlock Text="🖼️ Papel de Parede" Foreground="#FFFFFF" FontWeight="Bold" FontSize="11"/>
+                                                        <TextBlock Text="Papel de Parede" Foreground="#FFFFFF" FontWeight="Bold" FontSize="11"/>
                                                         <TextBlock Text="Aplica o wallpaper configurado do município" Foreground="#85859E" FontSize="9" Margin="0,2,0,0"/>
                                                     </StackPanel>
                                                     <Button Grid.Column="1" Tag="7" Click="BtnGestaoAction_Click" Content="Aplicar" Width="76" Height="28" Background="#161830" Foreground="#D2BBFF" BorderBrush="#8570E6" BorderThickness="1" Cursor="Hand" FontWeight="Bold" FontSize="10" VerticalAlignment="Center"/>
@@ -661,7 +665,7 @@
                                                         <ColumnDefinition Width="Auto"/>
                                                     </Grid.ColumnDefinitions>
                                                     <StackPanel VerticalAlignment="Center">
-                                                        <TextBlock Text="🌐 Internet USB" Foreground="#FFFFFF" FontWeight="Bold" FontSize="11"/>
+                                                        <TextBlock Text="Internet USB" Foreground="#FFFFFF" FontWeight="Bold" FontSize="11"/>
                                                         <TextBlock Text="Compartilha a internet do PC via cabo USB" Foreground="#85859E" FontSize="9" Margin="0,2,0,0"/>
                                                     </StackPanel>
                                                     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
@@ -679,7 +683,7 @@
                                                         <ColumnDefinition Width="Auto"/>
                                                     </Grid.ColumnDefinitions>
                                                     <StackPanel VerticalAlignment="Center">
-                                                        <TextBlock Text="🧹 Barra de Pesquisa" Foreground="#FFFFFF" FontWeight="Bold" FontSize="11"/>
+                                                        <TextBlock Text="Barra de Pesquisa" Foreground="#FFFFFF" FontWeight="Bold" FontSize="11"/>
                                                         <TextBlock Text="Remove a barra de busca da tela inicial" Foreground="#85859E" FontSize="9" Margin="0,2,0,0"/>
                                                     </StackPanel>
                                                     <Button Grid.Column="1" Tag="10" Click="BtnGestaoAction_Click" Content="Ocultar" Width="72" Height="28" Background="#1E1C12" Foreground="#FFE699" BorderBrush="#FFC107" BorderThickness="1" Cursor="Hand" FontWeight="Bold" FontSize="10" VerticalAlignment="Center"/>
@@ -751,7 +755,7 @@
                     <!-- Seletor de Categoria de Modelo (Segmented Pill) -->
                     <Border Grid.Column="0" Background="#0C0C16" CornerRadius="8" Padding="3" BorderBrush="#222236" BorderThickness="1">
                         <StackPanel Orientation="Horizontal">
-                            <Button x:Name="BtnCategoryPositivo" Content="📱 Positivo Tab Vision 7" Padding="12,5" Click="BtnCategoryPositivo_Click" FontWeight="Bold" FontSize="11" Cursor="Hand">
+                            <Button x:Name="BtnCategoryPositivo" Content="Positivo Tab Vision 7" Padding="12,5" Click="BtnCategoryPositivo_Click" FontWeight="Bold" FontSize="11" Cursor="Hand">
                                 <Button.Style>
                                     <Style TargetType="Button">
                                         <Setter Property="Background" Value="#513BA6"/>
@@ -772,7 +776,7 @@
                                 </Button.Style>
                             </Button>
 
-                            <Button x:Name="BtnCategoryMultilaser" Content="📱 Multilaser Tab-Multi" Padding="12,5" Click="BtnCategoryMultilaser_Click" FontWeight="Bold" FontSize="11" Cursor="Hand">
+                            <Button x:Name="BtnCategoryMultilaser" Content="Multilaser Tab-Multi" Padding="12,5" Click="BtnCategoryMultilaser_Click" FontWeight="Bold" FontSize="11" Cursor="Hand">
                                 <Button.Style>
                                     <Style TargetType="Button">
                                         <Setter Property="Background" Value="Transparent"/>
@@ -793,7 +797,7 @@
                                 </Button.Style>
                             </Button>
 
-                            <Button x:Name="BtnCategoryNokia" Content="📱 Nokia T20 (Android 11)" Padding="12,5" Click="BtnCategoryNokia_Click" FontWeight="Bold" FontSize="11" Cursor="Hand">
+                            <Button x:Name="BtnCategoryNokia" Content="Nokia T20 (Android 11)" Padding="12,5" Click="BtnCategoryNokia_Click" FontWeight="Bold" FontSize="11" Cursor="Hand">
                                 <Button.Style>
                                     <Style TargetType="Button">
                                         <Setter Property="Background" Value="Transparent"/>
@@ -818,7 +822,7 @@
 
                     <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
                         <Border Background="#241217" BorderBrush="#FF4D4D" BorderThickness="1" CornerRadius="6" Padding="8,4">
-                            <TextBlock Text="🛑 Parada Geral: Pressione ESC / ESPAÇO a qualquer momento" Foreground="#FFA3A3" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                            <TextBlock Text="Parada Geral: Pressione ESC / ESPAÇO a qualquer momento" Foreground="#FFA3A3" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center"/>
                         </Border>
                     </StackPanel>
                 </Grid>
@@ -833,7 +837,7 @@
                     <Button Content="[F5] Desligar Aparelhos" Style="{StaticResource F5Style}" Click="BtnF5_Click"/>
                     <Button Content="[F6] Sincronização Avançada" Style="{StaticResource F6Style}" Click="BtnF6_Click"/>
                     <Button Content="[F8] Conexão Ativa (Gnirehtet)" Style="{StaticResource F8Style}" Click="BtnF8_Click"/>
-                    <Button Content="🛑 Parar [ESC / ESPAÇO]" Style="{StaticResource StopStyle}" Click="BtnStop_Click"/>
+                    <Button Content="Parar [ESC / ESPAÇO]" Style="{StaticResource StopStyle}" Click="BtnStop_Click"/>
                 </UniformGrid>
 
                 <!-- Ações Multilaser (Multilaser Tab-Multi) -->
@@ -843,7 +847,7 @@
                     <Button Content="[F3] Terminal (Gestão do Aparelho)" Style="{StaticResource F4Style}" Click="BtnM7_F3_Click"/>
                     <Button Content="[F4] Desligar Aparelhos" Style="{StaticResource F5Style}" Click="BtnM7_F4_Click"/>
                     <Button Content="[F5] Login + Sinc 30s + Shutdown" Style="{StaticResource F6Style}" Click="BtnM7_F5_Click"/>
-                    <Button Content="🛑 Parar [ESC / ESPAÇO]" Style="{StaticResource StopStyle}" Click="BtnStop_Click"/>
+                    <Button Content="Parar [ESC / ESPAÇO]" Style="{StaticResource StopStyle}" Click="BtnStop_Click"/>
                 </UniformGrid>
 
                 <!-- Ações Nokia (Nokia T20 Android 11) -->
@@ -851,7 +855,7 @@
                     <Button Content="[F1] Sincronização + Instalação" Style="{StaticResource F1Style}" Click="BtnF1_Click"/>
                     <Button Content="[F2] Reinstalação (Preserva Apps)" Style="{StaticResource F2Style}" Click="BtnNokiaF2_Click"/>
                     <Button Content="[F3] Atualizar Pacote" Style="{StaticResource F3Style}" Click="BtnNokiaF3_Click"/>
-                    <Button Content="🛑 Parar [ESC / ESPAÇO]" Style="{StaticResource StopStyle}" Click="BtnStop_Click"/>
+                    <Button Content="Parar [ESC / ESPAÇO]" Style="{StaticResource StopStyle}" Click="BtnStop_Click"/>
                 </UniformGrid>
 
             </Grid>
