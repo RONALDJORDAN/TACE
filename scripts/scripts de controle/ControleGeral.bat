@@ -15,9 +15,9 @@ color 0B
 ::
 ::  Uso:
 ::    Duplo clique ............ menu interativo
-::    ControleGeral.bat 1..8 ... executa modo direto (sem pausas)
+::    ControleGeral.bat 1..9 ... executa modo direto (sem pausas)
 ::    ControleGeral.bat build ^| release ^| installer ^| deps ^| adb ^| monitor ^|
-::                            tools ^| ajuda
+::                            tools ^| registros ^| ajuda
 ::    ControleGeral.bat 0 ...... sai
 ::
 ::  Sub-lanchonetes dev (ferramentas auxiliares .ps1/py) ficam em scripts\scripts de teste
@@ -43,6 +43,7 @@ if "%~1"=="5" goto adb_setup
 if "%~1"=="6" goto monitor_mode
 if "%~1"=="7" goto tools_menu
 if /i "%~1"=="8" goto help
+if "%~1"=="9" goto enviar_registros_menu
 if /i "%~1"=="help" goto help
 if /i "%~1"=="ajuda" goto help
 if /i "%~1"=="build" goto build_teste
@@ -52,39 +53,47 @@ if /i "%~1"=="deps" goto deps
 if /i "%~1"=="adb" goto adb_setup
 if /i "%~1"=="monitor" goto monitor_mode
 if /i "%~1"=="tools" goto tools_menu
+if /i "%~1"=="registros" goto enviar_registros_menu
+if /i "%~1"=="enviar" goto enviar_registros_menu
+if /i "%~1"=="logs" goto enviar_registros_menu
 if "%~1"=="0" goto goodbye
 echo.
 echo [ERRO] Opcao invalida: '%~1'
-echo        Use 1-8 (ou 0 para sair). Ex: ControleGeral.bat 1
+echo        Use 0-9 (ou 0 para sair). Ex: ControleGeral.bat 1
 exit /b 1
 
 :: --------------------------------------------------------------------------
 :main_menu
 cls
 echo.
-echo ========================================================
-echo    Plataforma Bot_RPA - CONTROLE GERAL
-echo ========================================================
-echo    Raiz .....: %ROOT_DIR%
+echo  ==============================================================
+echo    BOT_RPA  ::  PLATAFORMA DE AUTOMACAO
+echo  ==============================================================
+echo    Raiz     : %ROOT_DIR%
 call :read_version
-echo    Versao ...: %VER_TXT%
+echo    Versao   : %VER_TXT%
 call :read_tool_status
-echo    GCC ......: %GCC_ST%
-echo    dotnet ...: %DOTNET_ST%
-echo ========================================================
-echo    [1] Build TESTE      - motor C + UI em data\output
-echo    [2] Build RELEASE    - pacote portatil PnP (BotRPA_Release)
-echo    [3] Build INSTALADOR - setup.exe via Inno Setup
-echo    [4] Instalar Dependencias (GCC + .NET 8 SDK)
-echo    [5] Baixar ADB (Google platform-tools)
-echo    [6] Monitor Continuo de Tela (ADB)
-echo    [7] Ferramentas Dev (gravador fluxo, XML, dispositivos)
-echo    [8] Ajuda / Detalhes
-echo    [0] Sair
-echo ========================================================
+echo    Ambiente : GCC %GCC_ST%   ^|   .NET %DOTNET_ST%
+echo  --------------------------------------------------------------
+echo    BUILD
+echo      [1] Teste .................. motor C + UI em data\output
+echo      [2] Release ................ pacote portatil BotRPA_Release
+echo      [3] Instalador ............. setup.exe via Inno Setup
+echo      [4] Dependencias ........... GCC + .NET 8 SDK
+echo  --------------------------------------------------------------
+echo    OPERACAO
+echo      [5] ADB .................... baixar platform-tools
+echo      [6] Monitor de tela ........ captura continua via ADB
+echo      [7] Ferramentas dev ........ fluxo, XML e dispositivos
+echo      [8] Ajuda .................. detalhes e auditoria
+echo      [9] Enviar registros ....... zipar docs\registros + logs
+echo  --------------------------------------------------------------
+echo      [0] Sair
+echo  ==============================================================
+echo.
 set "ESCOLHA="
-set /p ESCOLHA="    Opcao: "
-if "%ESCOLHA%"=="" ( echo    Opcao vazia. Tente de novo. & goto main_menu )
+set /p ESCOLHA="  Opcao: "
+if "%ESCOLHA%"=="" ( echo    ^> Opcao vazia. Tente novamente. & timeout /t 1 >nul & goto main_menu )
 if "%ESCOLHA%"=="0" goto goodbye
 call :dispatch "%ESCOLHA%"
 if errorlevel 1 (
@@ -128,6 +137,8 @@ if %GCC_ERR% neq 0 (
 
 :: Compilar a Interface Grafica em C# WPF (.NET 8)
 echo [*] Compilando BotRpaUI (C# WPF) Self-Contained Offline...
+:: Reforca o encerramento da UI (pode ter sido reaberta durante o build)
+taskkill /F /IM BotRPAui.exe /T 2>nul
 cd /d "%ROOT_DIR%\src\ui"
 >> "..\..\%AUDIT_DIR%\build.log" echo --- dotnet publish ---
 "C:\Program Files\dotnet\dotnet.exe" publish BotRpaUI.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o ..\..\data\output\ >> "..\..\%AUDIT_DIR%\build.log" 2>&1
@@ -157,8 +168,12 @@ echo [+] Compilacao concluida com sucesso!
 echo [+] Motor     : data\output\BotEngine.dll
 echo [+] Interface : data\output\BotRPAui.exe
 echo [+] Auditoria : %AUDIT_DIR%
+
+:: Pergunta se deseja enviar os registros atuais (somente build TESTE avulso)
+if /i not "%BUILD_MODE%"=="RELEASE" call :perguntar_enviar_registros
+
 call :pause_if_interativo
-goto :eof
+exit /b 0
 
 :: --------------------------------------------------------------------------
 :build_release
@@ -172,19 +187,29 @@ echo ========================================================
 set "BUILD_MODE=RELEASE"
 call :build_teste
 set "BUILD_MODE="
+if errorlevel 1 (
+    echo.
+    echo [ERRO] Build TESTE falhou. Build RELEASE cancelado.
+    call :pause_if_interativo
+    exit /b 1
+)
 
-:: 2. Prepara a pasta de Release
+:: 2. Assina os binarios antes de empacotar (o release e o instalador herdam)
+call :sign_file "data\output\BotRPAui.exe"
+call :sign_file "data\output\BotEngine.dll"
+
+:: 3. Prepara a pasta de Release
 set "RELEASE_DIR=BotRPA_Release"
 echo [*] Criando pasta de Release: %RELEASE_DIR%
 if exist "%RELEASE_DIR%" rmdir /s /q "%RELEASE_DIR%"
 mkdir "%RELEASE_DIR%"
 
-:: 3. Copia Executavel e Motor DLL
+:: 4. Copia Executavel e Motor DLL
 echo [*] Copiando binarios...
 copy /y "data\output\BotRPAui.exe"  "%RELEASE_DIR%\" >nul
 copy /y "data\output\BotEngine.dll" "%RELEASE_DIR%\" >nul
 
-:: 4. Copia Dependencias Estruturais (SEM tools\mingw64)
+:: 5. Copia Dependencias Estruturais (SEM tools\mingw64)
 echo [*] Copiando pasta config e tools...
 xcopy /s /i /y "config" "%RELEASE_DIR%\config" >nul
 mkdir "%RELEASE_DIR%\tools" 2>nul
@@ -193,7 +218,7 @@ if exist "tools\reverse_tethering" xcopy /s /e /i /y "tools\reverse_tethering" "
 if exist "tools\mac_address_finder.apk" copy /y "tools\mac_address_finder.apk" "%RELEASE_DIR%\tools\" >nul
 echo [+][OK] Tools copiadas (platform-tools + reverse_tethering + mac_address_finder.apk, sem mingw64).
 
-:: 5. Banco de dados do sistema COM os registros dos aparelhos (ordem explicita
+:: 6. Banco de dados do sistema COM os registros dos aparelhos (ordem explicita
 :: do usuario em 28/09/2026)
 echo [*] Embarcando banco de dados com os registros dos aparelhos...
 mkdir "%RELEASE_DIR%\data" 2>nul
@@ -211,12 +236,12 @@ if exist "data\output\data\bot_learn.json" (
     copy /y "data\bot_learn.json" "%RELEASE_DIR%\data\" >nul
 )
 
-:: 6. Pastas de sistema (logs de runtime + registros do app)
+:: 7. Pastas de sistema (logs de runtime + registros do app)
 echo [*] Criando pastas de sistema...
 mkdir "%RELEASE_DIR%\logs" 2>nul
 mkdir "%RELEASE_DIR%\docs\registros" 2>nul
 
-:: 7. Pacotes de municipios, APKs e Arquivos organizados
+:: 8. Pacotes de municipios, APKs e Arquivos organizados
 echo [*] Copiando municipios, APKs e Arquivos...
 mkdir "%RELEASE_DIR%\data\input\municipios" 2>nul
 mkdir "%RELEASE_DIR%\data\input\apps" 2>nul
@@ -230,7 +255,7 @@ if exist "Arquivos" (
     echo [+][OK] Diretorio Arquivos copiado.
 )
 
-:: 8. Seed publico de municipios (SEM credenciais: cofre DPAPI e por maquina)
+:: 9. Seed publico de municipios (SEM credenciais: cofre DPAPI e por maquina)
 if not exist "%RELEASE_DIR%\municipios.csv" (
     if exist "config\municipios.csv" copy /y "config\municipios.csv" "%RELEASE_DIR%\municipios.csv" >nul
 )
@@ -252,10 +277,33 @@ echo ========================================================
 echo    [3] BUILD INSTALADOR - Inno Setup
 echo ========================================================
 
-:: 1. Valida o pacote portatil
+:: 1. Valida o pacote portatil (gera automaticamente se necessario/desatualizado)
+set "RELEASE_VER="
+if exist "BotRPA_Release\config\version.txt" set /p RELEASE_VER=<"BotRPA_Release\config\version.txt"
+set "CURRENT_VER="
+if exist "config\version.txt" set /p CURRENT_VER=<"config\version.txt"
+
+if not exist "BotRPA_Release\BotRPAui.exe" (
+    echo [*] Pacote Release ausente. Executando Build RELEASE primeiro...
+    call :build_release
+    if errorlevel 1 (
+        echo [ERRO] Build RELEASE falhou. Instalador cancelado.
+        call :pause_if_interativo
+        exit /b 1
+    )
+) else if /i not "!RELEASE_VER!"=="!CURRENT_VER!" (
+    echo [i] Pacote Release desatualizado: !RELEASE_VER! / atual !CURRENT_VER!. Recompilando...
+    call :build_release
+    if errorlevel 1 (
+        echo [ERRO] Build RELEASE falhou. Instalador cancelado.
+        call :pause_if_interativo
+        exit /b 1
+    )
+)
+
 if not exist "BotRPA_Release\BotRPAui.exe" (
     echo [ERRO] Pacote nao encontrado: BotRPA_Release\BotRPAui.exe
-    echo        Rode antes a opcao [2] Build RELEASE.
+    echo        Rode a opcao [2] Build RELEASE manualmente.
     call :pause_if_interativo
     exit /b 1
 )
@@ -314,6 +362,9 @@ if not exist "!SETUP!" (
     call :pause_if_interativo
     exit /b 1
 )
+
+:: Assinar instalador (se certificado configurado)
+call :sign_file "!SETUP!"
 
 echo.
 echo [OK] Instalador gerado: !SETUP!
@@ -537,6 +588,17 @@ if "%ADB_ERR%" neq "0" exit /b %ADB_ERR%
 goto :eof
 
 :: --------------------------------------------------------------------------
+:enviar_registros_menu
+cd /d "%ROOT_DIR%"
+echo.
+echo ========================================================
+echo    [9] ENVIAR REGISTROS - docs\registros + logs
+echo ========================================================
+call :enviar_registros
+call :pause_if_interativo
+goto :eof
+
+:: --------------------------------------------------------------------------
 :help
 cls
 echo.
@@ -555,10 +617,12 @@ echo    ControleGeral.bat 5 ................ Baixar ADB
 echo    ControleGeral.bat 6 ................ Monitor continuo de tela
 echo    ControleGeral.bat 7 ................ Ferramentas Dev
 echo    ControleGeral.bat 8 ................ Esta ajuda
+echo    ControleGeral.bat 9 ................ Enviar registros (ZIP)
 echo    ControleGeral.bat 0 ................ Sair
 echo.
 echo  Nomes textuais equivalentes:
-echo    build ^| release ^| installer ^| deps ^| adb ^| monitor ^| tools ^| ajuda
+echo    build ^| release ^| installer ^| deps ^| adb ^| monitor ^| tools ^|
+echo    registros ^| ajuda
 echo.
 echo  AUDITORIA DE BUILD:
 echo    docs\registros\YYYY-MM-DD\HH-MM_Plataforma_BotRPA_DESKTOP_BUILD
@@ -641,4 +705,91 @@ goto :eof
 
 :pause_if_interativo
 if "%INTERATIVO%"=="1" pause
+goto :eof
+
+:: ==========================================================================
+::  SUB-ROTINA: ASSINATURA DE CODIGO (SignTool)
+::  Variaveis de ambiente opcionais:
+::    BOTRPA_SIGN_CERT   = caminho para o arquivo .pfx do certificado
+::    BOTRPA_SIGN_PASSWORD = senha do certificado .pfx
+::  Se nao encontrar o SignTool ou o certificado, pula a assinatura com aviso.
+:: ==========================================================================
+:sign_file
+set "FILE_TO_SIGN=%~1"
+if not exist "%FILE_TO_SIGN%" goto :eof
+
+:: Assinatura desativada quando nao ha certificado configurado
+if "!BOTRPA_SIGN_CERT!"=="" (
+    if not defined SIGN_SKIP_NOTICE (
+        echo [i] Assinatura de codigo desativada - defina BOTRPA_SIGN_CERT para assinar.
+        set "SIGN_SKIP_NOTICE=1"
+    )
+    goto :eof
+)
+if not exist "!BOTRPA_SIGN_CERT!" (
+    echo [AVISO] Certificado nao encontrado: !BOTRPA_SIGN_CERT! - pulando assinatura de "%FILE_TO_SIGN%"
+    goto :eof
+)
+
+:: Localiza o SignTool do Windows SDK
+set "SIGNTOOL="
+for %%P in (
+    "%ProgramFiles(x86)%\Windows Kits\10\bin\x64\signtool.exe"
+    "%ProgramFiles(x86)%\Windows Kits\10\bin\x86\signtool.exe"
+    "%ProgramFiles%\Windows Kits\10\bin\x64\signtool.exe"
+    "%ProgramFiles(x86)%\Windows Kits\8.1\bin\x64\signtool.exe"
+    "%ProgramFiles(x86)%\Windows Kits\8.1\bin\x86\signtool.exe"
+) do if exist %%P if not defined SIGNTOOL set "SIGNTOOL=%%~P"
+
+if "!SIGNTOOL!"=="" (
+    echo [AVISO] SignTool nao encontrado - pulando assinatura de "%FILE_TO_SIGN%"
+    goto :eof
+)
+
+echo [*] Assinando "%FILE_TO_SIGN%"...
+if "!BOTRPA_SIGN_PASSWORD!"=="" (
+    "!SIGNTOOL!" sign /f "!BOTRPA_SIGN_CERT!" /t http://timestamp.digicert.com "%FILE_TO_SIGN%" >nul 2>&1
+) else (
+    "!SIGNTOOL!" sign /f "!BOTRPA_SIGN_CERT!" /p "!BOTRPA_SIGN_PASSWORD!" /t http://timestamp.digicert.com "%FILE_TO_SIGN%" >nul 2>&1
+)
+if %errorlevel% neq 0 (
+    echo [AVISO] Falha ao assinar "%FILE_TO_SIGN%" - continuando sem assinatura
+)
+goto :eof
+
+:: ==========================================================================
+::  SUB-ROTINA: PERGUNTAR ENVIO DE REGISTROS
+::  Pergunta se o usuario deseja enviar/zipar os registros atuais
+::  (docs\registros + logs) apos o build.
+:: ==========================================================================
+:perguntar_enviar_registros
+if "%INTERATIVO%"=="0" goto :eof
+set "ENVIAR="
+set /p ENVIAR="    Deseja enviar os registros atuais (docs\registros + logs)? (S/N): "
+if /i "!ENVIAR!"=="S" (
+    call :enviar_registros
+) else if /i "!ENVIAR!"=="N" (
+    echo    Registros nao enviados.
+) else (
+    echo    Opcao invalida. Registros nao enviados.
+)
+goto :eof
+
+:enviar_registros
+cd /d "%ROOT_DIR%"
+set "DATA=%date:~6,4%-%date:~3,2%-%date:~0,2%_%time:~0,2%-%time:~3,2%-%time:~6,2%"
+set "DATA=%DATA: =0%"
+set "ZIP_NAME=RegistrosBotRPA_%DATA%.zip"
+set "ZIP_PATH=%TEMP%\%ZIP_NAME%"
+
+echo    Compactando registros em %ZIP_NAME%...
+powershell -NoProfile -Command "Compress-Archive -Path 'docs\registros','logs' -DestinationPath '%ZIP_PATH%' -Force" >nul 2>&1
+
+if exist "%ZIP_PATH%" (
+    echo    Registros compactados em: %ZIP_PATH%
+    echo    Abrindo pasta de downloads para voce enviar o arquivo...
+    explorer "%TEMP%"
+) else (
+    echo    [!] Falha ao compactar registros.
+)
 goto :eof

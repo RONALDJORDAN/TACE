@@ -146,6 +146,13 @@ DllExport int Engine_ExecuteF1_Positivo(const char* serial, const char* apk_path
     return V7_ExecutarPipelineCompleto(serial, apk_path, pacote_path, wp_path, package_name, login, senha, municipio, cb);
 }
 
+// [Registro] Desligamento seguro (mesma rotina da Etapa 7 do F1)
+DllExport int Engine_ShutdownDeviceClean(const char* serial, LogCallback cb) {
+    if (!serial) return PIPELINE_ERROR;
+    if (cb) cb("[Registro] Iniciando desligamento seguro (rotina F1 - Etapa 7)...");
+    return V7_Etapa7_PowerOff(serial, cb);
+}
+
 // [Automação] F1: Instalação Nokia T20
 DllExport int Engine_ExecuteF1_NokiaT20(const char* serial, const char* apk_path, const char* pacote_path, const char* wp_path, const char* package_name, const char* login, const char* senha, const char* municipio, LogCallback cb) {
     return T20_ExecutarPipelineCompleto(serial, apk_path, pacote_path, wp_path, package_name, login, senha, municipio, cb);

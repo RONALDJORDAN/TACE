@@ -436,7 +436,7 @@ namespace BotRpaUI.Core
             lock (_cacheLock)
             {
                 var cache = GetSerialCache();
-                if (cache.Contains(serial))
+                            if (cache.Contains(serial))
                 {
                     // Se o aparelho já está cadastrado no cache, mas agora temos um MAC válido (17 caracteres)
                     // e o banco pode estar com MAC 'N/A', '---' ou vazio:
@@ -458,6 +458,7 @@ namespace BotRpaUI.Core
                                 cmd.ExecuteNonQuery();
                             }
                             SincronizarCsv();
+                            AuditLogManager.GravarDispositivo("ATUALIZAR_MAC", serial, "", mac, "MAC preenchido automaticamente");
                         }
                         catch { }
                     }
@@ -516,6 +517,7 @@ namespace BotRpaUI.Core
                     }
                     cache.Add(serial);
                     if (!string.IsNullOrEmpty(mac) && mac.Length == 17) SincronizarCsv();
+                    AuditLogManager.GravarDispositivo("CADASTRAR", serial, "", mac, "Novo dispositivo cadastrado");
                 }
                 catch { }
             }
@@ -738,6 +740,8 @@ namespace BotRpaUI.Core
                             pSerial.Value = d.Serial ?? string.Empty;
                             pId.Value = d.ID;
                             cmd.ExecuteNonQuery();
+                            AuditLogManager.GravarDispositivo("ATUALIZAR_DISPOSITIVO", d.Serial ?? string.Empty, d.Patrimonio ?? string.Empty, d.MAC ?? string.Empty,
+                                $"Salvo em lote (ID={d.ID}, Fabricante={d.Fabricante}, Modelo={d.Modelo})");
                         }
                         transaction.Commit();
                     }
@@ -754,6 +758,22 @@ namespace BotRpaUI.Core
         public static bool AtualizarPatrimonio(int id, string patrimonio)
         {
             if (!PatrimonioHelper.TryNormalizar(patrimonio, out string normalizado, out _)) return false;
+
+            string serialAntes = "";
+            try
+            {
+                using (var conn = new SqliteConnection(_connectionString))
+                {
+                    conn.Open();
+                    using (var cmd = conn.CreateCommand())
+                    {
+                        cmd.CommandText = "SELECT Serial FROM Dispositivos WHERE ID = $id";
+                        cmd.Parameters.AddWithValue("$id", id);
+                        serialAntes = cmd.ExecuteScalar() as string ?? string.Empty;
+                    }
+                }
+            }
+            catch { }
 
             try
             {
@@ -791,6 +811,7 @@ namespace BotRpaUI.Core
                     }
                 }
                 SincronizarCsv();
+                AuditLogManager.GravarDispositivo("ATUALIZAR_PATRIMONIO", serialAntes, normalizado, "", $"ID alterado de {id} para idFinal");
                 return true;
             }
             catch { return false; }
@@ -803,6 +824,30 @@ namespace BotRpaUI.Core
         {
             if (string.IsNullOrWhiteSpace(serial)) return false;
             if (!PatrimonioHelper.TryNormalizar(patrimonio, out string normalizado, out _)) return false;
+
+            string serialAntes = "";
+            string patrimonioAntes = "";
+            try
+            {
+                using (var conn = new SqliteConnection(_connectionString))
+                {
+                    conn.Open();
+                    using (var cmd = conn.CreateCommand())
+                    {
+                        cmd.CommandText = "SELECT Serial, Patrimonio FROM Dispositivos WHERE ID = $id";
+                        cmd.Parameters.AddWithValue("$id", id);
+                        using (var r = cmd.ExecuteReader())
+                        {
+                            if (r.Read())
+                            {
+                                serialAntes = r.IsDBNull(0) ? string.Empty : r.GetString(0);
+                                patrimonioAntes = r.IsDBNull(1) ? string.Empty : r.GetString(1);
+                            }
+                        }
+                    }
+                }
+            }
+            catch { }
 
             try
             {
@@ -852,6 +897,8 @@ namespace BotRpaUI.Core
                     }
                 }
                 SincronizarCsv();
+                AuditLogManager.GravarDispositivo("ATUALIZAR_DISPOSITIVO", serial, normalizado, mac ?? string.Empty,
+                    $"Antes: Serial={serialAntes}, Patrimonio={patrimonioAntes}. Depois: Serial={serial}, Patrimonio={normalizado}, Modelo={modelo}, MAC={mac}");
                 return true;
             }
             catch { return false; }
@@ -919,6 +966,22 @@ namespace BotRpaUI.Core
 
         public static void Excluir(int id)
         {
+            string serialExcluido = "";
+            try
+            {
+                using (var conn = new SqliteConnection(_connectionString))
+                {
+                    conn.Open();
+                    using (var cmd = conn.CreateCommand())
+                    {
+                        cmd.CommandText = "SELECT Serial FROM Dispositivos WHERE ID = $id";
+                        cmd.Parameters.AddWithValue("$id", id);
+                        serialExcluido = cmd.ExecuteScalar() as string ?? string.Empty;
+                    }
+                }
+            }
+            catch { }
+
             try
             {
                 using (var connection = new SqliteConnection(_connectionString))
@@ -929,6 +992,7 @@ namespace BotRpaUI.Core
                     cmd.Parameters.AddWithValue("$id", id);
                     cmd.ExecuteNonQuery();
                 }
+                AuditLogManager.GravarDispositivo("EXCLUIR", serialExcluido, "", "", $"Dispositivo excluido (ID={id})");
             }
             catch { }
         }
@@ -990,6 +1054,11 @@ namespace BotRpaUI.Core
                             cmd.Parameters.AddWithValue("$imei", "N/A");
                             cmd.Parameters.AddWithValue("$mac", mac);
                             cmd.ExecuteNonQuery();
+                            AuditLogManager.GravarDispositivo("CADASTRAR", serial, "", mac, $"Novo dispositivo via RegistrarOuAtualizarMAC (modelo={modelo})");
+                        }
+                        else
+                        {
+                            AuditLogManager.GravarDispositivo("ATUALIZAR_MAC", serial, "", mac, $"MAC atualizado (modelo={modelo})");
                         }
                     }
                     cache.Add(serial);

@@ -627,6 +627,7 @@ namespace BotRpaUI.Views
             BtnRegistrarPatrimonio.IsEnabled = false;
             BtnPularRegistro.IsEnabled = false;
             TxtRegistroSerial.Text = "-";
+            LimparReferenciaPortaUsb();
             TxtRegistroMac.Text = "-";
             TxtStatusRegistroSerie.Text = "Monitorando tablets conectados...";
             TxtContadorRegistroSerie.Text = "0 registrados";
@@ -777,6 +778,7 @@ namespace BotRpaUI.Views
                     if (!string.IsNullOrWhiteSpace(conectado.Modelo)) item.Modelo = conectado.Modelo;
                     if (!string.IsNullOrWhiteSpace(conectado.Fabricante)) item.Fabricante = conectado.Fabricante;
                     if (!string.IsNullOrWhiteSpace(conectado.PortaUsb)) item.PortaUsb = conectado.PortaUsb;
+                    if (ReferenceEquals(item, _registroAtual)) AtualizarReferenciaPortaUsb(item);
 
                     if (BotRpaUI.Core.MacCaptureService.MacValido(conectado.MAC) && !string.Equals(item.MAC, conectado.MAC, StringComparison.OrdinalIgnoreCase))
                     {
@@ -912,6 +914,13 @@ namespace BotRpaUI.Views
             if (item == null || string.IsNullOrWhiteSpace(item.Serial)) return;
 
             string serial = item.Serial.Trim();
+
+            if (ToggleDesligarAoRegistrar.IsChecked != true)
+            {
+                RegistroLog($"DESLIGAMENTO AUTOMATICO DESATIVADO | S/N: {serial}");
+                return;
+            }
+
             if (!_registroDesligamentosSolicitados.Add(serial)) return;
 
             item.Status = "Desligando...";
@@ -919,12 +928,14 @@ namespace BotRpaUI.Views
 
             _ = System.Threading.Tasks.Task.Run(() =>
             {
+                bool sucesso = false;
                 string resposta = string.Empty;
                 try
                 {
-                    var buffer = new System.Text.StringBuilder(1024);
-                    MonitorView.Engine_RunAdbShell(serial, "reboot -p", buffer, 1024);
-                    resposta = (buffer.ToString() ?? string.Empty).Trim();
+                    MonitorView.Engine_ResetCancel();
+                    int retorno = MonitorView.Engine_ShutdownDeviceClean(serial, RegistroLog);
+                    sucesso = retorno == 1;
+                    resposta = sucesso ? "rotina de desligamento concluida" : "rotina de desligamento retornou falha";
                 }
                 catch (Exception ex)
                 {
@@ -933,10 +944,29 @@ namespace BotRpaUI.Views
 
                 Dispatcher.BeginInvoke(new Action(() =>
                 {
-                    item.Status = resposta.StartsWith("ERRO", StringComparison.OrdinalIgnoreCase) ? "Falha ao desligar" : "Desligado";
-                    RegistroLog($"DESLIGAMENTO | S/N: {serial} | {(string.IsNullOrWhiteSpace(resposta) ? "comando enviado" : resposta)}");
+                    item.Status = sucesso ? "Desligado" : "Falha ao desligar";
+                    RegistroLog($"DESLIGAMENTO | S/N: {serial} | {resposta}");
                 }));
             });
+        }
+
+        private void AtualizarReferenciaPortaUsb(RegistroAparelhoItem item)
+        {
+            string porta = item?.PortaUsb ?? string.Empty;
+            bool identificada = !string.IsNullOrWhiteSpace(porta) && porta != "N/A";
+
+            TxtRegistroPortaUsb.Text = identificada
+                ? BotRpaUI.Core.UsbPortNameService.ObterExibicaoComPorta(porta)
+                : "---";
+            TxtRegistroPortaUsb.ToolTip = identificada
+                ? $"Porta USB fisica: {porta}"
+                : "Porta USB nao identificada para o aparelho atual";
+        }
+
+        private void LimparReferenciaPortaUsb()
+        {
+            TxtRegistroPortaUsb.Text = "---";
+            TxtRegistroPortaUsb.ToolTip = "Referencia fisica da porta USB do tablet atual";
         }
 
         private void SelecionarAparelhoParaPatrimonio(RegistroAparelhoItem item)
@@ -945,13 +975,14 @@ namespace BotRpaUI.Views
             item.Status = "Informe o patrimonio";
             GridRegistroSerie.SelectedItem = item;
             TxtRegistroSerial.Text = item.Serial;
+            AtualizarReferenciaPortaUsb(item);
             TxtRegistroMac.Text = BotRpaUI.Core.MacCaptureService.MacValido(item.MAC) ? item.MAC : "nao capturado";
             TxtRegistroPatrimonio.Text = string.Empty;
             TxtRegistroPatrimonio.IsEnabled = true;
             BtnRegistrarPatrimonio.IsEnabled = true;
             BtnPularRegistro.IsEnabled = true;
             TxtStatusRegistroSerie.Text = "Informe o numero de patrimonio do aparelho atual.";
-            RegistroLog($"AGUARDANDO PATRIMONIO | S/N: {item.Serial} | MAC: {(BotRpaUI.Core.MacCaptureService.MacValido(item.MAC) ? item.MAC : "nao capturado")}");
+            RegistroLog($"AGUARDANDO PATRIMONIO | S/N: {item.Serial} | USB: {BotRpaUI.Core.UsbPortNameService.ObterExibicaoComPorta(item.PortaUsb)} | MAC: {(BotRpaUI.Core.MacCaptureService.MacValido(item.MAC) ? item.MAC : "nao capturado")}");
             Dispatcher.BeginInvoke(new Action(() => TxtRegistroPatrimonio.Focus()));
         }
 
@@ -998,6 +1029,7 @@ namespace BotRpaUI.Views
             BtnRegistrarPatrimonio.IsEnabled = false;
             BtnPularRegistro.IsEnabled = false;
             TxtRegistroSerial.Text = "-";
+            LimparReferenciaPortaUsb();
             TxtRegistroMac.Text = "-";
             TxtStatusRegistroSerie.Text = "Aparelho registrado. Conecte o proximo tablet...";
             AtualizarContadorRegistro();
@@ -1026,6 +1058,7 @@ namespace BotRpaUI.Views
             if (janela.ShowDialog() != true) return;
 
             foreach (var item in _registroAparelhos) item.NotificarPortaUsb();
+            if (_registroAtual != null) AtualizarReferenciaPortaUsb(_registroAtual);
             RegistroLog("Nomes das portas USB atualizados.");
         }
 
@@ -1100,6 +1133,7 @@ namespace BotRpaUI.Views
                 BtnRegistrarPatrimonio.IsEnabled = false;
                 BtnPularRegistro.IsEnabled = false;
                 TxtRegistroSerial.Text = "-";
+                LimparReferenciaPortaUsb();
                 TxtRegistroMac.Text = "-";
             }
 
@@ -1131,6 +1165,7 @@ namespace BotRpaUI.Views
             BtnRegistrarPatrimonio.IsEnabled = false;
             BtnPularRegistro.IsEnabled = false;
             TxtRegistroSerial.Text = "-";
+            LimparReferenciaPortaUsb();
             TxtRegistroMac.Text = "-";
             TxtStatusRegistroSerie.Text = "Aparelho pulado. Aguardando o proximo...";
             Dispatcher.BeginInvoke(new Action(() => RegistroTimer_Tick(null, EventArgs.Empty)));
@@ -1153,6 +1188,7 @@ namespace BotRpaUI.Views
             BtnRegistrarPatrimonio.IsEnabled = false;
             BtnPularRegistro.IsEnabled = false;
             TxtRegistroSerial.Text = "-";
+            LimparReferenciaPortaUsb();
             TxtRegistroMac.Text = "-";
             TxtStatusRegistroSerie.Text = "Captura reiniciada.";
             RegistroLog("Captura reiniciada pelo operador.");

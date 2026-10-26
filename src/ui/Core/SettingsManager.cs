@@ -50,6 +50,15 @@ namespace BotRpaUI.Core
 
         [JsonPropertyName("google_account_password_dpapi")]
         public string GoogleAccountPasswordDpapi { get; set; } = "";
+
+        [JsonPropertyName("auto_update_enabled")]
+        public bool AutoUpdateEnabled { get; set; } = true;
+
+        [JsonPropertyName("auto_update_url")]
+        public string AutoUpdateUrl { get; set; } = "";
+
+        [JsonPropertyName("auto_update_last_check")]
+        public string AutoUpdateLastCheck { get; set; } = "";
     }
 
     public enum DeviceHardwareType
@@ -242,6 +251,24 @@ namespace BotRpaUI.Core
             !string.IsNullOrWhiteSpace(GoogleAccountEmail) &&
             !string.IsNullOrWhiteSpace(_settings.GoogleAccountPasswordDpapi);
 
+        public static bool AutoUpdateEnabled
+        {
+            get => _settings.AutoUpdateEnabled;
+            set { _settings.AutoUpdateEnabled = value; Save(); }
+        }
+
+        public static string AutoUpdateUrl
+        {
+            get => _settings.AutoUpdateUrl ?? "";
+            set { _settings.AutoUpdateUrl = value; Save(); }
+        }
+
+        public static string AutoUpdateLastCheck
+        {
+            get => _settings.AutoUpdateLastCheck ?? "";
+            set { _settings.AutoUpdateLastCheck = value; Save(); }
+        }
+
         public static bool SetGoogleAccount(string email, string password)
         {
             email = (email ?? "").Trim();
@@ -382,6 +409,16 @@ namespace BotRpaUI.Core
                     System.Diagnostics.Debug.WriteLine($"[SettingsManager.Save] {ex.Message}");
                 }
             }
+        }
+
+        public static void ConfigurarAutoUpdate()
+        {
+            try
+            {
+                string pastaDownloads = Path.Combine(PathHelper.GetRootDirectory(), "downloads");
+                AutoUpdateManager.Configurar(AutoUpdateUrl, pastaDownloads);
+            }
+            catch { }
         }
     }
 }

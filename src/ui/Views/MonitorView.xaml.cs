@@ -728,6 +728,11 @@ namespace BotRpaUI.Views
             int max_len);
 
         [DllImport("BotEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        public static extern int Engine_ShutdownDeviceClean(
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string serial, 
+            LogCallback cb);
+
+        [DllImport("BotEngine.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern int Engine_ExecuteF2_TabMulti_Atualizar(
             [MarshalAs(UnmanagedType.LPUTF8Str)] string serial, 
             [MarshalAs(UnmanagedType.LPUTF8Str)] string apk_path, 

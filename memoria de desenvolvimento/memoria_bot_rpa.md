@@ -1916,3 +1916,13 @@ O **InnoAI** é o motor de inteligência e automação visual da Plataforma Inno
 - **CSV historico:** registros validos da pasta antiga foram mesclados no CSV de `tools/capturamac` (24 seriais unicos; linhas "nao encontrado" descartadas).
 - **Launcher:** criado `tools/capturamac/Capturar MAC.bat` (duplo clique, sem depender do repositorio).
 - **Teste:** copia integral para `%TEMP%\capturamac_portable` executada com `--test` a partir de outro diretorio: adb local encontrado e servidor iniciado (exit 0). Nenhum tablet estava conectado no momento, entao a captura real de MAC nao pode ser testada.
+
+
+### [2026-10-26 10:40] - REGISTRO EM SERIE: DESLIGAMENTO SEGURO, PORTA USB E MAC RAPIDO
+- **Pedido:** desligar o tablet com seguranca ao registrar (como F1), toggle para ativar/desativar, exibir a referencia da porta USB no topo do modal de patrimonio e acelerar a extracao automatica de MAC.
+- **Desligamento seguro:** export `Engine_ShutdownDeviceClean` em `src/api.c` -> `V7_Etapa7_PowerOff` em `f1_vision_tab7.c`; MonitorView/RelatoriosView chamam a rotina; toggle `ToggleDesligarAoRegistrar` (padrao ligado) controla o desligamento.
+- **Porta USB:** coluna `PORTA USB` (`TxtRegistroPortaUsb`) na barra superior do registro em serie, entre Serial e MAC; helpers `AtualizarReferenciaPortaUsb`/`LimparReferenciaPortaUsb` em `RelatoriosView.xaml.cs`; atualiza ao selecionar o aparelho e ao renomear portas; botao Registrar movido para `Grid.Column="8"`.
+- **MAC rapido:** `src/core/drivers/adb.c` agora usa `adb_read_mac_fast` (estado + sysfs + ip link em um unico ADB) e `adb_read_mac_dumpsys` (grep -m1 no aparelho); `adb_get_mac` tenta leitura rapida, dumpsys direto, polling de 300 ms (ate 10x) e so liga o Wi-Fi se necessario, restaurando desligado; `adb_list_devices` nao executa mais `dumpsys wifi` nem IMEI no refresh periodico (MAC vem do cache).
+- **Build/instalador:** Build TESTE `26.10.2026.1031` OK; release `26.10.2026.1036` OK; instalador `scripts/scripts de controle/BotRPA_Instalador_26.10.2026.1036.exe` (61.535.240 B; SHA256 DC0B0C93084285BF8BDE7469FCBDD22E8E0466892E96F2C1358F047B3732E257), sem assinatura.
+- **Correcao no ControleGeral.bat:** `build_installer` agora compara `BotRPA_Release/config/version.txt` com `config/version.txt` e recompila o release se estiver desatualizado, evitando instalador com binarios antigos (o primeiro 1031 foi descartado por esse motivo).
+- **Pendente:** sem tablet conectado para medir o tempo real da captura; validar em runtime o MAC e o desligamento seguro.
