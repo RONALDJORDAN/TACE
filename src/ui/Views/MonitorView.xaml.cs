@@ -154,6 +154,9 @@ namespace BotRpaUI.Views
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 512)]
         public string WallpaperPath;
 
+        public string NomeExibicao => Nome;
+        public string LoginExibicao => Login;
+
         public override string ToString()
         {
             return string.IsNullOrEmpty(Nome) ? "Município sem Nome" : Nome;
@@ -1457,12 +1460,9 @@ namespace BotRpaUI.Views
 
             try
             {
-                if (targetSerial != null)
+                if (!string.IsNullOrWhiteSpace(targetSerial))
                 {
-                    string dir = System.IO.Path.Combine(BotRpaUI.Core.PathHelper.GetRegistrosDirectory(), DateTime.Now.ToString("yyyy-MM-dd"));
-                    if (!System.IO.Directory.Exists(dir)) System.IO.Directory.CreateDirectory(dir);
-                    string logFile = System.IO.Path.Combine(dir, $"{targetSerial}_execucao.log");
-                    System.IO.File.AppendAllText(logFile, $"[{DateTime.Now:HH:mm:ss}] {displayMsg}\n");
+                    BotRpaUI.Core.RegistroStorage.RegistrarExecucao(targetSerial, displayMsg);
                 }
             }
             catch { }

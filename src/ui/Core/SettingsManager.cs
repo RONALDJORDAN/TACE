@@ -245,11 +245,32 @@ namespace BotRpaUI.Core
             set { _settings.MetaLoteTotal = value < 1 ? 1 : (value > 10000 ? 10000 : value); Save(); }
         }
 
-        public static string GoogleAccountEmail => _settings.GoogleAccountEmail ?? "";
+        public static string GoogleAccountEmail
+        {
+            get
+            {
+                // 1) Variável de ambiente tem precedência (não grava em disco)
+                string? env = Environment.GetEnvironmentVariable("BOTRPA_GOOGLE_EMAIL");
+                if (!string.IsNullOrWhiteSpace(env)) return env;
+                return _settings.GoogleAccountEmail ?? "";
+            }
+        }
+
+        public static string GoogleAccountPasswordRaw
+        {
+            get
+            {
+                // 1) Variável de ambiente tem precedência (não grava em disco)
+                string? env = Environment.GetEnvironmentVariable("BOTRPA_GOOGLE_PASSWORD");
+                if (!string.IsNullOrWhiteSpace(env)) return env;
+                // 2) Senha criptografada no settings.json via DPAPI
+                return UnprotectSecret(_settings.GoogleAccountPasswordDpapi);
+            }
+        }
 
         public static bool HasGoogleAccountConfigured =>
             !string.IsNullOrWhiteSpace(GoogleAccountEmail) &&
-            !string.IsNullOrWhiteSpace(_settings.GoogleAccountPasswordDpapi);
+            !string.IsNullOrWhiteSpace(GoogleAccountPasswordRaw);
 
         public static bool AutoUpdateEnabled
         {

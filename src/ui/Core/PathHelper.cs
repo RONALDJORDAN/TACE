@@ -212,6 +212,8 @@ namespace BotRpaUI.Core
                 Path.Combine(root, "data", "output", "arquivos", "apks", cleanAscii),
                 Path.Combine(root, "data", "output", "arquivos", "pacotes", clean),
                 Path.Combine(root, "data", "output", "arquivos", "pacotes", cleanAscii),
+                Path.Combine(root, "data", "output", "arquivos", "wallpapers", clean),
+                Path.Combine(root, "data", "output", "arquivos", "wallpapers", cleanAscii),
                 Path.Combine(root, "Arquivos", municipio),
                 Path.Combine(root, "Arquivos", clean),
                 Path.Combine(root, "Arquivos", cleanAscii),

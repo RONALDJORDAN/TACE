@@ -10,10 +10,16 @@ namespace BotRpaUI.Views
 {
     public class RegistroModel
     {
-        public string Data { get; set; } = string.Empty;
+        public DateTime DataHora { get; set; }
+        public string Data => DataHora.ToString("dd/MM/yyyy");
+        public string Hora => DataHora.ToString("HH:mm");
         public string Nome { get; set; } = string.Empty;
+        public string Modalidade { get; set; } = string.Empty;
         public string Tipo { get; set; } = string.Empty;
+        public string Detalhe { get; set; } = string.Empty;
+        public string Tamanho { get; set; } = string.Empty;
         public string FullPath { get; set; } = string.Empty;
+        public bool IsFolder { get; set; }
     }
 
     public class DispositivoSelecionavel : System.ComponentModel.INotifyPropertyChanged
@@ -140,8 +146,17 @@ namespace BotRpaUI.Views
         // Cache e Filtros do Banco de Dados
         private System.Collections.Generic.List<BotRpaUI.Core.DispositivoDB> _bancoDadosCache = new System.Collections.Generic.List<BotRpaUI.Core.DispositivoDB>();
         private string _filtroModeloAtivo = "Todos";
+        private string _colunaOrdenacaoBD = "Patrimonio";
+        private System.ComponentModel.ListSortDirection _direcaoOrdenacaoBD = System.ComponentModel.ListSortDirection.Ascending;
         private int _editingDeviceId = 0;
         private string _currentSelectedLogPath = string.Empty;
+
+        // Registros & Auditoria
+        private readonly System.Collections.Generic.List<RegistroModel> _todosRegistros = new System.Collections.Generic.List<RegistroModel>();
+        private bool _auditoriaCarregada;
+        private bool _atualizandoArquivosRegistro;
+        private bool _atualizandoFiltrosRegistros;
+        private bool _atualizandoFiltrosAuditoria;
 
         // Auto-refresh via FileSystemWatcher
         private FileSystemWatcher? _dbWatcher;
@@ -170,6 +185,16 @@ namespace BotRpaUI.Views
             ListBuscaAparelhos.ItemsSource = _listaCompletaSelecionaveis;
             ListSelecionados.ItemsSource = _listaSelecionados;
             GridRegistroSerie.ItemsSource = _registroAparelhos;
+
+            _atualizandoFiltrosRegistros = true;
+            if (CmbModalidadeRegistros != null) CmbModalidadeRegistros.SelectedIndex = 0;
+            if (CmbPeriodoRegistros != null) CmbPeriodoRegistros.SelectedIndex = 0;
+            _atualizandoFiltrosRegistros = false;
+
+            _atualizandoFiltrosAuditoria = true;
+            if (CmbModalidadeAuditoria != null) CmbModalidadeAuditoria.SelectedIndex = 0;
+            if (CmbPeriodoAuditoria != null) CmbPeriodoAuditoria.SelectedIndex = 0;
+            _atualizandoFiltrosAuditoria = false;
 
             _registroTimer = new System.Windows.Threading.DispatcherTimer();
             _registroTimer.Interval = TimeSpan.FromSeconds(2);
@@ -238,6 +263,11 @@ namespace BotRpaUI.Views
         {
             SetActiveSubMenu(BtnSubRegistros, PanelRegistros);
             LoadRegistrosLocais();
+
+            if (SubPanelAuditoriaBase != null && SubPanelAuditoriaBase.Visibility == Visibility.Visible)
+            {
+                LoadAuditoria();
+            }
         }
 
         private void BtnSubExportacao_Click(object sender, RoutedEventArgs e)
@@ -292,12 +322,12 @@ namespace BotRpaUI.Views
                 if (TxtBarNokiaT20 != null) TxtBarNokiaT20.Text = $"{totalNokia} ({percNokia:F1}%)";
                 if (ProgressNokiaT20 != null) ProgressNokiaT20.Value = percNokia;
 
-                // Integridade de MAC
-                int comMac = todosDispositivos.Count(d => !string.IsNullOrWhiteSpace(d.MAC) && d.MAC != "02:00:00:00:00:00" && d.MAC != "Desconhecido");
+                // Integridade de MAC (mesma regra usada nos indicadores de cobertura)
+                int comMac = todosDispositivos.Count(d => MacValido(d.MAC));
                 double percMac = total > 0 ? (comMac * 100.0 / total) : 100;
                 if (TxtIntegridadeMac != null) TxtIntegridadeMac.Text = $"{comMac}/{total} ({percMac:F1}%)";
 
-                // Contagem de Registros de Auditoria
+                // Contagem de Registros de Auditoria (pastas de build/log)
                 string rootPath = BotRpaUI.Core.PathHelper.GetRegistrosDirectory();
                 int totalLogs = 0;
                 if (Directory.Exists(rootPath))
@@ -306,6 +336,117 @@ namespace BotRpaUI.Views
                 }
                 if (DashTotalRegistros != null) DashTotalRegistros.Text = totalLogs.ToString("N0");
                 if (TxtTotalSessoesBuild != null) TxtTotalSessoesBuild.Text = $"{totalLogs} sessões gravadas";
+
+                // Cobertura e qualidade do cadastro
+                int comPatrimonio = todosDispositivos.Count(d => !string.IsNullOrWhiteSpace(d.Patrimonio));
+                int comSerial = todosDispositivos.Count(d => SerialValido(d.Serial));
+                int comModelo = todosDispositivos.Count(d => ModeloIdentificado(d.Modelo));
+                int cadastrosCompletos = todosDispositivos.Count(d =>
+                    !string.IsNullOrWhiteSpace(d.Patrimonio) &&
+                    SerialValido(d.Serial) &&
+                    MacValido(d.MAC) &&
+                    ModeloIdentificado(d.Modelo));
+
+                AtualizarCoberturaDashboard(TxtCoberturaPatrimonio, TxtCoberturaPatrimonioPerc, ProgressCoberturaPatrimonio, comPatrimonio, total);
+                AtualizarCoberturaDashboard(TxtCoberturaSerial, TxtCoberturaSerialPerc, ProgressCoberturaSerial, comSerial, total);
+                AtualizarCoberturaDashboard(TxtCoberturaMac, TxtCoberturaMacPerc, ProgressCoberturaMac, comMac, total);
+                AtualizarCoberturaDashboard(TxtCoberturaModelo, TxtCoberturaModeloPerc, ProgressCoberturaModelo, comModelo, total);
+
+                double percCompleta = total > 0 ? (cadastrosCompletos * 100.0 / total) : 0;
+                if (TxtBaseCompleta != null) TxtBaseCompleta.Text = $"{cadastrosCompletos}/{total} ({percCompleta:F1}%)";
+
+                // Ranking de modelos
+                var topModelos = todosDispositivos
+                    .Select(d => ModeloIdentificado(d.Modelo) ? d.Modelo.Trim() : "Não identificado")
+                    .GroupBy(m => m, StringComparer.OrdinalIgnoreCase)
+                    .Select(g => new { Nome = g.Key, Quantidade = g.Count() })
+                    .OrderByDescending(x => x.Quantidade)
+                    .ThenBy(x => x.Nome, StringComparer.CurrentCultureIgnoreCase)
+                    .Take(5)
+                    .ToList();
+
+                var paineisTopModelos = new[] { PanelTopModelo1, PanelTopModelo2, PanelTopModelo3, PanelTopModelo4, PanelTopModelo5 };
+                var nomesTopModelos = new[] { TxtTopModelo1Nome, TxtTopModelo2Nome, TxtTopModelo3Nome, TxtTopModelo4Nome, TxtTopModelo5Nome };
+                var valoresTopModelos = new[] { TxtTopModelo1Valor, TxtTopModelo2Valor, TxtTopModelo3Valor, TxtTopModelo4Valor, TxtTopModelo5Valor };
+                var barrasTopModelos = new[] { ProgressTopModelo1, ProgressTopModelo2, ProgressTopModelo3, ProgressTopModelo4, ProgressTopModelo5 };
+
+                for (int i = 0; i < paineisTopModelos.Length; i++)
+                {
+                    if (i < topModelos.Count)
+                    {
+                        double percModelo = total > 0 ? (topModelos[i].Quantidade * 100.0 / total) : 0;
+                        paineisTopModelos[i].Visibility = Visibility.Visible;
+                        nomesTopModelos[i].Text = topModelos[i].Nome;
+                        valoresTopModelos[i].Text = $"{topModelos[i].Quantidade} ({percModelo:F1}%)";
+                        barrasTopModelos[i].Value = percModelo;
+                    }
+                    else
+                    {
+                        paineisTopModelos[i].Visibility = Visibility.Collapsed;
+                    }
+                }
+
+                // Alertas de cadastro
+                int semPatrimonio = total - comPatrimonio;
+                var patrimoniosDuplicados = todosDispositivos
+                    .Where(d => !string.IsNullOrWhiteSpace(d.Patrimonio))
+                    .GroupBy(d => d.Patrimonio.Trim(), StringComparer.OrdinalIgnoreCase)
+                    .Where(g => g.Count() > 1)
+                    .ToList();
+                int codigosDuplicados = patrimoniosDuplicados.Count;
+                int registrosDuplicados = patrimoniosDuplicados.Sum(g => g.Count());
+                int macInvalido = total - comMac;
+                int modeloNaoIdentificado = total - comModelo;
+                int cadastrosIncompletos = total - cadastrosCompletos;
+
+                if (TxtAlertaSemPatrimonio != null) TxtAlertaSemPatrimonio.Text = semPatrimonio.ToString("N0");
+                if (TxtAlertaPatrimonioDuplicado != null) TxtAlertaPatrimonioDuplicado.Text = codigosDuplicados.ToString("N0");
+                if (TxtAlertaMac != null) TxtAlertaMac.Text = macInvalido.ToString("N0");
+                if (TxtAlertaModelo != null) TxtAlertaModelo.Text = modeloNaoIdentificado.ToString("N0");
+
+                if (TxtResumoAlertas != null)
+                {
+                    if (cadastrosIncompletos == 0)
+                    {
+                        TxtResumoAlertas.Text = "Nenhuma pendência encontrada. Base 100% completa.";
+                        TxtResumoAlertas.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#4EDEA3"));
+                    }
+                    else
+                    {
+                        string duplicados = registrosDuplicados > 0 ? $" | {registrosDuplicados} registro(s) com patrimônio duplicado" : string.Empty;
+                        TxtResumoAlertas.Text = $"{cadastrosIncompletos} cadastro(s) com pendência(s) | base {percCompleta:F1}% completa{duplicados}";
+                        TxtResumoAlertas.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFB703"));
+                    }
+                }
+
+                // Atividade recente registrada na auditoria
+                var resumoAuditoria = BotRpaUI.Core.AuditLogManager.ObterResumo();
+                if (TxtAuditoriaTotal != null) TxtAuditoriaTotal.Text = resumoAuditoria.Total.ToString("N0");
+                if (TxtAuditoria7Dias != null) TxtAuditoria7Dias.Text = resumoAuditoria.Ultimos7Dias.ToString("N0");
+                if (TxtAuditoria30Dias != null) TxtAuditoria30Dias.Text = resumoAuditoria.Ultimos30Dias.ToString("N0");
+
+                if (TxtAuditoriaUltimoEvento != null)
+                {
+                    if (DateTime.TryParseExact(resumoAuditoria.UltimaDataHora, "yyyy-MM-dd HH:mm:ss",
+                        System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out DateTime ultimaData))
+                    {
+                        TxtAuditoriaUltimoEvento.Text = ultimaData.ToString("dd/MM/yyyy HH:mm");
+                    }
+                    else
+                    {
+                        TxtAuditoriaUltimoEvento.Text = "—";
+                    }
+                }
+
+                if (TxtAuditoriaUltimoDetalhe != null)
+                    TxtAuditoriaUltimoDetalhe.Text = string.IsNullOrWhiteSpace(resumoAuditoria.UltimaAcao) ? "sem eventos" : resumoAuditoria.UltimaAcao;
+
+                if (TxtAuditoriaAcaoPrincipal != null)
+                {
+                    TxtAuditoriaAcaoPrincipal.Text = string.IsNullOrWhiteSpace(resumoAuditoria.AcaoPrincipal)
+                        ? "Ação mais frequente: —"
+                        : $"Ação mais frequente: {resumoAuditoria.AcaoPrincipal} ({resumoAuditoria.AcaoPrincipalQuantidade:N0} eventos)";
+                }
 
                 // Último dispositivo (por ID de cadastro, independente da ordenação por patrimônio)
                 var ultimo = todosDispositivos.OrderByDescending(d => d.ID).FirstOrDefault();
@@ -325,6 +466,45 @@ namespace BotRpaUI.Views
             {
                 System.Diagnostics.Debug.WriteLine($"[RelatoriosView] Erro ao atualizar métricas: {ex.Message}");
             }
+        }
+
+        private static bool SerialValido(string? serial)
+        {
+            if (string.IsNullOrWhiteSpace(serial)) return false;
+
+            string valor = serial.Trim();
+            return !valor.Equals("unknown", StringComparison.OrdinalIgnoreCase)
+                && !valor.Equals("pendente", StringComparison.OrdinalIgnoreCase)
+                && !valor.Equals("n/a", StringComparison.OrdinalIgnoreCase)
+                && !valor.StartsWith("?", StringComparison.Ordinal);
+        }
+
+        private static bool MacValido(string? mac)
+        {
+            if (string.IsNullOrWhiteSpace(mac)) return false;
+
+            string valor = mac.Trim();
+            return !valor.Equals("N/A", StringComparison.OrdinalIgnoreCase)
+                && !valor.Equals("Desconhecido", StringComparison.OrdinalIgnoreCase)
+                && valor != "---"
+                && valor != "02:00:00:00:00:00";
+        }
+
+        private static bool ModeloIdentificado(string? modelo)
+        {
+            if (string.IsNullOrWhiteSpace(modelo)) return false;
+
+            string valor = modelo.Trim();
+            return !valor.Equals("Desconhecido", StringComparison.OrdinalIgnoreCase)
+                && !valor.Equals("N/A", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static void AtualizarCoberturaDashboard(TextBlock? texto, TextBlock? percentual, ProgressBar? barra, int quantidade, int total)
+        {
+            double perc = total > 0 ? (quantidade * 100.0 / total) : 0;
+            if (texto != null) texto.Text = $"{quantidade}/{total}";
+            if (percentual != null) percentual.Text = $"{perc:F1}%";
+            if (barra != null) barra.Value = perc;
         }
 
         // =========================================================================
@@ -375,12 +555,10 @@ namespace BotRpaUI.Views
                     resultado.Add(d);
             }
 
-            resultado = resultado
-                .OrderBy(d => BotRpaUI.Core.PatrimonioHelper.ExtrairNumero(d.Patrimonio))
-                .ThenBy(d => d.ID)
-                .ToList();
+            resultado = OrdenarResultadoBD(resultado);
 
             GridBancoDados.ItemsSource = resultado;
+            AtualizarIndicadoresOrdenacaoBD();
             if (TxtContadorBD != null)
                 TxtContadorBD.Text = $"{resultado.Count} registro{(resultado.Count != 1 ? "s" : "")}" + (_bancoDadosCache.Count != resultado.Count ? $" de {_bancoDadosCache.Count}" : "");
 
@@ -389,6 +567,87 @@ namespace BotRpaUI.Views
 
             if (TxtInfoSelecionado != null)
                 TxtInfoSelecionado.Text = "Nenhum registro selecionado";
+        }
+
+        private void GridBancoDados_LoadingRow(object sender, DataGridRowEventArgs e)
+        {
+            e.Row.Header = (e.Row.GetIndex() + 1).ToString();
+        }
+
+        private void GridBancoDados_Sorting(object sender, DataGridSortingEventArgs e)
+        {
+            string? coluna = e.Column?.SortMemberPath;
+            if (string.IsNullOrEmpty(coluna)) return;
+
+            if (string.Equals(_colunaOrdenacaoBD, coluna, StringComparison.Ordinal))
+            {
+                _direcaoOrdenacaoBD = _direcaoOrdenacaoBD == System.ComponentModel.ListSortDirection.Ascending
+                    ? System.ComponentModel.ListSortDirection.Descending
+                    : System.ComponentModel.ListSortDirection.Ascending;
+            }
+            else
+            {
+                _colunaOrdenacaoBD = coluna;
+                _direcaoOrdenacaoBD = System.ComponentModel.ListSortDirection.Ascending;
+            }
+
+            e.Handled = true;
+            AplicarFiltroBD();
+        }
+
+        private void AtualizarIndicadoresOrdenacaoBD()
+        {
+            if (GridBancoDados == null) return;
+
+            foreach (var coluna in GridBancoDados.Columns)
+            {
+                coluna.SortDirection = string.Equals(coluna.SortMemberPath, _colunaOrdenacaoBD, StringComparison.Ordinal)
+                    ? _direcaoOrdenacaoBD
+                    : null;
+            }
+        }
+
+        private System.Collections.Generic.List<BotRpaUI.Core.DispositivoDB> OrdenarResultadoBD(
+            System.Collections.Generic.List<BotRpaUI.Core.DispositivoDB> itens)
+        {
+            bool desc = _direcaoOrdenacaoBD == System.ComponentModel.ListSortDirection.Descending;
+
+            switch (_colunaOrdenacaoBD)
+            {
+                case "MarcaModelo":
+                    return OrdenarPorTextoBD(itens, d => d.MarcaModelo, desc);
+                case "Serial":
+                    return OrdenarPorTextoBD(itens, d => d.Serial, desc);
+                case "MAC":
+                    return OrdenarPorTextoBD(itens, d => d.MAC, desc);
+                case "Patrimonio":
+                default:
+                    var porPatrimonio = itens.OrderBy(d => string.IsNullOrWhiteSpace(d.Patrimonio));
+                    var ordenado = desc
+                        ? porPatrimonio.ThenByDescending(d => BotRpaUI.Core.PatrimonioHelper.ExtrairNumero(d.Patrimonio))
+                        : porPatrimonio.ThenBy(d => BotRpaUI.Core.PatrimonioHelper.ExtrairNumero(d.Patrimonio));
+
+                    return ordenado
+                        .ThenBy(d => d.Patrimonio ?? string.Empty, StringComparer.CurrentCultureIgnoreCase)
+                        .ThenBy(d => d.ID)
+                        .ToList();
+            }
+        }
+
+        private static System.Collections.Generic.List<BotRpaUI.Core.DispositivoDB> OrdenarPorTextoBD(
+            System.Collections.Generic.List<BotRpaUI.Core.DispositivoDB> itens,
+            Func<BotRpaUI.Core.DispositivoDB, string?> seletor,
+            bool desc)
+        {
+            var semVazios = itens.OrderBy(d => string.IsNullOrWhiteSpace(seletor(d)));
+            var ordenado = desc
+                ? semVazios.ThenByDescending(d => seletor(d) ?? string.Empty, StringComparer.CurrentCultureIgnoreCase)
+                : semVazios.ThenBy(d => seletor(d) ?? string.Empty, StringComparer.CurrentCultureIgnoreCase);
+
+            return ordenado
+                .ThenBy(d => BotRpaUI.Core.PatrimonioHelper.ExtrairNumero(d.Patrimonio))
+                .ThenBy(d => d.ID)
+                .ToList();
         }
 
         private static string NormalizarBusca(string? valor)
@@ -440,7 +699,7 @@ namespace BotRpaUI.Views
                 TxtInfoSelecionado.Text = "Nenhum registro selecionado";
                 return;
             }
-            TxtInfoSelecionado.Text = $"Selecionado: #{item.ID} — {item.MarcaModelo} | N/S: {item.Serial} | MAC: {item.MAC} | Patrimônio: {(string.IsNullOrWhiteSpace(item.Patrimonio) ? "—" : item.Patrimonio)}";
+            TxtInfoSelecionado.Text = $"Selecionado: Patrimônio {(string.IsNullOrWhiteSpace(item.Patrimonio) ? "—" : item.Patrimonio)} — {item.MarcaModelo} | N/S: {item.Serial} | MAC: {item.MAC}";
         }
 
         private void BtnNovoDispositivo_Click(object sender, RoutedEventArgs e)
@@ -465,7 +724,9 @@ namespace BotRpaUI.Views
             }
 
             _editingDeviceId = selectedItem.ID;
-            TxtModalTitulo.Text = $"Editar Dispositivo #{selectedItem.ID}";
+            TxtModalTitulo.Text = string.IsNullOrWhiteSpace(selectedItem.Patrimonio)
+                ? "Editar Dispositivo"
+                : $"Editar Dispositivo — {selectedItem.Patrimonio}";
             TxtModalPatrimonio.Text = SomenteDigitosPatrimonio(selectedItem.Patrimonio);
             TxtModalFabricante.Text = selectedItem.Fabricante;
             TxtModalModelo.Text = selectedItem.Modelo;
@@ -1240,13 +1501,13 @@ namespace BotRpaUI.Views
         }
 
         // =========================================================================
-        // SUBMODULO 3: REGISTROS & AUDITORIA DE LOGS
+        // SUBMODULO 3: REGISTROS & AUDITORIA
         // =========================================================================
         private void LoadRegistrosLocais()
         {
             try
             {
-                _registrosList.Clear();
+                _todosRegistros.Clear();
                 string rootPath = BotRpaUI.Core.PathHelper.GetRegistrosDirectory();
 
                 if (!Directory.Exists(rootPath))
@@ -1254,50 +1515,30 @@ namespace BotRpaUI.Views
                     Directory.CreateDirectory(rootPath);
                 }
 
+                // Arquivos soltos na raiz de registros (ex.: erros_sqlite.txt)
+                foreach (var file in Directory.GetFiles(rootPath))
+                {
+                    if (!EhArquivoTexto(file)) continue;
+                    _todosRegistros.Add(CriarRegistroArquivo(new FileInfo(file), DateTime.Today, DetectarModalidadeArquivo(Path.GetFileName(file))));
+                }
+
                 var dirs = Directory.GetDirectories(rootPath);
-                // Ordena por data decrescente
-                Array.Sort(dirs, (a, b) => Directory.GetCreationTime(b).CompareTo(Directory.GetCreationTime(a)));
+                Array.Sort(dirs, (a, b) => string.Compare(Path.GetFileName(b), Path.GetFileName(a), StringComparison.Ordinal));
 
                 foreach (var d in dirs)
                 {
                     var info = new DirectoryInfo(d);
-                    
-                    // Procura subpastas de auditoria (ex: HH-MM_Plataforma_BotRPA_DESKTOP_BUILD)
-                    var subDirs = Directory.GetDirectories(d);
-                    if (subDirs.Length > 0)
-                    {
-                        foreach (var sub in subDirs)
-                        {
-                            var subInfo = new DirectoryInfo(sub);
-                            string tipo = "Auditoria Build";
-                            if (subInfo.Name.IndexOf("OTA", StringComparison.OrdinalIgnoreCase) >= 0) tipo = "OTA Update";
-                            else if (subInfo.Name.IndexOf("EXEC", StringComparison.OrdinalIgnoreCase) >= 0) tipo = "Execução RPA";
+                    DateTime dataPasta = DateTime.TryParseExact(info.Name, "yyyy-MM-dd",
+                        System.Globalization.CultureInfo.InvariantCulture,
+                        System.Globalization.DateTimeStyles.None, out DateTime dataConvertida)
+                        ? dataConvertida
+                        : info.CreationTime.Date;
 
-                            _registrosList.Add(new RegistroModel
-                            {
-                                Data = info.Name,
-                                Nome = subInfo.Name,
-                                Tipo = tipo,
-                                FullPath = sub
-                            });
-                        }
-                    }
-                    else
-                    {
-                        _registrosList.Add(new RegistroModel
-                        {
-                            Data = info.CreationTime.ToString("yyyy-MM-dd"),
-                            Nome = info.Name,
-                            Tipo = "Pasta de Auditoria",
-                            FullPath = d
-                        });
-                    }
+                    EscanearRegistros(d, dataPasta, null);
                 }
 
-                if (_registrosList.Count > 0 && ListRegistros.SelectedIndex == -1)
-                {
-                    ListRegistros.SelectedIndex = 0;
-                }
+                _todosRegistros.Sort((a, b) => b.DataHora.CompareTo(a.DataHora));
+                AplicarFiltroRegistros();
             }
             catch (Exception ex)
             {
@@ -1305,51 +1546,513 @@ namespace BotRpaUI.Views
             }
         }
 
+        private void EscanearRegistros(string diretorio, DateTime dataPasta, string? modalidadePai)
+        {
+            try
+            {
+                var info = new DirectoryInfo(diretorio);
+                string modalidade = string.IsNullOrWhiteSpace(modalidadePai)
+                    ? DetectarModalidadeArquivo(info.Name)
+                    : modalidadePai;
+
+                if (EhPastaSessaoBuild(info.Name, modalidadePai))
+                {
+                    _todosRegistros.Add(CriarRegistroPasta(info, dataPasta, modalidade));
+                    return;
+                }
+
+                foreach (var file in Directory.GetFiles(diretorio))
+                {
+                    if (!EhArquivoTexto(file)) continue;
+                    string modalidadeArquivo = modalidadePai == null
+                        ? DetectarModalidadeArquivo(Path.GetFileName(file))
+                        : modalidade;
+                    _todosRegistros.Add(CriarRegistroArquivo(new FileInfo(file), dataPasta, modalidadeArquivo));
+                }
+
+                foreach (var sub in Directory.GetDirectories(diretorio))
+                {
+                    var subInfo = new DirectoryInfo(sub);
+                    string modalidadeSub = modalidadePai != null
+                        ? modalidade
+                        : DetectarModalidadeArquivo(subInfo.Name);
+
+                    EscanearRegistros(sub, dataPasta, modalidadeSub);
+                }
+            }
+            catch { }
+        }
+
+        private static bool EhPastaSessaoBuild(string nome, string? modalidadePai)
+        {
+            string limpo = nome.Trim();
+            if (limpo.Equals("BUILD", StringComparison.OrdinalIgnoreCase) ||
+                limpo.Equals("OTA", StringComparison.OrdinalIgnoreCase) ||
+                limpo.Equals("EXECUCAO", StringComparison.OrdinalIgnoreCase) ||
+                limpo.Equals("SISTEMA", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            bool temMarcador = limpo.IndexOf("BUILD", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                               limpo.IndexOf("OTA", StringComparison.OrdinalIgnoreCase) >= 0;
+            bool temHora = TentarHoraDoNome(limpo, out _);
+            return temMarcador || (temHora && string.Equals(modalidadePai, BotRpaUI.Core.RegistroStorage.ModalidadeBuild, StringComparison.OrdinalIgnoreCase));
+        }
+
+        private static RegistroModel CriarRegistroPasta(DirectoryInfo info, DateTime dataPasta, string modalidade)
+        {
+            DateTime dataHora = TentarHoraDoNome(info.Name, out TimeSpan hora)
+                ? dataPasta.Date.Add(hora)
+                : info.CreationTime;
+            long tamanho = 0;
+            int arquivos = 0;
+
+            try
+            {
+                foreach (var file in info.GetFiles("*", SearchOption.AllDirectories))
+                {
+                    tamanho += file.Length;
+                    arquivos++;
+                }
+            }
+            catch { }
+
+            return new RegistroModel
+            {
+                DataHora = dataHora,
+                Nome = info.Name,
+                Modalidade = modalidade,
+                Tipo = modalidade,
+                Detalhe = LerDetalheBuild(info.FullName, arquivos),
+                Tamanho = FormatarTamanho(tamanho),
+                FullPath = info.FullName,
+                IsFolder = true
+            };
+        }
+
+        private static RegistroModel CriarRegistroArquivo(FileInfo info, DateTime dataPasta, string modalidade)
+        {
+            DateTime dataHora = info.LastWriteTime;
+            if (TentarHoraDoNome(info.Name, out TimeSpan hora))
+            {
+                dataHora = dataPasta.Date.Add(hora);
+            }
+
+            string serial = ExtrairSerialDoLog(info.Name);
+            return new RegistroModel
+            {
+                DataHora = dataHora,
+                Nome = info.Name,
+                Modalidade = modalidade,
+                Tipo = modalidade,
+                Detalhe = string.IsNullOrWhiteSpace(serial) ? info.Extension.TrimStart('.').ToUpperInvariant() : $"Serial {serial}",
+                Tamanho = FormatarTamanho(info.Length),
+                FullPath = info.FullName,
+                IsFolder = false
+            };
+        }
+
+        private static string DetectarModalidadeArquivo(string nome)
+        {
+            string valor = (nome ?? string.Empty).ToUpperInvariant();
+            if (valor.Contains("OTA")) return BotRpaUI.Core.RegistroStorage.ModalidadeOta;
+            if (valor.Contains("BUILD")) return BotRpaUI.Core.RegistroStorage.ModalidadeBuild;
+            if (valor.Contains("EXEC")) return BotRpaUI.Core.RegistroStorage.ModalidadeExecucao;
+            return BotRpaUI.Core.RegistroStorage.ModalidadeSistema;
+        }
+
+        private static bool TentarHoraDoNome(string nome, out TimeSpan hora)
+        {
+            hora = TimeSpan.Zero;
+            var match = System.Text.RegularExpressions.Regex.Match(nome ?? string.Empty, @"^(\d{2})[-_](\d{2})(?:[-_](\d{2}))?");
+            if (!match.Success) return false;
+
+            if (!int.TryParse(match.Groups[1].Value, out int h) ||
+                !int.TryParse(match.Groups[2].Value, out int m))
+            {
+                return false;
+            }
+
+            int s = match.Groups[3].Success && int.TryParse(match.Groups[3].Value, out int seg) ? seg : 0;
+            if (h > 23 || m > 59 || s > 59) return false;
+
+            hora = new TimeSpan(h, m, s);
+            return true;
+        }
+
+        private static string ExtrairSerialDoLog(string nomeArquivo)
+        {
+            string nome = Path.GetFileNameWithoutExtension(nomeArquivo ?? string.Empty);
+            int idx = nome.IndexOf("_execucao", StringComparison.OrdinalIgnoreCase);
+            if (idx > 0) nome = nome.Substring(0, idx);
+            return nome.Trim();
+        }
+
+        private static string LerDetalheBuild(string pasta, int arquivos)
+        {
+            try
+            {
+                string log = Path.Combine(pasta, "build.log");
+                if (File.Exists(log))
+                {
+                    string? versao = null;
+                    string? modo = null;
+                    foreach (var linha in File.ReadLines(log).Take(8))
+                    {
+                        if (linha.StartsWith("Versao:", StringComparison.OrdinalIgnoreCase))
+                            versao = linha.Substring("Versao:".Length).Trim();
+                        else if (linha.StartsWith("Modo:", StringComparison.OrdinalIgnoreCase))
+                            modo = linha.Substring("Modo:".Length).Trim();
+                    }
+
+                    string detalhe = string.Join(" · ", new[] { versao, modo }.Where(x => !string.IsNullOrWhiteSpace(x)));
+                    if (!string.IsNullOrWhiteSpace(detalhe)) return $"{detalhe} · {arquivos} arquivo(s)";
+                }
+            }
+            catch { }
+
+            return $"{arquivos} arquivo(s)";
+        }
+
+        private static bool EhArquivoTexto(string caminho)
+        {
+            string ext = Path.GetExtension(caminho).ToLowerInvariant();
+            return ext == ".log" || ext == ".txt" || ext == ".json" || ext == ".csv" ||
+                   ext == ".md" || ext == ".xml" || ext == ".ini" || ext == ".config" || ext == ".html";
+        }
+
+        private static string FormatarTamanho(long bytes)
+        {
+            if (bytes >= 1024L * 1024L) return $"{bytes / 1024.0 / 1024.0:F1} MB";
+            if (bytes >= 1024L) return $"{bytes / 1024.0:F1} KB";
+            return $"{bytes} B";
+        }
+
+        private void AplicarFiltroRegistros()
+        {
+            try
+            {
+                string busca = (TxtBuscaRegistros?.Text ?? string.Empty).Trim();
+                string modalidade = ObterTextoCombo(CmbModalidadeRegistros, "Todas");
+                string periodo = ObterTextoCombo(CmbPeriodoRegistros, "Tudo");
+                DateTime? limite = ObterLimitePeriodo(periodo);
+
+                var filtrados = _todosRegistros
+                    .Where(r => modalidade == "Todas" || string.Equals(r.Modalidade, modalidade, StringComparison.OrdinalIgnoreCase))
+                    .Where(r => !limite.HasValue || r.DataHora >= limite.Value)
+                    .Where(r => string.IsNullOrWhiteSpace(busca) ||
+                                r.Nome.IndexOf(busca, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                r.Detalhe.IndexOf(busca, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                r.Modalidade.IndexOf(busca, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                r.Data.IndexOf(busca, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                r.Hora.IndexOf(busca, StringComparison.OrdinalIgnoreCase) >= 0)
+                    .OrderByDescending(r => r.DataHora)
+                    .ToList();
+
+                ListRegistros.SelectedItem = null;
+                _registrosList.Clear();
+                foreach (var registro in filtrados) _registrosList.Add(registro);
+
+                AtualizarResumoRegistros();
+                AtualizarContadorAba();
+
+                if (_registrosList.Count > 0)
+                {
+                    ListRegistros.SelectedIndex = 0;
+                }
+                else
+                {
+                    TxtLogHeaderTitle.Text = "Nenhum registro encontrado";
+                    TxtLogMeta.Text = "Ajuste os filtros ou gere um novo build/execução.";
+                    TxtLogViewer.Text = "[Nenhum registro corresponde aos filtros atuais...]";
+                    CmbArquivosRegistro.Items.Clear();
+                }
+            }
+            catch (Exception ex)
+            {
+                TxtLogViewer.Text = "Erro ao filtrar registros: " + ex.Message;
+            }
+        }
+
+        private void AtualizarResumoRegistros()
+        {
+            if (TxtResumoRegistrosTotal != null) TxtResumoRegistrosTotal.Text = _todosRegistros.Count.ToString("N0");
+            if (TxtResumoRegistrosHoje != null) TxtResumoRegistrosHoje.Text = _todosRegistros.Count(r => r.DataHora.Date == DateTime.Today).ToString("N0");
+            if (TxtResumoBuilds != null) TxtResumoBuilds.Text = _todosRegistros.Count(r => r.Modalidade == BotRpaUI.Core.RegistroStorage.ModalidadeBuild).ToString("N0");
+            if (TxtResumoExecucoes != null) TxtResumoExecucoes.Text = _todosRegistros.Count(r => r.Modalidade == BotRpaUI.Core.RegistroStorage.ModalidadeExecucao).ToString("N0");
+        }
+
+        private static string ObterTextoCombo(ComboBox? combo, string padrao)
+        {
+            if (combo?.SelectedItem is ComboBoxItem item && item.Content != null)
+            {
+                return item.Content.ToString() ?? padrao;
+            }
+            return padrao;
+        }
+
+        private static DateTime? ObterLimitePeriodo(string periodo)
+        {
+            switch (periodo)
+            {
+                case "Hoje": return DateTime.Today;
+                case "7 dias": return DateTime.Today.AddDays(-7);
+                case "30 dias": return DateTime.Today.AddDays(-30);
+                default: return null;
+            }
+        }
+
+        private void FiltroRegistros_Changed(object sender, RoutedEventArgs e)
+        {
+            if (_atualizandoFiltrosRegistros || !IsLoaded) return;
+            AplicarFiltroRegistros();
+        }
+
         private void ListRegistros_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             var reg = ListRegistros.SelectedItem as RegistroModel;
             if (reg == null || string.IsNullOrWhiteSpace(reg.FullPath)) return;
 
+            TxtLogHeaderTitle.Text = reg.Nome;
+            TxtLogMeta.Text = $"{reg.DataHora:dd/MM/yyyy HH:mm} · {reg.Modalidade} · {reg.Tamanho}";
+            _currentSelectedLogPath = reg.FullPath;
+
+            _atualizandoArquivosRegistro = true;
+            CmbArquivosRegistro.Items.Clear();
+
+            var arquivos = new System.Collections.Generic.List<string>();
+            if (reg.IsFolder && Directory.Exists(reg.FullPath))
+            {
+                arquivos = ObterArquivosTexto(reg.FullPath, true);
+                foreach (var arquivo in arquivos)
+                {
+                    CmbArquivosRegistro.Items.Add(new ComboBoxItem
+                    {
+                        Content = Path.GetRelativePath(reg.FullPath, arquivo),
+                        Tag = arquivo
+                    });
+                }
+            }
+            else if (File.Exists(reg.FullPath))
+            {
+                arquivos.Add(reg.FullPath);
+                CmbArquivosRegistro.Items.Add(new ComboBoxItem
+                {
+                    Content = Path.GetFileName(reg.FullPath),
+                    Tag = reg.FullPath
+                });
+            }
+
+            if (arquivos.Count > 0)
+            {
+                CmbArquivosRegistro.SelectedIndex = 0;
+                _atualizandoArquivosRegistro = false;
+                CarregarArquivoRegistro(arquivos[0]);
+            }
+            else
+            {
+                _atualizandoArquivosRegistro = false;
+                _currentSelectedLogPath = reg.FullPath;
+                TxtLogViewer.Text = reg.IsFolder
+                    ? "[Pasta de auditoria sem arquivos de texto]"
+                    : "[Arquivo binário ou vazio]";
+            }
+        }
+
+        private static System.Collections.Generic.List<string> ObterArquivosTexto(string pasta, bool recursivo)
+        {
             try
             {
-                _currentSelectedLogPath = reg.FullPath;
-                TxtLogHeaderTitle.Text = $"{reg.Nome} ({reg.Data})";
+                return Directory.GetFiles(pasta, "*", recursivo ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly)
+                    .Where(EhArquivoTexto)
+                    .OrderBy(f => Path.GetFileName(f).Equals("build.log", StringComparison.OrdinalIgnoreCase) ? 0 : 1)
+                    .ThenBy(Path.GetFileName, StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+            }
+            catch
+            {
+                return new System.Collections.Generic.List<string>();
+            }
+        }
 
-                if (Directory.Exists(reg.FullPath))
+        private void CmbArquivosRegistro_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (_atualizandoArquivosRegistro) return;
+            if (CmbArquivosRegistro.SelectedItem is ComboBoxItem item && item.Tag is string caminho)
+            {
+                CarregarArquivoRegistro(caminho);
+            }
+        }
+
+        private void CarregarArquivoRegistro(string caminho)
+        {
+            try
+            {
+                _currentSelectedLogPath = caminho;
+                var info = new FileInfo(caminho);
+                if (!info.Exists)
                 {
-                    // Procura arquivos .log ou .txt na pasta
-                    var logFiles = Directory.GetFiles(reg.FullPath, "*.log", SearchOption.AllDirectories)
-                        .Concat(Directory.GetFiles(reg.FullPath, "*.txt", SearchOption.AllDirectories))
-                        .ToArray();
+                    TxtLogViewer.Text = "[Arquivo não encontrado]";
+                    return;
+                }
 
-                    if (logFiles.Length > 0)
+                if (info.Length > 2_000_000)
+                {
+                    using (var fs = new FileStream(caminho, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                    using (var sr = new StreamReader(fs, System.Text.Encoding.UTF8, true))
                     {
-                        string content = File.ReadAllText(logFiles[0]);
-                        TxtLogViewer.Text = content;
-                        _currentSelectedLogPath = logFiles[0];
-                    }
-                    else
-                    {
-                        var files = Directory.GetFiles(reg.FullPath);
-                        if (files.Length > 0)
-                        {
-                            TxtLogViewer.Text = $"[Pasta de Auditoria]\nArquivos presentes ({files.Length}):\n" + string.Join("\n", files.Select(Path.GetFileName));
-                        }
-                        else
-                        {
-                            TxtLogViewer.Text = "[Pasta de Auditoria Vazia ou Sem Arquivos de Texto]";
-                        }
+                        char[] buffer = new char[2_000_000];
+                        int lidos = sr.ReadBlock(buffer, 0, buffer.Length);
+                        TxtLogViewer.Text = new string(buffer, 0, lidos) + "\n\n[...] Visualização truncada em 2 MB. Use 'Abrir Selecionado' para ver o arquivo completo.";
                     }
                 }
-                else if (File.Exists(reg.FullPath))
+                else
                 {
-                    TxtLogViewer.Text = File.ReadAllText(reg.FullPath);
+                    TxtLogViewer.Text = File.ReadAllText(caminho);
                 }
+
+                var reg = ListRegistros.SelectedItem as RegistroModel;
+                if (reg != null)
+                {
+                    TxtLogMeta.Text = $"{reg.DataHora:dd/MM/yyyy HH:mm} · {reg.Modalidade} · {reg.Tamanho} · {Path.GetFileName(caminho)}";
+                }
+
+                TxtLogViewer.ScrollToHome();
             }
             catch (Exception ex)
             {
-                TxtLogViewer.Text = $"Erro ao ler arquivo de log: {ex.Message}";
+                TxtLogViewer.Text = $"Erro ao ler arquivo de registro: {ex.Message}";
             }
+        }
+
+        private void BtnTabRegistrosArquivos_Click(object sender, RoutedEventArgs e)
+        {
+            SelecionarAbaRegistros(false);
+        }
+
+        private void BtnTabAuditoriaBase_Click(object sender, RoutedEventArgs e)
+        {
+            SelecionarAbaRegistros(true);
+        }
+
+        private void SelecionarAbaRegistros(bool auditoria)
+        {
+            var corAtiva = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#513BA6"));
+            var corInativa = Brushes.Transparent;
+            var textoAtivo = Brushes.White;
+            var textoInativo = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#85859E"));
+
+            BtnTabRegistrosArquivos.Background = auditoria ? corInativa : corAtiva;
+            BtnTabRegistrosArquivos.Foreground = auditoria ? textoInativo : textoAtivo;
+            BtnTabAuditoriaBase.Background = auditoria ? corAtiva : corInativa;
+            BtnTabAuditoriaBase.Foreground = auditoria ? textoAtivo : textoInativo;
+
+            SubPanelRegistrosArquivos.Visibility = auditoria ? Visibility.Collapsed : Visibility.Visible;
+            SubPanelAuditoriaBase.Visibility = auditoria ? Visibility.Visible : Visibility.Collapsed;
+
+            if (auditoria)
+            {
+                if (!_auditoriaCarregada) LoadAuditoria();
+                else AplicarFiltroAuditoria();
+            }
+
+            AtualizarContadorAba();
+        }
+
+        private void AtualizarContadorAba()
+        {
+            if (TxtContadorRegistros == null) return;
+
+            if (SubPanelAuditoriaBase != null && SubPanelAuditoriaBase.Visibility == Visibility.Visible)
+            {
+                TxtContadorRegistros.Text = TxtContadorAuditoria?.Text ?? "0 evento(s)";
+            }
+            else
+            {
+                TxtContadorRegistros.Text = $"{_registrosList.Count:N0} de {_todosRegistros.Count:N0} registro(s)";
+            }
+        }
+
+        private void LoadAuditoria()
+        {
+            _auditoriaCarregada = true;
+            AplicarFiltroAuditoria();
+        }
+
+        private void AplicarFiltroAuditoria()
+        {
+            try
+            {
+                string busca = (TxtBuscaAuditoria?.Text ?? string.Empty).Trim();
+                string modalidade = ObterTextoCombo(CmbModalidadeAuditoria, "Todas");
+                string periodo = ObterTextoCombo(CmbPeriodoAuditoria, "Tudo");
+                DateTime? inicio = null;
+                DateTime? fim = null;
+
+                switch (periodo)
+                {
+                    case "Hoje":
+                        inicio = DateTime.Today;
+                        fim = DateTime.Today.AddDays(1).AddSeconds(-1);
+                        break;
+                    case "7 dias":
+                        inicio = DateTime.Today.AddDays(-7);
+                        break;
+                    case "30 dias":
+                        inicio = DateTime.Today.AddDays(-30);
+                        break;
+                }
+
+                var lista = BotRpaUI.Core.AuditLogManager.LerFiltrado(inicio, fim, modalidade, busca, 5000);
+                GridAuditoria.ItemsSource = lista;
+                TxtContadorAuditoria.Text = $"{lista.Count:N0} evento(s)";
+
+                if (lista.Count > 0)
+                {
+                    GridAuditoria.SelectedIndex = 0;
+                }
+                else
+                {
+                    TxtAuditoriaDetalhesTitulo.Text = "Nenhum evento encontrado";
+                    TxtAuditoriaDetalhes.Text = "Ajuste os filtros de período, modalidade ou busca.";
+                }
+
+                AtualizarContadorAba();
+            }
+            catch (Exception ex)
+            {
+                TxtAuditoriaDetalhesTitulo.Text = "Erro ao carregar auditoria";
+                TxtAuditoriaDetalhes.Text = ex.Message;
+            }
+        }
+
+        private void FiltroAuditoria_Changed(object sender, RoutedEventArgs e)
+        {
+            if (_atualizandoFiltrosAuditoria || !IsLoaded) return;
+            AplicarFiltroAuditoria();
+        }
+
+        private void GridAuditoria_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (GridAuditoria.SelectedItem is not BotRpaUI.Core.AuditoriaRegistro reg)
+            {
+                return;
+            }
+
+            TxtAuditoriaDetalhesTitulo.Text = $"{reg.Acao} · {reg.Modalidade}";
+
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine($"Data/Hora: {reg.DataHoraFormatada}");
+            sb.AppendLine($"Modalidade: {reg.Modalidade}");
+            sb.AppendLine($"Ação: {reg.Acao}");
+            sb.AppendLine($"Tabela: {reg.Tabela}");
+            sb.AppendLine($"Registro: {reg.RegistroId}");
+            sb.AppendLine($"Usuário: {reg.Usuario}");
+            sb.AppendLine($"IP/Máquina: {reg.IpMaquina}");
+            sb.AppendLine();
+            sb.AppendLine($"Detalhes: {(string.IsNullOrWhiteSpace(reg.Detalhes) ? "—" : reg.Detalhes)}");
+            TxtAuditoriaDetalhes.Text = sb.ToString().TrimEnd();
         }
 
         private void BtnCopiarLog_Click(object sender, RoutedEventArgs e)
@@ -1357,7 +2060,6 @@ namespace BotRpaUI.Views
             if (!string.IsNullOrWhiteSpace(TxtLogViewer.Text))
             {
                 Clipboard.SetText(TxtLogViewer.Text);
-                MessageBox.Show("Conteúdo do log copiado para a Área de Transferência!", "Log Copiado", MessageBoxButton.OK, MessageBoxImage.Information);
             }
         }
 
@@ -1369,10 +2071,23 @@ namespace BotRpaUI.Views
             }
             else
             {
-                // Cria arquivo temporário para visualização
                 string tempFile = Path.Combine(Path.GetTempPath(), "inno_log_inspect.txt");
                 File.WriteAllText(tempFile, TxtLogViewer.Text);
                 System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("notepad.exe", tempFile) { UseShellExecute = true });
+            }
+        }
+
+        private void BtnAbrirRegistroSelecionado_Click(object sender, RoutedEventArgs e)
+        {
+            if (!string.IsNullOrWhiteSpace(_currentSelectedLogPath) && File.Exists(_currentSelectedLogPath))
+            {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(_currentSelectedLogPath) { UseShellExecute = true });
+                return;
+            }
+
+            if (ListRegistros.SelectedItem is RegistroModel reg && Directory.Exists(reg.FullPath))
+            {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("explorer.exe", reg.FullPath) { UseShellExecute = true });
             }
         }
 
@@ -1386,7 +2101,7 @@ namespace BotRpaUI.Views
         private void BtnRecarregarLogs_Click(object sender, RoutedEventArgs e)
         {
             LoadRegistrosLocais();
-            MessageBox.Show("Registros e auditorias recarregados com sucesso!", "Registros", MessageBoxButton.OK, MessageBoxImage.Information);
+            if (_auditoriaCarregada) LoadAuditoria();
         }
 
         // =========================================================================
@@ -1595,88 +2310,28 @@ namespace BotRpaUI.Views
                 var lista = ObterListaExportacao(somenteSelecionados, true);
                 if (lista == null) return;
 
-                PrintDialog pd = new PrintDialog();
-                if (pd.ShowDialog() != true) return;
-
-                System.Windows.Documents.FlowDocument doc = new System.Windows.Documents.FlowDocument();
-                doc.PagePadding = new Thickness(50, 40, 50, 40);
-                doc.ColumnWidth = pd.PrintableAreaWidth - 100;
-                doc.FontFamily = new FontFamily("Segoe UI");
-
-                // Cabeçalho / Título
-                var title = new System.Windows.Documents.Paragraph(new System.Windows.Documents.Run("Relatório de Equipamentos — Plataforma Bot_RPA"))
+                var sfd = new Microsoft.Win32.SaveFileDialog
                 {
-                    FontSize = 18,
-                    FontWeight = FontWeights.Bold,
-                    TextAlignment = TextAlignment.Center,
-                    Margin = new Thickness(0, 0, 0, 4)
+                    Filter = "Documento PDF (*.pdf)|*.pdf|Todos os arquivos (*.*)|*.*",
+                    DefaultExt = ".pdf",
+                    AddExtension = true,
+                    FileName = $"Relatorio_Dispositivos_{DateTime.Now:yyyyMMdd_HHmm}.pdf",
+                    Title = "Salvar relatório executivo em PDF"
                 };
-                doc.Blocks.Add(title);
 
-                // Subtítulo
-                string strFiltro = somenteSelecionados ? "Seleção Personalizada" : "Base Completa";
-                var sub = new System.Windows.Documents.Paragraph(new System.Windows.Documents.Run($"Filtro: {strFiltro} | Total: {lista.Count} dispositivo(s) | Emitido em: {DateTime.Now:dd/MM/yyyy HH:mm}"))
-                {
-                    FontSize = 10,
-                    Foreground = Brushes.Gray,
-                    TextAlignment = TextAlignment.Center,
-                    Margin = new Thickness(0, 0, 0, 16)
-                };
-                doc.Blocks.Add(sub);
+                if (sfd.ShowDialog() != true) return;
 
-                // Tabela de Dados
-                var table = new System.Windows.Documents.Table();
-                double[] widths = { 40, 160, 140, 140, 110 };
-                foreach (var w in widths) table.Columns.Add(new System.Windows.Documents.TableColumn { Width = new GridLength(w) });
+                BotRpaUI.Core.RelatorioPdfGenerator.Gerar(
+                    sfd.FileName,
+                    lista,
+                    somenteSelecionados,
+                    BotRpaUI.Core.AppInfo.CurrentVersion);
 
-                var rg = new System.Windows.Documents.TableRowGroup();
-                table.RowGroups.Add(rg);
-
-                // Cabeçalho da Tabela
-                string[] headers = { "#", "Nº Patrimônio", "Fabricante / Modelo", "N/S (Serial)", "MAC Address" };
-                var hr = new System.Windows.Documents.TableRow { Background = Brushes.DarkSlateGray };
-                foreach (var h in headers)
-                {
-                    hr.Cells.Add(new System.Windows.Documents.TableCell(new System.Windows.Documents.Paragraph(new System.Windows.Documents.Run(h))
-                    {
-                        FontWeight = FontWeights.Bold,
-                        FontSize = 10,
-                        Foreground = Brushes.White,
-                        Padding = new Thickness(6, 4, 6, 4)
-                    }));
-                }
-                rg.Rows.Add(hr);
-
-                // Linhas
-                bool alt = false;
-                foreach (var d in lista)
-                {
-                    var row = new System.Windows.Documents.TableRow { Background = alt ? Brushes.WhiteSmoke : Brushes.White };
-                    alt = !alt;
-                    string[] vals = { d.ID.ToString(), string.IsNullOrWhiteSpace(d.Patrimonio) ? "-" : d.Patrimonio, d.MarcaModelo, d.Serial, d.MAC };
-                    foreach (var v in vals)
-                    {
-                        row.Cells.Add(new System.Windows.Documents.TableCell(new System.Windows.Documents.Paragraph(new System.Windows.Documents.Run(v ?? "-"))
-                        {
-                            FontSize = 9.5,
-                            Padding = new Thickness(6, 3, 6, 3)
-                        }));
-                    }
-                    rg.Rows.Add(row);
-                }
-                doc.Blocks.Add(table);
-
-                // Rodapé
-                var footer = new System.Windows.Documents.Paragraph(new System.Windows.Documents.Run($"Plataforma Bot_RPA — Gerado automaticamente em {DateTime.Now:dd/MM/yyyy HH:mm:ss}"))
-                {
-                    FontSize = 8.5,
-                    Foreground = Brushes.Gray,
-                    TextAlignment = TextAlignment.Right,
-                    Margin = new Thickness(0, 16, 0, 0)
-                };
-                doc.Blocks.Add(footer);
-
-                pd.PrintDocument(((System.Windows.Documents.IDocumentPaginatorSource)doc).DocumentPaginator, "Relatorio de Dispositivos - Bot_RPA");
+                MessageBox.Show(
+                    $"Relatório PDF gerado com sucesso!\n\nArquivo: {sfd.FileName}",
+                    "Relatório Executivo",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
             }
             catch (Exception ex)
             {

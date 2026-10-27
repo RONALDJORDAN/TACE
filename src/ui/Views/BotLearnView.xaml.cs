@@ -7,9 +7,9 @@ using System.Windows.Controls;
 using System.Windows.Threading;
 
 // ============================================================
-// BotLearnView — Painel de Estatísticas de Aprendizado
-// Exibe scores, acertos e falhas de cada estratégia de UI,
-// além do controle de reset com confirmação dupla.
+// BotLearnView — Painel do motor de estratégias adaptativas.
+// Exibe scores, acertos, falhas e o ranking heurístico de
+// seletores, além do controle de reset com confirmação dupla.
 // Autor: Jordan Araujo | BotRpa
 // ============================================================
 
@@ -17,55 +17,57 @@ using System.Windows.Data;
 
 namespace BotRpaUI.Views
 {
-    // --- Conversores para Progresso de Grupo ---
-    public class GroupProgressConverter : IValueConverter
+    // --- Conversores para o score médio dos grupos ---
+    public class GroupScoreStrConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
             if (value is ReadOnlyObservableCollection<object> items && items.Count > 0)
             {
                 double total = 0;
-                foreach (LearnStrategyItem item in items) total += item.Progresso;
-                return total / items.Count;
+                int count = 0;
+                foreach (var entry in items)
+                {
+                    if (entry is LearnStrategyItem item)
+                    {
+                        total += item.Score;
+                        count++;
+                    }
+                }
+                if (count > 0) return $"{total / count:+0;-0;0}";
             }
-            return 0.0;
+            return "—";
         }
+
         public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture) => Binding.DoNothing;
     }
 
-    public class GroupProgressStrConverter : IValueConverter
+    public class GroupScoreBrushConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
             if (value is ReadOnlyObservableCollection<object> items && items.Count > 0)
             {
                 double total = 0;
-                foreach (LearnStrategyItem item in items) total += item.Progresso;
-                return $"{(total / items.Count):F0}%";
-            }
-            return "0%";
-        }
-        public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture) => Binding.DoNothing;
-    }
-
-    public class GroupProgressBrushConverter : IValueConverter
-    {
-        public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
-        {
-            if (value is ReadOnlyObservableCollection<object> items && items.Count > 0)
-            {
-                double total = 0;
-                foreach (LearnStrategyItem item in items) total += item.Progresso;
-                double avg = total / items.Count;
-                var converter = new ScoreToBrushConverter();
-                return converter.Convert(avg, targetType, parameter, culture);
+                int count = 0;
+                foreach (var entry in items)
+                {
+                    if (entry is LearnStrategyItem item)
+                    {
+                        total += item.Score;
+                        count++;
+                    }
+                }
+                if (count > 0)
+                    return new ScoreToBrushConverter().Convert(total / count, targetType, parameter, culture);
             }
             return System.Windows.Media.Brushes.Transparent;
         }
+
         public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture) => Binding.DoNothing;
     }
 
-    // Legenda unificada com o Mapa Neural: >50 verde, 1-50 amarelo, 0 neutro, <0 vermelho
+    // Legenda unificada: >50 verde, 1-50 amarelo, 0 neutro, <0 vermelho.
     public class ScoreToBrushConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
@@ -73,68 +75,48 @@ namespace BotRpaUI.Views
             if (value is double or int)
             {
                 double score = System.Convert.ToDouble(value);
-                if (score > 50) return new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#4EDEA3"));
-                if (score > 0) return new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#F5C542"));
-                if (score == 0) return new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#8E8EA0"));
-                return new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#FF6B6B"));
+                string color = score > 50 ? "#3FB950" : score > 0 ? "#D29922" : score == 0 ? "#8B98A7" : "#F85149";
+                return new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(color));
             }
             return System.Windows.Media.Brushes.Transparent;
         }
+
         public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture) => Binding.DoNothing;
     }
 
-    // --- Modelo de linha da tabela ---
+    // --- Modelo de linha do ranking ---
     public class LearnStrategyItem
     {
         public string RawTargetId { get; set; } = string.Empty;
-        public string Categoria   { get; set; } = string.Empty;
-        public string ElementoId  { get; set; } = string.Empty;
-        public string Query       { get; set; } = string.Empty;
-        public int    Score       { get; set; }
-        public int    Hits        { get; set; }
-        public int    Misses      { get; set; }
+        public string Categoria { get; set; } = string.Empty;
+        public string ElementoId { get; set; } = string.Empty;
+        public string Query { get; set; } = string.Empty;
+        public int Score { get; set; }
+        public int Hits { get; set; }
+        public int Misses { get; set; }
+        public int Attempts => Hits + Misses;
 
-        // Taxa de precisão calculada na leitura
         public string Precisao
         {
             get
             {
-                int total = Hits + Misses;
-                if (total == 0) return "—";
-                double rate = (double)Hits / total * 100.0;
+                if (Attempts == 0) return "—";
+                double rate = (double)Hits / Attempts * 100.0;
                 return $"{rate:F1}%";
             }
         }
 
-        // Progresso de Aprendizado (Agora direto de -100 a +100)
-        public double Progresso
-        {
-            get
-            {
-                return Score;
-            }
-        }
-
-        // String formatada para exibir no TextBlock
-        public string ProgressoStr
-        {
-            get
-            {
-                if (Score == 0 && Hits == 0 && Misses == 0) return "0";
-                return $"{Score}";
-            }
-        }
-
-        // Status textual baseado no score
         public string StatusStr
         {
             get
             {
-                if (Score == 0 && Hits == 0 && Misses == 0) return "Não testada";
+                if (Attempts == 0) return "Sem testes";
                 if (Score >= 80) return "Excelente";
-                if (Score > 0)   return "Boa";
-                if (Score <= -80) return "Não utilizar";
-                return "Ruim";
+                if (Score > 50) return "Alta confiança";
+                if (Score > 0) return "Em observação";
+                if (Score == 0) return "Neutra";
+                if (Score <= -50) return "Penalizada";
+                return "Atenção";
             }
         }
 
@@ -144,14 +126,9 @@ namespace BotRpaUI.Views
         {
             get
             {
-                if (string.IsNullOrEmpty(HistoryRaw)) return "-----";
-                string res = "";
-                foreach (char c in HistoryRaw)
-                {
-                    if (c == '1') res += "1";
-                    else if (c == '0') res += "0";
-                }
-                return res.TrimEnd();
+                if (string.IsNullOrWhiteSpace(HistoryRaw)) return "—";
+                var chars = HistoryRaw.Where(c => c == '1' || c == '0').Take(10).ToArray();
+                return chars.Length == 0 ? "—" : string.Join(" ", chars);
             }
         }
     }
@@ -159,9 +136,8 @@ namespace BotRpaUI.Views
     public partial class BotLearnView : UserControl
     {
         // ============================================================
-        // P/Invoke — Estrutura espelho do LearnStrategyExport do C
-        // ATENÇÃO: A ordem e os tamanhos devem ser idênticos ao struct
-        // definido em api.c (target_id[64], query[128], score, hits, misses)
+        // P/Invoke — Estrutura espelho do LearnStrategyExport do C.
+        // A ordem e os tamanhos devem ser idênticos ao struct de api.c.
         // ============================================================
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
         private struct LearnStrategyExport
@@ -195,19 +171,9 @@ namespace BotRpaUI.Views
         [DllImport("BotEngine.dll", CallingConvention = CallingConvention.Cdecl)]
         private static extern int Engine_Learn_GetActiveMode();
 
-        [DllImport("BotEngine.dll", CallingConvention = CallingConvention.Cdecl)]
-        private static extern int Engine_RefreshDevices();
-
-        [DllImport("BotEngine.dll", CallingConvention = CallingConvention.Cdecl)]
-        private static extern int Engine_GetRegisteredTotal();
-
-        // --- Estado interno de confirmação dupla ---
         private bool _resetPrimarioConfirmado = false;
-
-        // --- Filtro por Modelo de Hardware ---
         private string _currentModelFilter = "ALL";
-
-        // --- Coleção de dados master e da tabela ---
+        private string _searchTerm = "";
         private System.Collections.Generic.List<LearnStrategyItem> _allStrategies = new();
         private ObservableCollection<LearnStrategyItem> _strategies = new();
 
@@ -216,27 +182,40 @@ namespace BotRpaUI.Views
             InitializeComponent();
             BotRpaUI.Core.BotLearnBackupManager.ExecutarRotinaDiaria();
             CarregarDados();
-
-            UpdateIaModeBadge();
+            AtualizarModo();
         }
 
-        private void UpdateIaModeBadge()
+        private void AtualizarModo()
         {
             try
             {
                 int mode = 0;
                 try { mode = Engine_Learn_GetActiveMode(); }
                 catch { mode = BotRpaUI.Core.SettingsManager.AiLearnActive ? 1 : 0; }
-                if (TxtIaSubtitle != null)
-                    TxtIaSubtitle.Text = mode == 1
-                        ? "Mecanismo de IA adaptativa com Centroid Matching, resolução multi-fallback e proteção contra drift de tela."
-                        : "Seletores determinísticos versionados — aprendizado desligado, sem persistência (recomendado produção).";
+
+                bool adaptive = mode == 1;
+                if (TxtModeBadge != null)
+                {
+                    TxtModeBadge.Text = adaptive ? "ADAPTATIVO" : "DETERMINÍSTICO";
+                    TxtModeBadge.Foreground = BrushFromHex(adaptive ? "#3FB950" : "#58A6FF");
+                }
+                if (BadgeModo != null)
+                {
+                    BadgeModo.Background = BrushFromHex(adaptive ? "#0F2A1A" : "#0D1B2A");
+                    BadgeModo.BorderBrush = BrushFromHex(adaptive ? "#3FB950" : "#1F6FEB");
+                }
+                if (TxtModeDescription != null)
+                {
+                    TxtModeDescription.Text = adaptive
+                        ? "Aprende com acertos e falhas registrados e persiste o ranking em bot_learn.json."
+                        : "Usa somente o seed compilado; scores não são persistidos.";
+                }
                 if (BtnResetDB != null)
                 {
-                    BtnResetDB.IsEnabled = mode == 1;
-                    BtnResetDB.ToolTip = mode == 1
-                        ? "Apaga o histórico de aprendizado persistido e volta ao seed."
-                        : "Modo Estático: sem histórico persistido — nada a resetar. Ative o modo ATIVO nas Configurações para aprender.";
+                    BtnResetDB.IsEnabled = adaptive;
+                    BtnResetDB.ToolTip = adaptive
+                        ? "Apaga o histórico adaptativo persistido e retorna ao seed compilado."
+                        : "Disponível apenas no modo adaptativo. Ative o modo nas Configurações.";
                 }
             }
             catch { }
@@ -246,9 +225,19 @@ namespace BotRpaUI.Views
         {
             var backups = BotRpaUI.Core.BotLearnBackupManager.ObterBackupsDisponiveis();
             ListBackups.ItemsSource = backups;
-        }
 
-        private string _searchTerm = "";
+            if (TxtBackupsEmpty != null)
+                TxtBackupsEmpty.Visibility = backups.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+
+            if (TxtBackupCount != null)
+                TxtBackupCount.Text = backups.Count == 1 ? "1 cópia" : $"{backups.Count} cópias";
+
+            if (TxtBackupPath != null)
+            {
+                try { TxtBackupPath.Text = $"Pasta de backups: {BotRpaUI.Core.BotLearnBackupManager.GetBackupDirectory()}"; }
+                catch { TxtBackupPath.Text = "Pasta de backups: —"; }
+            }
+        }
 
         public void TxtSearchStrategy_TextChanged(object sender, TextChangedEventArgs e)
         {
@@ -289,9 +278,8 @@ namespace BotRpaUI.Views
             }
         }
 
-        // A roda do mouse sobre a matriz era engolida pelo ScrollViewer interno
-        // do ListView (barra desabilitada) e nunca chegava ao ScrollViewer da
-        // página. Repassa o evento ao ScrollViewer externo mais próximo.
+        // Repassa a roda do mouse ao ScrollViewer da página, pois o ScrollViewer
+        // interno do ListView está desabilitado.
         private void ListStrategies_PreviewMouseWheel(object sender, System.Windows.Input.MouseWheelEventArgs e)
         {
             if (sender is not ListView lv) return;
@@ -320,20 +308,41 @@ namespace BotRpaUI.Views
 
         private void AtualizarSimulador(string friendlyName)
         {
-            if (TxtSimTargetId == null || TxtSimPrimary == null || TxtSimFallback1 == null || TxtSimConfidence == null)
+            if (TxtSimTargetId == null || TxtSimPrimary == null || TxtSimFallback1 == null)
                 return;
 
             var items = _allStrategies.Where(s => s.ElementoId == friendlyName).OrderByDescending(s => s.Score).ToList();
-            if (items.Count > 0)
+            if (items.Count == 0)
             {
-                var best = items[0];
-                TxtSimTargetId.Text = $"ALVO: {best.RawTargetId} ({friendlyName})";
-                TxtSimPrimary.Text = best.Query;
-                TxtSimFallback1.Text = items.Count > 1 ? items[1].Query : "Heurística de Centróide Estático / Relativo (X, Y)";
-
-                double conf = Math.Max(88.0, Math.Min(99.9, 88.0 + (best.Score * 0.12)));
-                TxtSimConfidence.Text = $"{conf:F1}% Confiabilidade Heurística (Score: {best.Score})";
+                LimparDiagnostico();
+                return;
             }
+
+            var best = items[0];
+            TxtSimTargetId.Text = $"ALVO: {best.ElementoId} · {best.RawTargetId}";
+            TxtSimPrimary.Text = string.IsNullOrWhiteSpace(best.Query) ? "—" : best.Query;
+            TxtSimFallback1.Text = items.Count > 1 ? items[1].Query : "Sem alternativa registrada";
+            TxtSimScore.Text = $"{best.Score:+0;-0;0}";
+            TxtSimPrecision.Text = best.Precisao;
+            TxtSimAttempts.Text = best.Attempts == 0
+                ? "0 registros"
+                : $"{best.Attempts} ({best.Hits} acertos / {best.Misses} falhas)";
+            TxtSimStatus.Text = best.StatusStr;
+
+            var brush = BrushParaScore(best.Score);
+            if (TxtSimScore != null) TxtSimScore.Foreground = brush;
+            if (TxtSimStatus != null) TxtSimStatus.Foreground = brush;
+        }
+
+        private void LimparDiagnostico()
+        {
+            if (TxtSimTargetId != null) TxtSimTargetId.Text = "ALVO: nenhuma estratégia selecionada";
+            if (TxtSimPrimary != null) TxtSimPrimary.Text = "Aguardando seleção...";
+            if (TxtSimFallback1 != null) TxtSimFallback1.Text = "Aguardando seleção...";
+            if (TxtSimScore != null) TxtSimScore.Text = "—";
+            if (TxtSimPrecision != null) TxtSimPrecision.Text = "—";
+            if (TxtSimAttempts != null) TxtSimAttempts.Text = "0 registros";
+            if (TxtSimStatus != null) TxtSimStatus.Text = "Sem testes";
         }
 
         private void FilterModel_Click(object sender, RoutedEventArgs e)
@@ -345,19 +354,23 @@ namespace BotRpaUI.Views
             }
         }
 
+        private void BtnAtualizar_Click(object sender, RoutedEventArgs e)
+        {
+            CarregarDados();
+            AtualizarModo();
+        }
+
         // ============================================================
-        // Carrega os dados do banco BotLearn via DLL e atualiza a UI
+        // Carrega os dados do motor nativo e atualiza indicadores e ranking.
         // ============================================================
         private void CarregarDados()
         {
             _allStrategies.Clear();
             _strategies.Clear();
 
-            int totalStrategies = 0;
-
             try
             {
-                totalStrategies = Engine_Learn_GetStrategyCount();
+                int totalStrategies = Engine_Learn_GetStrategyCount();
 
                 for (int i = 0; i < totalStrategies; i++)
                 {
@@ -368,41 +381,86 @@ namespace BotRpaUI.Views
                     _allStrategies.Add(new LearnStrategyItem
                     {
                         RawTargetId = tid,
-                        Categoria   = ObterCategoria(tid),
-                        ElementoId  = FormatarElementoId(tid),
-                        Query       = raw.Query ?? "",
-                        Score       = raw.Score,
-                        Hits        = raw.Hits,
-                        Misses      = raw.Misses,
-                        HistoryRaw  = raw.History ?? ""
+                        Categoria = ObterCategoria(tid),
+                        ElementoId = FormatarElementoId(tid),
+                        Query = raw.Query ?? "",
+                        Score = raw.Score,
+                        Hits = raw.Hits,
+                        Misses = raw.Misses,
+                        HistoryRaw = raw.History ?? ""
                     });
-                }
-
-                AplicarFiltroEAgrupamento();
-
-                // Atualizar seletor do simulador BotAI 2.0
-                if (ComboSimulador != null)
-                {
-                    var distinctElements = _allStrategies.Select(s => s.ElementoId).Distinct().OrderBy(x => x).ToList();
-                    ComboSimulador.ItemsSource = distinctElements;
-                    if (distinctElements.Count > 0 && ComboSimulador.SelectedIndex < 0)
-                    {
-                        ComboSimulador.SelectedIndex = 0;
-                    }
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erro ao ler banco BotLearn:\n{ex.Message}",
+                MessageBox.Show($"Erro ao ler os dados do BotLearn:\n{ex.Message}",
                     "BotLearn — Erro", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
 
-            // Cancela qualquer confirmação dupla pendente ao recarregar
-            _resetPrimarioConfirmado = false;
-            BtnResetDB.Content = "RESETAR BANCO BotLearn";
+            AtualizarKpis();
+            AplicarFiltroEAgrupamento();
 
-            // Atualiza também a lista de backups
+            if (ComboSimulador != null)
+            {
+                var distinctElements = _allStrategies.Select(s => s.ElementoId).Distinct().OrderBy(x => x).ToList();
+                ComboSimulador.ItemsSource = distinctElements;
+                if (distinctElements.Count > 0)
+                    ComboSimulador.SelectedIndex = 0;
+                else
+                    LimparDiagnostico();
+            }
+
+            _resetPrimarioConfirmado = false;
+            if (BtnResetDB != null)
+                BtnResetDB.Content = "Redefinir dados adaptativos";
+
             CarregarBackups();
+        }
+
+        private void AtualizarKpis()
+        {
+            int totalStrategies = _allStrategies.Count;
+            int targets = 0;
+            try { targets = Engine_Learn_GetTargetCount(); } catch { }
+            if (targets <= 0)
+                targets = _allStrategies.Select(s => s.RawTargetId).Distinct().Count();
+
+            int hits = _allStrategies.Sum(s => s.Hits);
+            int misses = _allStrategies.Sum(s => s.Misses);
+            int runs = hits + misses;
+            double avgScore = totalStrategies > 0 ? _allStrategies.Average(s => s.Score) : 0;
+
+            if (TxtKpiStrategies != null) TxtKpiStrategies.Text = totalStrategies.ToString();
+            if (TxtKpiTargets != null) TxtKpiTargets.Text = targets.ToString();
+            if (TxtKpiRuns != null) TxtKpiRuns.Text = runs.ToString();
+
+            if (TxtKpiAccuracy != null)
+            {
+                if (runs > 0)
+                {
+                    TxtKpiAccuracy.Text = $"{(double)hits / runs * 100.0:F1}%";
+                    TxtKpiAccuracy.Foreground = BrushFromHex("#58A6FF");
+                }
+                else
+                {
+                    TxtKpiAccuracy.Text = "—";
+                    TxtKpiAccuracy.Foreground = BrushFromHex("#8B98A7");
+                }
+            }
+
+            if (TxtKpiScore != null)
+            {
+                if (totalStrategies > 0)
+                {
+                    TxtKpiScore.Text = $"{avgScore:+0.0;-0.0;0.0}";
+                    TxtKpiScore.Foreground = BrushParaScore(avgScore);
+                }
+                else
+                {
+                    TxtKpiScore.Text = "—";
+                    TxtKpiScore.Foreground = BrushFromHex("#8B98A7");
+                }
+            }
         }
 
         private void AplicarFiltroEAgrupamento()
@@ -413,11 +471,11 @@ namespace BotRpaUI.Views
             {
                 bool matches = _currentModelFilter switch
                 {
-                    "V7"  => item.Categoria.Contains("Vision 7") || item.RawTargetId.StartsWith("v7_") || item.RawTargetId.Contains("vision7"),
-                    "M7"  => item.Categoria.Contains("TabMulti M7") || item.RawTargetId.StartsWith("f7_") || item.RawTargetId.Contains("m7"),
+                    "V7" => item.Categoria.Contains("Vision 7") || item.RawTargetId.StartsWith("v7_") || item.RawTargetId.Contains("vision7"),
+                    "M7" => item.Categoria.Contains("TabMulti M7") || item.RawTargetId.StartsWith("f7_") || item.RawTargetId.Contains("m7"),
                     "T20" => item.Categoria.Contains("Nokia T20") || item.RawTargetId.StartsWith("t20_") || item.RawTargetId.Contains("t20"),
-                    "F1"  => item.Categoria.Contains("Geral") || item.RawTargetId.StartsWith("f1_") || (!item.RawTargetId.StartsWith("f7_") && !item.RawTargetId.StartsWith("v7_") && !item.RawTargetId.StartsWith("t20_")),
-                    _     => true // ALL
+                    "F1" => item.Categoria.Contains("Geral") || item.RawTargetId.StartsWith("f1_") || (!item.RawTargetId.StartsWith("f7_") && !item.RawTargetId.StartsWith("v7_") && !item.RawTargetId.StartsWith("t20_")),
+                    _ => true
                 };
 
                 if (!string.IsNullOrEmpty(_searchTerm))
@@ -441,84 +499,110 @@ namespace BotRpaUI.Views
             var cvs = new CollectionViewSource { Source = _strategies };
             cvs.GroupDescriptions.Add(new PropertyGroupDescription("Categoria"));
             ListStrategies.ItemsSource = cvs.View;
+
+            AtualizarContadoresRanking(filtered.Count);
         }
 
-        // Formata o ID técnico do elemento para exibição amigável
+        private void AtualizarContadoresRanking(int filteredCount)
+        {
+            if (TxtRankingCount != null)
+                TxtRankingCount.Text = filteredCount == 1 ? "1 seletor" : $"{filteredCount} seletores";
+
+            if (TxtRankingEmpty != null)
+            {
+                bool empty = filteredCount == 0;
+                TxtRankingEmpty.Visibility = empty ? Visibility.Visible : Visibility.Collapsed;
+                if (empty)
+                {
+                    TxtRankingEmpty.Text = _allStrategies.Count == 0
+                        ? "Nenhuma estratégia carregada pelo motor."
+                        : "Nenhum seletor corresponde aos filtros atuais.";
+                }
+            }
+        }
+
+        private static System.Windows.Media.Brush BrushFromHex(string hex)
+        {
+            return new System.Windows.Media.SolidColorBrush(
+                (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(hex));
+        }
+
+        private static System.Windows.Media.Brush BrushParaScore(double score)
+        {
+            string color = score > 50 ? "#3FB950" : score > 0 ? "#D29922" : score == 0 ? "#8B98A7" : "#F85149";
+            return BrushFromHex(color);
+        }
+
+        // Formata o ID técnico do elemento para exibição amigável.
         private static string FormatarElementoId(string id)
         {
             return id switch
             {
-                "campo_email"             => "E-mail do Aplicador",
-                "campo_senha"             => "Senha do Aplicador",
-                "botao_entrar"            => "Botão Entrar",
-                "spinner_municipio"       => "Gaveta de Município",
-                "botao_importar_zip"      => "Opção Importar ZIP",
+                "campo_email" => "E-mail do Aplicador",
+                "campo_senha" => "Senha do Aplicador",
+                "botao_entrar" => "Botão Entrar",
+                "spinner_municipio" => "Gaveta de Município",
+                "botao_importar_zip" => "Opção Importar ZIP",
                 "f1_btn_procurar_arquivo" => "Botão Procurar Arquivo ZIP",
-                "f1_btn_avaliacoes"        => "Pasta Avaliações",
-                "f7_spinner_municipio"    => "Gaveta de Município (M7)",
-                "f7_campo_email"          => "E-mail do Aplicador (M7)",
-                "f7_campo_senha"          => "Senha do Aplicador (M7)",
-                "f7_botao_entrar"         => "Botão Entrar (M7)",
+                "f1_btn_avaliacoes" => "Pasta Avaliações",
+                "f7_spinner_municipio" => "Gaveta de Município (M7)",
+                "f7_campo_email" => "E-mail do Aplicador (M7)",
+                "f7_campo_senha" => "Senha do Aplicador (M7)",
+                "f7_botao_entrar" => "Botão Entrar (M7)",
                 "f7_btn_procurar_arquivo" => "Botão Procurar Arquivo ZIP (M7)",
-                "v7_spinner_municipio"    => "Gaveta de Município (V7)",
-                "v7_campo_email"          => "E-mail do Aplicador (V7)",
-                "v7_campo_senha"          => "Senha do Aplicador (V7)",
-                "v7_botao_entrar"         => "Botão Entrar (V7)",
-                "v7_botao_importar_zip"   => "Opção Importar ZIP (V7)",
+                "v7_spinner_municipio" => "Gaveta de Município (V7)",
+                "v7_campo_email" => "E-mail do Aplicador (V7)",
+                "v7_campo_senha" => "Senha do Aplicador (V7)",
+                "v7_botao_entrar" => "Botão Entrar (V7)",
+                "v7_botao_importar_zip" => "Opção Importar ZIP (V7)",
                 "v7_btn_procurar_arquivo" => "Botão Procurar Arquivo ZIP (V7)",
                 "v7_btn_sincronizar_agora" => "Botão Sincronizar Agora (V7)",
-                "t20_spinner_municipio"   => "Gaveta de Município (T20)",
-                "t20_campo_email"         => "E-mail do Aplicador (T20)",
-                "t20_campo_senha"         => "Senha do Aplicador (T20)",
-                "t20_botao_entrar"        => "Botão Entrar (T20)",
+                "t20_spinner_municipio" => "Gaveta de Município (T20)",
+                "t20_campo_email" => "E-mail do Aplicador (T20)",
+                "t20_campo_senha" => "Senha do Aplicador (T20)",
+                "t20_botao_entrar" => "Botão Entrar (T20)",
                 "f6_btn_sincronizar_agora" => "Botão Sincronizar Agora",
-                _                         => id
+                _ => id
             };
         }
 
-        // Define a qual Etapa e função pertence o elemento para agrupamento estrito
+        // Define a etapa e a função do elemento para agrupamento.
         private static string ObterCategoria(string id)
         {
             return id switch
             {
-                // --- ETAPAS NOKIA T20 (ANDROID 11) ---
-                "t20_spinner_municipio"    => "Nokia T20 — Etapa 2: Seleção de Município",
-                "t20_campo_email"          => "Nokia T20 — Etapa 3: Injeção de E-mail do Aplicador",
-                "t20_campo_senha"          => "Nokia T20 — Etapa 4a: Injeção de Senha do Aplicador",
-                "t20_botao_entrar"         => "Nokia T20 — Etapa 4b: Confirmação de Acesso (Botão Entrar)",
-                "t20_botao_importar_zip"   => "Nokia T20 — Etapa 5a: Menu de Importação do Pacote ZIP",
+                "t20_spinner_municipio" => "Nokia T20 — Etapa 2: Seleção de Município",
+                "t20_campo_email" => "Nokia T20 — Etapa 3: Injeção de E-mail do Aplicador",
+                "t20_campo_senha" => "Nokia T20 — Etapa 4a: Injeção de Senha do Aplicador",
+                "t20_botao_entrar" => "Nokia T20 — Etapa 4b: Confirmação de Acesso (Botão Entrar)",
+                "t20_botao_importar_zip" => "Nokia T20 — Etapa 5a: Menu de Importação do Pacote ZIP",
                 "t20_btn_procurar_arquivo" => "Nokia T20 — Etapa 5b: Botão Procurar Arquivo .ZIP",
 
-
-                // --- ETAPAS V7 (POSITIVO VISION 7) ---
-                "v7_spinner_municipio"     => "V7 — Etapa 2: Seleção de Município",
-                "v7_campo_email"           => "V7 — Etapa 3: Injeção de E-mail do Aplicador",
-                "v7_campo_senha"           => "V7 — Etapa 4a: Injeção de Senha do Aplicador",
-                "v7_botao_entrar"          => "V7 — Etapa 4b: Confirmação de Acesso (Botão Entrar)",
-                "v7_botao_importar_zip"    => "V7 — Etapa 5: Menu de Importação de Pacote ZIP",
-                "v7_btn_procurar_arquivo"  => "V7 — Etapa 6: Seleção de Arquivo no Storage",
+                "v7_spinner_municipio" => "V7 — Etapa 2: Seleção de Município",
+                "v7_campo_email" => "V7 — Etapa 3: Injeção de E-mail do Aplicador",
+                "v7_campo_senha" => "V7 — Etapa 4a: Injeção de Senha do Aplicador",
+                "v7_botao_entrar" => "V7 — Etapa 4b: Confirmação de Acesso (Botão Entrar)",
+                "v7_botao_importar_zip" => "V7 — Etapa 5: Menu de Importação de Pacote ZIP",
+                "v7_btn_procurar_arquivo" => "V7 — Etapa 6: Seleção de Arquivo no Storage",
                 "v7_btn_sincronizar_agora" => "V7 — Etapa F6: Sincronização Direta",
 
-                // --- ETAPAS M7 (MULTILASER TABMULTI M7) ---
-                "f7_spinner_municipio"     => "M7 — Etapa 2: Seleção de Município",
-                "f7_campo_email"           => "M7 — Etapa 3: Injeção de E-mail do Aplicador",
-                "f7_campo_senha"           => "M7 — Etapa 4a: Injeção de Senha do Aplicador",
-                "f7_botao_entrar"          => "M7 — Etapa 4b: Confirmação de Acesso (Botão Entrar)",
-                "f7_btn_procurar_arquivo"  => "M7 — Etapa 6: Seleção de Arquivo no Storage",
+                "f7_spinner_municipio" => "M7 — Etapa 2: Seleção de Município",
+                "f7_campo_email" => "M7 — Etapa 3: Injeção de E-mail do Aplicador",
+                "f7_campo_senha" => "M7 — Etapa 4a: Injeção de Senha do Aplicador",
+                "f7_botao_entrar" => "M7 — Etapa 4b: Confirmação de Acesso (Botão Entrar)",
+                "f7_btn_procurar_arquivo" => "M7 — Etapa 6: Seleção de Arquivo no Storage",
 
-                // --- ETAPAS F1 (GERAL / MULTILASER PADRÃO) ---
-                "spinner_municipio"        => "F1 — Etapa 2: Seleção de Município",
-                "campo_email"              => "F1 — Etapa 3: Injeção de E-mail do Aplicador",
-                "campo_senha"              => "F1 — Etapa 4a: Injeção de Senha do Aplicador",
-                "botao_entrar"             => "F1 — Etapa 4b: Confirmação de Acesso (Botão Entrar)",
-                "botao_importar_zip"       => "F1 — Etapa 5: Menu de Importação de Pacote ZIP",
-                "f1_btn_procurar_arquivo"  => "F1 — Etapa 6: Seleção de Arquivo no Storage",
-                "f1_btn_avaliacoes"         => "F1 — Etapa 6.5: Pasta de Avaliações",
+                "spinner_municipio" => "F1 — Etapa 2: Seleção de Município",
+                "campo_email" => "F1 — Etapa 3: Injeção de E-mail do Aplicador",
+                "campo_senha" => "F1 — Etapa 4a: Injeção de Senha do Aplicador",
+                "botao_entrar" => "F1 — Etapa 4b: Confirmação de Acesso (Botão Entrar)",
+                "botao_importar_zip" => "F1 — Etapa 5: Menu de Importação de Pacote ZIP",
+                "f1_btn_procurar_arquivo" => "F1 — Etapa 6: Seleção de Arquivo no Storage",
+                "f1_btn_avaliacoes" => "F1 — Etapa 6.5: Pasta de Avaliações",
 
-                // --- OUTROS MÓDULOS ---
-                "f2_btn_enviar"            => "F2 — Etapa F2: Envio de Dados de Alunos",
-                "f3_btn_atualizar"         => "F3 — Etapa F3: Atualização Expressa de Pacote",
-                "f5_btn_desligar"          => "F5 — Etapa F5: Desligamento Remoto",
+                "f2_btn_enviar" => "F2 — Etapa F2: Envio de Dados de Alunos",
+                "f3_btn_atualizar" => "F3 — Etapa F3: Atualização Expressa de Pacote",
+                "f5_btn_desligar" => "F5 — Etapa F5: Desligamento Remoto",
                 "f6_btn_sincronizar_agora" => "F6 — Etapa F6: Sincronização Direta de Dados",
 
                 _ => id.StartsWith("v7_") ? "V7 — Etapas Positivo Vision 7" :
@@ -543,21 +627,17 @@ namespace BotRpaUI.Views
         }
 
         // ============================================================
-        // Reset com Confirmação DUPLA
-        // Clique 1 -> muda o botão para "TEM CERTEZA?"
-        // Clique 2 -> executa o reset e recarrega
-        // Qualquer outro clique na UI cancela a confirmação pendente
+        // Reset com confirmação dupla.
+        // Clique 1 muda o botão para confirmação; clique 2 executa.
         // ============================================================
         private void BtnResetDB_Click(object sender, RoutedEventArgs e)
         {
             if (!_resetPrimarioConfirmado)
             {
-                // === PRIMEIRA CONFIRMAÇÃO ===
                 _resetPrimarioConfirmado = true;
-                BtnResetDB.Content = "CONFIRMAR RESET? (clique novamente)";
+                BtnResetDB.Content = "Confirmar redefinição";
 
-                // Timer de 5 segundos: se não confirmar, cancela automaticamente
-                var timer = new System.Windows.Threading.DispatcherTimer
+                var timer = new DispatcherTimer
                 {
                     Interval = TimeSpan.FromSeconds(5)
                 };
@@ -567,21 +647,19 @@ namespace BotRpaUI.Views
                     if (_resetPrimarioConfirmado)
                     {
                         _resetPrimarioConfirmado = false;
-                        BtnResetDB.Content = "RESETAR BANCO BotLearn";
+                        BtnResetDB.Content = "Redefinir dados adaptativos";
                     }
                 };
                 timer.Start();
             }
             else
             {
-                // === SEGUNDA CONFIRMAÇÃO (EXECUTA O RESET) ===
                 var resultado = MessageBox.Show(
-                    "ATENÇÃO: Esta ação é IRREVERSÍVEL.\n\n" +
-                    "Todo o histórico de aprendizado (scores, acertos, falhas e\n" +
-                    "coordenadas aprendidas) será apagado permanentemente.\n\n" +
-                    "O sistema voltará ao estado inicial (seed).\n\n" +
+                    "Esta ação é irreversível.\n\n" +
+                    "Todo o histórico adaptativo (scores, acertos, falhas e histórico)\n" +
+                    "será apagado e o motor voltará ao seed compilado.\n\n" +
                     "Deseja realmente continuar?",
-                    "BotLearn — Confirmação Final de Reset",
+                    "BotLearn — Confirmar redefinição",
                     MessageBoxButton.YesNo,
                     MessageBoxImage.Warning,
                     MessageBoxResult.No);
@@ -592,42 +670,42 @@ namespace BotRpaUI.Views
                     {
                         Engine_Learn_ResetDB();
                         CarregarDados();
+                        AtualizarModo();
                         MessageBox.Show(
-                            "Banco BotLearn resetado com sucesso.\n" +
-                            "O sistema voltou ao estado inicial (seed).",
-                            "BotLearn — Reset Concluído",
+                            "Dados adaptativos redefinidos com sucesso.\n" +
+                            "O motor voltou ao seed compilado.",
+                            "BotLearn — Redefinição concluída",
                             MessageBoxButton.OK,
                             MessageBoxImage.Information);
                     }
                     catch (Exception ex)
                     {
-                        MessageBox.Show($"Erro ao resetar o banco:\n{ex.Message}",
-                            "BotLearn — Erro Crítico",
+                        MessageBox.Show($"Erro ao redefinir os dados adaptativos:\n{ex.Message}",
+                            "BotLearn — Erro crítico",
                             MessageBoxButton.OK,
                             MessageBoxImage.Error);
                     }
                 }
                 else
                 {
-                    // Cancelou na segunda confirmação
                     _resetPrimarioConfirmado = false;
-                    BtnResetDB.Content = "RESETAR BANCO BotLearn";
+                    BtnResetDB.Content = "Redefinir dados adaptativos";
                 }
             }
         }
 
         // ============================================================
-        // Restaurar Backup Específico
+        // Restauração de backup específico.
         // ============================================================
         private void BtnRestaurarBackup_Click(object sender, RoutedEventArgs e)
         {
             if (sender is Button btn && btn.Tag is string bkpPath)
             {
                 var result = MessageBox.Show(
-                    "ATENÇÃO: Tem certeza que deseja restaurar este backup?\n" +
-                    "O estado atual do aprendizado será permanentemente sobrescrito pelas configurações dessa data.",
-                    "Restaurar Backup BotLearn", MessageBoxButton.YesNo, MessageBoxImage.Warning);
-                
+                    "Tem certeza que deseja restaurar este backup?\n" +
+                    "O estado atual do arquivo de dados será sobrescrito.",
+                    "Restaurar backup do BotLearn", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+
                 if (result == MessageBoxResult.Yes)
                 {
                     bool sucesso = BotRpaUI.Core.BotLearnBackupManager.RestaurarBackup(bkpPath);
@@ -635,14 +713,13 @@ namespace BotRpaUI.Views
                     {
                         MessageBox.Show(
                             "Backup restaurado com sucesso na pasta de dados.\n\n" +
-                            "IMPORTANTE: Para que o motor nativo (BotEngine.dll) recarregue " +
-                            "as informações na memória, por favor, REINICIE o aplicativo.",
-                            "Restauração Concluída", MessageBoxButton.OK, MessageBoxImage.Information);
+                            "Para que o motor nativo recarregue as informações em memória, reinicie o aplicativo.",
+                            "Restauração concluída", MessageBoxButton.OK, MessageBoxImage.Information);
                     }
                     else
                     {
-                        MessageBox.Show("Ocorreu uma falha ao tentar restaurar o backup. Verifique se o arquivo não está sendo utilizado.",
-                            "Erro de Restauração", MessageBoxButton.OK, MessageBoxImage.Error);
+                        MessageBox.Show("Não foi possível restaurar o backup. Verifique se o arquivo não está em uso.",
+                            "Erro de restauração", MessageBoxButton.OK, MessageBoxImage.Error);
                     }
                 }
             }

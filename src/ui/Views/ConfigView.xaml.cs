@@ -18,6 +18,7 @@ namespace BotRpaUI.Views
         public ConfigView()
         {
             InitializeComponent();
+            TxtVersaoSistema.Text = $"v{AppInfo.CurrentVersion}";
             InitializeSpeedTestUI();
             LoadSettings();
         }
@@ -29,10 +30,8 @@ namespace BotRpaUI.Views
                 _isInitializingSettings = true;
                 SettingsManager.Load();
                 
-                ToggleMotor.IsChecked = SettingsManager.MotorCEnabled;
                 ToggleAiLearn.IsChecked = SettingsManager.AiLearnActive;
                 UpdateAiModeBadge(SettingsManager.AiLearnActive);
-                ToggleTethering.IsChecked = SettingsManager.ReverseTetheringEnabled;
                 ToggleShowDisconnected.IsChecked = SettingsManager.ShowDisconnectedDevices;
 
                 ToggleDeviceVision7.IsChecked = SettingsManager.EnableDeviceVision7;
@@ -87,7 +86,7 @@ namespace BotRpaUI.Views
 
             if (email.Length == 0 || email.Length > 200 || !email.Contains("@"))
             {
-                DefinirStatusGoogle("Informe um e-mail Google valido.", "#FF8080");
+                DefinirStatusGoogle("Informe um e-mail Google válido.", "#FF8080");
                 return;
             }
 
@@ -105,19 +104,19 @@ namespace BotRpaUI.Views
                     return;
                 }
 
-                DefinirStatusGoogle("Senha mantida. Conta Google ja configurada.", "#4EDEA3");
+                DefinirStatusGoogle("Senha mantida. Conta Google já configurada.", "#4EDEA3");
                 return;
             }
 
             if (senha.Length > 200)
             {
-                DefinirStatusGoogle("A senha informada e muito longa.", "#FF8080");
+                DefinirStatusGoogle("A senha informada é muito longa.", "#FF8080");
                 return;
             }
 
             if (!SettingsManager.SetGoogleAccount(email, senha))
             {
-                DefinirStatusGoogle("Nao foi possivel salvar a conta Google.", "#FF8080");
+                DefinirStatusGoogle("Não foi possível salvar a conta Google.", "#FF8080");
                 return;
             }
 
@@ -133,11 +132,9 @@ namespace BotRpaUI.Views
 
             try
             {
-                SettingsManager.MotorCEnabled = ToggleMotor.IsChecked == true;
                 SettingsManager.AiLearnActive = ToggleAiLearn.IsChecked == true;
                 UpdateAiModeBadge(SettingsManager.AiLearnActive);
                 try { Engine_Learn_SetActiveMode(SettingsManager.AiLearnActive ? 1 : 0); } catch { }
-                SettingsManager.ReverseTetheringEnabled = ToggleTethering.IsChecked == true;
                 SettingsManager.ShowDisconnectedDevices = ToggleShowDisconnected.IsChecked == true;
 
                 SettingsManager.EnableDeviceVision7 = ToggleDeviceVision7.IsChecked == true;
@@ -279,30 +276,20 @@ namespace BotRpaUI.Views
                 if (TxtAiMode == null || BadgeAiMode == null) return;
                 if (active)
                 {
-                    TxtAiMode.Text = "ATIVO";
-                    TxtAiMode.Foreground = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#00E5FF"));
-                    BadgeAiMode.Background = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#0A2235"));
-                    BadgeAiMode.BorderBrush = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#00E5FF"));
+                    TxtAiMode.Text = "ADAPTATIVO";
+                    TxtAiMode.Foreground = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#58A6FF"));
+                    BadgeAiMode.Background = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#0D1B2A"));
+                    BadgeAiMode.BorderBrush = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#1F6FEB"));
                 }
                 else
                 {
-                    TxtAiMode.Text = "ESTÁTICO";
-                    TxtAiMode.Foreground = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#4EDEA3"));
-                    BadgeAiMode.Background = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#12251B"));
-                    BadgeAiMode.BorderBrush = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#4EDEA3"));
+                    TxtAiMode.Text = "DETERMINÍSTICO";
+                    TxtAiMode.Foreground = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#3FB950"));
+                    BadgeAiMode.Background = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#0F2A1A"));
+                    BadgeAiMode.BorderBrush = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#3FB950"));
                 }
             }
             catch { }
-        }
-
-        private void ToggleMotor_Checked(object sender, RoutedEventArgs e)
-        {
-            SaveSettings();
-        }
-
-        private void ToggleMotor_Unchecked(object sender, RoutedEventArgs e)
-        {
-            SaveSettings();
         }
 
         private void ToggleAiLearn_Checked(object sender, RoutedEventArgs e)
@@ -311,16 +298,6 @@ namespace BotRpaUI.Views
         }
 
         private void ToggleAiLearn_Unchecked(object sender, RoutedEventArgs e)
-        {
-            SaveSettings();
-        }
-
-        private void ToggleTethering_Checked(object sender, RoutedEventArgs e)
-        {
-            SaveSettings();
-        }
-
-        private void ToggleTethering_Unchecked(object sender, RoutedEventArgs e)
         {
             SaveSettings();
         }
@@ -337,7 +314,59 @@ namespace BotRpaUI.Views
 
         private void ToggleDevice_Changed(object sender, RoutedEventArgs e)
         {
+            if (_isInitializingSettings) return;
+
+            if (ToggleDeviceVision7.IsChecked != true
+                && ToggleDeviceTabMulti.IsChecked != true
+                && ToggleDeviceNokiaT20.IsChecked != true)
+            {
+                MessageBox.Show(
+                    "Mantenha pelo menos um modelo de tablet ativo. Sem nenhum modelo habilitado, o monitor USB não exibirá dispositivos.",
+                    "Modelos suportados", MessageBoxButton.OK, MessageBoxImage.Warning);
+
+                if (sender is CheckBox origem)
+                {
+                    _isInitializingSettings = true;
+                    origem.IsChecked = true;
+                    _isInitializingSettings = false;
+                }
+                return;
+            }
+
             SaveSettings();
+        }
+
+        private static void AdicionarArquivoAoZip(ZipArchive archive, string caminhoCompleto, string nomeEntrada)
+        {
+            ZipArchiveEntry entry = archive.CreateEntry(nomeEntrada, CompressionLevel.Optimal);
+            using (var origem = new FileStream(caminhoCompleto, FileMode.Open, FileAccess.Read,
+                FileShare.ReadWrite | FileShare.Delete))
+            using (Stream destino = entry.Open())
+            {
+                origem.CopyTo(destino);
+            }
+        }
+
+        private static void AdicionarArquivoBackup(ZipArchive archive, string caminhoCompleto, string nomeEntrada)
+        {
+            if (nomeEntrada.EndsWith(".db", StringComparison.OrdinalIgnoreCase))
+            {
+                string snapshot = Path.Combine(Path.GetTempPath(), $"bot_rpa_backup_{Guid.NewGuid():N}.db");
+                try
+                {
+                    if (SQLiteDatabaseManager.CriarSnapshotBackup(snapshot))
+                    {
+                        AdicionarArquivoAoZip(archive, snapshot, nomeEntrada);
+                        return;
+                    }
+                }
+                finally
+                {
+                    try { if (File.Exists(snapshot)) File.Delete(snapshot); } catch { }
+                }
+            }
+
+            AdicionarArquivoAoZip(archive, caminhoCompleto, nomeEntrada);
         }
 
         private async void BtnExportar_Click(object sender, RoutedEventArgs e)
@@ -369,13 +398,19 @@ namespace BotRpaUI.Views
                             string[] folders = { 
                                 @"docs\registros", 
                                 "registros_de_dispositivos", 
+                                "config",
                                 @"data\input\municipios",
-                                @"data\input\apps"
+                                @"data\input\apps",
+                                @"data\output\arquivos"
                             };
                             
                             string[] filesToBackup = {
                                 @"data\bot_database.db",
-                                @"data\bot_learn.json"
+                                @"data\bot_learn.json",
+                                @"data\output\data\bot_learn.json",
+                                "municipios.csv",
+                                @"data\municipios.csv",
+                                @"data\output\municipios.csv"
                             };
                             
                             // Primeiro contamos o total de arquivos nas pastas
@@ -412,7 +447,7 @@ namespace BotRpaUI.Views
                                     foreach (string file in files)
                                     {
                                         string relativePath = folder + "\\" + file.Substring(sourceDir.Length + 1);
-                                        archive.CreateEntryFromFile(file, relativePath);
+                                        AdicionarArquivoAoZip(archive, file, relativePath);
                                         
                                         processed++;
                                         int percent = (processed * 100) / totalFiles;
@@ -432,7 +467,7 @@ namespace BotRpaUI.Views
                                 string fullFilePath = Path.Combine(rootPath, relFile);
                                 if (File.Exists(fullFilePath))
                                 {
-                                    archive.CreateEntryFromFile(fullFilePath, relFile);
+                                    AdicionarArquivoBackup(archive, fullFilePath, relFile);
                                     
                                     processed++;
                                     int percent = (processed * 100) / totalFiles;
@@ -481,18 +516,40 @@ namespace BotRpaUI.Views
                     
                     string rootPath = BotRpaUI.Core.PathHelper.GetRootDirectory();
                     string sourceFile = ofd.FileName;
+                    int entradasIgnoradas = 0;
                     
                     await Task.Run(() =>
                     {
+                        string raizSegura = Path.GetFullPath(rootPath) + Path.DirectorySeparatorChar;
+
                         using (ZipArchive archive = ZipFile.OpenRead(sourceFile))
                         {
                             int totalFiles = archive.Entries.Count;
                             if (totalFiles == 0) totalFiles = 1;
                             int processed = 0;
-                            
+                            int ignorados = 0;
+
                             foreach (ZipArchiveEntry entry in archive.Entries)
                             {
-                                string destinationPath = Path.Combine(rootPath, entry.FullName);
+                                string destinationPath;
+                                try
+                                {
+                                    destinationPath = Path.GetFullPath(Path.Combine(rootPath, entry.FullName));
+                                }
+                                catch
+                                {
+                                    processed++;
+                                    ignorados++;
+                                    continue;
+                                }
+
+                                if (!destinationPath.StartsWith(raizSegura, StringComparison.OrdinalIgnoreCase))
+                                {
+                                    processed++;
+                                    ignorados++;
+                                    continue;
+                                }
+
                                 string? destDir = Path.GetDirectoryName(destinationPath);
                                 
                                 if (!Directory.Exists(destDir) && !string.IsNullOrEmpty(destDir))
@@ -514,12 +571,20 @@ namespace BotRpaUI.Views
                                     TxtStatusProgresso.Text = $"Importando: {percent}% ({processed}/{totalFiles} arquivos)";
                                 });
                               }
+
+                            entradasIgnoradas = ignorados;
                         }
                     });
                     
-                    TxtStatusProgresso.Text = "Importação concluída com sucesso!";
+                    TxtStatusProgresso.Text = entradasIgnoradas > 0
+                        ? $"Importação concluída. {entradasIgnoradas} entrada(s) insegura(s) ignorada(s)."
+                        : "Importação concluída com sucesso!";
                     BarraProgresso.Value = 100;
-                    MessageBox.Show("Backup importado com sucesso! Os dados locais foram atualizados.", "Importação Concluída", MessageBoxButton.OK, MessageBoxImage.Information);
+                    MessageBox.Show(
+                        entradasIgnoradas > 0
+                            ? $"Backup importado, mas {entradasIgnoradas} entrada(s) com caminho inválido foram ignoradas por segurança."
+                            : "Backup importado com sucesso! Os dados locais foram atualizados.",
+                        "Importação Concluída", MessageBoxButton.OK, MessageBoxImage.Information);
                     PanelProgresso.Visibility = Visibility.Collapsed;
                     BtnExportar.IsEnabled = true;
                     BtnImportar.IsEnabled = true;

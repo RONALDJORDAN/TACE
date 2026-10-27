@@ -195,6 +195,7 @@ namespace BotRpaUI
         public void NavigateToSobre()
         {
             MainContent.Content = _aboutView;
+            _aboutView.AtualizarDados();
             UpdateMenuStyles(BtnMenuSobre);
         }
 

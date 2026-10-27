@@ -51,7 +51,7 @@ namespace BotRpaUI.Views
             public FrameworkElement VisualElement = null!;
             public Border? VisualBadge;
             public string TargetId = "";
-            public string Type = ""; // "CORE", "TARGET", "STRATEGY"
+            public string Type = ""; // "CORE", "TARGET", "STRATEGY", "COGNITIVE", "MICRO"
             public Color BaseColor;
             public LearnStrategyExport StrategyData;
             public List<LearnStrategyExport>? TargetStrategies;
@@ -90,7 +90,14 @@ namespace BotRpaUI.Views
         private double _lastFrameSeconds;
         private bool _isRenderingSubscribed = false;
         private System.Windows.Threading.DispatcherTimer? _liveTimer;
-        private int _lastKnownStrategyCount = -1;
+        private System.Windows.Threading.DispatcherTimer? _searchDebounce;
+        private (int Count, int Hits, int Misses, int ScoreSum) _lastKnownSignature = (-1, 0, 0, 0);
+        private int _knownStrategies;
+        private int _knownTargets;
+        private int _knownHits;
+        private int _knownMisses;
+        private int _knownScoreSum;
+        private string _knownHistory = "";
 
         private readonly List<Node3D> _nodes3D = new List<Node3D>();
         private readonly List<Synapse3D> _synapses3D = new List<Synapse3D>();
@@ -120,6 +127,11 @@ namespace BotRpaUI.Views
                 _liveTimer.Tick -= LiveTimer_Tick;
                 _liveTimer = null;
             }
+            if (_searchDebounce != null)
+            {
+                _searchDebounce.Stop();
+                _searchDebounce = null;
+            }
             base.OnClosed(e);
         }
 
@@ -145,10 +157,10 @@ namespace BotRpaUI.Views
             if (!IsLoaded) return;
             try
             {
-                int count = Engine_Learn_GetStrategyCount();
-                if (count != _lastKnownStrategyCount)
+                var signature = ReadLearnSignature();
+                if (signature != _lastKnownSignature)
                 {
-                    _lastKnownStrategyCount = count;
+                    _lastKnownSignature = signature;
                     RenderBrain();
                     return;
                 }
@@ -156,6 +168,26 @@ namespace BotRpaUI.Views
                 if (TxtActiveDevices != null) TxtActiveDevices.Text = active.ToString();
             }
             catch { }
+        }
+
+        private (int Count, int Hits, int Misses, int ScoreSum) ReadLearnSignature()
+        {
+            int count = 0;
+            int hits = 0;
+            int misses = 0;
+            int scoreSum = 0;
+
+            count = Engine_Learn_GetStrategyCount();
+            for (int i = 0; i < count; i++)
+            {
+                if (Engine_Learn_GetStrategy(i, out LearnStrategyExport strat) != 0)
+                {
+                    hits += strat.Hits;
+                    misses += strat.Misses;
+                    scoreSum += strat.Score;
+                }
+            }
+            return (count, hits, misses, scoreSum);
         }
 
         private void BtnClose_Click(object sender, RoutedEventArgs e)
@@ -222,6 +254,8 @@ namespace BotRpaUI.Views
             _showTagCognitive = ChkTagCognitive?.IsChecked == true;
             _showTagStrategies = ChkTagStrategies?.IsChecked == true;
             _showTagMicro = ChkTagMicro?.IsChecked == true;
+
+            if (IsLoaded) RenderBrain();
         }
 
         private void BtnToggleAllTags_Click(object sender, RoutedEventArgs e)
@@ -238,6 +272,8 @@ namespace BotRpaUI.Views
             if (ChkTagCognitive != null) ChkTagCognitive.IsChecked = anyOff;
             if (ChkTagStrategies != null) ChkTagStrategies.IsChecked = anyOff;
             if (ChkTagMicro != null) ChkTagMicro.IsChecked = anyOff;
+
+            if (IsLoaded) RenderBrain();
         }
 
         private void BtnCloseInspector_Click(object sender, RoutedEventArgs e)
@@ -335,7 +371,7 @@ namespace BotRpaUI.Views
         }
 
         // ============================================================
-        // CONSTRUÇÃO DA ESFERA NEURAL 3D (RENDERBRAIN)
+        // CONSTRUÇÃO DO MAPA 3D DE ESTRATÉGIAS (RENDERBRAIN)
         // ============================================================
         private void RenderBrain()
         {
@@ -347,7 +383,6 @@ namespace BotRpaUI.Views
 
             int strategyCount = 0;
             try { strategyCount = Engine_Learn_GetStrategyCount(); } catch { }
-            _lastKnownStrategyCount = strategyCount;
 
             var allStrategies = new List<LearnStrategyExport>();
             for (int i = 0; i < strategyCount; i++)
@@ -380,20 +415,39 @@ namespace BotRpaUI.Views
 
             var targetGroups = filtered.GroupBy(s => s.TargetId).OrderBy(g => GetEtapaOrder(g.Key)).ToList();
 
-            // Atualização dos Indicadores do Cabeçalho
-            int totalNodes = targetGroups.Count + filtered.Count + 1;
+            // Atualização dos indicadores do cabeçalho
             int totalHits = filtered.Sum(s => s.Hits);
             int totalMisses = filtered.Sum(s => s.Misses);
             int totalOps = totalHits + totalMisses;
-            int globalAccuracy = totalOps > 0 ? (int)Math.Round((double)totalHits / totalOps * 100.0) : 100;
+            int totalScore = filtered.Sum(s => s.Score);
+            string globalAccuracy = totalOps > 0 ? $"{(double)totalHits / totalOps * 100.0:F1}%" : "—";
+            string combinedHistory = string.Concat(filtered
+                .OrderByDescending(s => s.Score)
+                .Select(s => s.History ?? ""));
+            string recentHistory = new string(combinedHistory.Where(c => c == '1' || c == '0').Take(10).ToArray());
 
-            TxtTotalNodes.Text = totalNodes.ToString();
+            _knownStrategies = filtered.Count;
+            _knownTargets = targetGroups.Count;
+            _knownHits = totalHits;
+            _knownMisses = totalMisses;
+            _knownScoreSum = totalScore;
+            _knownHistory = recentHistory;
+
+            // A assinatura usa o total do motor (não o filtro), para que o timer
+            // não re-renderize continuamente quando um filtro está ativo.
+            _lastKnownSignature = (
+                strategyCount,
+                allStrategies.Sum(s => s.Hits),
+                allStrategies.Sum(s => s.Misses),
+                allStrategies.Sum(s => s.Score));
+
+            TxtTotalNodes.Text = targetGroups.Count.ToString();
             TxtTotalStrategies.Text = filtered.Count.ToString();
             if (TxtTotalRules != null)
-                TxtTotalRules.Text = filtered.Count.ToString();
+                TxtTotalRules.Text = totalOps.ToString();
             if (TxtTotalParameters != null)
-                TxtTotalParameters.Text = ((targetGroups.Count * 16) + (filtered.Count * 12) + 256).ToString("N0");
-            TxtGlobalAccuracy.Text = $"{globalAccuracy}%";
+                TxtTotalParameters.Text = totalScore.ToString("+0;-0;0");
+            TxtGlobalAccuracy.Text = globalAccuracy;
 
             try
             {
@@ -403,7 +457,7 @@ namespace BotRpaUI.Views
             catch { }
 
             // ------------------------------------------------------------
-            // 1. CRIAR NÓ CENTRAL (REATOR QUÂNTICO BOTAI 2.0 - MACIÇO)
+            // 1. NÓ CENTRAL (MOTOR DE ESTRATÉGIAS)
             // ------------------------------------------------------------
             Node3D coreNode = new Node3D
             {
@@ -412,11 +466,10 @@ namespace BotRpaUI.Views
                 OrigZ = 0,
                 BaseSize = 92,
                 Type = "CORE",
-                TargetId = "BotAI_Core",
-                BaseColor = (Color)ColorConverter.ConvertFromString("#00E5FF")
+                TargetId = "BotLearn_Core",
+                BaseColor = (Color)ColorConverter.ConvertFromString("#58A6FF")
             };
 
-            // Casca Externa Blindada Maciça
             Border coreOrb = new Border
             {
                 Background = new RadialGradientBrush
@@ -424,28 +477,27 @@ namespace BotRpaUI.Views
                     GradientStops = new GradientStopCollection
                     {
                         new GradientStop((Color)ColorConverter.ConvertFromString("#FFFFFF"), 0.0),
-                        new GradientStop((Color)ColorConverter.ConvertFromString("#00F5D4"), 0.20),
-                        new GradientStop((Color)ColorConverter.ConvertFromString("#432C81"), 0.60),
-                        new GradientStop((Color)ColorConverter.ConvertFromString("#0C0A1C"), 1.0)
+                        new GradientStop((Color)ColorConverter.ConvertFromString("#58A6FF"), 0.20),
+                        new GradientStop((Color)ColorConverter.ConvertFromString("#1F3A5F"), 0.60),
+                        new GradientStop((Color)ColorConverter.ConvertFromString("#0D1117"), 1.0)
                     }
                 },
                 BorderBrush = new LinearGradientBrush(
-                    (Color)ColorConverter.ConvertFromString("#00F5D4"),
-                    (Color)ColorConverter.ConvertFromString("#8570E6"),
+                    (Color)ColorConverter.ConvertFromString("#58A6FF"),
+                    (Color)ColorConverter.ConvertFromString("#3FB950"),
                     new Point(0, 0),
                     new Point(1, 1)),
-                BorderThickness = new Thickness(2.8),
+                BorderThickness = new Thickness(2.2),
                 CornerRadius = new CornerRadius(46),
                 Cursor = Cursors.Hand,
-                ToolTip = "Reator Central BotAI 2.0 (Núcleo Maciço — Clique para Inspecionar)"
+                ToolTip = "Motor de Estratégias BotLearn — clique para inspecionar"
             };
 
-            // Anel Interno de Fusão Quântica
             Border innerRing = new Border
             {
                 Margin = new Thickness(5),
-                Background = new RadialGradientBrush((Color)ColorConverter.ConvertFromString("#23154C"), (Color)ColorConverter.ConvertFromString("#090816")),
-                BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#00E5FF")),
+                Background = new RadialGradientBrush((Color)ColorConverter.ConvertFromString("#0F1B2A"), (Color)ColorConverter.ConvertFromString("#0D1117")),
+                BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#58A6FF")),
                 BorderThickness = new Thickness(1.2),
                 CornerRadius = new CornerRadius(40)
             };
@@ -458,27 +510,27 @@ namespace BotRpaUI.Views
 
             TextBlock coreTitle = new TextBlock
             {
-                Text = "BOTAI",
+                Text = "BOTLEARN",
                 Foreground = Brushes.White,
                 FontWeight = FontWeights.Black,
-                FontSize = 10,
+                FontSize = 8.5,
                 HorizontalAlignment = HorizontalAlignment.Center
             };
 
             TextBlock coreVer = new TextBlock
             {
-                Text = "2.0",
-                Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#00E5FF")),
+                Text = "MOTOR",
+                Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#58A6FF")),
                 FontWeight = FontWeights.Black,
-                FontSize = 14,
+                FontSize = 9,
                 HorizontalAlignment = HorizontalAlignment.Center,
                 Margin = new Thickness(0, -2, 0, 0)
             };
 
             Border coreBadge = new Border
             {
-                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#513BA6")),
-                BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#8570E6")),
+                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1F6FEB")),
+                BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#58A6FF")),
                 BorderThickness = new Thickness(0.8),
                 CornerRadius = new CornerRadius(4),
                 Padding = new Thickness(5, 1, 5, 1),
@@ -512,7 +564,7 @@ namespace BotRpaUI.Views
             Border coreFloatingBadge = new Border
             {
                 Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#DD121222")),
-                BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#00F5D4")),
+                BorderBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#58A6FF")),
                 BorderThickness = new Thickness(1),
                 CornerRadius = new CornerRadius(5),
                 Padding = new Thickness(6, 2, 6, 2),
@@ -520,7 +572,7 @@ namespace BotRpaUI.Views
             };
             TextBlock coreFloatingBadgeTxt = new TextBlock
             {
-                Text = "REATOR CENTRAL BOTAI 2.0",
+                Text = "MOTOR DE ESTRATÉGIAS",
                 Foreground = Brushes.White,
                 FontWeight = FontWeights.Black,
                 FontSize = 9.5
@@ -561,10 +613,10 @@ namespace BotRpaUI.Views
                 double tz = sphereRadius * Math.Sin(phi) * Math.Sin(theta);
 
                 Color targetColor;
-                if (tid.StartsWith("v7_")) targetColor = (Color)ColorConverter.ConvertFromString("#00F5D4");
-                else if (tid.StartsWith("f7_") || tid.StartsWith("m7_")) targetColor = (Color)ColorConverter.ConvertFromString("#FFB703");
-                else if (tid.StartsWith("t20_") || tid.StartsWith("nokia_")) targetColor = (Color)ColorConverter.ConvertFromString("#00E5FF");
-                else targetColor = (Color)ColorConverter.ConvertFromString("#D2BBFF");
+                if (tid.StartsWith("v7_")) targetColor = (Color)ColorConverter.ConvertFromString("#3FB950");
+                else if (tid.StartsWith("f7_") || tid.StartsWith("m7_")) targetColor = (Color)ColorConverter.ConvertFromString("#D29922");
+                else if (tid.StartsWith("t20_") || tid.StartsWith("nokia_")) targetColor = (Color)ColorConverter.ConvertFromString("#58A6FF");
+                else targetColor = (Color)ColorConverter.ConvertFromString("#8B98A7");
 
                 Node3D targetNode = new Node3D
                 {
@@ -660,10 +712,10 @@ namespace BotRpaUI.Views
                     double sz = tz + (nz * 20.0) + (rz * Math.Cos(satAngle) + uz * Math.Sin(satAngle)) * satDist;
 
                     Color stratColor;
-                    if (strat.Score > 50) stratColor = (Color)ColorConverter.ConvertFromString("#4EDEA3");
-                    else if (strat.Score > 0) stratColor = (Color)ColorConverter.ConvertFromString("#FFD666");
-                    else if (strat.Score == 0) stratColor = (Color)ColorConverter.ConvertFromString("#8E8EA0");
-                    else stratColor = (Color)ColorConverter.ConvertFromString("#FF4C4C");
+                    if (strat.Score > 50) stratColor = (Color)ColorConverter.ConvertFromString("#3FB950");
+                    else if (strat.Score > 0) stratColor = (Color)ColorConverter.ConvertFromString("#D29922");
+                    else if (strat.Score == 0) stratColor = (Color)ColorConverter.ConvertFromString("#8B98A7");
+                    else stratColor = (Color)ColorConverter.ConvertFromString("#F85149");
 
                     Node3D stratNode = new Node3D
                     {
@@ -726,22 +778,22 @@ namespace BotRpaUI.Views
             }
 
             // ------------------------------------------------------------
-            // 5. CRIAR INTERNEURÔNIOS COGNITIVOS (CAMADA DE DECISÃO BOTAI 2.0)
+            // 5. COMPONENTES CONCEITUAIS DO MOTOR
             // ------------------------------------------------------------
             var cognitiveNodes = new (string Name, string Role, string Details, string Symbol)[]
             {
-                ("Centroid Matcher", "Motor de Centróide Determinístico", "Calcula o centroide exato de toque em botões e gavetas dinâmicas com desvio nulo.", ""),
-                ("Fuzzy Resolver", "Normalizador Fuzzy & Tolerância", "Ajusta desvios sutis de texto, pontuação e espaços em seletores.", ""),
-                ("Anti-Drift Shield", "Guardião Anti-Desvio de Interface", "Bloqueia disparos incorretos caso a tela sofra reordenação inesperada.", ""),
-                ("FastCache Router", "Roteador de Acesso Rápido", "Resolução direta em memória RAM de coordenadas de alta frequência.", ""),
-                ("Hierarchy Scanner", "Varredura de Árvore UIAutomator", "Analisa hierarquia pai-filho e nós adjacentes na árvore de acessibilidade XML.", ""),
-                ("Diacritic Normalizer", "Normalizador de Acentuação", "Equipara caracteres Unicode e ASCII (ex: Município vs Municipio).", ""),
-                ("Latency Compensator", "Compensador de Latência Android", "Ajusta temporizações dinâmicas de acordo com a carga do processador do tablet.", ""),
-                ("Adaptive Learner", "Otimizador de Pesos Heurísticos", "Promove estratégias comprovadas (+5 pts) e penaliza rotas obsoletas (-15 pts).", ""),
-                ("Context Analyzer", "Analista de Contexto Operacional", "Valida a presença da janela correta antes de liberar o acionamento do alvo.", ""),
-                ("Fallback Provider", "Provedor Multi-Estratégia", "Oferece rotas alternativas em milissegundos se o primeiro seletor falhar.", ""),
-                ("Resource Extractor", "Extrator de IDs e Propriedades", "Lê resource-id, class name, bounds e content-desc em alta velocidade.", ""),
-                ("Zero-Drift Sensor", "Sensor de Estabilidade de Tela", "Garante que elementos em movimento pararam antes da interação de clique.", "")
+                ("Seed compilado", "Ordem determinística", "Estratégias iniciais embarcadas na DLL e usadas no modo determinístico.", ""),
+                ("Leitura de alvos", "UIAutomator e visão", "Localiza elementos por query, texto e estrutura da tela.", ""),
+                ("Fallback de seletores", "Rotas alternativas", "Usa a próxima estratégia quando a primeira não encontra o alvo.", ""),
+                ("Feedback de execução", "Acertos e falhas", "Atualiza o score nos fluxos que registram acerto ou falha.", ""),
+                ("Persistência", "bot_learn.json", "Persiste scores e histórico apenas quando o modo adaptativo está ativo.", ""),
+                ("Ranking por score", "Ordenação heurística", "Ordena os seletores de cada alvo pelo score atual.", ""),
+                ("Histórico recente", "Até 10 execuções", "Mantém os últimos resultados registrados por seletor.", ""),
+                ("Escopo atual", "F1, V7, M7 e T20", "Alvos embarcados; a cobertura de feedback varia conforme o modelo.", ""),
+                ("Limites do motor", "16 seletores por alvo", "Teto compilado para o ranking de cada alvo.", ""),
+                ("Modo de operação", "Determinístico ou adaptativo", "Controlado nas Configurações; o modo adaptativo persiste dados.", ""),
+                ("Filtro de hardware", "Modelos suportados", "Segmenta alvos e seletores por modelo de tablet.", ""),
+                ("Auditoria visual", "Somente leitura", "Este mapa exibe o estado atual; alterações são feitas no fluxo do bot.", "")
             };
 
             double cogRadius = sphereRadius * 0.61;
@@ -756,7 +808,7 @@ namespace BotRpaUI.Views
                 double cy = cogRadius * Math.Cos(phi);
                 double cz = cogRadius * Math.Sin(phi) * Math.Sin(theta);
 
-                Color cogColor = (Color)ColorConverter.ConvertFromString("#00E5FF");
+                Color cogColor = (Color)ColorConverter.ConvertFromString("#58A6FF");
 
                 Node3D cogNode = new Node3D
                 {
@@ -771,7 +823,7 @@ namespace BotRpaUI.Views
 
                 Border cogOrb = new Border
                 {
-                    Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#15152A")),
+                    Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#151B23")),
                     BorderBrush = new SolidColorBrush(cogColor),
                     BorderThickness = new Thickness(1.4),
                     CornerRadius = new CornerRadius(9),
@@ -819,15 +871,15 @@ namespace BotRpaUI.Views
                 _nodes3D.Add(cogNode);
                 createdCogNodes.Add(cogNode);
 
-                // Sinapse do Núcleo Central para o Interneurônio Cognitivo
+                // Conexão do motor com o componente conceitual
                 CriarSinapse(coreNode, cogNode, 100, true);
             }
 
             // ------------------------------------------------------------
-            // 6. CRIAR MALHA DE MICRO-NEURÔNIOS DE RELÉ (SYNAPTIC LATTICE)
-            // Em filtros específicos (V7/M7/T20) oculta relés para focar no modelo
+            // 6. CONEXÕES VISUAIS DO MAPA
+            // Em filtros específicos (V7/M7/T20), oculta a malha decorativa.
             // ------------------------------------------------------------
-            int microCount = (_currentFilter == "ALL") ? 38 : 0;
+            int microCount = (_currentFilter == "ALL") ? 24 : 0;
             for (int m = 0; m < microCount; m++)
             {
                 double mRadius = (m % 2 == 0) ? sphereRadius * 0.82 : sphereRadius * 1.15;
@@ -838,11 +890,11 @@ namespace BotRpaUI.Views
                 double my = mRadius * Math.Cos(phi);
                 double mz = mRadius * Math.Sin(phi) * Math.Sin(theta);
 
-                Color mColor = (m % 3 == 0) 
-                    ? (Color)ColorConverter.ConvertFromString("#4EDEA3") 
-                    : (m % 3 == 1) 
-                        ? (Color)ColorConverter.ConvertFromString("#00F5D4") 
-                        : (Color)ColorConverter.ConvertFromString("#D2BBFF");
+                Color mColor = (m % 3 == 0)
+                    ? (Color)ColorConverter.ConvertFromString("#3FB950")
+                    : (m % 3 == 1)
+                        ? (Color)ColorConverter.ConvertFromString("#58A6FF")
+                        : (Color)ColorConverter.ConvertFromString("#8B98A7");
 
                 Node3D mNode = new Node3D
                 {
@@ -851,7 +903,7 @@ namespace BotRpaUI.Views
                     OrigZ = mz,
                     BaseSize = 8,
                     Type = "MICRO",
-                    TargetId = $"MicroNeuron_{m + 1}",
+                    TargetId = $"ConexaoVisual_{m + 1}",
                     BaseColor = mColor
                 };
 
@@ -862,11 +914,11 @@ namespace BotRpaUI.Views
                     BorderThickness = new Thickness(0.8),
                     CornerRadius = new CornerRadius(4),
                     Cursor = Cursors.Hand,
-                    ToolTip = $"Micro-Neurônio Relé #{m + 1:D2} (Canal de Sinapse Ativo)"
+                    ToolTip = $"Conexão visual #{m + 1:D2} (elemento ilustrativo)"
                 };
 
                 int microId = m + 1;
-                string microType = (m % 2 == 0) ? "Camada Primária" : "Camada Secundária";
+                string microType = (m % 2 == 0) ? "Anel interno" : "Anel externo";
                 mOrb.MouseLeftButtonDown += (s, e) =>
                 {
                     e.Handled = true;
@@ -886,7 +938,7 @@ namespace BotRpaUI.Views
                 };
                 TextBlock mBadgeTxt = new TextBlock
                 {
-                    Text = $"Relé #{m + 1:D2}",
+                    Text = $"Conexão #{m + 1:D2}",
                     Foreground = Brushes.White,
                     FontWeight = FontWeights.Normal,
                     FontSize = 7.5
@@ -898,7 +950,7 @@ namespace BotRpaUI.Views
                 BrainCanvas.Children.Add(mBadge);
                 _nodes3D.Add(mNode);
 
-                // Conectar o micro-neurônio ao interneurônio cognitivo mais próximo
+                // Conectar a conexão visual ao componente conceitual mais próximo
                 if (createdCogNodes.Count > 0)
                 {
                     int nearestCogIdx = m % createdCogNodes.Count;
@@ -907,20 +959,12 @@ namespace BotRpaUI.Views
             }
 
             // ------------------------------------------------------------
-            // 7. SINAPSES LATERAIS DE FLUXO (PIPELINE ENTRE ALVOS)
+            // 7. CONEXÕES LATERAIS DE FLUXO (PIPELINE ENTRE ALVOS)
             // ------------------------------------------------------------
             for (int i = 0; i < targetNodesList.Count - 1; i++)
             {
                 CriarSinapseLateral(targetNodesList[i], targetNodesList[i + 1], targetNodesList[i].BaseColor);
             }
-
-            // Atualização dinâmica total no HUD
-            TxtTotalNodes.Text = _nodes3D.Count.ToString();
-            TxtTotalStrategies.Text = _synapses3D.Count.ToString();
-            if (TxtTotalRules != null)
-                TxtTotalRules.Text = filtered.Count.ToString();
-            if (TxtTotalParameters != null)
-                TxtTotalParameters.Text = ((_nodes3D.Count * 18) + (_synapses3D.Count * 12) + 512).ToString("N0");
 
             EnsureRenderLoop();
         }
@@ -928,11 +972,11 @@ namespace BotRpaUI.Views
         private void CriarSinapse(Node3D from, Node3D to, int score, bool isCore)
         {
             Color c;
-            if (isCore) c = (Color)ColorConverter.ConvertFromString("#00E5FF");
-            else if (score > 50) c = (Color)ColorConverter.ConvertFromString("#4EDEA3");
-            else if (score > 0) c = (Color)ColorConverter.ConvertFromString("#FFD666");
-            else if (score == 0) c = (Color)ColorConverter.ConvertFromString("#6E6E82");
-            else c = (Color)ColorConverter.ConvertFromString("#FF4C4C");
+            if (isCore) c = (Color)ColorConverter.ConvertFromString("#58A6FF");
+            else if (score > 50) c = (Color)ColorConverter.ConvertFromString("#3FB950");
+            else if (score > 0) c = (Color)ColorConverter.ConvertFromString("#D29922");
+            else if (score == 0) c = (Color)ColorConverter.ConvertFromString("#8B98A7");
+            else c = (Color)ColorConverter.ConvertFromString("#F85149");
 
             Line line = new Line
             {
@@ -1140,13 +1184,12 @@ namespace BotRpaUI.Views
         private void ShowStrategyInspector(LearnStrategyExport strat)
         {
             InspectorTitle.Text = FormatarTargetName(strat.TargetId);
-            InspectorSubtitle.Text = $"Estratégia IA: {strat.TargetId}";
+            InspectorSubtitle.Text = $"Seletor: {strat.TargetId}";
             InspectorQueryText.Text = strat.Query;
-            InspectorScoreText.Text = strat.Score.ToString();
+            InspectorScoreText.Text = $"{strat.Score:+0;-0;0}";
 
             int total = strat.Hits + strat.Misses;
-            int acc = total > 0 ? (int)Math.Round((double)strat.Hits / total * 100.0) : 100;
-            InspectorAccuracyText.Text = $"{acc}%";
+            InspectorAccuracyText.Text = total > 0 ? $"{(double)strat.Hits / total * 100.0:F1}%" : "—";
             InspectorHitsText.Text = strat.Hits.ToString();
             InspectorMissesText.Text = strat.Misses.ToString();
 
@@ -1157,26 +1200,23 @@ namespace BotRpaUI.Views
         private void ShowTargetInspector(string targetId, List<LearnStrategyExport> strats)
         {
             InspectorTitle.Text = FormatarTargetName(targetId);
-            InspectorSubtitle.Text = $"Grupo de Seletores: {targetId} ({strats.Count} estratégias) — {GetEtapaLabel(targetId)}";
+            InspectorSubtitle.Text = $"Alvo: {targetId} · {strats.Count} seletores · {GetEtapaLabel(targetId)}";
             var ordered = strats.OrderByDescending(s => s.Score).ToList();
-            var lines = ordered.Select(s => $"[{s.Score,4}] {s.Query} (H:{s.Hits}/M:{s.Misses})");
+            var lines = ordered.Select(s => $"[{s.Score:+0;-0;0}] {s.Query} (H:{s.Hits}/M:{s.Misses})");
             InspectorQueryText.Text = $"Alvo: {targetId}\nEtapa: {GetEtapaLabel(targetId)}\n\n" + string.Join("\n", lines);
 
-            int avgScore = strats.Count > 0 ? (int)strats.Average(s => s.Score) : 0;
+            double avgScore = strats.Count > 0 ? strats.Average(s => s.Score) : 0;
             int totalHits = strats.Sum(s => s.Hits);
             int totalMisses = strats.Sum(s => s.Misses);
             int total = totalHits + totalMisses;
-            int acc = total > 0 ? (int)Math.Round((double)totalHits / total * 100.0) : 100;
 
-            InspectorScoreText.Text = avgScore.ToString();
-            InspectorAccuracyText.Text = $"{acc}%";
+            InspectorScoreText.Text = strats.Count > 0 ? $"{avgScore:+0.0;-0.0;0.0}" : "—";
+            InspectorAccuracyText.Text = total > 0 ? $"{(double)totalHits / total * 100.0:F1}%" : "—";
             InspectorHitsText.Text = totalHits.ToString();
             InspectorMissesText.Text = totalMisses.ToString();
 
-            // Agrega históricos reais de todas as estratégias (até 10, priorizando hits)
             string combined = string.Concat(ordered.Select(s => s.History ?? ""));
             string agg = new string(combined.Where(c => c == '1' || c == '0').Take(10).ToArray());
-            if (string.IsNullOrEmpty(agg) && total == 0) agg = "";
             RenderHistoryDots(agg);
             NodeInspectorPanel.Visibility = Visibility.Visible;
         }
@@ -1184,8 +1224,8 @@ namespace BotRpaUI.Views
         private void ShowCognitiveInspector(string name, string role, string details)
         {
             InspectorTitle.Text = name;
-            InspectorSubtitle.Text = $"BotAI 2.0 (SIMULADO): {role}";
-            InspectorQueryText.Text = $"[SIMULADO — Camada decorativa, sem telemetria real]\n\n{details}\n\nTempo de Resposta: —\nProteção Zero-Drift: ATIVA";
+            InspectorSubtitle.Text = $"Componente conceitual · {role}";
+            InspectorQueryText.Text = $"{details}\n\nEste nó representa uma etapa conceitual do motor BotLearn; não possui telemetria independente.";
             InspectorScoreText.Text = "—";
             InspectorAccuracyText.Text = "—";
             InspectorHitsText.Text = "—";
@@ -1196,9 +1236,9 @@ namespace BotRpaUI.Views
 
         private void ShowMicroNeuronInspector(int id, string type)
         {
-            InspectorTitle.Text = $"Micro-Neurônio Relé #{id:D2}";
-            InspectorSubtitle.Text = $"SIMULADO — Canal Sináptico ({type})";
-            InspectorQueryText.Text = $"[SIMULADO — Lattice visual 3D, sem dados reais]\nCanal de interconexão de alta frequência no espaço 3D.\nStatus: decorativo.";
+            InspectorTitle.Text = $"Conexão visual #{id:D2}";
+            InspectorSubtitle.Text = $"Elemento ilustrativo do mapa · {type}";
+            InspectorQueryText.Text = "Conexão visual sem telemetria própria. Serve apenas para organizar a leitura do mapa 3D.";
             InspectorScoreText.Text = "—";
             InspectorAccuracyText.Text = "—";
             InspectorHitsText.Text = "—";
@@ -1209,14 +1249,22 @@ namespace BotRpaUI.Views
 
         private void ShowCoreInspector()
         {
-            InspectorTitle.Text = "REATOR CENTRAL BOTAI 2.0";
-            InspectorSubtitle.Text = "Núcleo Cognitivo e Motor Determinístico";
-            InspectorQueryText.Text = "[NÚCLEO MACIÇO DE DECISÃO CENTRAL]\n\nMotor Nativo: BotEngine.dll (Win32)\nTopologia: Esfera Neural 3D Multicamadas\nProteção: Zero-Drift & Centroid Matching\nStatus Operacional: 30 FPS (throttle iGPU) com Aceleração GPU.";
-            InspectorScoreText.Text = "100";
-            InspectorAccuracyText.Text = "100%";
-            InspectorHitsText.Text = _synapses3D.Count.ToString();
-            InspectorMissesText.Text = "0";
-            RenderHistoryDots("1111111111");
+            int total = _knownHits + _knownMisses;
+            double avgScore = _knownStrategies > 0 ? (double)_knownScoreSum / _knownStrategies : 0;
+
+            InspectorTitle.Text = "MOTOR DE ESTRATÉGIAS BOTLEARN";
+            InspectorSubtitle.Text = "Núcleo do motor nativo";
+            InspectorQueryText.Text =
+                $"Motor: BotEngine.dll (Win32)\n" +
+                $"Alvos visíveis: {_knownTargets}\n" +
+                $"Seletores visíveis: {_knownStrategies}\n" +
+                $"Execuções registradas: {total}\n\n" +
+                "Este painel exibe os dados atuais do mapa; alterações são feitas no fluxo do bot.";
+            InspectorScoreText.Text = _knownStrategies > 0 ? $"{avgScore:+0.0;-0.0;0.0}" : "—";
+            InspectorAccuracyText.Text = total > 0 ? $"{(double)_knownHits / total * 100.0:F1}%" : "—";
+            InspectorHitsText.Text = _knownHits.ToString();
+            InspectorMissesText.Text = _knownMisses.ToString();
+            RenderHistoryDots(_knownHistory);
             NodeInspectorPanel.Visibility = Visibility.Visible;
         }
 
@@ -1233,8 +1281,8 @@ namespace BotRpaUI.Views
                     Height = 10,
                     Margin = new Thickness(0, 0, 6, 0),
                     Fill = ch == '1'
-                        ? new SolidColorBrush((Color)ColorConverter.ConvertFromString("#4EDEA3"))
-                        : new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF6B6B"))
+                        ? new SolidColorBrush((Color)ColorConverter.ConvertFromString("#3FB950"))
+                        : new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F85149"))
                 };
                 InspectorHistoryDots.Items.Add(dot);
             }
@@ -1305,6 +1353,23 @@ namespace BotRpaUI.Views
             if (sender is System.Windows.Controls.TextBox tb)
             {
                 _searchText = tb.Text ?? "";
+                if (SearchWatermark != null)
+                    SearchWatermark.Visibility = string.IsNullOrEmpty(tb.Text) ? Visibility.Visible : Visibility.Collapsed;
+
+                if (_searchDebounce == null)
+                {
+                    _searchDebounce = new System.Windows.Threading.DispatcherTimer
+                    {
+                        Interval = TimeSpan.FromMilliseconds(280)
+                    };
+                    _searchDebounce.Tick += (_, _) =>
+                    {
+                        _searchDebounce?.Stop();
+                        if (IsLoaded) RenderBrain();
+                    };
+                }
+                _searchDebounce.Stop();
+                _searchDebounce.Start();
             }
         }
 

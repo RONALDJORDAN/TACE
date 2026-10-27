@@ -167,6 +167,26 @@
             <Setter Property="BorderBrush" Value="#2A2A40"/>
         </Style>
 
+        <Style x:Key="DarkDataGridRowHeader" TargetType="DataGridRowHeader">
+            <Setter Property="Background" Value="#121220"/>
+            <Setter Property="Foreground" Value="#85859E"/>
+            <Setter Property="FontFamily" Value="Consolas"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Width" Value="46"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Padding" Value="6,0"/>
+            <Setter Property="BorderThickness" Value="0,0,1,1"/>
+            <Setter Property="BorderBrush" Value="#202035"/>
+            <Style.Triggers>
+                <Trigger Property="IsRowSelected" Value="True">
+                    <Setter Property="Background" Value="#23174A"/>
+                    <Setter Property="Foreground" Value="#FFFFFF"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
         <Style x:Key="DarkDataGridCell" TargetType="DataGridCell">
             <Setter Property="Padding" Value="10,0"/>
             <Setter Property="Template">
@@ -387,6 +407,252 @@
                                 </StackPanel>
                             </Border>
                         </Grid>
+
+                        <!-- Cobertura do Cadastro -->
+                        <Border Background="#0D0D18" CornerRadius="10" Padding="16" Margin="0,0,0,15" BorderBrush="#23233A" BorderThickness="1">
+                            <StackPanel>
+                                <Grid Margin="0,0,0,14">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="Cobertura do Cadastro" Foreground="#E3E0F2" FontSize="14" FontWeight="Bold"/>
+                                        <TextBlock Text="Percentual de equipamentos com os dados essenciais preenchidos." Foreground="#85859E" FontSize="11" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="12,0,0,0">
+                                        <TextBlock x:Name="TxtBaseCompleta" Text="0/0 (0%)" Foreground="#4EDEA3" FontSize="15" FontWeight="Bold" HorizontalAlignment="Right"/>
+                                        <TextBlock Text="cadastros 100% completos" Foreground="#85859E" FontSize="10" HorizontalAlignment="Right"/>
+                                    </StackPanel>
+                                </Grid>
+
+                                <UniformGrid Columns="4">
+                                    <Border Background="#121220" CornerRadius="8" Padding="12" Margin="0,0,8,0">
+                                        <StackPanel>
+                                            <TextBlock Text="PATRIMÔNIO" Foreground="#FFB703" FontSize="10" FontWeight="Bold"/>
+                                            <TextBlock x:Name="TxtCoberturaPatrimonio" Text="0/0" Foreground="#FFFFFF" FontSize="16" FontWeight="Bold" Margin="0,4,0,2"/>
+                                            <TextBlock x:Name="TxtCoberturaPatrimonioPerc" Text="0%" Foreground="#FFB703" FontSize="10" FontWeight="SemiBold"/>
+                                            <ProgressBar x:Name="ProgressCoberturaPatrimonio" Margin="0,6,0,0" Foreground="#FFB703" Style="{StaticResource MetricProgressBar}" Value="0" Maximum="100"/>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <Border Background="#121220" CornerRadius="8" Padding="12" Margin="4,0,4,0">
+                                        <StackPanel>
+                                            <TextBlock Text="SERIAL" Foreground="#5EB1FF" FontSize="10" FontWeight="Bold"/>
+                                            <TextBlock x:Name="TxtCoberturaSerial" Text="0/0" Foreground="#FFFFFF" FontSize="16" FontWeight="Bold" Margin="0,4,0,2"/>
+                                            <TextBlock x:Name="TxtCoberturaSerialPerc" Text="0%" Foreground="#5EB1FF" FontSize="10" FontWeight="SemiBold"/>
+                                            <ProgressBar x:Name="ProgressCoberturaSerial" Margin="0,6,0,0" Foreground="#5EB1FF" Style="{StaticResource MetricProgressBar}" Value="0" Maximum="100"/>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <Border Background="#121220" CornerRadius="8" Padding="12" Margin="4,0,4,0">
+                                        <StackPanel>
+                                            <TextBlock Text="MAC ADDRESS" Foreground="#4EDEA3" FontSize="10" FontWeight="Bold"/>
+                                            <TextBlock x:Name="TxtCoberturaMac" Text="0/0" Foreground="#FFFFFF" FontSize="16" FontWeight="Bold" Margin="0,4,0,2"/>
+                                            <TextBlock x:Name="TxtCoberturaMacPerc" Text="0%" Foreground="#4EDEA3" FontSize="10" FontWeight="SemiBold"/>
+                                            <ProgressBar x:Name="ProgressCoberturaMac" Margin="0,6,0,0" Foreground="#4EDEA3" Style="{StaticResource MetricProgressBar}" Value="0" Maximum="100"/>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <Border Background="#121220" CornerRadius="8" Padding="12" Margin="8,0,0,0">
+                                        <StackPanel>
+                                            <TextBlock Text="MODELO / FABRICANTE" Foreground="#D2BBFF" FontSize="10" FontWeight="Bold"/>
+                                            <TextBlock x:Name="TxtCoberturaModelo" Text="0/0" Foreground="#FFFFFF" FontSize="16" FontWeight="Bold" Margin="0,4,0,2"/>
+                                            <TextBlock x:Name="TxtCoberturaModeloPerc" Text="0%" Foreground="#D2BBFF" FontSize="10" FontWeight="SemiBold"/>
+                                            <ProgressBar x:Name="ProgressCoberturaModelo" Margin="0,6,0,0" Foreground="#D2BBFF" Style="{StaticResource MetricProgressBar}" Value="0" Maximum="100"/>
+                                        </StackPanel>
+                                    </Border>
+                                </UniformGrid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Top Modelos + Alertas de Cadastro -->
+                        <Grid Margin="0,0,0,15">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="15"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Top Modelos -->
+                            <Border Grid.Column="0" Background="#0D0D18" CornerRadius="10" Padding="16" BorderBrush="#23233A" BorderThickness="1">
+                                <StackPanel>
+                                    <TextBlock Text="Top Modelos da Frota" Foreground="#E3E0F2" FontSize="14" FontWeight="Bold"/>
+                                    <TextBlock Text="Ranking dos modelos mais presentes na base." Foreground="#85859E" FontSize="11" Margin="0,2,0,12"/>
+
+                                    <StackPanel x:Name="PanelTopModelo1" Margin="0,0,0,8">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock x:Name="TxtTopModelo1Nome" Text="—" Foreground="#E3E0F2" FontSize="12" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" Margin="0,0,8,0"/>
+                                            <TextBlock x:Name="TxtTopModelo1Valor" Grid.Column="1" Text="0 (0%)" Foreground="#00F5D4" FontSize="12" FontWeight="Bold"/>
+                                        </Grid>
+                                        <ProgressBar x:Name="ProgressTopModelo1" Margin="0,4,0,0" Foreground="#00F5D4" Style="{StaticResource MetricProgressBar}" Value="0" Maximum="100"/>
+                                    </StackPanel>
+
+                                    <StackPanel x:Name="PanelTopModelo2" Margin="0,0,0,8">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock x:Name="TxtTopModelo2Nome" Text="—" Foreground="#E3E0F2" FontSize="12" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" Margin="0,0,8,0"/>
+                                            <TextBlock x:Name="TxtTopModelo2Valor" Grid.Column="1" Text="0 (0%)" Foreground="#FFB703" FontSize="12" FontWeight="Bold"/>
+                                        </Grid>
+                                        <ProgressBar x:Name="ProgressTopModelo2" Margin="0,4,0,0" Foreground="#FFB703" Style="{StaticResource MetricProgressBar}" Value="0" Maximum="100"/>
+                                    </StackPanel>
+
+                                    <StackPanel x:Name="PanelTopModelo3" Margin="0,0,0,8">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock x:Name="TxtTopModelo3Nome" Text="—" Foreground="#E3E0F2" FontSize="12" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" Margin="0,0,8,0"/>
+                                            <TextBlock x:Name="TxtTopModelo3Valor" Grid.Column="1" Text="0 (0%)" Foreground="#D2BBFF" FontSize="12" FontWeight="Bold"/>
+                                        </Grid>
+                                        <ProgressBar x:Name="ProgressTopModelo3" Margin="0,4,0,0" Foreground="#D2BBFF" Style="{StaticResource MetricProgressBar}" Value="0" Maximum="100"/>
+                                    </StackPanel>
+
+                                    <StackPanel x:Name="PanelTopModelo4" Margin="0,0,0,8">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock x:Name="TxtTopModelo4Nome" Text="—" Foreground="#E3E0F2" FontSize="12" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" Margin="0,0,8,0"/>
+                                            <TextBlock x:Name="TxtTopModelo4Valor" Grid.Column="1" Text="0 (0%)" Foreground="#5EB1FF" FontSize="12" FontWeight="Bold"/>
+                                        </Grid>
+                                        <ProgressBar x:Name="ProgressTopModelo4" Margin="0,4,0,0" Foreground="#5EB1FF" Style="{StaticResource MetricProgressBar}" Value="0" Maximum="100"/>
+                                    </StackPanel>
+
+                                    <StackPanel x:Name="PanelTopModelo5" Margin="0,0,0,8">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock x:Name="TxtTopModelo5Nome" Text="—" Foreground="#E3E0F2" FontSize="12" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" Margin="0,0,8,0"/>
+                                            <TextBlock x:Name="TxtTopModelo5Valor" Grid.Column="1" Text="0 (0%)" Foreground="#4EDEA3" FontSize="12" FontWeight="Bold"/>
+                                        </Grid>
+                                        <ProgressBar x:Name="ProgressTopModelo5" Margin="0,4,0,0" Foreground="#4EDEA3" Style="{StaticResource MetricProgressBar}" Value="0" Maximum="100"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Alertas de Cadastro -->
+                            <Border Grid.Column="2" Background="#0D0D18" CornerRadius="10" Padding="16" BorderBrush="#23233A" BorderThickness="1">
+                                <StackPanel>
+                                    <TextBlock Text="Alertas de Cadastro" Foreground="#E3E0F2" FontSize="14" FontWeight="Bold"/>
+                                    <TextBlock Text="Pendências que impactam a identificação e o suporte." Foreground="#85859E" FontSize="11" Margin="0,2,0,12"/>
+
+                                    <Border Background="#121220" CornerRadius="6" Padding="10,7" Margin="0,0,0,6">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Orientation="Horizontal">
+                                                <Ellipse Width="6" Height="6" Fill="#FF4D4D" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                                <TextBlock Text="Sem patrimônio" Foreground="#A1A1AA" FontSize="11" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                            <TextBlock x:Name="TxtAlertaSemPatrimonio" Grid.Column="1" Text="0" Foreground="#FF4D4D" FontSize="12" FontWeight="Bold" VerticalAlignment="Center"/>
+                                        </Grid>
+                                    </Border>
+
+                                    <Border Background="#121220" CornerRadius="6" Padding="10,7" Margin="0,0,0,6">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Orientation="Horizontal">
+                                                <Ellipse Width="6" Height="6" Fill="#FF8A65" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                                <TextBlock Text="Patrimônio duplicado" Foreground="#A1A1AA" FontSize="11" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                            <TextBlock x:Name="TxtAlertaPatrimonioDuplicado" Grid.Column="1" Text="0" Foreground="#FF8A65" FontSize="12" FontWeight="Bold" VerticalAlignment="Center"/>
+                                        </Grid>
+                                    </Border>
+
+                                    <Border Background="#121220" CornerRadius="6" Padding="10,7" Margin="0,0,0,6">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Orientation="Horizontal">
+                                                <Ellipse Width="6" Height="6" Fill="#FFB703" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                                <TextBlock Text="MAC ausente ou inválido" Foreground="#A1A1AA" FontSize="11" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                            <TextBlock x:Name="TxtAlertaMac" Grid.Column="1" Text="0" Foreground="#FFB703" FontSize="12" FontWeight="Bold" VerticalAlignment="Center"/>
+                                        </Grid>
+                                    </Border>
+
+                                    <Border Background="#121220" CornerRadius="6" Padding="10,7" Margin="0,0,0,6">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Orientation="Horizontal">
+                                                <Ellipse Width="6" Height="6" Fill="#D2BBFF" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                                <TextBlock Text="Modelo não identificado" Foreground="#A1A1AA" FontSize="11" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                            <TextBlock x:Name="TxtAlertaModelo" Grid.Column="1" Text="0" Foreground="#D2BBFF" FontSize="12" FontWeight="Bold" VerticalAlignment="Center"/>
+                                        </Grid>
+                                    </Border>
+
+                                    <Separator Background="#23233A" Margin="0,8,0,8"/>
+                                    <TextBlock x:Name="TxtResumoAlertas" Text="Nenhuma pendência encontrada." Foreground="#4EDEA3" FontSize="11" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+
+                        <!-- Atividade da Auditoria -->
+                        <Border Background="#0D0D18" CornerRadius="10" Padding="16" BorderBrush="#23233A" BorderThickness="1">
+                            <StackPanel>
+                                <TextBlock Text="Atividade da Base" Foreground="#E3E0F2" FontSize="14" FontWeight="Bold"/>
+                                <TextBlock Text="Eventos registrados na auditoria do sistema." Foreground="#85859E" FontSize="11" Margin="0,2,0,12"/>
+
+                                <UniformGrid Columns="4">
+                                    <Border Background="#121220" CornerRadius="8" Padding="12" Margin="0,0,8,0">
+                                        <StackPanel>
+                                            <TextBlock Text="TOTAL DE EVENTOS" Foreground="#00E5FF" FontSize="10" FontWeight="Bold"/>
+                                            <TextBlock x:Name="TxtAuditoriaTotal" Text="0" Foreground="#FFFFFF" FontSize="20" FontWeight="Black" Margin="0,4,0,0"/>
+                                            <TextBlock Text="registros de auditoria" Foreground="#85859E" FontSize="10"/>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <Border Background="#121220" CornerRadius="8" Padding="12" Margin="4,0,4,0">
+                                        <StackPanel>
+                                            <TextBlock Text="ÚLTIMOS 7 DIAS" Foreground="#4EDEA3" FontSize="10" FontWeight="Bold"/>
+                                            <TextBlock x:Name="TxtAuditoria7Dias" Text="0" Foreground="#4EDEA3" FontSize="20" FontWeight="Black" Margin="0,4,0,0"/>
+                                            <TextBlock Text="eventos recentes" Foreground="#85859E" FontSize="10"/>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <Border Background="#121220" CornerRadius="8" Padding="12" Margin="4,0,4,0">
+                                        <StackPanel>
+                                            <TextBlock Text="ÚLTIMOS 30 DIAS" Foreground="#FFB703" FontSize="10" FontWeight="Bold"/>
+                                            <TextBlock x:Name="TxtAuditoria30Dias" Text="0" Foreground="#FFB703" FontSize="20" FontWeight="Black" Margin="0,4,0,0"/>
+                                            <TextBlock Text="eventos no mês" Foreground="#85859E" FontSize="10"/>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <Border Background="#121220" CornerRadius="8" Padding="12" Margin="8,0,0,0">
+                                        <StackPanel>
+                                            <TextBlock Text="ÚLTIMO EVENTO" Foreground="#D2BBFF" FontSize="10" FontWeight="Bold"/>
+                                            <TextBlock x:Name="TxtAuditoriaUltimoEvento" Text="—" Foreground="#FFFFFF" FontSize="14" FontWeight="Bold" Margin="0,4,0,0"/>
+                                            <TextBlock x:Name="TxtAuditoriaUltimoDetalhe" Text="sem eventos" Foreground="#85859E" FontSize="10" TextTrimming="CharacterEllipsis"/>
+                                        </StackPanel>
+                                    </Border>
+                                </UniformGrid>
+
+                                <TextBlock x:Name="TxtAuditoriaAcaoPrincipal" Text="Ação mais frequente: —" Foreground="#85859E" FontSize="11" Margin="0,10,0,0" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Border>
                     </StackPanel>
                 </ScrollViewer>
             </Border>
@@ -469,6 +735,7 @@
                     <DataGrid x:Name="GridBancoDados" Grid.Row="2"
                               Style="{StaticResource DarkDataGrid}"
                               ColumnHeaderStyle="{StaticResource DarkDataGridColumnHeader}"
+                              RowHeaderStyle="{StaticResource DarkDataGridRowHeader}"
                               CellStyle="{StaticResource DarkDataGridCell}"
                               AutoGenerateColumns="False"
                               CanUserAddRows="False"
@@ -477,26 +744,15 @@
                               CanUserSortColumns="True"
                               SelectionMode="Extended"
                               GridLinesVisibility="Horizontal"
-                              HeadersVisibility="Column"
+                              HeadersVisibility="All"
+                              RowHeaderWidth="46"
+                              Sorting="GridBancoDados_Sorting"
+                              LoadingRow="GridBancoDados_LoadingRow"
                               CellEditEnding="GridBancoDados_CellEditEnding"
                               SelectionChanged="GridBancoDados_SelectionChanged">
                         <DataGrid.Columns>
-                            <!-- ID alinhado ao número de patrimônio -->
-                            <DataGridTextColumn Header="ID" Width="70" Binding="{Binding ID}" IsReadOnly="True">
-                                <DataGridTextColumn.ElementStyle>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="Foreground" Value="#00E5FF"/>
-                                        <Setter Property="FontFamily" Value="Consolas"/>
-                                        <Setter Property="FontWeight" Value="Bold"/>
-                                        <Setter Property="VerticalAlignment" Value="Center"/>
-                                        <Setter Property="Margin" Value="8,0"/>
-                                        <Setter Property="ToolTip" Value="ID alinhado ao número do patrimônio. Ao editar o patrimônio, o sistema realoca o registro."/>
-                                    </Style>
-                                </DataGridTextColumn.ElementStyle>
-                            </DataGridTextColumn>
-
                             <!-- Nº de Patrimônio (edição manual inline) -->
-                            <DataGridTextColumn Header="Nº Patrimônio" Width="140" Binding="{Binding Patrimonio, UpdateSourceTrigger=PropertyChanged}" IsReadOnly="False">
+                            <DataGridTextColumn Header="Nº Patrimônio" Width="140" SortMemberPath="Patrimonio" Binding="{Binding Patrimonio, UpdateSourceTrigger=PropertyChanged}" IsReadOnly="False">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="Foreground" Value="#FFB703"/>
@@ -520,7 +776,7 @@
                             </DataGridTextColumn>
 
                             <!-- Marca e Modelo -->
-                            <DataGridTextColumn Header="Fabricante / Modelo" Width="1.2*" Binding="{Binding MarcaModelo}" IsReadOnly="True">
+                            <DataGridTextColumn Header="Fabricante / Modelo" Width="1.2*" SortMemberPath="MarcaModelo" Binding="{Binding MarcaModelo}" IsReadOnly="True">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="Foreground" Value="#E3E0F2"/>
@@ -532,7 +788,7 @@
                             </DataGridTextColumn>
 
                             <!-- Serial -->
-                            <DataGridTextColumn Header="N/S (Número de Série)" Width="1.2*" Binding="{Binding Serial}" IsReadOnly="True">
+                            <DataGridTextColumn Header="N/S (Número de Série)" Width="1.2*" SortMemberPath="Serial" Binding="{Binding Serial}" IsReadOnly="True">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="Foreground" Value="#5EB1FF"/>
@@ -544,7 +800,7 @@
                             </DataGridTextColumn>
 
                             <!-- MAC Address -->
-                            <DataGridTextColumn Header="MAC Address (Wi-Fi)" Width="1.1*" Binding="{Binding MAC}" IsReadOnly="True">
+                            <DataGridTextColumn Header="MAC Address (Wi-Fi)" Width="1.1*" SortMemberPath="MAC" Binding="{Binding MAC}" IsReadOnly="True">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="Foreground" Value="#4EDEA3"/>
@@ -595,80 +851,276 @@
             </Border>
 
             <!-- ========================================================================= -->
-            <!-- SUBMÓDULO 3: REGISTROS & AUDITORIA COM LEITOR DE LOG INTEGRADO -->
+            <!-- SUBMÓDULO 3: REGISTROS & AUDITORIA -->
             <!-- ========================================================================= -->
             <Border x:Name="PanelRegistros" Background="#151525" CornerRadius="12" Padding="20" BorderBrush="#23233A" BorderThickness="1" Visibility="Collapsed">
                 <Grid>
                     <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
                     <!-- Cabeçalho -->
                     <Grid Grid.Row="0" Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
                         <StackPanel>
-                            <TextBlock Text="Central de Registros &amp; Auditoria de Builds" Foreground="#FFFFFF" FontSize="18" FontWeight="Bold"/>
-                            <TextBlock Text="Histórico completo de auditoria gravado no sistema (/docs/registros). Selecione um registro para inspecionar o log." Foreground="#85859E" FontSize="12" Margin="0,2,0,0"/>
+                            <TextBlock Text="Registros &amp; Auditoria" Foreground="#FFFFFF" FontSize="20" FontWeight="Bold"/>
+                            <TextBlock Text="Histórico organizado por data, hora e modalidade — builds, execuções e eventos da base." Foreground="#85859E" FontSize="12" Margin="0,2,0,0"/>
                         </StackPanel>
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="12,0,0,0">
                             <Button Content="Recarregar" Style="{StaticResource RoundedActionButton}" Background="#0A0A0F" Foreground="#E3E0F2" BorderBrush="#2A2A40" BorderThickness="1" Padding="10,5" Click="BtnRecarregarLogs_Click" Margin="0,0,6,0"/>
-                            <Button Content="Abrir Pasta no Explorer" Style="{StaticResource RoundedActionButton}" Background="#0A0A0F" Foreground="#4EDEA3" BorderBrush="#4EDEA3" BorderThickness="1" Padding="10,5" Click="BtnAbrirPastaRegistros_Click"/>
+                            <Button Content="Abrir Pasta" Style="{StaticResource RoundedActionButton}" Background="#0A0A0F" Foreground="#4EDEA3" BorderBrush="#4EDEA3" BorderThickness="1" Padding="10,5" Click="BtnAbrirPastaRegistros_Click"/>
                         </StackPanel>
                     </Grid>
 
-                    <!-- Split-View: Lista à Esquerda (40%) | Leitor de Log à Direita (60%) -->
-                    <Grid Grid.Row="1">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="380"/>
-                            <ColumnDefinition Width="15"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-
-                        <!-- Lado Esquerdo: Lista de Sessões/Pastas de Registros -->
-                        <Border Grid.Column="0" Background="#0A0A0F" CornerRadius="8" BorderBrush="#202035" BorderThickness="1" Padding="2">
-                            <ListView x:Name="ListRegistros" Background="Transparent" Foreground="#E3E0F2" BorderThickness="0" SelectionChanged="ListRegistros_SelectionChanged">
-                                <ListView.View>
-                                    <GridView>
-                                        <GridViewColumn Header="Data" Width="90" DisplayMemberBinding="{Binding Data}"/>
-                                        <GridViewColumn Header="Nome do Registro" Width="180" DisplayMemberBinding="{Binding Nome}"/>
-                                        <GridViewColumn Header="Tipo" Width="90" DisplayMemberBinding="{Binding Tipo}"/>
-                                    </GridView>
-                                </ListView.View>
-                                <ListView.Resources>
-                                    <Style TargetType="GridViewColumnHeader">
-                                        <Setter Property="Background" Value="#161628"/>
-                                        <Setter Property="Foreground" Value="#8570E6"/>
-                                        <Setter Property="FontWeight" Value="SemiBold"/>
-                                        <Setter Property="Padding" Value="6,4"/>
-                                        <Setter Property="BorderThickness" Value="0,0,0,1"/>
-                                        <Setter Property="BorderBrush" Value="#2A2A40"/>
-                                    </Style>
-                                </ListView.Resources>
-                            </ListView>
+                    <!-- KPIs -->
+                    <UniformGrid Grid.Row="1" Columns="4" Margin="0,0,0,12">
+                        <Border Background="#121220" CornerRadius="8" Padding="12" Margin="0,0,8,0">
+                            <StackPanel>
+                                <TextBlock Text="TOTAL DE REGISTROS" Foreground="#00E5FF" FontSize="10" FontWeight="Bold"/>
+                                <TextBlock x:Name="TxtResumoRegistrosTotal" Text="0" Foreground="#FFFFFF" FontSize="20" FontWeight="Black" Margin="0,3,0,0"/>
+                                <TextBlock Text="arquivos e builds" Foreground="#85859E" FontSize="10"/>
+                            </StackPanel>
                         </Border>
+                        <Border Background="#121220" CornerRadius="8" Padding="12" Margin="4,0,4,0">
+                            <StackPanel>
+                                <TextBlock Text="HOJE" Foreground="#4EDEA3" FontSize="10" FontWeight="Bold"/>
+                                <TextBlock x:Name="TxtResumoRegistrosHoje" Text="0" Foreground="#4EDEA3" FontSize="20" FontWeight="Black" Margin="0,3,0,0"/>
+                                <TextBlock Text="registros do dia" Foreground="#85859E" FontSize="10"/>
+                            </StackPanel>
+                        </Border>
+                        <Border Background="#121220" CornerRadius="8" Padding="12" Margin="4,0,4,0">
+                            <StackPanel>
+                                <TextBlock Text="BUILDS" Foreground="#D2BBFF" FontSize="10" FontWeight="Bold"/>
+                                <TextBlock x:Name="TxtResumoBuilds" Text="0" Foreground="#D2BBFF" FontSize="20" FontWeight="Black" Margin="0,3,0,0"/>
+                                <TextBlock Text="compilações auditadas" Foreground="#85859E" FontSize="10"/>
+                            </StackPanel>
+                        </Border>
+                        <Border Background="#121220" CornerRadius="8" Padding="12" Margin="8,0,0,0">
+                            <StackPanel>
+                                <TextBlock Text="EXECUÇÕES" Foreground="#FFB703" FontSize="10" FontWeight="Bold"/>
+                                <TextBlock x:Name="TxtResumoExecucoes" Text="0" Foreground="#FFB703" FontSize="20" FontWeight="Black" Margin="0,3,0,0"/>
+                                <TextBlock Text="sessões de dispositivos" Foreground="#85859E" FontSize="10"/>
+                            </StackPanel>
+                        </Border>
+                    </UniformGrid>
 
-                        <!-- Lado Direito: Visualizador de Log Integrado -->
-                        <Border Grid.Column="2" Background="#0A0A0F" CornerRadius="8" BorderBrush="#202035" BorderThickness="1" Padding="12">
-                            <Grid>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="*"/>
-                                </Grid.RowDefinitions>
+                    <!-- Abas e contador -->
+                    <Grid Grid.Row="2" Margin="0,0,0,10">
+                        <Border Background="#0A0A0F" CornerRadius="6" Padding="3" BorderBrush="#23233A" BorderThickness="1" HorizontalAlignment="Left">
+                            <StackPanel Orientation="Horizontal">
+                                <Button x:Name="BtnTabRegistrosArquivos" Content="Arquivos &amp; Builds" Style="{StaticResource ExportTabButton}" Click="BtnTabRegistrosArquivos_Click" Background="#513BA6" Foreground="#FFFFFF"/>
+                                <Button x:Name="BtnTabAuditoriaBase" Content="Auditoria da Base" Style="{StaticResource ExportTabButton}" Click="BtnTabAuditoriaBase_Click" Background="Transparent" Foreground="#85859E"/>
+                            </StackPanel>
+                        </Border>
+                        <TextBlock x:Name="TxtContadorRegistros" HorizontalAlignment="Right" VerticalAlignment="Center" Foreground="#85859E" FontSize="11" FontWeight="SemiBold" Text="0 registro(s)"/>
+                    </Grid>
 
-                                <!-- Barra Superior do Log -->
-                                <Grid Grid.Row="0" Margin="0,0,0,8">
-                                    <TextBlock x:Name="TxtLogHeaderTitle" Text="Selecione um registro ao lado para visualizar" Foreground="#8570E6" FontSize="12" FontWeight="Bold" VerticalAlignment="Center"/>
-                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                                        <Button Content="Copiar Log" Background="#151525" Foreground="#E3E0F2" BorderBrush="#2A2A40" BorderThickness="1" Padding="8,3" FontSize="11" Cursor="Hand" Click="BtnCopiarLog_Click" Margin="0,0,6,0"/>
-                                        <Button Content="Bloco de Notas" Background="#151525" Foreground="#E3E0F2" BorderBrush="#2A2A40" BorderThickness="1" Padding="8,3" FontSize="11" Cursor="Hand" Click="BtnAbrirBlocoNotas_Click"/>
-                                    </StackPanel>
+                    <!-- ============================ ABA 1: ARQUIVOS & BUILDS ============================ -->
+                    <Grid x:Name="SubPanelRegistrosArquivos" Grid.Row="3">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Filtros -->
+                        <Grid Grid.Row="0" Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="150"/>
+                                <ColumnDefinition Width="150"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBox x:Name="TxtBuscaRegistros" Background="#0A0A0F" Foreground="#E3E0F2" BorderBrush="#2A2A40" BorderThickness="1"
+                                     Padding="9,7" FontSize="12" TextChanged="FiltroRegistros_Changed"
+                                     ToolTip="Buscar por nome, data, serial ou modalidade"/>
+                            <ComboBox x:Name="CmbModalidadeRegistros" Grid.Column="1" Margin="8,0,0,0" Padding="8,6" FontSize="12" SelectionChanged="FiltroRegistros_Changed">
+                                <ComboBoxItem Content="Todas"/>
+                                <ComboBoxItem Content="Build"/>
+                                <ComboBoxItem Content="Execução"/>
+                                <ComboBoxItem Content="OTA"/>
+                                <ComboBoxItem Content="Sistema"/>
+                            </ComboBox>
+                            <ComboBox x:Name="CmbPeriodoRegistros" Grid.Column="2" Margin="8,0,0,0" Padding="8,6" FontSize="12" SelectionChanged="FiltroRegistros_Changed">
+                                <ComboBoxItem Content="Tudo"/>
+                                <ComboBoxItem Content="Hoje"/>
+                                <ComboBoxItem Content="7 dias"/>
+                                <ComboBoxItem Content="30 dias"/>
+                            </ComboBox>
+                        </Grid>
+
+                        <!-- Split-View -->
+                        <Grid Grid.Row="1">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="480"/>
+                                <ColumnDefinition Width="12"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Lista -->
+                            <Border Grid.Column="0" Background="#0A0A0F" CornerRadius="8" BorderBrush="#202035" BorderThickness="1" Padding="2">
+                                <ListView x:Name="ListRegistros" Background="Transparent" Foreground="#E3E0F2" BorderThickness="0"
+                                          SelectionChanged="ListRegistros_SelectionChanged" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                                    <ListView.View>
+                                        <GridView>
+                                            <GridViewColumn Header="Data" Width="85" DisplayMemberBinding="{Binding Data}"/>
+                                            <GridViewColumn Header="Hora" Width="55" DisplayMemberBinding="{Binding Hora}"/>
+                                            <GridViewColumn Header="Modalidade" Width="90" DisplayMemberBinding="{Binding Modalidade}"/>
+                                            <GridViewColumn Header="Registro" Width="210" DisplayMemberBinding="{Binding Nome}"/>
+                                        </GridView>
+                                    </ListView.View>
+                                    <ListView.Resources>
+                                        <Style TargetType="GridViewColumnHeader">
+                                            <Setter Property="Background" Value="#161628"/>
+                                            <Setter Property="Foreground" Value="#8570E6"/>
+                                            <Setter Property="FontWeight" Value="SemiBold"/>
+                                            <Setter Property="Padding" Value="6,4"/>
+                                            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                                            <Setter Property="BorderBrush" Value="#2A2A40"/>
+                                        </Style>
+                                        <Style TargetType="ListViewItem">
+                                            <Setter Property="Padding" Value="0"/>
+                                            <Setter Property="Margin" Value="0"/>
+                                            <Setter Property="Background" Value="Transparent"/>
+                                            <Setter Property="Foreground" Value="#E3E0F2"/>
+                                            <Style.Triggers>
+                                                <Trigger Property="IsSelected" Value="True">
+                                                    <Setter Property="Background" Value="#23174A"/>
+                                                    <Setter Property="Foreground" Value="#FFFFFF"/>
+                                                </Trigger>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter Property="Background" Value="#1A1A2E"/>
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </ListView.Resources>
+                                </ListView>
+                            </Border>
+
+                            <!-- Visualizador -->
+                            <Border Grid.Column="2" Background="#0A0A0F" CornerRadius="8" BorderBrush="#202035" BorderThickness="1" Padding="12">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
+
+                                    <Grid Grid.Row="0" Margin="0,0,0,6">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel>
+                                            <TextBlock x:Name="TxtLogHeaderTitle" Text="Selecione um registro ao lado para visualizar" Foreground="#8570E6" FontSize="12" FontWeight="Bold"/>
+                                            <TextBlock x:Name="TxtLogMeta" Text="Data, modalidade e tamanho do registro" Foreground="#85859E" FontSize="10" Margin="0,2,0,0" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Top" Margin="8,0,0,0">
+                                            <Button Content="Copiar" Background="#151525" Foreground="#E3E0F2" BorderBrush="#2A2A40" BorderThickness="1" Padding="8,3" FontSize="11" Cursor="Hand" Click="BtnCopiarLog_Click" Margin="0,0,6,0"/>
+                                            <Button Content="Bloco de Notas" Background="#151525" Foreground="#E3E0F2" BorderBrush="#2A2A40" BorderThickness="1" Padding="8,3" FontSize="11" Cursor="Hand" Click="BtnAbrirBlocoNotas_Click" Margin="0,0,6,0"/>
+                                            <Button Content="Abrir Selecionado" Background="#151525" Foreground="#4EDEA3" BorderBrush="#4EDEA3" BorderThickness="1" Padding="8,3" FontSize="11" Cursor="Hand" Click="BtnAbrirRegistroSelecionado_Click"/>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <Grid Grid.Row="1" Margin="0,0,0,6">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="ARQUIVO" Foreground="#85859E" FontSize="10" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                        <ComboBox x:Name="CmbArquivosRegistro" Grid.Column="1" FontSize="11" Padding="8,4" SelectionChanged="CmbArquivosRegistro_SelectionChanged"/>
+                                    </Grid>
+
+                                    <TextBox x:Name="TxtLogViewer" Grid.Row="2" Background="#05050A" Foreground="#4EDEA3" BorderBrush="#151525" BorderThickness="1"
+                                             FontFamily="Consolas" FontSize="12" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" IsReadOnly="True"
+                                             Padding="8" Text="[Selecione um registro na lista ao lado para inspecionar os detalhes de compilação ou automação...]"/>
                                 </Grid>
+                            </Border>
+                        </Grid>
+                    </Grid>
 
-                                <!-- Caixa de Texto do Log -->
-                                <TextBox x:Name="TxtLogViewer" Grid.Row="1" Background="#05050A" Foreground="#4EDEA3" BorderBrush="#151525" BorderThickness="1" 
-                                         FontFamily="Consolas" FontSize="12" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" IsReadOnly="True"
-                                         Padding="8" Text="[Selecione um registro na lista ao lado para inspecionar os detalhes de compilação ou automação...]"/>
-                            </Grid>
+                    <!-- ============================ ABA 2: AUDITORIA DA BASE ============================ -->
+                    <Grid x:Name="SubPanelAuditoriaBase" Grid.Row="3" Visibility="Collapsed">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Filtros -->
+                        <Grid Grid.Row="0" Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="150"/>
+                                <ColumnDefinition Width="150"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBox x:Name="TxtBuscaAuditoria" Background="#0A0A0F" Foreground="#E3E0F2" BorderBrush="#2A2A40" BorderThickness="1"
+                                     Padding="9,7" FontSize="12" TextChanged="FiltroAuditoria_Changed"
+                                     ToolTip="Buscar por usuário, ação, tabela, serial ou detalhes"/>
+                            <ComboBox x:Name="CmbModalidadeAuditoria" Grid.Column="1" Margin="8,0,0,0" Padding="8,6" FontSize="12" SelectionChanged="FiltroAuditoria_Changed">
+                                <ComboBoxItem Content="Todas"/>
+                                <ComboBoxItem Content="Cadastro"/>
+                                <ComboBoxItem Content="Build"/>
+                                <ComboBoxItem Content="Execução"/>
+                                <ComboBoxItem Content="OTA"/>
+                                <ComboBoxItem Content="Sistema"/>
+                            </ComboBox>
+                            <ComboBox x:Name="CmbPeriodoAuditoria" Grid.Column="2" Margin="8,0,0,0" Padding="8,6" FontSize="12" SelectionChanged="FiltroAuditoria_Changed">
+                                <ComboBoxItem Content="Tudo"/>
+                                <ComboBoxItem Content="Hoje"/>
+                                <ComboBoxItem Content="7 dias"/>
+                                <ComboBoxItem Content="30 dias"/>
+                            </ComboBox>
+                        </Grid>
+
+                        <DataGrid x:Name="GridAuditoria" Grid.Row="1" Style="{StaticResource DarkDataGrid}"
+                                  ColumnHeaderStyle="{StaticResource DarkDataGridColumnHeader}"
+                                  CellStyle="{StaticResource DarkDataGridCell}"
+                                  AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"
+                                  SelectionMode="Single" SelectionUnit="FullRow" HeadersVisibility="Column"
+                                  GridLinesVisibility="Horizontal" RowHeight="32" FontSize="11"
+                                  SelectionChanged="GridAuditoria_SelectionChanged">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Data/Hora" Binding="{Binding DataHoraFormatada}" Width="135"/>
+                                <DataGridTemplateColumn Header="Modalidade" Width="95">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Border Background="#1A1A2E" BorderBrush="#2A2A40" BorderThickness="1" CornerRadius="8" Padding="7,2" HorizontalAlignment="Left">
+                                                <TextBlock Text="{Binding Modalidade}" Foreground="#5EB1FF" FontSize="10" FontWeight="Bold"/>
+                                            </Border>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTextColumn Header="Ação" Binding="{Binding Acao}" Width="140"/>
+                                <DataGridTextColumn Header="Tabela" Binding="{Binding Tabela}" Width="85"/>
+                                <DataGridTextColumn Header="Registro" Binding="{Binding RegistroId}" Width="120"/>
+                                <DataGridTextColumn Header="Usuário" Binding="{Binding Usuario}" Width="85"/>
+                                <DataGridTemplateColumn Header="Detalhes" Width="*">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Detalhes}" ToolTip="{Binding Detalhes}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+
+                        <Border Grid.Row="2" Background="#0A0A0F" CornerRadius="8" BorderBrush="#202035" BorderThickness="1" Padding="12" Margin="0,10,0,0">
+                            <StackPanel>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock x:Name="TxtAuditoriaDetalhesTitulo" Text="Selecione um evento para ver os detalhes" Foreground="#8570E6" FontSize="11" FontWeight="Bold"/>
+                                    <TextBlock x:Name="TxtContadorAuditoria" Grid.Column="1" Text="0 evento(s)" Foreground="#85859E" FontSize="11" FontWeight="SemiBold"/>
+                                </Grid>
+                                <TextBlock x:Name="TxtAuditoriaDetalhes" Text="Os detalhes do evento selecionado aparecem aqui." Foreground="#A1A1AA" FontSize="11" TextWrapping="Wrap" Margin="0,5,0,0"/>
+                            </StackPanel>
                         </Border>
                     </Grid>
                 </Grid>

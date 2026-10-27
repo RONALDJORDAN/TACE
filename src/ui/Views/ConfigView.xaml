@@ -215,13 +215,15 @@
                                 </Grid.ColumnDefinitions>
                                 <StackPanel VerticalAlignment="Center" Margin="0,0,20,0">
                                     <TextBlock Text="Motor C Nativo (BotEngine.dll)" Foreground="#FFFFFF" FontSize="15" FontWeight="Bold"/>
-                                    <TextBlock Text="Módulo de alta velocidade que controla a comunicação direta com os tablets via protocolo Fast-Track ADB." Foreground="#85859E" FontSize="12" Margin="0,4,0,0" TextWrapping="Wrap"/>
+                                    <TextBlock Text="Núcleo obrigatório desta versão. Toda a execução dos pipelines passa pela BotEngine.dll; não há fallback alternativo." Foreground="#85859E" FontSize="12" Margin="0,4,0,0" TextWrapping="Wrap"/>
                                 </StackPanel>
-                                <CheckBox Grid.Column="1" x:Name="ToggleMotor" Content="Ativo" Style="{StaticResource ToggleSwitchStyle}" IsChecked="True" Checked="ToggleMotor_Checked" Unchecked="ToggleMotor_Unchecked" VerticalAlignment="Center"/>
+                                <Border Grid.Column="1" Background="#0F2A1A" BorderBrush="#3FB950" BorderThickness="1" CornerRadius="6" Padding="10,5" VerticalAlignment="Center">
+                                    <TextBlock Text="SEMPRE ATIVO" Foreground="#3FB950" FontSize="10" FontWeight="Black"/>
+                                </Border>
                             </Grid>
                         </Border>
 
-                        <!-- Motor IA: Estático vs Ativo -->
+                        <!-- Estratégias adaptativas: determinístico vs adaptativo -->
                         <Border Style="{StaticResource CardStyle}" BorderBrush="#513BA6">
                             <Grid>
                                 <Grid.ColumnDefinitions>
@@ -230,14 +232,14 @@
                                 </Grid.ColumnDefinitions>
                                 <StackPanel VerticalAlignment="Center" Margin="0,0,20,0">
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                        <TextBlock Text="Motor IA BotLearn (InnoAI)" Foreground="#FFFFFF" FontSize="15" FontWeight="Bold"/>
-                                        <Border x:Name="BadgeAiMode" Background="#12251B" BorderBrush="#4EDEA3" BorderThickness="1" CornerRadius="4" Padding="6,2" Margin="10,0,0,0" VerticalAlignment="Center">
-                                            <TextBlock x:Name="TxtAiMode" Text="ESTÁTICO" Foreground="#4EDEA3" FontSize="10" FontWeight="Black"/>
+                                        <TextBlock Text="Motor de Estratégias Adaptativas (BotLearn)" Foreground="#FFFFFF" FontSize="15" FontWeight="Bold"/>
+                                        <Border x:Name="BadgeAiMode" Background="#0F2A1A" BorderBrush="#3FB950" BorderThickness="1" CornerRadius="4" Padding="6,2" Margin="10,0,0,0" VerticalAlignment="Center">
+                                            <TextBlock x:Name="TxtAiMode" Text="DETERMINÍSTICO" Foreground="#3FB950" FontSize="10" FontWeight="Black"/>
                                         </Border>
                                     </StackPanel>
-                                    <TextBlock Text="ESTÁTICO = seed determinístico fixo, zero drift, sem persistência (recomendado produção). ATIVO = aprende scores/hits em bot_learn.json, cresce via auto-discovery (requer validação)." Foreground="#85859E" FontSize="12" Margin="0,4,0,0" TextWrapping="Wrap"/>
+                                    <TextBlock Text="DETERMINÍSTICO = usa somente o seed compilado e não persiste scores (recomendado para produção). ADAPTATIVO = registra acertos e falhas e persiste o ranking em bot_learn.json." Foreground="#85859E" FontSize="12" Margin="0,4,0,0" TextWrapping="Wrap"/>
                                 </StackPanel>
-                                <CheckBox Grid.Column="1" x:Name="ToggleAiLearn" Content="Ativo" Style="{StaticResource ToggleSwitchStyle}" IsChecked="False" Checked="ToggleAiLearn_Checked" Unchecked="ToggleAiLearn_Unchecked" VerticalAlignment="Center"/>
+                                <CheckBox Grid.Column="1" x:Name="ToggleAiLearn" Content="Adaptativo" Style="{StaticResource ToggleSwitchStyle}" IsChecked="False" Checked="ToggleAiLearn_Checked" Unchecked="ToggleAiLearn_Unchecked" VerticalAlignment="Center"/>
                             </Grid>
                         </Border>
 
@@ -267,7 +269,7 @@
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel>
                         <TextBlock Text="Base Oficial de Hardware Suportado" Style="{StaticResource CategoryTitle}"/>
-                        <TextBlock Text="Ative ou desative modelos de tablets. Quando a chave estiver desligada, os aparelhos desse modelo não aparecerão no monitor USB ADB e seus menus inferiores ficarão ocultos." Style="{StaticResource CategoryDesc}"/>
+                        <TextBlock Text="Ative ou desative modelos de tablets. Quando a chave estiver desligada, os aparelhos desse modelo não aparecerão no monitor USB ADB e seus menus inferiores ficarão ocultos. Pelo menos um modelo deve permanecer ativo." Style="{StaticResource CategoryDesc}"/>
 
                         <!-- Modelo 1: Positivo Tab Vision 7 -->
                         <Border Style="{StaticResource CardStyle}">
@@ -317,7 +319,7 @@
                             </Grid>
                         </Border>
 
-                        <!-- Conta Google Padrao (F4) -->
+                        <!-- Conta Google Padrão (F4) -->
                         <Border Style="{StaticResource CardStyle}" BorderBrush="#4285F4">
                             <StackPanel>
                                 <StackPanel Orientation="Horizontal">
@@ -325,7 +327,7 @@
                                         <TextBlock Text="G" Foreground="#8AB4F8" FontSize="20" FontWeight="Black" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
                                     <StackPanel VerticalAlignment="Center">
-                                        <TextBlock Text="Conta Google Padrao (F4)" Foreground="#FFFFFF" FontSize="15" FontWeight="Bold"/>
+                                        <TextBlock Text="Conta Google Padrão (F4)" Foreground="#FFFFFF" FontSize="15" FontWeight="Bold"/>
                                         <TextBlock Text="Usada automaticamente pelo F4 ao adicionar conta nos tablets Vision 7." Foreground="#85859E" FontSize="12" Margin="0,4,0,0"/>
                                     </StackPanel>
                                 </StackPanel>
@@ -348,7 +350,7 @@
                                 </Grid>
 
                                 <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
-                                    <Button x:Name="BtnSalvarGoogle" Content="Salvar conta padrao" Width="170" Height="32" Background="#16233A" Foreground="#8AB4F8" BorderBrush="#4285F4" BorderThickness="1.5" Cursor="Hand" FontWeight="Bold" FontSize="12" Click="BtnSalvarGoogle_Click"/>
+                                    <Button x:Name="BtnSalvarGoogle" Content="Salvar conta padrão" Width="170" Height="32" Background="#16233A" Foreground="#8AB4F8" BorderBrush="#4285F4" BorderThickness="1.5" Cursor="Hand" FontWeight="Bold" FontSize="12" Click="BtnSalvarGoogle_Click"/>
                                     <TextBlock x:Name="TxtGoogleStatus" Foreground="#85859E" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" Margin="12,0,0,0" TextWrapping="Wrap"/>
                                 </StackPanel>
                             </StackPanel>
@@ -374,10 +376,12 @@
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
                                 <StackPanel VerticalAlignment="Center" Margin="0,0,20,0">
-                                    <TextBlock Text="Reverse Tethering Automático (Gnirehtet)" Foreground="#FFFFFF" FontSize="15" FontWeight="Bold"/>
-                                    <TextBlock Text="Injeta a conexão cabeada do computador diretamente no tablet, contornando bloqueios de Wi-Fi nas escolas." Foreground="#85859E" FontSize="12" Margin="0,4,0,0" TextWrapping="Wrap"/>
+                                    <TextBlock Text="Reverse Tethering (Gnirehtet)" Foreground="#FFFFFF" FontSize="15" FontWeight="Bold"/>
+                                    <TextBlock Text="O túnel USB é acionado pelos próprios pipelines (F1, F5 e F8) quando necessário, sem chave global de ativação." Foreground="#85859E" FontSize="12" Margin="0,4,0,0" TextWrapping="Wrap"/>
                                 </StackPanel>
-                                <CheckBox Grid.Column="1" x:Name="ToggleTethering" Content="Automático" Style="{StaticResource ToggleSwitchStyle}" Checked="ToggleTethering_Checked" Unchecked="ToggleTethering_Unchecked" VerticalAlignment="Center"/>
+                                <Border Grid.Column="1" Background="#0D1B2A" BorderBrush="#1F6FEB" BorderThickness="1" CornerRadius="6" Padding="10,5" VerticalAlignment="Center">
+                                    <TextBlock Text="INTEGRADO AOS FLUXOS" Foreground="#58A6FF" FontSize="10" FontWeight="Black"/>
+                                </Border>
                             </Grid>
                         </Border>
 
@@ -428,7 +432,7 @@
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel>
                         <TextBlock Text="Gestão &amp; Backup de Dados" Style="{StaticResource CategoryTitle}"/>
-                        <TextBlock Text="Proteja e restaure a base de dados SQLite, configurações e arquivos de pacotes em um arquivo .zip." Style="{StaticResource CategoryDesc}"/>
+                        <TextBlock Text="Proteja e restaure a base SQLite, credenciais de municípios, configurações, registros e arquivos de APK/pacote/wallpaper em um único .zip." Style="{StaticResource CategoryDesc}"/>
 
                         <!-- Exportar Backup -->
                         <Border Style="{StaticResource CardStyle}">
@@ -439,7 +443,7 @@
                                 </Grid.ColumnDefinitions>
                                 <StackPanel VerticalAlignment="Center" Margin="0,0,20,0">
                                     <TextBlock Text="Exportar Pacote (Backup Completo)" Foreground="#4EDEA3" FontSize="15" FontWeight="Bold"/>
-                                    <TextBlock Text="Comprime todo o ambiente (bot_database.db, configurações e logs) em um único arquivo .zip." Foreground="#85859E" FontSize="12" Margin="0,4,0,0" TextWrapping="Wrap"/>
+                                    <TextBlock Text="Inclui banco SQLite, municipios.csv, settings.json, registros e os arquivos operacionais dos municípios." Foreground="#85859E" FontSize="12" Margin="0,4,0,0" TextWrapping="Wrap"/>
                                 </StackPanel>
                                 <Button Grid.Column="1" x:Name="BtnExportar" Content="Exportar" Background="#2A2A40" Foreground="#4EDEA3" BorderThickness="1" BorderBrush="#4EDEA3" Padding="18,8" Cursor="Hand" FontWeight="Bold" FontSize="13" Click="BtnExportar_Click" VerticalAlignment="Center"/>
                             </Grid>
@@ -454,7 +458,7 @@
                                 </Grid.ColumnDefinitions>
                                 <StackPanel VerticalAlignment="Center" Margin="0,0,20,0">
                                     <TextBlock Text="Importar Pacote de Backup (.zip)" Foreground="#D2BBFF" FontSize="15" FontWeight="Bold"/>
-                                    <TextBlock Text="Restaura a base de dados local a partir de um backup anterior." Foreground="#85859E" FontSize="12" Margin="0,4,0,0" TextWrapping="Wrap"/>
+                                    <TextBlock Text="Restaura dados e arquivos de um backup anterior. Entradas com caminhos externos à pasta de dados são bloqueadas." Foreground="#85859E" FontSize="12" Margin="0,4,0,0" TextWrapping="Wrap"/>
                                 </StackPanel>
                                 <Button Grid.Column="1" x:Name="BtnImportar" Content="Importar" Background="#513BA6" Foreground="#FFFFFF" BorderThickness="0" Padding="18,8" Cursor="Hand" FontWeight="Bold" FontSize="13" Click="BtnImportar_Click" VerticalAlignment="Center"/>
                             </Grid>
@@ -472,7 +476,7 @@
             </Border>
 
             <!-- ========================================================================= -->
-            <!-- SUBMÓDULO 6: TECNOLOGIAS & LICENÇAS -->
+            <!-- SUBMÓDULO 5: TECNOLOGIAS & LICENÇA -->
             <!-- ========================================================================= -->
             <Border x:Name="PanelBibliotecas" Background="#151525" CornerRadius="12" Padding="20" BorderBrush="#23233A" BorderThickness="1" Visibility="Collapsed">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
@@ -502,6 +506,26 @@
                                 </StackPanel>
                                 <TextBlock Text="Compilador C embarcado utilizado para compilar a BotEngine.dll com zero dependências externas e execução em tempo real na bancada de automação." Foreground="#E3E0F2" FontSize="12" TextWrapping="Wrap"/>
                             </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource CardStyle}" BorderBrush="#513BA6">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel VerticalAlignment="Center" Margin="0,0,20,0">
+                                    <TextBlock Text="Licença de uso" Foreground="#D2BBFF" FontSize="15" FontWeight="Bold"/>
+                                    <TextBlock Text="Distribuição interna InnovEdu. Uso restrito às operações autorizadas do Setor Operacional."
+                                               Foreground="#E3E0F2" FontSize="12" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                                    <TextBlock Text="Componentes de terceiros mantêm suas licenças originais (QRCoder, PdfSharpCore, Microsoft.Data.Sqlite e .NET 8)."
+                                               Foreground="#85859E" FontSize="11" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                                </StackPanel>
+                                <Border Grid.Column="1" Background="#1A1A2E" BorderBrush="#513BA6" BorderThickness="1" CornerRadius="8"
+                                        Padding="12,8" VerticalAlignment="Center">
+                                    <TextBlock x:Name="TxtVersaoSistema" Text="v0.0.0" Foreground="#D2BBFF" FontSize="12" FontWeight="Bold"/>
+                                </Border>
+                            </Grid>
                         </Border>
                     </StackPanel>
                 </ScrollViewer>

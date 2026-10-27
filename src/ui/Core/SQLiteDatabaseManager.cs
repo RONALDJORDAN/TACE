@@ -57,7 +57,7 @@ namespace BotRpaUI.Core
                 if (!File.Exists(_dbPath) && File.Exists(legacy))
                     File.Move(legacy, _dbPath);
             }
-            catch { }
+            catch (Exception ex) { LogErro("SQLiteDatabaseManager", ex); }
             return _dbPath;
         }
 
@@ -153,7 +153,7 @@ namespace BotRpaUI.Core
 
                 _esquemaValidado = true;
             }
-            catch { }
+            catch (Exception ex) { LogErro("SQLiteDatabaseManager", ex); }
         }
 
         /// <summary>
@@ -204,7 +204,7 @@ namespace BotRpaUI.Core
                     transaction.Commit();
                 }
             }
-            catch { }
+            catch (Exception ex) { LogErro("SQLiteDatabaseManager", ex); }
         }
 
         private static List<string> LerColunas(SqliteConnection connection, string tabela)
@@ -224,7 +224,7 @@ namespace BotRpaUI.Core
                     }
                 }
             }
-            catch { }
+            catch (Exception ex) { LogErro("SQLiteDatabaseManager", ex); }
             return lista;
         }
 
@@ -311,7 +311,7 @@ namespace BotRpaUI.Core
                                 SELECT 'Dispositivos', IFNULL(MAX(ID), 0) FROM Dispositivos;";
                             cmd.ExecuteNonQuery();
                         }
-                        catch { }
+                        catch (Exception ex) { LogErro("SQLiteDatabaseManager", ex); }
                     }
 
                     transaction.Commit();
@@ -371,7 +371,7 @@ namespace BotRpaUI.Core
                     transaction.Commit();
                 }
             }
-            catch { }
+            catch (Exception ex) { LogErro("SQLiteDatabaseManager", ex); }
         }
 
         private static HashSet<string> GetSerialCache()
@@ -436,7 +436,7 @@ namespace BotRpaUI.Core
             lock (_cacheLock)
             {
                 var cache = GetSerialCache();
-                            if (cache.Contains(serial))
+                if (cache.Contains(serial))
                 {
                     // Se o aparelho já está cadastrado no cache, mas agora temos um MAC válido (17 caracteres)
                     // e o banco pode estar com MAC 'N/A', '---' ou vazio:
@@ -460,7 +460,7 @@ namespace BotRpaUI.Core
                             SincronizarCsv();
                             AuditLogManager.GravarDispositivo("ATUALIZAR_MAC", serial, "", mac, "MAC preenchido automaticamente");
                         }
-                        catch { }
+                        catch (Exception ex) { LogErro("SQLiteDatabaseManager", ex); }
                     }
                     return;
                 }
@@ -492,7 +492,7 @@ namespace BotRpaUI.Core
                             }
                         }
                     }
-                    catch { }
+                    catch (Exception ex) { LogErro("SQLiteDatabaseManager", ex); }
                 }
 
                 try
@@ -519,7 +519,7 @@ namespace BotRpaUI.Core
                     if (!string.IsNullOrEmpty(mac) && mac.Length == 17) SincronizarCsv();
                     AuditLogManager.GravarDispositivo("CADASTRAR", serial, "", mac, "Novo dispositivo cadastrado");
                 }
-                catch { }
+                catch (Exception ex) { LogErro("SQLiteDatabaseManager", ex); }
             }
         }
 
@@ -578,7 +578,7 @@ namespace BotRpaUI.Core
                     }
                 }
             }
-            catch { }
+            catch (Exception ex) { LogErro("SQLiteDatabaseManager", ex); }
 
             return null;
         }
@@ -602,7 +602,7 @@ namespace BotRpaUI.Core
                     serial = cmd.ExecuteScalar() as string;
                 }
             }
-            catch { }
+            catch (Exception ex) { LogErro("SQLiteDatabaseManager", ex); }
 
             if (!string.IsNullOrWhiteSpace(serial))
                 return BuscarPorSerial(serial);
@@ -632,6 +632,34 @@ namespace BotRpaUI.Core
             if (alvo == null) return false;
 
             return AtualizarPatrimonio(alvo.ID, normalizado);
+        }
+
+        /// <summary>
+        /// Cria um snapshot consistente do banco para backup, sem depender
+        /// do arquivo principal estar liberado pelo processo em execução.
+        /// </summary>
+        public static bool CriarSnapshotBackup(string caminhoDestino)
+        {
+            try
+            {
+                InitializeDatabase();
+                if (!File.Exists(_dbPath)) return false;
+                if (File.Exists(caminhoDestino)) File.Delete(caminhoDestino);
+
+                using (var origem = new SqliteConnection(_connectionString))
+                using (var destino = new SqliteConnection($"Data Source={caminhoDestino}"))
+                {
+                    origem.Open();
+                    destino.Open();
+                    origem.BackupDatabase(destino);
+                }
+
+                return File.Exists(caminhoDestino);
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         public static List<DispositivoDB> LerTodos()
@@ -700,7 +728,7 @@ namespace BotRpaUI.Core
                     }
                 }
             }
-            catch { }
+            catch (Exception ex) { LogErro("SQLiteDatabaseManager", ex); }
 
             return lista;
         }
@@ -733,7 +761,7 @@ namespace BotRpaUI.Core
 
                         foreach (var d in lista)
                         {
-                            pPat.Value = PatrimonioHelper.NormalizarOuOriginal(d.Patrimonio);
+                            pPat.Value = PatrimonioHelper.NormalizarOuOriginal(d.Patrimonio ?? string.Empty);
                             pFab.Value = d.Fabricante ?? string.Empty;
                             pMod.Value = d.Modelo ?? string.Empty;
                             pMac.Value = d.MAC ?? string.Empty;
@@ -748,7 +776,7 @@ namespace BotRpaUI.Core
                 }
                 SincronizarCsv();
             }
-            catch { }
+            catch (Exception ex) { LogErro("SQLiteDatabaseManager", ex); }
         }
 
         /// <summary>
@@ -773,7 +801,7 @@ namespace BotRpaUI.Core
                     }
                 }
             }
-            catch { }
+            catch (Exception ex) { LogErro("SQLiteDatabaseManager", ex); }
 
             try
             {
@@ -847,7 +875,7 @@ namespace BotRpaUI.Core
                     }
                 }
             }
-            catch { }
+            catch (Exception ex) { LogErro("SQLiteDatabaseManager", ex); }
 
             try
             {
@@ -961,7 +989,7 @@ namespace BotRpaUI.Core
                     cmd.ExecuteNonQuery();
                 }
             }
-            catch { }
+            catch (Exception ex) { LogErro("SQLiteDatabaseManager", ex); }
         }
 
         public static void Excluir(int id)
@@ -980,7 +1008,7 @@ namespace BotRpaUI.Core
                     }
                 }
             }
-            catch { }
+            catch (Exception ex) { LogErro("SQLiteDatabaseManager", ex); }
 
             try
             {
@@ -994,7 +1022,7 @@ namespace BotRpaUI.Core
                 }
                 AuditLogManager.GravarDispositivo("EXCLUIR", serialExcluido, "", "", $"Dispositivo excluido (ID={id})");
             }
-            catch { }
+            catch (Exception ex) { LogErro("SQLiteDatabaseManager", ex); }
         }
 
         public static void InvalidarCache()
@@ -1064,7 +1092,7 @@ namespace BotRpaUI.Core
                     cache.Add(serial);
                     SincronizarCsv();
                 }
-                catch { }
+                catch (Exception ex) { LogErro("SQLiteDatabaseManager", ex); }
             }
         }
 
@@ -1095,8 +1123,26 @@ namespace BotRpaUI.Core
                 }
                 System.IO.File.WriteAllText(relatorioPath, sbRel.ToString(), Encoding.UTF8);
             }
-            catch { }
+            catch (Exception ex) { LogErro("SQLiteDatabaseManager", ex); }
         }
 
+        /// <summary>
+        /// Registra erros capturados em catch-vazio para não silenciar exceções críticas.
+        /// Escreve em docs\registros\erros_sqlite.txt para auditoria posterior.
+        /// </summary>
+        private static void LogErro(string contexto, Exception ex)
+        {
+            try
+            {
+                string registrosDir = Path.Combine(PathHelper.GetRootDirectory(), "docs", "registros");
+                if (!Directory.Exists(registrosDir)) Directory.CreateDirectory(registrosDir);
+                string logPath = Path.Combine(registrosDir, "erros_sqlite.txt");
+                string linha = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {contexto}: {ex.Message}";
+                if (ex.InnerException != null)
+                    linha += $" | Inner: {ex.InnerException.Message}";
+                File.AppendAllText(logPath, linha + Environment.NewLine);
+            }
+            catch { }
+        }
     }
 }

@@ -1926,3 +1926,51 @@ O **InnoAI** é o motor de inteligência e automação visual da Plataforma Inno
 - **Build/instalador:** Build TESTE `26.10.2026.1031` OK; release `26.10.2026.1036` OK; instalador `scripts/scripts de controle/BotRPA_Instalador_26.10.2026.1036.exe` (61.535.240 B; SHA256 DC0B0C93084285BF8BDE7469FCBDD22E8E0466892E96F2C1358F047B3732E257), sem assinatura.
 - **Correcao no ControleGeral.bat:** `build_installer` agora compara `BotRPA_Release/config/version.txt` com `config/version.txt` e recompila o release se estiver desatualizado, evitando instalador com binarios antigos (o primeiro 1031 foi descartado por esse motivo).
 - **Pendente:** sem tablet conectado para medir o tempo real da captura; validar em runtime o MAC e o desligamento seguro.
+
+
+### [2026-10-26 21:24] - PLANO CONSOLIDADO: REGISTROS, PDF EXECUTIVO, SOBRE, ICONE E BUILD FINAL 2120
+- **Pedido:** concluir o pacote de melhorias com Registros & Auditoria, armazenamento por data/hora/modalidade, PDF executivo vertical, pagina Sobre com dados reais, icone da arte do usuario, build final validado e aviso explicito ao terminar.
+- **Registros & Auditoria:** `RelatoriosView.xaml/.xaml.cs` consolidados com KPIs (total, hoje, builds, execucoes), busca, filtros de modalidade/periodo, contador, abas Arquivos & Builds/Auditoria da Base, grade, visualizador com metadados, copiar, Bloco de Notas, abrir arquivo/pasta e detalhes da auditoria. Auditoria usa `LerFiltrado` e migracao/backfill de modalidade.
+- **Correcao de classificacao:** logs soltos `*_execucao.log` na raiz de `docs/registros/AAAA-MM-DD` eram tratados como `Sistema`; a varredura agora detecta a modalidade pelo nome do arquivo quando nao ha pasta de modalidade pai. Validado em runtime: `EXECUCOES` passou de 0 para 245.
+- **Contagens atuais de registros (build 2120):** total 317, hoje 24, builds 72, execucoes 245; contador 317/317.
+- **PDF executivo:** `RelatorioPdfGenerator.cs` gera A4 retrato com PdfSharpCore, capa, ficha tecnica, sumario, KPIs/graficos, resumo por fabricante/modelo, dados por dispositivo e anexo; `SaveFileDialog` integrado em Exportacao. Teste real normalizado: 463 dispositivos, 30 paginas, A4 595x842, 133.354 bytes; paginas 1-6, 18 e 30 inspecionadas.
+- **Dados normalizados:** banco bruto tem 463 dispositivos, 400 patrimonios, 406 MACs, 1.136 eventos de auditoria, 391 completos/72 pendencias e 3 modelos brutos; `SQLiteDatabaseManager.LerTodos()` normaliza Vision7 e a UI/PDF usam 400 completos (86,4%), 63 pendencias, 2 modelos, 0 sem modelo. Existe 1 patrimonio duplicado (`INV0284`, IDs 284/499).
+- **About:** `AboutView.xaml` reescrito e `AboutView.xaml.cs` preenche dados reais ao carregar e ao navegar via MainWindow: versao, ambiente, empresa/setor, 463 dispositivos, 400 patrimonios, 406 MACs, 1.136 eventos, 86,4% de cobertura, 2 modelos, 63 pendencias, 272+ arquivos de registro, caminhos, runtime e ultimo evento.
+- **Icone:** ICO multi-size transparente (16,24,32,48,64,128,256) criado a partir da arte do robo roxo; original preservado; `BotRPAui.png` 256x256 usado nos controles WPF para evitar borrado em 30px. O `ApplicationIcon` continua sendo o ICO.
+- **Build final:** `ControleGeral.bat 1` gerou versao `26.10.2026.2120`, `BotEngine.dll` e `data/output/BotRPAui.exe`; auditoria em `docs/registros/2026-10-26/21-20_Plataforma_BotRPA_DESKTOP_BUILD`.
+- **Validacao final por UIAutomation/PrintWindow:** app abre com titulo `Bot_RPA - v26.10.2026.2120`; Gestao > Registros exibe 317/24/72/245; Sobre exibe versao 2120, 463 dispositivos e 86,4%; screenshots sem regressao visual.
+- **Warnings preexistentes (build .NET):** `AuditLogManager.cs(71,30)` CS8600, `SettingsManager.cs(253/264)` CS8600, `SQLiteDatabaseManager.cs(736,80)` CS8604; zero erros.
+- **Pendente:** validar em tablet real os fluxos que dependem de hardware (captura MAC, desligamento seguro, execucao F1-F8). Nenhum bloqueio de build/UI.
+
+### [2026-10-26 23:56] - BOTLEARN: TERMINOLOGIA ADAPTATIVA E LAYOUT OPERACIONAL
+- **Pedido:** remover a apresentacao de "IA/Rede Neural" e redesenhar o modulo BotLearn com terminologia honesta e dados reais.
+- **Terminologia:** modulo passou a "Motor de Estrategias Adaptativas"; tela de ranking "Ranking Heuristico de Seletores"; modos "Deterministico (seed)" e "Adaptativo (feedback)"; textos de IA/sinapse/neural/simulado removidos da UI e dos inspetores 3D.
+- **BotLearnView:** layout operacional escuro; 5 KPIs reais (seletores, alvos, execucoes, precisao, score medio); diagnostico do melhor seletor sem confianca artificial; ranking agrupado por etapa com filtros/busca, acertos, falhas, precisao, historico e status; backups com estado vazio; reset com confirmacao dupla apenas no modo adaptativo.
+- **Mapa 3D:** titulo/HUD renomeados; precisao "—" sem execucoes; score total real; nucleo BotLearn; 12 componentes conceituais reais; conexoes visuais ilustrativas; cabecalho dividido em duas linhas para nao cortar filtros em 1366px; legenda "Neutro (score 0)"; busca com debounce e filtros de tags agora re-renderizam; inspetores exibem dados reais ou "—".
+- **Correcao funcional:** assinatura do timer usa totais do motor (nao do filtro), evitando re-render continuo; busca por texto e checkboxes de tags passaram a atualizar o mapa.
+- **Build/validacao:** `ControleGeral.bat 1` gerou versao `26.10.2026.2356`, `data/output/BotEngine.dll` e `data/output/BotRPAui.exe`; auditoria em `docs/registros/2026-10-26/23-56_Plataforma_BotRPA_DESKTOP_BUILD`. UIAutomation confirmou abertura do app, navegacao para BotLearn e abertura do mapa 3D; screenshots em 1366x768 sem corte no cabecalho. Warnings .NET preexistentes (8), zero erros.
+- **Escopo:** nenhuma alteracao no motor C; pendencias de hardware (tablet real) permanecem.
+
+### [2026-10-27 00:49] - MUNICIPIOS MODERNIZADOS, CONFIGURACOES REVISADAS E BACKUP CONFIAVEL
+- **Pedido:** melhorar o relatorio PDF, modernizar a tela Gerenciar Municipios e revisar o modulo Configuracoes, validando tudo em runtime antes do build final.
+- **Relatorio PDF:** removida a secao duplicada de dispositivos; anexo unico com Marca, Modelo, No de Serie e MAC (sem coluna `#`). Teste real com 463 dispositivos: 18 paginas A4 retrato (antes ~30).
+- **Municipios - correcoes de runtime:** `TxtBuscaMunicipio_TextChanged` implementado (handler estava ausente); busca com contador e estado vazio; `PurgarArquivos` preserva o arquivo de origem selecionado; cor do status restaurada apos carregar/limpar/preencher/salvar/anexar/excluir; nome somente leitura na edicao (renomear = novo cadastro); duplicidade compara nome e chave ASCII sanitizada.
+- **Municipios - arquivos e layout:** janela 940x700 (minimo 840x620); anexos de APK/ZIP/wallpaper copiados para as pastas do municipio; exclusao remove apk, pacote e wallpapers (`clean`/`cleanAscii`); binding da lista corrigido com propriedades `NomeExibicao`/`LoginExibicao` no struct `MunicipioModel` (WPF nao faz binding em campos publicos).
+- **Configuracoes:** toggles de Motor C e Reverse Tethering removidos por nao terem consumidor; substituidos pelos selos `SEMPRE ATIVO` e `INTEGRADO AOS FLUXOS`; card de licenca com versao; textos/acentos revisados; bloqueio para nao desativar todos os modelos de tablet. Propriedades legadas permanecem em `SettingsManager` sem uso.
+- **Backup - causa raiz do erro:** `CreateEntryFromFile` mantinha `data/bot_database.db` aberto em modo incompativel com o SQLite em execucao (`The process cannot access the file ... because it is being used by another process`).
+- **Backup - correcao:** `SQLiteDatabaseManager.CriarSnapshotBackup` usa `SqliteConnection.BackupDatabase` para gerar copia consistente; arquivos sao adicionados ao ZIP por `FileStream` com `FileShare.ReadWrite | FileShare.Delete`. Incluidos `config`, `municipios.csv`, banco, registros, `data/output/arquivos` e `bot_learn.json`; importacao mantem protecao Zip Slip com contagem de entradas ignoradas.
+- **Teste real do backup:** `backup_final.zip` com 289 entradas; `data/bot_database.db` snapshot de 471.040 B; extracao e consulta SQLite confirmaram 463 dispositivos.
+- **Validacao de UI (UIAutomation):** titulo `Bot_RPA - v27.10.2026.0049`; lista de Municipios exibiu `Boca da Mata`/`aplicador`; busca `zzz` retornou estado vazio; Configuracoes mostrou selos, versao e card de licenca; exportacao de backup concluida sem dialogo de erro.
+- **Build final:** `dotnet build` com **0 erros e 0 avisos** (corrigidos os 4 avisos CS8600/CS8604 preexistentes). `ControleGeral.bat 1` gerou `27.10.2026.0049`, `data/output/BotRPAui.exe` e `data/output/BotEngine.dll`; auditoria em `docs/registros/2026-10-27/00-49_Plataforma_BotRPA_DESKTOP_BUILD`.
+- **Escopo:** nenhuma alteracao no motor C; sem tablet fisico para validar ADB/F1-F8. Card 3D do BotLearn continua pendente.
+
+### [2026-10-27 09:38] - SINCRONIZAÇÃO GIT, CORREÇÃO DE DIVERGÊNCIA E PUSH PARA ORIGIN
+- **Contexto:** Resolução de erro 'non-fast-forward' no Git ao realizar push para https://github.com/RONALDJORDAN/Bot_RPA.git.
+- **Diagnóstico:** Divergência histórica entre origin/main e a árvore local decorrente de SHAs distintos originados pelo arquivo de semente config/municipios.csv. O repositório continha todas as novas funcionalidades no commit local de backup, mas não conseguia avançar em fast-forward sobre o remoto.
+- **Resolução:**
+  - Criação de salvaguarda local (backup_local_before_fix).
+  - Alinhamento da esteira sobre a base canônica de origin/main (b96857c).
+  - Preservação integral de 100% dos novos arquivos e módulos desenvolvidos (relatório executivo PDF via RelatorioPdfGenerator.cs, auditorias em AuditLogManager.cs e RegistroStorage.cs, modernização das views WPF, workflow do GitHub Actions em .github/workflows/build.yml e scripts de controle).
+  - Preservação do seed canônico config/municipios.csv.
+- **Build de Auditoria:** Executado ControleGeral.bat 1 gerando a versão 27.10.2026.0938, com BotEngine.dll e BotRPAui.exe compilados com sucesso e log registrado em docs/registros/2026-10-27/09-38_Plataforma_BotRPA_DESKTOP_BUILD.
+- **Sincronização:** Branch main atualizada e enviada para o remoto origin/main via Conventional Commits.

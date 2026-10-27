@@ -168,9 +168,7 @@ echo [+] Compilacao concluida com sucesso!
 echo [+] Motor     : data\output\BotEngine.dll
 echo [+] Interface : data\output\BotRPAui.exe
 echo [+] Auditoria : %AUDIT_DIR%
-
-:: Pergunta se deseja enviar os registros atuais (somente build TESTE avulso)
-if /i not "%BUILD_MODE%"=="RELEASE" call :perguntar_enviar_registros
+echo [i] Para zipar os registros, use a opcao [9] no menu.
 
 call :pause_if_interativo
 exit /b 0
@@ -697,6 +695,7 @@ mkdir "%ROOT_DIR%\%AUDIT_DIR%" 2>nul
 echo [*] Versao de Compilacao Gerada: %BUILD_VER%
 echo [*] Registro de build criado em: %AUDIT_DIR%
 > "%ROOT_DIR%\%AUDIT_DIR%\build.log" echo Versao: %BUILD_VER%
+>> "%ROOT_DIR%\%AUDIT_DIR%\build.log" echo Modalidade: BUILD
 >> "%ROOT_DIR%\%AUDIT_DIR%\build.log" echo Modo: %BUILD_MODE%
 >> "%ROOT_DIR%\%AUDIT_DIR%\build.log" echo PastaAuditoria: %AUDIT_DIR%
 :: Escreve a versao sem espaco a direita (quebra filename do instalador)
@@ -710,13 +709,27 @@ goto :eof
 :: ==========================================================================
 ::  SUB-ROTINA: ASSINATURA DE CODIGO (SignTool)
 ::  Variaveis de ambiente opcionais:
-::    BOTRPA_SIGN_CERT   = caminho para o arquivo .pfx do certificado
-::    BOTRPA_SIGN_PASSWORD = senha do certificado .pfx
-::  Se nao encontrar o SignTool ou o certificado, pula a assinatura com aviso.
+::    BOTRPA_SIGN_CERT        = caminho para o arquivo .pfx do certificado
+::    BOTRPA_SIGN_PASSWORD    = senha do certificado .pfx
+::    BOTRPA_SIGN_REQUIRED    = se "1", falha o build se nao conseguir assinar
+::  Se nao encontrar o SignTool ou o certificado, pula a assinatura com aviso
+::  (a menos que BOTRPA_SIGN_REQUIRED=1).
 :: ==========================================================================
 :sign_file
 set "FILE_TO_SIGN=%~1"
 if not exist "%FILE_TO_SIGN%" goto :eof
+
+:: Se assinacao e obrigatoria e nao ha certificado, falha imediatamente
+if "!BOTRPA_SIGN_REQUIRED!"=="1" (
+    if "!BOTRPA_SIGN_CERT!"=="" (
+        echo [ERRO] BOTRPA_SIGN_REQUIRED=1 mas BOTRPA_SIGN_CERT nao definido.
+        goto :sign_fail
+    )
+    if not exist "!BOTRPA_SIGN_CERT!" (
+        echo [ERRO] BOTRPA_SIGN_REQUIRED=1 mas certificado nao encontrado: !BOTRPA_SIGN_CERT!
+        goto :sign_fail
+    )
+)
 
 :: Assinatura desativada quando nao ha certificado configurado
 if "!BOTRPA_SIGN_CERT!"=="" (
@@ -742,6 +755,10 @@ for %%P in (
 ) do if exist %%P if not defined SIGNTOOL set "SIGNTOOL=%%~P"
 
 if "!SIGNTOOL!"=="" (
+    if "!BOTRPA_SIGN_REQUIRED!"=="1" (
+        echo [ERRO] BOTRPA_SIGN_REQUIRED=1 mas SignTool nao encontrado.
+        goto :sign_fail
+    )
     echo [AVISO] SignTool nao encontrado - pulando assinatura de "%FILE_TO_SIGN%"
     goto :eof
 )
@@ -753,42 +770,41 @@ if "!BOTRPA_SIGN_PASSWORD!"=="" (
     "!SIGNTOOL!" sign /f "!BOTRPA_SIGN_CERT!" /p "!BOTRPA_SIGN_PASSWORD!" /t http://timestamp.digicert.com "%FILE_TO_SIGN%" >nul 2>&1
 )
 if %errorlevel% neq 0 (
+    if "!BOTRPA_SIGN_REQUIRED!"=="1" (
+        echo [ERRO] BOTRPA_SIGN_REQUIRED=1 mas falha ao assinar "%FILE_TO_SIGN%".
+        goto :sign_fail
+    )
     echo [AVISO] Falha ao assinar "%FILE_TO_SIGN%" - continuando sem assinatura
 )
 goto :eof
 
-:: ==========================================================================
-::  SUB-ROTINA: PERGUNTAR ENVIO DE REGISTROS
-::  Pergunta se o usuario deseja enviar/zipar os registros atuais
-::  (docs\registros + logs) apos o build.
-:: ==========================================================================
-:perguntar_enviar_registros
-if "%INTERATIVO%"=="0" goto :eof
-set "ENVIAR="
-set /p ENVIAR="    Deseja enviar os registros atuais (docs\registros + logs)? (S/N): "
-if /i "!ENVIAR!"=="S" (
-    call :enviar_registros
-) else if /i "!ENVIAR!"=="N" (
-    echo    Registros nao enviados.
-) else (
-    echo    Opcao invalida. Registros nao enviados.
-)
-goto :eof
+:sign_fail
+exit /b 1
 
+:: ==========================================================================
+::  SUB-ROTINA: ENVIAR REGISTROS
+::  Compacta docs\registros + logs em um ZIP na pasta Downloads.
+:: ==========================================================================
 :enviar_registros
 cd /d "%ROOT_DIR%"
 set "DATA=%date:~6,4%-%date:~3,2%-%date:~0,2%_%time:~0,2%-%time:~3,2%-%time:~6,2%"
 set "DATA=%DATA: =0%"
 set "ZIP_NAME=RegistrosBotRPA_%DATA%.zip"
-set "ZIP_PATH=%TEMP%\%ZIP_NAME%"
+
+set "DOWNLOADS=%USERPROFILE%\Downloads"
+if not exist "%DOWNLOADS%" mkdir "%DOWNLOADS%" 2>nul
+if not exist "%DOWNLOADS%" set "DOWNLOADS=%TEMP%"
+set "ZIP_PATH=%DOWNLOADS%\%ZIP_NAME%"
 
 echo    Compactando registros em %ZIP_NAME%...
 powershell -NoProfile -Command "Compress-Archive -Path 'docs\registros','logs' -DestinationPath '%ZIP_PATH%' -Force" >nul 2>&1
 
 if exist "%ZIP_PATH%" (
     echo    Registros compactados em: %ZIP_PATH%
-    echo    Abrindo pasta de downloads para voce enviar o arquivo...
-    explorer "%TEMP%"
+    if /i "%INTERATIVO%"=="1" (
+        echo    Abrindo pasta de downloads...
+        explorer "%DOWNLOADS%"
+    )
 ) else (
     echo    [!] Falha ao compactar registros.
 )

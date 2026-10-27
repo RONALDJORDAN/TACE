@@ -5,57 +5,59 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:local="clr-namespace:BotRpaUI.Views"
              mc:Ignorable="d"
-             d:DesignHeight="950" d:DesignWidth="1100"
-             Background="#0B0B14"
+             d:DesignHeight="1000" d:DesignWidth="1200"
+             Background="#0B0B13"
              FontFamily="Segoe UI">
 
     <UserControl.Resources>
-        <!-- Conversores de Grupo e Pontuação -->
-        <local:GroupProgressConverter x:Key="GroupProgressConv"/>
-        <local:GroupProgressStrConverter x:Key="GroupProgressStrConv"/>
-        <local:GroupProgressBrushConverter x:Key="GroupProgressBrushConv"/>
+        <local:GroupScoreStrConverter x:Key="GroupScoreStrConv"/>
+        <local:GroupScoreBrushConverter x:Key="GroupScoreBrushConv"/>
         <local:ScoreToBrushConverter x:Key="ScoreToBrushConv"/>
 
-        <!-- Card Cyber-Glassmorphic -->
-        <Style x:Key="GlassCard" TargetType="Border">
-            <Setter Property="Background" Value="#121220"/>
-            <Setter Property="CornerRadius" Value="12"/>
-            <Setter Property="BorderBrush" Value="#222236"/>
+        <Style x:Key="Card" TargetType="Border">
+            <Setter Property="Background" Value="#0D0D18"/>
+            <Setter Property="BorderBrush" Value="#23233A"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Effect">
-                <Setter.Value>
-                    <DropShadowEffect Color="#000000" BlurRadius="16" ShadowDepth="4" Opacity="0.4"/>
-                </Setter.Value>
-            </Setter>
+            <Setter Property="CornerRadius" Value="10"/>
         </Style>
 
-        <!-- Botão Primário Roxo Glow -->
+        <Style x:Key="SectionTitle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#E6EDF3"/>
+            <Setter Property="FontSize" Value="15"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+
+        <Style x:Key="MutedText" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#8B98A7"/>
+            <Setter Property="FontSize" Value="11"/>
+        </Style>
+
         <Style x:Key="PrimaryBtn" TargetType="Button">
-            <Setter Property="Background" Value="#513BA6"/>
+            <Setter Property="Background" Value="#1F6FEB"/>
             <Setter Property="Foreground" Value="#FFFFFF"/>
             <Setter Property="FontSize" Value="12"/>
-            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Padding" Value="16,8"/>
+            <Setter Property="Padding" Value="14,7"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border x:Name="Bd" Background="{TemplateBinding Background}"
-                                BorderBrush="#8570E6" BorderThickness="1"
-                                CornerRadius="8" Padding="{TemplateBinding Padding}">
+                                BorderBrush="#388BFD" BorderThickness="1"
+                                CornerRadius="6" Padding="{TemplateBinding Padding}">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="#6246C9"/>
-                                <Setter TargetName="Bd" Property="Effect">
-                                    <Setter.Value>
-                                        <DropShadowEffect Color="#8570E6" BlurRadius="10" ShadowDepth="0" Opacity="0.5"/>
-                                    </Setter.Value>
-                                </Setter>
+                                <Setter TargetName="Bd" Property="Background" Value="#388BFD"/>
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="#3F2D82"/>
+                                <Setter TargetName="Bd" Property="Background" Value="#1158C7"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Bd" Property="Background" Value="#1A1A2E"/>
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="#23233A"/>
+                                <Setter Property="Foreground" Value="#6E7681"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -63,32 +65,28 @@
             </Setter>
         </Style>
 
-        <!-- Botão Neural Ciano (BotAI 2.0) -->
-        <Style x:Key="NeuralBtnStyle" TargetType="Button">
-            <Setter Property="Background" Value="#14182E"/>
-            <Setter Property="Foreground" Value="#00E5FF"/>
-            <Setter Property="FontWeight" Value="Bold"/>
+        <Style x:Key="SecondaryBtn" TargetType="Button">
+            <Setter Property="Background" Value="#1A1A2E"/>
+            <Setter Property="Foreground" Value="#C9D1D9"/>
             <Setter Property="FontSize" Value="12"/>
-            <Setter Property="Padding" Value="16,8"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="BorderBrush" Value="#00E5FF"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Padding" Value="14,7"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="border" Background="{TemplateBinding Background}" BorderThickness="{TemplateBinding BorderThickness}" BorderBrush="{TemplateBinding BorderBrush}" CornerRadius="8" Padding="{TemplateBinding Padding}">
-                            <Border.Effect>
-                                <DropShadowEffect x:Name="glow" Color="#00E5FF" BlurRadius="10" ShadowDepth="0" Opacity="0.4"/>
-                            </Border.Effect>
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}"
+                                BorderBrush="#23233A" BorderThickness="1"
+                                CornerRadius="6" Padding="{TemplateBinding Padding}">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#1B2446"/>
-                                <Setter TargetName="border" Property="BorderBrush" Value="#4EDEA3"/>
+                                <Setter TargetName="Bd" Property="Background" Value="#23233A"/>
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="#8B98A7"/>
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#0A0E20"/>
+                                <Setter TargetName="Bd" Property="Background" Value="#141424"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -96,33 +94,32 @@
             </Setter>
         </Style>
 
-        <!-- Botão de Perigo (Reset de Segurança) -->
         <Style x:Key="DangerBtn" TargetType="Button">
-            <Setter Property="Background" Value="#2A1010"/>
-            <Setter Property="Foreground" Value="#FF6B6B"/>
+            <Setter Property="Background" Value="#3D1418"/>
+            <Setter Property="Foreground" Value="#FF7B72"/>
             <Setter Property="FontSize" Value="12"/>
-            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Padding" Value="16,8"/>
+            <Setter Property="Padding" Value="14,7"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border x:Name="Bd" Background="{TemplateBinding Background}"
-                                CornerRadius="8" Padding="{TemplateBinding Padding}"
-                                BorderBrush="#FF4C4C" BorderThickness="1">
+                                BorderBrush="#F85149" BorderThickness="1"
+                                CornerRadius="6" Padding="{TemplateBinding Padding}">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="#4A1818"/>
-                                <Setter TargetName="Bd" Property="Effect">
-                                    <Setter.Value>
-                                        <DropShadowEffect Color="#FF4C4C" BlurRadius="10" ShadowDepth="0" Opacity="0.5"/>
-                                    </Setter.Value>
-                                </Setter>
+                                <Setter TargetName="Bd" Property="Background" Value="#5A1E23"/>
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="#1A0808"/>
+                                <Setter TargetName="Bd" Property="Background" Value="#2A0D10"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Bd" Property="Background" Value="#1A1A2E"/>
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="#23233A"/>
+                                <Setter Property="Foreground" Value="#6E7681"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -130,30 +127,31 @@
             </Setter>
         </Style>
 
-        <!-- Abas de Perfil de Hardware -->
-        <Style x:Key="ModelTabStyle" TargetType="RadioButton">
-            <Setter Property="Background" Value="#121220"/>
-            <Setter Property="Foreground" Value="#8E8EA6"/>
+        <Style x:Key="FilterTab" TargetType="RadioButton">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#8B98A7"/>
             <Setter Property="FontSize" Value="11"/>
-            <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="Margin" Value="0,0,8,0"/>
-            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Margin" Value="0,0,6,0"/>
+            <Setter Property="Padding" Value="11,6"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="RadioButton">
-                        <Border x:Name="bd" Background="{TemplateBinding Background}" BorderBrush="#222236" BorderThickness="1" CornerRadius="6" Padding="{TemplateBinding Padding}">
+                        <Border x:Name="bd" Background="{TemplateBinding Background}"
+                                BorderBrush="#23233A" BorderThickness="1"
+                                CornerRadius="6" Padding="{TemplateBinding Padding}">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="bd" Property="Background" Value="#1C1C30"/>
-                                <Setter Property="Foreground" Value="#FFFFFF"/>
+                                <Setter TargetName="bd" Property="Background" Value="#1A1A2E"/>
+                                <Setter Property="Foreground" Value="#E6EDF3"/>
                             </Trigger>
                             <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="bd" Property="Background" Value="#2D1F5E"/>
-                                <Setter TargetName="bd" Property="BorderBrush" Value="#8570E6"/>
-                                <Setter Property="Foreground" Value="#4EDEA3"/>
+                                <Setter TargetName="bd" Property="Background" Value="#1F6FEB"/>
+                                <Setter TargetName="bd" Property="BorderBrush" Value="#388BFD"/>
+                                <Setter Property="Foreground" Value="#FFFFFF"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -161,10 +159,9 @@
             </Setter>
         </Style>
 
-        <!-- Linha Zebrada para a Matriz de Estratégias -->
-        <Style x:Key="ZebraRow" TargetType="ListViewItem">
-            <Setter Property="Foreground" Value="#E3E0F2"/>
-            <Setter Property="Padding" Value="8,5"/>
+        <Style x:Key="StrategyRow" TargetType="ListViewItem">
+            <Setter Property="Foreground" Value="#C9D1D9"/>
+            <Setter Property="Padding" Value="8,6"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ListViewItem">
@@ -176,35 +173,35 @@
                                 <GridViewRowPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                                                       VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
                                                       SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
-                                <Border x:Name="DetailsPanel" Background="#0A0A14" CornerRadius="6" Padding="12,8" Margin="0,8,0,4" BorderBrush="#2A2A40" BorderThickness="1" Visibility="Collapsed">
+                                <Border x:Name="DetailsPanel" Background="#0B0B13" CornerRadius="6" Padding="12,8" Margin="0,8,0,4" BorderBrush="#23233A" BorderThickness="1" Visibility="Collapsed">
                                     <Grid>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
                                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                            <TextBlock Text="Disparos Recentes (Audit Trail):" Foreground="#9C8BE0" FontSize="11" FontWeight="Bold" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                                            <TextBlock Text="{Binding HistoryVisual}" FontSize="15" VerticalAlignment="Center"/>
+                                            <TextBlock Text="Últimas execuções registradas:" Foreground="#8B98A7" FontSize="11" FontWeight="SemiBold" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                            <TextBlock Text="{Binding HistoryVisual}" Foreground="#58A6FF" FontSize="12" FontFamily="Consolas" VerticalAlignment="Center"/>
                                         </StackPanel>
-                                        <TextBlock Grid.Column="1" Text="{Binding RawTargetId, StringFormat='ID Técnico: {0}'}" Foreground="#6E6E82" FontSize="11" FontFamily="Consolas" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding RawTargetId, StringFormat='ID técnico: {0}'}" Foreground="#6E7681" FontSize="11" FontFamily="Consolas" VerticalAlignment="Center"/>
                                     </Grid>
                                 </Border>
                             </StackPanel>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="ItemsControl.AlternationIndex" Value="1">
-                                <Setter Property="Background" Value="#151525"/>
+                                <Setter Property="Background" Value="#10101C"/>
                             </Trigger>
                             <Trigger Property="ItemsControl.AlternationIndex" Value="0">
                                 <Setter Property="Background" Value="Transparent"/>
                             </Trigger>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="#1F1F35"/>
+                                <Setter TargetName="Bd" Property="Background" Value="#1A1A2E"/>
                             </Trigger>
                             <Trigger Property="IsSelected" Value="True">
                                 <Setter TargetName="DetailsPanel" Property="Visibility" Value="Visible"/>
-                                <Setter TargetName="Bd" Property="Background" Value="#25253E"/>
-                                <Setter TargetName="Bd" Property="BorderBrush" Value="#513BA6"/>
+                                <Setter TargetName="Bd" Property="Background" Value="#1A1A2E"/>
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="#1F6FEB"/>
                                 <Setter TargetName="Bd" Property="BorderThickness" Value="1"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
@@ -213,299 +210,372 @@
             </Setter>
         </Style>
 
-        <!-- Barra de Progresso Futurista -->
-        <Style x:Key="AnimatedProgressStyle" TargetType="ProgressBar">
-            <Setter Property="Background" Value="#17172A"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="ProgressBar">
-                        <Grid>
-                            <Border Background="{TemplateBinding Background}" CornerRadius="3" BorderBrush="#202034" BorderThickness="1"/>
-                            <Border x:Name="PART_Track"/>
-                            <Border x:Name="PART_Indicator" HorizontalAlignment="Left" CornerRadius="2" Margin="1" Background="{TemplateBinding Foreground}"/>
-                        </Grid>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
+        <Style TargetType="{x:Type GridViewColumnHeader}">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#8B98A7"/>
+            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Padding" Value="8,6"/>
+            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+            <Setter Property="BorderBrush" Value="#23233A"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
         </Style>
     </UserControl.Resources>
 
     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
         <Grid Margin="0">
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>  <!-- 0: Header -->
-                <RowDefinition Height="Auto"/>  <!-- 1: BotAI 2.0 Heuristic Lab & Inspector -->
-                <RowDefinition Height="Auto"/>  <!-- 2: Matriz de Estratégias -->
-                <RowDefinition Height="Auto"/>  <!-- 3: Backups -->
-                <RowDefinition Height="Auto"/>  <!-- 4: Zona de Segurança -->
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
-            <!-- ===================== 0: HEADER HERO BOTAI 2.0 ===================== -->
-            <Border Grid.Row="0" Margin="0,0,0,16" Style="{StaticResource GlassCard}" Padding="16" BorderBrush="#2D1F5E">
+            <!-- Cabeçalho -->
+            <Border Grid.Row="0" Style="{StaticResource Card}" Padding="18" Margin="0,0,0,12">
                 <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
 
-                    <!-- Linha 0: título + ação -->
-                    <Grid Grid.Row="0">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-
-                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                            <TextBlock Text="BotAI 2.0" Foreground="#FFFFFF" FontSize="26" FontWeight="Black"/>
-                            <TextBlock Text="— Matriz Neural &amp; Heurística" Foreground="#D2BBFF" FontSize="26" FontWeight="SemiBold"/>
+                    <StackPanel Grid.Column="0">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="BotLearn" Foreground="#E6EDF3" FontSize="26" FontWeight="Bold"/>
+                            <Border x:Name="BadgeModo" Background="#0F2A1A" BorderBrush="#3FB950" BorderThickness="1" CornerRadius="4" Padding="7,3" Margin="12,2,0,0" VerticalAlignment="Center">
+                                <TextBlock x:Name="TxtModeBadge" Text="DETERMINÍSTICO" Foreground="#3FB950" FontSize="10" FontWeight="Bold"/>
+                            </Border>
                         </StackPanel>
+                        <TextBlock Text="Motor de Estratégias Adaptativas" Foreground="#8B98A7" FontSize="13" Margin="0,5,0,0"/>
+                        <TextBlock x:Name="TxtModeDescription" Text="Usa somente o seed compilado; scores não são persistidos." Foreground="#6E7681" FontSize="11" Margin="0,4,0,0"/>
+                    </StackPanel>
 
-                        <Button x:Name="BtnMapeamento" Grid.Column="1" Content="REDE NEURAL 3D"
-                                Style="{StaticResource NeuralBtnStyle}" VerticalAlignment="Center" Margin="16,0,0,0"
-                                Click="BtnMapeamento_Click"/>
-                    </Grid>
-
-                    <!-- Linha 1: subtítulo por modo -->
-                    <TextBlock x:Name="TxtIaSubtitle" Grid.Row="1" Text="Mecanismo de IA adaptativa com Centroid Matching, resolução multi-fallback e proteção contra drift de tela."
-                               Foreground="#8E8EA0" FontSize="12" Margin="0,4,0,0"/>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button x:Name="BtnAtualizar" Content="Atualizar" Style="{StaticResource SecondaryBtn}" Margin="0,0,8,0" Click="BtnAtualizar_Click" ToolTip="Relê o ranking e os indicadores do motor"/>
+                        <Button x:Name="BtnMapeamento" Content="Mapa 3D" Style="{StaticResource SecondaryBtn}" Click="BtnMapeamento_Click" ToolTip="Abrir o mapa 3D de alvos, seletores e scores"/>
+                    </StackPanel>
                 </Grid>
             </Border>
 
-            <!-- ===================== 1: BOTAI 2.0 HEURISTIC LAB & INSPECTOR ===================== -->
-            <Border Style="{StaticResource GlassCard}" Grid.Row="1" Padding="14" Margin="0,0,0,16" BorderBrush="#35266A">
+            <!-- Indicadores -->
+            <Grid Grid.Row="1" Margin="0,0,0,12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <Border Grid.Column="0" Style="{StaticResource Card}" Padding="14" Margin="0,0,8,0">
+                    <StackPanel>
+                        <TextBlock Text="SELETORES" Foreground="#8B98A7" FontSize="10" FontWeight="Bold"/>
+                        <TextBlock x:Name="TxtKpiStrategies" Text="0" Foreground="#E6EDF3" FontSize="24" FontWeight="Bold" Margin="0,4,0,0"/>
+                        <TextBlock Text="estratégias carregadas" Foreground="#6E7681" FontSize="10" Margin="0,2,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Column="1" Style="{StaticResource Card}" Padding="14" Margin="0,0,8,0">
+                    <StackPanel>
+                        <TextBlock Text="ALVOS" Foreground="#8B98A7" FontSize="10" FontWeight="Bold"/>
+                        <TextBlock x:Name="TxtKpiTargets" Text="0" Foreground="#E6EDF3" FontSize="24" FontWeight="Bold" Margin="0,4,0,0"/>
+                        <TextBlock Text="cadastrados no motor" Foreground="#6E7681" FontSize="10" Margin="0,2,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Column="2" Style="{StaticResource Card}" Padding="14" Margin="0,0,8,0">
+                    <StackPanel>
+                        <TextBlock Text="EXECUÇÕES" Foreground="#8B98A7" FontSize="10" FontWeight="Bold"/>
+                        <TextBlock x:Name="TxtKpiRuns" Text="0" Foreground="#E6EDF3" FontSize="24" FontWeight="Bold" Margin="0,4,0,0"/>
+                        <TextBlock Text="acertos e falhas registrados" Foreground="#6E7681" FontSize="10" Margin="0,2,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Column="3" Style="{StaticResource Card}" Padding="14" Margin="0,0,8,0">
+                    <StackPanel>
+                        <TextBlock Text="PRECISÃO" Foreground="#8B98A7" FontSize="10" FontWeight="Bold"/>
+                        <TextBlock x:Name="TxtKpiAccuracy" Text="—" Foreground="#58A6FF" FontSize="24" FontWeight="Bold" Margin="0,4,0,0"/>
+                        <TextBlock Text="acertos sobre execuções" Foreground="#6E7681" FontSize="10" Margin="0,2,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Column="4" Style="{StaticResource Card}" Padding="14">
+                    <StackPanel>
+                        <TextBlock Text="SCORE MÉDIO" Foreground="#8B98A7" FontSize="10" FontWeight="Bold"/>
+                        <TextBlock x:Name="TxtKpiScore" Text="—" Foreground="#D29922" FontSize="24" FontWeight="Bold" Margin="0,4,0,0"/>
+                        <TextBlock Text="média dos seletores" Foreground="#6E7681" FontSize="10" Margin="0,2,0,0"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <!-- Diagnóstico do seletor -->
+            <Border Grid.Row="2" Style="{StaticResource Card}" Padding="16" Margin="0,0,0,12">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <!-- Header do Inspetor -->
                     <Grid Grid.Row="0" Margin="0,0,0,10">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <TextBlock Text="BotAI 2.0 Heuristic Lab &amp; Element Inspector" Foreground="#E2DDFE" FontSize="13" FontWeight="Bold" VerticalAlignment="Center"/>
+
+                        <StackPanel>
+                            <TextBlock Text="Diagnóstico do Seletor" Style="{StaticResource SectionTitle}"/>
+                            <TextBlock Text="Leitura do melhor seletor registrado para o elemento selecionado." Style="{StaticResource MutedText}" Margin="0,3,0,0"/>
                         </StackPanel>
 
                         <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                            <TextBlock Text="Selecione um elemento:" Foreground="#8E8EA0" FontSize="11" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                            <ComboBox x:Name="ComboSimulador" Width="260" Height="28" Background="#1A1A2E" Foreground="#FFFFFF" BorderBrush="#513BA6" FontSize="11" SelectionChanged="ComboSimulador_SelectionChanged"/>
+                            <TextBlock Text="Elemento:" Foreground="#8B98A7" FontSize="11" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <ComboBox x:Name="ComboSimulador" Width="280" Height="28" Background="#0B0B13" Foreground="#E6EDF3" BorderBrush="#23233A" FontSize="11" SelectionChanged="ComboSimulador_SelectionChanged"/>
                         </StackPanel>
                     </Grid>
 
-                    <!-- Detalhes do Elemento Selecionado no Inspetor -->
-                    <Border Grid.Row="1" Background="#0C0C16" CornerRadius="8" Padding="12,10" BorderBrush="#202034" BorderThickness="1">
+                    <Border Grid.Row="1" Background="#0B0B13" CornerRadius="8" Padding="14,12" BorderBrush="#23233A" BorderThickness="1">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="300"/>
                             </Grid.ColumnDefinitions>
 
-                            <StackPanel Grid.Column="0">
-                                <TextBlock x:Name="TxtSimTargetId" Text="ALVO: Carregando..." Foreground="#4EDEA3" FontWeight="Bold" FontSize="11" Margin="0,0,0,4"/>
+                            <StackPanel Grid.Column="0" Margin="0,0,16,0">
+                                <TextBlock x:Name="TxtSimTargetId" Text="ALVO: nenhuma estratégia selecionada" Foreground="#58A6FF" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,8"/>
                                 <StackPanel Orientation="Horizontal" Margin="0,2">
-                                    <TextBlock Text="Rota Primária (Centroid):" Foreground="#8570E6" FontSize="11" FontWeight="SemiBold"/>
-                                    <TextBlock x:Name="TxtSimPrimary" Text="Aguardando seleção..." Foreground="#FFFFFF" FontSize="11" FontFamily="Consolas"/>
+                                    <TextBlock Text="Rota primária:" Foreground="#8B98A7" FontSize="11" Width="92"/>
+                                    <TextBlock x:Name="TxtSimPrimary" Text="Aguardando seleção..." Foreground="#C9D1D9" FontSize="11" FontFamily="Consolas" TextTrimming="CharacterEllipsis"/>
                                 </StackPanel>
-                                <StackPanel Orientation="Horizontal" Margin="0,2">
-                                    <TextBlock Text="Rota Fallback Segura:" Foreground="#8E8EA0" FontSize="11" FontWeight="SemiBold"/>
-                                    <TextBlock x:Name="TxtSimFallback1" Text="Calculando..." Foreground="#A3A3C2" FontSize="11" FontFamily="Consolas"/>
+                                <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                                    <TextBlock Text="Alternativa:" Foreground="#8B98A7" FontSize="11" Width="92"/>
+                                    <TextBlock x:Name="TxtSimFallback1" Text="Aguardando seleção..." Foreground="#8B98A7" FontSize="11" FontFamily="Consolas" TextTrimming="CharacterEllipsis"/>
                                 </StackPanel>
                             </StackPanel>
 
-                            <Border Grid.Column="1" Background="#141E28" BorderBrush="#00E5FF" BorderThickness="1" CornerRadius="8" Padding="12,6" VerticalAlignment="Center" Margin="16,0,0,0">
-                                <StackPanel HorizontalAlignment="Center">
-                                    <TextBlock Text="CONFIANÇA HEURÍSTICA" Foreground="#00E5FF" FontSize="9" FontWeight="Bold" HorizontalAlignment="Center"/>
-                                    <TextBlock x:Name="TxtSimConfidence" Text="99.4% Confiabilidade" Foreground="#4EDEA3" FontSize="12" FontWeight="Black" HorizontalAlignment="Center" Margin="0,2,0,0"/>
-                                </StackPanel>
+                            <Border Grid.Column="1" Background="#0D0D18" CornerRadius="6" BorderBrush="#23233A" BorderThickness="1" Padding="12,10">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,8,8">
+                                        <TextBlock Text="SCORE" Foreground="#8B98A7" FontSize="9" FontWeight="Bold"/>
+                                        <TextBlock x:Name="TxtSimScore" Text="—" Foreground="#D29922" FontSize="18" FontWeight="Bold" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Row="0" Grid.Column="1" Margin="8,0,0,8">
+                                        <TextBlock Text="PRECISÃO" Foreground="#8B98A7" FontSize="9" FontWeight="Bold"/>
+                                        <TextBlock x:Name="TxtSimPrecision" Text="—" Foreground="#58A6FF" FontSize="18" FontWeight="Bold" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,8,0">
+                                        <TextBlock Text="REGISTROS" Foreground="#8B98A7" FontSize="9" FontWeight="Bold"/>
+                                        <TextBlock x:Name="TxtSimAttempts" Text="0 registros" Foreground="#C9D1D9" FontSize="11" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Row="1" Grid.Column="1" Margin="8,0,0,0">
+                                        <TextBlock Text="STATUS" Foreground="#8B98A7" FontSize="9" FontWeight="Bold"/>
+                                        <TextBlock x:Name="TxtSimStatus" Text="Sem testes" Foreground="#8B98A7" FontSize="11" FontWeight="SemiBold" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </Grid>
                             </Border>
                         </Grid>
                     </Border>
                 </Grid>
             </Border>
 
-            <!-- ===================== 2: MATRIZ DE ESTRATÉGIAS COM BUSCA ===================== -->
-            <Border Style="{StaticResource GlassCard}" Grid.Row="2" Padding="14" Margin="0,0,0,16">
+            <!-- Ranking -->
+            <Border Grid.Row="3" Style="{StaticResource Card}" Padding="16" Margin="0,0,0,12">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <!-- Linha 0: Título e Contagem -->
-                    <Grid Grid.Row="0" Margin="0,0,0,12">
+                    <Grid Grid.Row="0" Margin="0,0,0,10">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <TextBlock Text="Matriz de Heurísticas por Elemento de UI" Foreground="#FFFFFF" FontSize="15" FontWeight="Bold"/>
+
+                        <StackPanel>
+                            <TextBlock Text="Ranking Heurístico de Seletores" Style="{StaticResource SectionTitle}"/>
+                            <TextBlock Text="Agrupado por etapa e ordenado por score. A precisão considera apenas execuções registradas." Style="{StaticResource MutedText}" Margin="0,3,0,0"/>
                         </StackPanel>
 
                         <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                            <TextBlock Text="Heurísticas agrupadas por etapa e ordenadas por score" Foreground="#6E6E82" FontSize="11" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                            <Button Content="+ Todas" Style="{StaticResource PrimaryBtn}" Padding="8,3" FontSize="10" Margin="0,0,6,0" Click="BtnExpandAllGroups_Click" ToolTip="Expande todas as etapas"/>
-                            <Button Content="- Todas" Style="{StaticResource PrimaryBtn}" Padding="8,3" FontSize="10" Click="BtnCollapseAllGroups_Click" ToolTip="Recolhe todas as etapas"/>
+                            <TextBlock x:Name="TxtRankingCount" Text="0 seletores" Foreground="#8B98A7" FontSize="11" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                            <Button Content="Expandir" Style="{StaticResource SecondaryBtn}" Padding="9,4" FontSize="10" Margin="0,0,6,0" Click="BtnExpandAllGroups_Click" ToolTip="Expande todas as etapas"/>
+                            <Button Content="Recolher" Style="{StaticResource SecondaryBtn}" Padding="9,4" FontSize="10" Click="BtnCollapseAllGroups_Click" ToolTip="Recolhe todas as etapas"/>
                         </StackPanel>
                     </Grid>
 
-                    <!-- Linha 1: Abas de Modelo e Campo de Busca Rápida -->
-                    <Grid Grid.Row="1" Margin="0,0,0,14">
+                    <Grid Grid.Row="1" Margin="0,0,0,12">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="260"/>
+                            <ColumnDefinition Width="280"/>
                         </Grid.ColumnDefinitions>
 
-                        <!-- Filtros por Modelo -->
                         <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                            <RadioButton x:Name="TabAll" Content="TODOS" Style="{StaticResource ModelTabStyle}" IsChecked="True" Click="FilterModel_Click" Tag="ALL"/>
-                            <RadioButton x:Name="TabVision7" Content="POSITIVO V7" Style="{StaticResource ModelTabStyle}" Click="FilterModel_Click" Tag="V7"/>
-                            <RadioButton x:Name="TabMultiM7" Content="TABMULTI M7" Style="{StaticResource ModelTabStyle}" Click="FilterModel_Click" Tag="M7"/>
-                            <RadioButton x:Name="TabNokiaT20" Content="NOKIA T20" Style="{StaticResource ModelTabStyle}" Click="FilterModel_Click" Tag="T20"/>
-                            <RadioButton x:Name="TabGeral" Content="GERAL" Style="{StaticResource ModelTabStyle}" Click="FilterModel_Click" Tag="F1"/>
+                            <RadioButton x:Name="TabAll" Content="TODOS" Style="{StaticResource FilterTab}" IsChecked="True" Click="FilterModel_Click" Tag="ALL"/>
+                            <RadioButton x:Name="TabVision7" Content="POSITIVO V7" Style="{StaticResource FilterTab}" Click="FilterModel_Click" Tag="V7"/>
+                            <RadioButton x:Name="TabMultiM7" Content="TABMULTI M7" Style="{StaticResource FilterTab}" Click="FilterModel_Click" Tag="M7"/>
+                            <RadioButton x:Name="TabNokiaT20" Content="NOKIA T20" Style="{StaticResource FilterTab}" Click="FilterModel_Click" Tag="T20"/>
+                            <RadioButton x:Name="TabGeral" Content="GERAL" Style="{StaticResource FilterTab}" Click="FilterModel_Click" Tag="F1"/>
                         </StackPanel>
 
-                        <!-- Campo de Busca em Tempo Real -->
-                        <Border Grid.Column="1" Background="#0C0C16" CornerRadius="6" BorderBrush="#222236" BorderThickness="1" Padding="8,2">
+                        <Border Grid.Column="1" Background="#0B0B13" CornerRadius="6" BorderBrush="#23233A" BorderThickness="1" Padding="9,4">
                             <Grid>
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
-                                <TextBox x:Name="TxtSearchStrategy" Grid.Column="1" Background="Transparent" Foreground="#FFFFFF" BorderThickness="0"
+                                <TextBox x:Name="TxtSearchStrategy" Grid.Column="0" Background="Transparent" Foreground="#E6EDF3" BorderThickness="0"
                                          FontSize="11" VerticalAlignment="Center" TextChanged="TxtSearchStrategy_TextChanged"
-                                         ToolTip="Filtrar por elemento, query ou categoria..."/>
-                                <TextBlock x:Name="TxtSearchWatermark" Grid.Column="1" Text="Filtrar por elemento, query ou categoria..." Foreground="#555566" FontSize="11" VerticalAlignment="Center" IsHitTestVisible="False"/>
+                                         ToolTip="Filtrar por elemento, seletor ou categoria..."/>
+                                <TextBlock x:Name="TxtSearchWatermark" Grid.Column="0" Text="Filtrar por elemento, seletor ou categoria..." Foreground="#6E7681" FontSize="11" VerticalAlignment="Center" IsHitTestVisible="False"/>
+                                <TextBlock Grid.Column="1" Text="BUSCAR" Foreground="#6E7681" FontSize="9" FontWeight="Bold" VerticalAlignment="Center" Margin="8,0,0,0"/>
                             </Grid>
                         </Border>
                     </Grid>
 
-                    <!-- Linha 2: Tabela Agrupada de Estratégias -->
-                    <ListView x:Name="ListStrategies" Grid.Row="2"
-                              Background="Transparent" BorderThickness="0"
-                              AlternationCount="2"
-                              ScrollViewer.VerticalScrollBarVisibility="Disabled"
-                              PreviewMouseWheel="ListStrategies_PreviewMouseWheel"
-                              ItemContainerStyle="{StaticResource ZebraRow}">
-                        <!-- Agrupamento por Etapa -->
-                        <ListView.GroupStyle>
-                            <GroupStyle>
-                                <GroupStyle.ContainerStyle>
-                                    <Style TargetType="{x:Type GroupItem}">
-                                        <Setter Property="Template">
-                                            <Setter.Value>
-                                                <ControlTemplate TargetType="{x:Type GroupItem}">
-                                                    <Expander Margin="0,0,0,12" IsExpanded="True" Background="Transparent" BorderThickness="0" HorizontalContentAlignment="Stretch">
-                                                        <Expander.Header>
-                                                            <!-- Cabeçalho do Grupo de Etapa (clique na seta recolhe/expande) -->
-                                                            <Border Background="#151526" BorderBrush="#262640" BorderThickness="1" CornerRadius="6" Padding="12,8" Margin="0,0,0,4" HorizontalAlignment="Stretch">
-                                                                <Grid>
-                                                                    <Grid.ColumnDefinitions>
-                                                                        <ColumnDefinition Width="*"/>
-                                                                        <ColumnDefinition Width="Auto"/>
-                                                                    </Grid.ColumnDefinitions>
-                                                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                                        <TextBlock Text="{Binding Name}" Foreground="#C5B8F8" FontWeight="Bold" FontSize="12" VerticalAlignment="Center"/>
-                                                                    </StackPanel>
+                    <Grid Grid.Row="2">
+                        <ListView x:Name="ListStrategies"
+                                  Background="Transparent" BorderThickness="0"
+                                  AlternationCount="2"
+                                  ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                                  PreviewMouseWheel="ListStrategies_PreviewMouseWheel"
+                                  ItemContainerStyle="{StaticResource StrategyRow}">
+                            <ListView.GroupStyle>
+                                <GroupStyle>
+                                    <GroupStyle.ContainerStyle>
+                                        <Style TargetType="{x:Type GroupItem}">
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="{x:Type GroupItem}">
+                                                        <Expander Margin="0,0,0,10" IsExpanded="True" Background="Transparent" BorderThickness="0" HorizontalContentAlignment="Stretch">
+                                                            <Expander.Header>
+                                                                <Border Background="#10101C" BorderBrush="#23233A" BorderThickness="1" CornerRadius="6" Padding="12,8" Margin="0,0,0,4" HorizontalAlignment="Stretch">
+                                                                    <Grid>
+                                                                        <Grid.ColumnDefinitions>
+                                                                            <ColumnDefinition Width="*"/>
+                                                                            <ColumnDefinition Width="Auto"/>
+                                                                        </Grid.ColumnDefinitions>
+                                                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                                            <TextBlock Text="{Binding Name}" Foreground="#C9D1D9" FontWeight="SemiBold" FontSize="12" VerticalAlignment="Center"/>
+                                                                            <TextBlock Text="{Binding Items.Count, StringFormat=' · {0} seletores'}" Foreground="#6E7681" FontSize="10" VerticalAlignment="Center"/>
+                                                                        </StackPanel>
 
-                                                                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                                                                        <TextBlock Text="Assertividade Média:" Foreground="#7A7A8E" FontSize="11" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                                                        <ProgressBar Minimum="-100" Maximum="100" Value="{Binding Items, Converter={StaticResource GroupProgressConv}, Mode=OneWay}" Foreground="{Binding Items, Converter={StaticResource GroupProgressBrushConv}}" Width="80" Height="7" Style="{StaticResource AnimatedProgressStyle}" Margin="0,0,8,0"/>
-                                                                        <TextBlock Text="{Binding Items, Converter={StaticResource GroupProgressStrConv}}" Foreground="{Binding Items, Converter={StaticResource GroupProgressBrushConv}}" FontWeight="Bold" FontSize="11" VerticalAlignment="Center"/>
-                                                                    </StackPanel>
-                                                                </Grid>
-                                                            </Border>
-                                                        </Expander.Header>
-                                                        <ItemsPresenter Margin="8,0,8,0"/>
-                                                    </Expander>
-                                                </ControlTemplate>
-                                            </Setter.Value>
-                                        </Setter>
-                                    </Style>
-                                </GroupStyle.ContainerStyle>
-                            </GroupStyle>
-                        </ListView.GroupStyle>
+                                                                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                                                            <TextBlock Text="Score médio:" Foreground="#8B98A7" FontSize="11" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                                                            <TextBlock Text="{Binding Items, Converter={StaticResource GroupScoreStrConv}}" Foreground="{Binding Items, Converter={StaticResource GroupScoreBrushConv}}" FontWeight="Bold" FontSize="11" VerticalAlignment="Center"/>
+                                                                        </StackPanel>
+                                                                    </Grid>
+                                                                </Border>
+                                                            </Expander.Header>
+                                                            <ItemsPresenter Margin="8,0,8,0"/>
+                                                        </Expander>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Style>
+                                    </GroupStyle.ContainerStyle>
+                                </GroupStyle>
+                            </ListView.GroupStyle>
 
-                        <ListView.View>
-                            <GridView>
-                                <GridViewColumn Header="ELEMENTO" Width="170" DisplayMemberBinding="{Binding ElementoId}"/>
-                                <GridViewColumn Header="ESTRATÉGIA (QUERY / XPATH)" Width="240">
-                                    <GridViewColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <TextBlock Text="{Binding Query}" Foreground="#E3E0F2" FontFamily="Consolas" FontSize="11" TextTrimming="CharacterEllipsis"/>
-                                        </DataTemplate>
-                                    </GridViewColumn.CellTemplate>
-                                </GridViewColumn>
-                                <GridViewColumn Header="SCORE" Width="75" DisplayMemberBinding="{Binding Score}"/>
-                                <GridViewColumn Header="ACERTOS" Width="80" DisplayMemberBinding="{Binding Hits}"/>
-                                <GridViewColumn Header="FALHAS" Width="80" DisplayMemberBinding="{Binding Misses}"/>
-                                <GridViewColumn Header="PRECISÃO" Width="85" DisplayMemberBinding="{Binding Precisao}"/>
-                                <GridViewColumn Header="STATUS" Width="100" DisplayMemberBinding="{Binding StatusStr}"/>
-                                <GridViewColumn Header="AVALIAÇÃO COGNITIVA" Width="120">
-                                    <GridViewColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                <Grid Margin="0,0,8,0">
-                                                    <ProgressBar Minimum="-100" Maximum="100" Value="{Binding Progresso, Mode=OneWay}" Foreground="{Binding Progresso, Converter={StaticResource ScoreToBrushConv}}" Width="70" Height="7" Style="{StaticResource AnimatedProgressStyle}"/>
-                                                    <Rectangle Width="2" Height="11" Fill="#555566" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                </Grid>
-                                                <TextBlock Text="{Binding ProgressoStr}" Foreground="{Binding Progresso, Converter={StaticResource ScoreToBrushConv}}" FontWeight="Bold" FontSize="11" VerticalAlignment="Center"/>
-                                            </StackPanel>
-                                        </DataTemplate>
-                                    </GridViewColumn.CellTemplate>
-                                </GridViewColumn>
-                            </GridView>
-                        </ListView.View>
-                    </ListView>
+                            <ListView.View>
+                                <GridView>
+                                    <GridViewColumn Header="ELEMENTO" Width="170" DisplayMemberBinding="{Binding ElementoId}"/>
+                                    <GridViewColumn Header="SELETOR (QUERY / XPATH)" Width="270">
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding Query}" Foreground="#C9D1D9" FontFamily="Consolas" FontSize="11" TextTrimming="CharacterEllipsis"/>
+                                            </DataTemplate>
+                                        </GridViewColumn.CellTemplate>
+                                    </GridViewColumn>
+                                    <GridViewColumn Header="SCORE" Width="65">
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding Score}" Foreground="{Binding Score, Converter={StaticResource ScoreToBrushConv}}" FontWeight="Bold"/>
+                                            </DataTemplate>
+                                        </GridViewColumn.CellTemplate>
+                                    </GridViewColumn>
+                                    <GridViewColumn Header="ACERTOS" Width="70" DisplayMemberBinding="{Binding Hits}"/>
+                                    <GridViewColumn Header="FALHAS" Width="65" DisplayMemberBinding="{Binding Misses}"/>
+                                    <GridViewColumn Header="PRECISÃO" Width="75" DisplayMemberBinding="{Binding Precisao}"/>
+                                    <GridViewColumn Header="HISTÓRICO" Width="100">
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding HistoryVisual}" Foreground="#58A6FF" FontFamily="Consolas" FontSize="11"/>
+                                            </DataTemplate>
+                                        </GridViewColumn.CellTemplate>
+                                    </GridViewColumn>
+                                    <GridViewColumn Header="STATUS" Width="110">
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding StatusStr}" Foreground="{Binding Score, Converter={StaticResource ScoreToBrushConv}}" FontWeight="SemiBold"/>
+                                            </DataTemplate>
+                                        </GridViewColumn.CellTemplate>
+                                    </GridViewColumn>
+                                </GridView>
+                            </ListView.View>
+                        </ListView>
+
+                        <TextBlock x:Name="TxtRankingEmpty" Text="Nenhuma estratégia carregada pelo motor." Foreground="#6E7681" FontSize="12" Margin="12,18,0,0" Visibility="Collapsed" IsHitTestVisible="False"/>
+                    </Grid>
                 </Grid>
             </Border>
 
-            <!-- ===================== 3: SUBMÓDULO DE BACKUPS ===================== -->
-            <Border Style="{StaticResource GlassCard}" Grid.Row="3" Padding="14" Margin="0,0,0,16">
+            <!-- Backups -->
+            <Border Grid.Row="4" Style="{StaticResource Card}" Padding="16" Margin="0,0,0,12">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
-                    
+
                     <Grid Grid.Row="0" Margin="0,0,0,10">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
                         <StackPanel>
-                            <TextBlock Text="Submódulo de Backups Automáticos (BotAI 2.0)" Foreground="#4EDEA3" FontSize="13" FontWeight="Bold"/>
-                            <TextBlock Text="Rotatividade automática mantendo os últimos 3 dias para restauração instantânea de emergência." Foreground="#8E8EA0" FontSize="11" Margin="0,2,0,0"/>
+                            <TextBlock Text="Backups do BotLearn" Style="{StaticResource SectionTitle}"/>
+                            <TextBlock Text="Cópias diárias do arquivo de dados. O limite de retenção é de 3 arquivos." Style="{StaticResource MutedText}" Margin="0,3,0,0"/>
                         </StackPanel>
-                        <Border Grid.Column="1" Background="#12251B" BorderBrush="#4EDEA3" BorderThickness="1" CornerRadius="6" Padding="6,2">
-                            <TextBlock Text="ROTATIVIDADE 3 DIAS ATIVA" Foreground="#4EDEA3" FontSize="9" FontWeight="Bold"/>
+                        <Border Grid.Column="1" Background="#10101C" BorderBrush="#23233A" BorderThickness="1" CornerRadius="4" Padding="7,3" VerticalAlignment="Top">
+                            <TextBlock x:Name="TxtBackupCount" Text="0 cópias" Foreground="#8B98A7" FontSize="10" FontWeight="Bold"/>
                         </Border>
                     </Grid>
-                    
-                    <ItemsControl x:Name="ListBackups" Grid.Row="1">
+
+                    <TextBlock x:Name="TxtBackupPath" Grid.Row="1" Text="Pasta de backups: —" Foreground="#6E7681" FontSize="10" FontFamily="Consolas" TextTrimming="CharacterEllipsis" Margin="0,0,0,8"/>
+                    <TextBlock x:Name="TxtBackupsEmpty" Grid.Row="2" Text="Nenhum backup disponível. A rotina cria uma cópia quando o motor persiste o arquivo de dados." Foreground="#6E7681" FontSize="11" Margin="0,2,0,0"/>
+
+                    <ItemsControl x:Name="ListBackups" Grid.Row="2">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Border Background="#0C0C16" CornerRadius="6" Padding="12,8" Margin="0,0,0,6" BorderBrush="#202034" BorderThickness="1">
+                                <Border Background="#0B0B13" CornerRadius="6" Padding="12,8" Margin="0,0,0,6" BorderBrush="#23233A" BorderThickness="1">
                                     <Grid>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="Auto"/>
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
-                                        
+
                                         <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                                            <TextBlock Text="{Binding FileName}" Foreground="#FFFFFF" FontWeight="SemiBold" FontSize="11"/>
-                                            <TextBlock Text="{Binding DataCriacao, StringFormat='{}Criado em: {0:dd/MM/yyyy HH:mm}'}" Foreground="#7A7A8E" FontSize="10" Margin="0,2,0,0"/>
+                                            <TextBlock Text="{Binding FileName}" Foreground="#C9D1D9" FontWeight="SemiBold" FontSize="11"/>
+                                            <TextBlock Text="{Binding DataCriacao, StringFormat='{}Criado em: {0:dd/MM/yyyy HH:mm}'}" Foreground="#6E7681" FontSize="10" Margin="0,2,0,0"/>
                                         </StackPanel>
-                                        
-                                        <TextBlock Grid.Column="1" Text="{Binding TamanhoStr}" Foreground="#8570E6" VerticalAlignment="Center" Margin="0,0,16,0" FontWeight="SemiBold" FontSize="11"/>
-                                        
-                                        <Button Grid.Column="2" Content="Restaurar Seed" Style="{StaticResource PrimaryBtn}" Padding="10,4" FontSize="10" Tag="{Binding FullPath}" Click="BtnRestaurarBackup_Click"/>
+
+                                        <TextBlock Grid.Column="1" Text="{Binding TamanhoStr}" Foreground="#8B98A7" VerticalAlignment="Center" Margin="0,0,16,0" FontWeight="SemiBold" FontSize="11"/>
+                                        <Button Grid.Column="2" Content="Restaurar" Style="{StaticResource SecondaryBtn}" Padding="10,4" FontSize="10" Tag="{Binding FullPath}" Click="BtnRestaurarBackup_Click"/>
                                     </Grid>
                                 </Border>
                             </DataTemplate>
@@ -514,8 +584,8 @@
                 </Grid>
             </Border>
 
-            <!-- ===================== 4: ZONA DE SEGURANÇA E RESET ===================== -->
-            <Border Grid.Row="4" Background="#1A0C0E" CornerRadius="12" BorderBrush="#4A181C" BorderThickness="1" Padding="14">
+            <!-- Reset -->
+            <Border Grid.Row="5" Background="#0D0D18" BorderBrush="#3D1418" BorderThickness="1" CornerRadius="10" Padding="16">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
@@ -523,14 +593,12 @@
                     </Grid.ColumnDefinitions>
 
                     <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="ZONA DE SEGURANÇA — RESET DO BANCO COGNITIVO BOTAI 2.0" Foreground="#FF4C4C" FontSize="12" FontWeight="Bold" VerticalAlignment="Center"/>
-                        </StackPanel>
-                        <TextBlock Text="Apaga os históricos dinâmicos e restaura instantaneamente todas as heurísticas para o Seed Determinístico Compilado na DLL."
-                                   Foreground="#A37070" FontSize="11" Margin="0,4,0,0" TextWrapping="Wrap"/>
+                        <TextBlock Text="Redefinir dados adaptativos" Foreground="#E6EDF3" FontSize="13" FontWeight="SemiBold"/>
+                        <TextBlock Text="Apaga scores, acertos, falhas e histórico persistidos. O motor retorna ao seed compilado. Disponível apenas no modo adaptativo."
+                                   Foreground="#8B98A7" FontSize="11" Margin="0,4,0,0" TextWrapping="Wrap"/>
                     </StackPanel>
 
-                    <Button x:Name="BtnResetDB" Grid.Column="1" Content="RESETAR BANCO BotLearn"
+                    <Button x:Name="BtnResetDB" Grid.Column="1" Content="Redefinir dados adaptativos"
                             Style="{StaticResource DangerBtn}" VerticalAlignment="Center"
                             Margin="16,0,0,0" Click="BtnResetDB_Click"/>
                 </Grid>

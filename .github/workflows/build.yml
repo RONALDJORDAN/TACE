@@ -1,0 +1,174 @@
+name: Build Bot_RPA
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      build_mode:
+        description: 'Tipo de build'
+        required: true
+        default: 'teste'
+        type: choice
+        options:
+        - teste
+        - release
+        - installer
+      sign:
+        description: 'Assinar binários?'
+        required: false
+        default: 'false'
+        type: boolean
+
+env:
+  BOTRPA_ROOT: ${{ github.workspace }}
+  DOTNET_VERSION: '8.0.x'
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Instalar .NET 8 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Instalar GCC (MinGW-W64 via WinGet)
+        shell: pwsh
+        run: |
+          winget install --id BrechtSanders.WinLibs.POSIX.UCRT_Microsoft.Winget.Source -e --accept-package-agreements --accept-source-agreements || true
+
+      - name: Instalar Inno Setup 6
+        shell: pwsh
+        run: |
+          winget install --id JRSoftware.InnoSetup -e --accept-package-agreements --accept-source-agreements || true
+
+      - name: Adicionar GCC ao PATH
+        shell: pwsh
+        run: |
+          $gccPath = "$env:USERPROFILE\AppData\Local\Microsoft\WinGet\Packages\BrechtSanders.WinLibs.POSIX.UCRT_Microsoft.Winget.Source_8wekyb3d8bbwe\mingw64\bin"
+          if (Test-Path $gccPath) {
+            echo "PATH=$gccPath;$env:PATH" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          }
+
+      - name: Gerar versão de build
+        shell: pwsh
+        run: |
+          $date = Get-Date -Format "dd.MM.yyyy.HHmm"
+          $date | Out-File -FilePath "config\version.txt" -Encoding utf8
+          echo "Versão: $date"
+
+      - name: Compilar Motor C (BotEngine.dll)
+        shell: cmd
+        run: |
+          set PATH=%PATH%;%USERPROFILE%\AppData\Local\Microsoft\WinGet\Packages\BrechtSanders.WinLibs.POSIX.UCRT_Microsoft.Winget.Source_8wekyb3d8bbwe\mingw64\bin
+          mkdir data\output 2>nul
+          gcc -shared src\api.c src\core\drivers\adb.c src\core\data\municipios.c src\core\data\cofre.c src\core\data\paths.c src\core\data\dispositivos.c src\core\config\config.c src\core\learn\learn_db.c src\core\learn\learn_engine.c src\core\functions\vision7\f1_vision_tab7.c src\core\functions\vision7\f2_vision_tab7.c src\core\functions\vision7\f3_vision_tab7.c src\core\functions\vision7\f4_vision_tab7.c src\core\functions\vision7\f5_vision_tab7.c src\core\functions\vision7\f6_vision_tab7.c src\core\functions\vision7\f8_vision_tab7.c src\core\functions\tabmulti\f1_tabmulti_m7.c src\core\functions\tabmulti\f2_tabmulti_m7.c src\core\functions\tabmulti\f3_tabmulti_m7.c src\core\functions\tabmulti\f4_tabmulti_m7.c src\core\functions\tabmulti\f5_tabmulti_m7.c src\core\functions\tabmulti\m7_helpers.c src\core\functions\nokia_t20\f1_nokia_t20.c src\core\functions\nokia_t20\f2_nokia_t20.c src\core\functions\nokia_t20\f3_nokia_t20.c -o data\output\BotEngine.dll -static -lcomctl32 -lgdi32 -luser32 -lcrypt32 -mwindows -D_WIN32_WINNT=0x0A00 -DWINVER=0x0A00
+          if %errorlevel% neq 0 exit /b %errorlevel%
+
+      - name: Compilar UI C# (BotRPAui.exe)
+        shell: pwsh
+        run: |
+          cd src\ui
+          dotnet publish BotRpaUI.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o ..\..\data\output\
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Copiar BotEngine.dll para output da UI
+        shell: pwsh
+        run: |
+          Copy-Item "data\output\BotEngine.dll" "src\ui\bin\Release\net8.0-windows10.0.22000.0\win-x64\BotEngine.dll" -Force
+
+      - name: Criar pacote Release (BotRPA_Release)
+        if: ${{ github.event.inputs.build_mode != 'teste' || github.event_name == 'push' }}
+        shell: cmd
+        run: |
+          set "RELEASE_DIR=BotRPA_Release"
+          if exist "%RELEASE_DIR%" rmdir /s /q "%RELEASE_DIR%"
+          mkdir "%RELEASE_DIR%"
+          copy /y "data\output\BotRPAui.exe" "%RELEASE_DIR%\" >nul
+          copy /y "data\output\BotEngine.dll" "%RELEASE_DIR%\" >nul
+          xcopy /s /i /y "config" "%RELEASE_DIR%\config" >nul
+          mkdir "%RELEASE_DIR%\tools" 2>nul
+          if exist "tools\platform-tools" xcopy /s /e /i /y "tools\platform-tools" "%RELEASE_DIR%\tools\platform-tools" >nul
+          if exist "tools\reverse_tethering" xcopy /s /e /i /y "tools\reverse_tethering" "%RELEASE_DIR%\tools\reverse_tethering" >nul
+          if exist "tools\mac_address_finder.apk" copy /y "tools\mac_address_finder.apk" "%RELEASE_DIR%\tools\" >nul
+          mkdir "%RELEASE_DIR%\data" 2>nul
+          if exist "data\bot_database.db" copy /y "data\bot_database.db" "%RELEASE_DIR%\data\bot_database.db" >nul
+          mkdir "%RELEASE_DIR%\logs" 2>nul
+          mkdir "%RELEASE_DIR%\docs\registros" 2>nul
+
+      - name: Assinar binários (se certificado configurado)
+        if: ${{ github.event.inputs.sign == 'true' || github.event_name == 'push' }}
+        shell: pwsh
+        run: |
+          $cert = $env:BOTRPA_SIGN_CERT
+          $pass = $env:BOTRPA_SIGN_PASSWORD
+          if (-not $cert -or -not (Test-Path $cert)) {
+            Write-Host "AVISO: BOTRPA_SIGN_CERT não definido ou não encontrado. Pulando assinatura."
+            exit 0
+          }
+          $signtool = Get-ChildItem -Path "C:\Program Files (x86)\Windows Kits\10\bin\x64\signtool.exe", "C:\Program Files\Windows Kits\10\bin\x64\signtool.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
+          if (-not $signtool) {
+            Write-Host "AVISO: SignTool não encontrado. Pulando assinatura."
+            exit 0
+          }
+          $files = @("data\output\BotRPAui.exe", "data\output\BotEngine.dll", "BotRPA_Release\BotRPAui.exe", "BotRPA_Release\BotEngine.dll")
+          foreach ($f in $files) {
+            if (Test-Path $f) {
+              Write-Host "Assinando $f..."
+              $args = @("/f", $cert, "/t", "http://timestamp.digicert.com", $f)
+              if ($pass) { $args = @("/f", $cert, "/p", $pass, "/t", "http://timestamp.digicert.com", $f) }
+              & $signtool $args
+              if ($LASTEXITCODE -ne 0) { Write-Host "AVISO: Falha ao assinar $f" }
+            }
+          }
+
+      - name: Gerar SHA256SUMS
+        shell: pwsh
+        run: |
+          $files = Get-ChildItem "data\output\BotRPAui.exe", "data\output\BotEngine.dll", "BotRPA_Release\*" -Recurse -File | Where-Object { $_.Extension -ne '.pdb' }
+          $hashes = @()
+          foreach ($f in $files) {
+            $hash = Get-FileHash -Path $f.FullName -Algorithm SHA256
+            $hashes += "$($hash.Hash)  $($f.FullName)"
+          }
+          $hashes | Out-File -FilePath "SHA256SUMS.txt" -Encoding utf8
+
+      - name: Publicar artefatos
+        uses: actions/upload-artifact@v4
+        with:
+          name: bot-rpa-build
+          path: |
+            data\output\BotRPAui.exe
+            data\output\BotEngine.dll
+            BotRPA_Release\
+            SHA256SUMS.txt
+          retention-days: 30
+
+      - name: Criar instalador (Inno Setup)
+        if: ${{ github.event.inputs.build_mode == 'installer' || github.event_name == 'push' }}
+        shell: cmd
+        run: |
+          set "ISCC=%ProgramFiles(x86)%\Inno Setup 6\ISCC.exe"
+          if not exist "%ISCC%" set "ISCC=%ProgramFiles%\Inno Setup 6\ISCC.exe"
+          if not exist "%ISCC%" set "ISCC=%LocalAppData%\Programs\Inno Setup 6\ISCC.exe"
+          if not exist "%ISCC%" (
+            echo ERRO: Inno Setup 6 não encontrado.
+            exit /b 1
+          )
+          set /p VER=<config\version.txt
+          powershell -NoProfile -Command "$f='scripts\scripts de controle\BotRPA.iss'; $v='%VER%'; $c=[char]34; $s=Get-Content -LiteralPath $f -Raw; $s=$s -replace '(?m)^#define AppVersion .*$', ('#define AppVersion ' + $c + $v + $c); Set-Content -LiteralPath $f -Value $s -Encoding UTF8"
+          "%ISCC%" "scripts\scripts de controle\BotRPA.iss"
+
+      - name: Publicar instalador
+        if: ${{ github.event.inputs.build_mode == 'installer' || github.event_name == 'push' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: bot-rpa-installer
+          path: "scripts\scripts de controle\BotRPA_Instalador_*.exe"
+          retention-days: 30

@@ -69,11 +69,11 @@
 
                 <!-- 1. Identidade Visual Bot_RPA (Esquerda) -->
                 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,16,0">
-                    <Border Width="34" Height="34" CornerRadius="6" Background="#513BA6" Margin="0,0,10,0">
+                    <Border Width="34" Height="34" CornerRadius="8" Background="#10101C" BorderBrush="#513BA6" BorderThickness="1" Margin="0,0,10,0" ClipToBounds="True">
                         <Border.Effect>
-                            <DropShadowEffect Color="#513BA6" BlurRadius="12" Opacity="0.65" ShadowDepth="0"/>
+                            <DropShadowEffect Color="#513BA6" BlurRadius="14" Opacity="0.7" ShadowDepth="0"/>
                         </Border.Effect>
-                        <TextBlock Text="BR" Foreground="#FFFFFF" FontWeight="Black" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <Image Source="/Assets/Icons/BotRPAui.png" Width="30" Height="30" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"/>
                     </Border>
                     <StackPanel VerticalAlignment="Center">
                         <TextBlock Text="BOT_RPA" Foreground="#FFFFFF" FontWeight="Black" FontSize="13"/>
@@ -86,7 +86,7 @@
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                     <Button x:Name="BtnMenuMonitor" Content="Monitor ADB" Style="{StaticResource NavTabButtonStyle}" Click="MenuMonitor_Click"/>
                     <Button x:Name="BtnMenuMonitorPro" Content="Monitor Pro" Style="{StaticResource NavTabButtonStyle}" Click="MenuMonitorPro_Click"/>
-                    <Button x:Name="BtnMenuLearn" Content="BotAI 2.0" Style="{StaticResource NavTabButtonStyle}" Click="MenuLearn_Click"/>
+                    <Button x:Name="BtnMenuLearn" Content="BotLearn" Style="{StaticResource NavTabButtonStyle}" Click="MenuLearn_Click"/>
                     <Button x:Name="BtnMenuRelatorios" Content="Gestão" Style="{StaticResource NavTabButtonStyle}" Click="MenuRelatorios_Click"/>
                     <Button x:Name="BtnMenuConfig" Content="Configurações" Style="{StaticResource NavTabButtonStyle}" Click="MenuConfig_Click"/>
                     <Button x:Name="BtnMenuSobre" Content="Sobre" Style="{StaticResource NavTabButtonStyle}" Click="MenuSobre_Click"/>

@@ -96,6 +96,7 @@ docs/registros/**/*.log
 # ATENCAO: usar barra inicial. src/core/data possui fontes C versionadas.
 /data/
 /municipios.csv
+/config/municipios.csv
 /version.txt
 *.db
 *.sqlite
