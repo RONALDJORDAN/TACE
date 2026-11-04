@@ -19,7 +19,7 @@ on:
       sign:
         description: 'Assinar binários?'
         required: false
-        default: 'false'
+        default: false
         type: boolean
 
 env:
@@ -162,13 +162,13 @@ jobs:
             exit /b 1
           )
           set /p VER=<config\version.txt
-          powershell -NoProfile -Command "$f='scripts\scripts de controle\TACE.iss'; $v='%VER%'; $c=[char]34; $s=Get-Content -LiteralPath $f -Raw; $s=$s -replace '(?m)^#define AppVersion .*$', ('#define AppVersion ' + $c + $v + $c); Set-Content -LiteralPath $f -Value $s -Encoding UTF8"
-          "%ISCC%" "scripts\scripts de controle\TACE.iss"
+          powershell -NoProfile -Command "$f='scripts\scripts de controle\BotRPA.iss'; $v='%VER%'; $c=[char]34; $s=Get-Content -LiteralPath $f -Raw; $s=$s -replace '(?m)^#define AppVersion .*$', ('#define AppVersion ' + $c + $v + $c); Set-Content -LiteralPath $f -Value $s -Encoding UTF8"
+          "%ISCC%" "scripts\scripts de controle\BotRPA.iss"
 
       - name: Publicar instalador
         if: ${{ github.event.inputs.build_mode == 'installer' || github.event_name == 'push' }}
         uses: actions/upload-artifact@v4
         with:
           name: bot-rpa-installer
-          path: "scripts\scripts de controle\TACE_Instalador_*.exe"
+          path: "scripts/scripts de controle/TACE_Instalador_*.exe"
           retention-days: 30
