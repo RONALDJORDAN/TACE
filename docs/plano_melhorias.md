@@ -1,4 +1,4 @@
-# Plano de Melhoria — TACE (Plataforma InnovTech)
+# Plano de Melhoria — TACE (Plataforma TACE)
 
 > Criado em 24/09/2026 a partir da auditoria técnica da sessão.
 > Como usar: cada item tem `[ ]` de status. Marque `[x]` ao concluir e registre o
@@ -42,8 +42,8 @@
 ## FASE 3 — Nuvem bidirecional (Fase 1 implementada em 24/09/2026)
 
 - [x] **🟡 Download `rpa_devices` (Fase 1) — implementado 24/09/2026**
-  `BaixarDoInnovStockAsync()` em `SQLiteDatabaseManager.cs` + botão
-  "⬇ Baixar InnovStock" nos Relatórios + toggle `cloud_pull_auto` (default ligado)
+  - `BaixarDoTACEAsync()` em `SQLiteDatabaseManager.cs` + botão
+  "⬇ Baixar TACE Devices" nos Relatórios + toggle `cloud_pull_auto` (default ligado)
   com pull no startup (`App.xaml.cs`). Política segura: só adiciona/preenche vazios,
   nunca apaga nem sobrescreve valor válido; sem re-upload (sem loop).
   Build TESTE `24.09.2026.1901` validado, zero warnings.
@@ -53,7 +53,7 @@
   disparo ao reconectar (`NetworkAvailabilityChanged` com debounce), guarda contra
   sobreposição (`Interlocked`) e checagem offline (`GetIsNetworkAvailable`).
   Após o pull, devolve à nuvem (PUT individual) só as linhas tocadas. Toggle único
-  em Configurações + ComboBox de intervalo (5/10/15/30/60). `BaixarDoInnovStockAsync`
+  em Configurações + ComboBox de intervalo (5/10/15/30/60). `BaixarDoTACEAsync`
   passou a retornar também os seriais afetados.
   Build TESTE `25.09.2026.0815` validado, zero warnings.
 
@@ -133,7 +133,7 @@ como relatório executivo vertical; (d) reescrever a página Sobre com dados rea
 Itens ficam `[ ]` até a validação e passam a `[x]` após build/teste.
 
 ## Decisões transversais
-- Empresa no cabeçalho do PDF: **InnovEdu** (grafia solicitada), setor **Operacional**.
+- Empresa no cabeçalho do PDF: **TACE** (grafia solicitada), setor **Operacional**.
   Manter as duas strings centralizadas para troca fácil.
 - PDF A4 retrato gerado com `PdfSharpCore` (já referenciado no projeto), sem depender do
   Microsoft Print to PDF.
@@ -174,7 +174,7 @@ Itens ficam `[ ]` até a validação e passam a `[x]` após build/teste.
 - [x] Estrutura: **capa**; **contracapa/ficha técnica**; **sumário**; primeira página de
   conteúdo com KPIs e **gráficos**; resumo por fabricante/modelo; dados por dispositivo;
   **anexo final** com marca, modelo, número de série e MAC em ordem.
-- [x] Cabeçalho em todas as páginas de conteúdo com InnovEdu, Setor Operacional, título e
+- [x] Cabeçalho em todas as páginas de conteúdo com TACE, Setor Operacional, título e
   data; rodapé com numeração e versão.
 - [x] Gráficos vetoriais: rosca por modelo, barras por fabricante e cobertura do cadastro,
   com legendas e percentuais.

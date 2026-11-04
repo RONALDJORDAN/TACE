@@ -1,0 +1,9 @@
+Versao: 04.11.2026.1137
+Modalidade: BUILD
+Modo: TESTE
+PastaAuditoria: docs\registros\2026-11-04\11-37_Plataforma_TACE_DESKTOP_BUILD
+--- gcc BotEngine.dll ---
+--- dotnet publish ---
+  Determining projects to restore...
+  Restored P:\Projetos\TACE - Tablet Auditor & Configurator for Education\src\ui\BotRpaUI.csproj (in 458 ms).
+C:\Program Files\dotnet\sdk\10.0.403\Sdks\Microsoft.NET.Sdk.WindowsDesktop\targets\Microsoft.WinFX.targets(707,5): error BG1002: File 'Assets\Icons\TACEui.ico' cannot be found. [P:\Projetos\TACE - Tablet Auditor & Configurator for Education\src\ui\BotRpaUI.csproj]

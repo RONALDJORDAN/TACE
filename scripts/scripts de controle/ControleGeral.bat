@@ -78,7 +78,7 @@ echo  --------------------------------------------------------------
 echo    BUILD
 echo      [1] Teste .................. motor C + UI em data\output
 echo      [2] Release ................ pacote portatil TACE_Release
-echo      [3] Instalador ............. setup.exe via Inno Setup
+echo      [3] Instalador ............. setup.exe via TACE Setup
 echo      [4] Dependencias ........... GCC + .NET 8 SDK
 echo  --------------------------------------------------------------
 echo    OPERACAO
@@ -141,7 +141,7 @@ echo [*] Compilando TACEUI (C# WPF) Self-Contained Offline...
 taskkill /F /IM TACEui.exe /T 2>nul
 cd /d "%ROOT_DIR%\src\ui"
 >> "..\..\%AUDIT_DIR%\build.log" echo --- dotnet publish ---
-"C:\Program Files\dotnet\dotnet.exe" publish TACEUI.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o ..\..\data\output\ >> "..\..\%AUDIT_DIR%\build.log" 2>&1
+"C:\Program Files\dotnet\dotnet.exe" publish BotRpaUI.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o ..\..\data\output\ >> "..\..\%AUDIT_DIR%\build.log" 2>&1
 set DOTNET_ERR=%errorlevel%
 :: Limpar intermediarios para economizar espaco em disco
 rd /s /q obj 2>nul
@@ -277,7 +277,7 @@ goto :eof
 cd /d "%ROOT_DIR%"
 echo.
 echo ========================================================
-echo    [3] BUILD INSTALADOR - Inno Setup
+echo    [3] BUILD INSTALADOR - TACE Setup
 echo ========================================================
 
 :: 1. Valida o pacote portatil (gera automaticamente se necessario/desatualizado)
@@ -321,12 +321,12 @@ if "!VER!"=="" (
 )
 echo [*] Versao do build: !VER!
 
-:: 3. Localiza o compilador do Inno Setup
+:: 3. Localiza o compilador do TACE Setup
 set "ISCC="
 for %%P in (
-    "%ProgramFiles(x86)%\Inno Setup 6\ISCC.exe"
-    "%ProgramFiles%\Inno Setup 6\ISCC.exe"
-    "%LocalAppData%\Programs\Inno Setup 6\ISCC.exe"
+    "%ProgramFiles(x86)%\TACE Setup 6\ISCC.exe"
+    "%ProgramFiles%\TACE Setup 6\ISCC.exe"
+    "%LocalAppData%\Programs\TACE Setup 6\ISCC.exe"
 ) do if exist %%P if not defined ISCC set "ISCC=%%~P"
 if "!ISCC!"=="" (
     echo [ERRO] Inno Setup 6 nao encontrado.
@@ -614,7 +614,7 @@ echo.
 echo  MODO DIRETO - chamadas equivalentes:
 echo    ControleGeral.bat 1 ................ Build TESTE (data\output)
 echo    ControleGeral.bat 2 ................ Build RELEASE (TACE_Release)
-echo    ControleGeral.bat 3 ................ Build INSTALADOR (Inno Setup)
+echo    ControleGeral.bat 3 ................ Build INSTALADOR (TACE Setup)
 echo    ControleGeral.bat 4 ................ Instalar dependencias
 echo    ControleGeral.bat 5 ................ Baixar ADB
 echo    ControleGeral.bat 6 ................ Monitor continuo de tela
@@ -638,7 +638,7 @@ echo    show_zip_node.ps1        (menu 7 - opcao 3)
 echo.
 echo  ATALHOS DO INSTALADOR (somente leitura pelo menu 3):
 echo    TACE.iss + InstallerAssets\ permanecem na pasta
-echo    scripts\scripts de controle\ (o Inno Setup exige os arquivos fisicos).
+echo    scripts\scripts de controle\ (o TACE Setup exige os arquivos fisicos).
 call :pause_if_interativo
 goto :eof
 

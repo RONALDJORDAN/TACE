@@ -45,11 +45,11 @@ WizardSmallImageFile=InstallerAssets\WizardSmall.png
 LicenseFile=InstallerAssets\TERMO_DE_USO.txt
 ; A aceitacao e obrigatoria por padrao: com LicenseFile, o botao Avancar
 ; da tela de licenca so habilita com "Eu aceito" selecionado.
-VersionInfoProductName=Bot RPA
+VersionInfoProductName=TACE
 VersionInfoProductVersion={#AppVersion}
 VersionInfoProductTextVersion={#AppVersion}
 VersionInfoTextVersion={#AppVersion}
-VersionInfoDescription=Instalador do Bot RPA
+VersionInfoDescription=Instalador do TACE
 VersionInfoCompany=Jordan R. Caraujo
 VersionInfoCopyright=Jordan R. Caraujo - Todos os direitos reservados
 ; Marca o instalador como "de atualizacao" quando ja existe instalacao:
@@ -65,12 +65,12 @@ brazilian.DataDirTitle=Pasta de dados do usuario
 brazilian.DataDirLabel=Os dados do TACE (banco de aparelhos, credenciais e pacotes dos municipios) serao gravados nesta pasta.%n%nA pasta padrao e %1.%n%nOs PROGRAMAS (arquivos do sistema) serao instalados em:%n%2%n%nSe voce desinstalar o programa, os dados desta pasta serao PRESERVADOS.
 
 [Messages]
-brazilian.SetupAppTitle=Instalador do Bot RPA - Jordan R. Caraujo
-brazilian.SetupWindowTitle=Instalador do Bot RPA - criacao Jordan R. Caraujo
-brazilian.WelcomeLabel1=Bot RPA
+brazilian.SetupAppTitle=Instalador do TACE - Jordan R. Caraujo
+brazilian.SetupWindowTitle=Instalador do TACE - criacao Jordan R. Caraujo
+brazilian.WelcomeLabel1=TACE
 brazilian.WelcomeLabel2=AUTOMACAO DE APARELHOS ANDROID VIA ADB%n%nJordan R. Caraujo
-brazilian.LicenseLabel=Contrato de licenca e TERMOS DE USO
-brazilian.LicenseLabel3=Leia atentamente os TERMOS DE USO. De acordo com as Leis no 9.609/98 (Lei do Software) e no 9.610/98 (Direitos Autorais), a ferramenta e de AUTORIA EXCLUSIVA de Jordan R. Caraujo - todos os direitos sao dele. A aceitacao e OBRIGATORIA para instalar ou atualizar.
+brazilian.LicenseLabel=Contrato de licenca e TERMOS DE USO do TACE
+brazilian.LicenseLabel3=Leia atentamente os TERMOS DE USO. De acordo com as Leis no 9.609/98 (Lei do Software) e no 9.610/98 (Direitos Autorais), a ferramenta e de AUTORIA EXCLUSIVA de Jordan R. Caraujo - todos os direitos sao dela. A aceitacao e OBRIGATORIA para instalar ou atualizar do TACE.
 brazilian.LicenseAccepted=Eu li e ACEITO os termos de uso acima
 brazilian.LicenseNotAccepted=Eu &Nao aceito os termos de uso
 brazilian.SelectDirDesc=Onde devo instalar o Bot RPA?

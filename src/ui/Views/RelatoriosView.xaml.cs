@@ -2071,7 +2071,7 @@ namespace TACEUI.Views
             }
             else
             {
-                string tempFile = Path.Combine(Path.GetTempPath(), "inno_log_inspect.txt");
+                string tempFile = Path.Combine(Path.GetTempPath(), "tace_log_inspect.txt");
                 File.WriteAllText(tempFile, TxtLogViewer.Text);
                 System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("notepad.exe", tempFile) { UseShellExecute = true });
             }

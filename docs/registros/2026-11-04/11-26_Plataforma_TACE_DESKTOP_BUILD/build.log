@@ -1,0 +1,8 @@
+Versao: 04.11.2026.1126
+Modalidade: BUILD
+Modo: TESTE
+PastaAuditoria: docs\registros\2026-11-04\11-26_Plataforma_TACE_DESKTOP_BUILD
+--- gcc BotEngine.dll ---
+--- dotnet publish ---
+MSBUILD : error MSB1009: Project file does not exist.
+Switch: TACEUI.csproj

@@ -9,12 +9,12 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
-    <ApplicationIcon>Assets\Icons\TACEui.ico</ApplicationIcon>
+    <ApplicationIcon>Assets\Icons\BotRPAui.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
-    <Resource Include="Assets\Icons\TACEui.ico" />
-    <Resource Include="Assets\Icons\TACEui.png" />
+    <Resource Include="Assets\Icons\BotRPAui.ico" />
+    <Resource Include="Assets\Icons\BotRPAui.png" />
     <EmbeddedResource Include="Resources\gnirehtet.zip" />
   </ItemGroup>
 

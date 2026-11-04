@@ -66,7 +66,7 @@ namespace TACEUI.Views
                 if (TxtSobreStatusMenu != null) TxtSobreStatusMenu.Text = "Operacional";
                 if (TxtSobreAtualizado != null) TxtSobreAtualizado.Text = $"Atualizado em {DateTime.Now:dd/MM/yyyy HH:mm}";
 
-                if (TxtSobreEmpresa != null) TxtSobreEmpresa.Text = "InnovEdu";
+                TxtSobreEmpresa.Text = "TACE";
                 if (TxtSobreSetor != null) TxtSobreSetor.Text = "Operacional";
                 if (TxtSobreDispositivos != null) TxtSobreDispositivos.Text = total.ToString("N0");
                 if (TxtSobrePatrimonios != null) TxtSobrePatrimonios.Text = comPatrimonio.ToString("N0");

@@ -1,4 +1,4 @@
-# DOCUMENTACAO COMPLETA - TACE (Plataforma InnovTech)
+# DOCUMENTACAO COMPLETA - TACE (Plataforma TACE)
 
 > Sistema de automação robótica (RPA) de alta performance para gerenciamento de dispositivos Android via ADB e Kiosk Mode.
 > Arquitetura híbrida: Motor Backend em C puro + Interface Gráfica em C# WPF (.NET 8).
@@ -9,7 +9,7 @@
 
 O **TACE** é uma plataforma de automação para tablets Android que executa pipelines configuráveis (F1 a F8) de instalação, atualização, configuração, desligamento e sincronização de dispositivos. Combina a velocidade bruta do C nativo com a renderização fluida do C# WPF.
 
-- **Nome do projeto:** TACE (apelido: inno_bot)
+- **Nome do projeto:** TACE (apelido: TACE Bot)
 - **Motor C nativo:** `BotEngine.dll`
 - **Interface C# WPF:** `TACEui.exe`
 - **Comunicação:** P/Invoke `[DllImport]` (C# consome a DLL em C)
@@ -71,7 +71,7 @@ Organizado por camadas funcionais:
   - `adb_force_stop()`, `adb_uninstall_app()`, `adb_ensure_app_running()` (relança o app InnovAva se encerrado por falta de RAM).
 - `adb_manager.c` / `adb_manager.h` — Gerenciador de caminho do ADB (`tools/platform-tools/adb.exe`).
 
-##### `src/core/learn/` — InnoAI (Inteligência Visual)
+##### `src/core/learn/` — TACE AI (Inteligência Visual)
 - `learn_db.c` / `learn_db.h` — Banco de estratégias neurais:
   - Parser/writer JSON minimalista (sem dependência externa) para `data/bot_learn.json`.
   - Estrutura `LearnDB` com targets (alvos de UI) e estratégias concorrentes.
@@ -79,8 +79,8 @@ Organizado por camadas funcionais:
   - `learn_find_element()`, `learn_record_hit()`, `learn_record_miss()`, `learn_save_fallback_coord()`, `learn_get_fallback_coord()`.
   - `learn_db_load()` / `learn_db_save()` — persistência em disco.
 - `learn_engine.c` / `learn_engine.h` — Motor de busca:
-  - `inno_normalize_char()` — normalização de caracteres (remove diacríticos, case-insensitive).
-  - `inno_stristr_fuzzy()` / `f7_stristr_fuzzy()` — busca fuzzy tolerante a acentos e encoding (Windows-1252, CP850, UTF-8).
+  - `inno_normalize_char()` — normalização de caracteres (remove diacríticos, case-insensitive) no motor TACE C
+  - `inno_stristr_fuzzy()` / `f7_stristr_fuzzy()` — busca fuzzy tolerante a acentos e encoding (Windows-1252, CP850, UTF-8) no motor TACE
   - FastCache de coordenadas de fallback para cliques quando XML falha.
   - Dual-Scan: varredura visual + matching fuzzy para localizar elementos.
 
@@ -312,7 +312,7 @@ Pacote de distribuição para o usuário final. Contém: `TACEui.exe`, `BotEngin
 
 ---
 
-## 6. INNOAI / BOTLEARN (Inteligência Visual)
+## 6. TACE AI / BOTLEARN (Inteligência Visual)
 
 - Motor determinístico de localização de elementos via UIAutomator XML dump.
 - Busca fuzzy (`inno_normalize_char`, `inno_stristr_fuzzy`) para lidar com diacríticos e encoding.
@@ -329,7 +329,7 @@ Pacote de distribuição para o usuário final. Contém: `TACEui.exe`, `BotEngin
 ### 7.1 Scripts de build
 - `scripts/scripts de controle/ControleGeral.bat 1` — Modo TESTE (ícone azul escuro), gera `data/output/`.
 - `scripts/scripts de controle/ControleGeral.bat 2` — Modo RELEASE (ícone roxo), gera `TACE_Release/`.
-- `scripts/scripts de controle/ControleGeral.bat 3` — Build INSTALADOR (Inno Setup, gera setup.exe a partir de `TACE_Release/`).
+- `scripts/scripts de controle/ControleGeral.bat 3` — Build INSTALADOR (TACE Setup, gera setup.exe a partir de `TACE_Release/`).
 
 ### 7.2 Política de build (Regra de Ouro #4)
 - Ao término de edições em C ou C#, é **obrigatório** rodar `scripts/scripts de controle/ControleGeral.bat 1`.

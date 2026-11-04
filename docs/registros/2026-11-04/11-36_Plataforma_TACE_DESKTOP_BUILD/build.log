@@ -1,0 +1,9 @@
+Versao: 04.11.2026.1136
+Modalidade: BUILD
+Modo: TESTE
+PastaAuditoria: docs\registros\2026-11-04\11-36_Plataforma_TACE_DESKTOP_BUILD
+--- gcc BotEngine.dll ---
+--- dotnet publish ---
+  Determining projects to restore...
+  Restored P:\Projetos\TACE - Tablet Auditor & Configurator for Education\src\ui\BotRpaUI.csproj (in 1,18 sec).
+CSC : error CS7064: Error opening icon file P:\Projetos\TACE - Tablet Auditor & Configurator for Education\src\ui\Assets\Icons\TACEui.ico -- Could not find file 'P:\Projetos\TACE - Tablet Auditor & Configurator for Education\src\ui\Assets\Icons\TACEui.ico'. [P:\Projetos\TACE - Tablet Auditor & Configurator for Education\src\ui\BotRpaUI_l5s1ffzg_wpftmp.csproj]

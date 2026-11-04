@@ -1,0 +1,12 @@
+Versao: 04.11.2026.1138
+Modalidade: BUILD
+Modo: TESTE
+PastaAuditoria: docs\registros\2026-11-04\11-38_Plataforma_TACE_DESKTOP_BUILD
+--- gcc BotEngine.dll ---
+--- dotnet publish ---
+  Determining projects to restore...
+  Restored P:\Projetos\TACE - Tablet Auditor & Configurator for Education\src\ui\BotRpaUI.csproj (in 561 ms).
+  BotRpaUI -> P:\Projetos\TACE - Tablet Auditor & Configurator for Education\src\ui\bin\Release\net8.0-windows10.0.22000.0\win-x64\TACEui.dll
+          1 file(s) copied.
+  BotRpaUI -> P:\Projetos\TACE - Tablet Auditor & Configurator for Education\data\output\
+Resultado: SUCESSO

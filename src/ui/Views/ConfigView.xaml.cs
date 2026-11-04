@@ -374,7 +374,7 @@ namespace TACEUI.Views
             try
             {
                 SaveFileDialog sfd = new SaveFileDialog();
-                sfd.Filter = "Inno Backup (*.zip)|*.zip";
+                sfd.Filter = "TACE Backup (*.zip)|*.zip";
                 sfd.FileName = "Backup_TACE_" + DateTime.Now.ToString("yyyy-MM-dd");
                 
                 if (sfd.ShowDialog() == true)
@@ -504,7 +504,7 @@ namespace TACEUI.Views
             try
             {
                 OpenFileDialog ofd = new OpenFileDialog();
-                ofd.Filter = "Inno Backup (*.zip)|*.zip";
+                ofd.Filter = "TACE Backup (*.zip)|*.zip";
                 
                 if (ofd.ShowDialog() == true)
                 {

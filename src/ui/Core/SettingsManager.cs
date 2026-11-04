@@ -7,7 +7,7 @@ using System.Text.Json.Serialization;
 
 namespace TACEUI.Core
 {
-    public class InnoAppSettings
+    public class TACEAppSettings
     {
         [JsonPropertyName("font_ui_size")]
         public int FontUiSize { get; set; } = 14;
@@ -181,7 +181,7 @@ namespace TACEUI.Core
 
     public static class SettingsManager
     {
-        private static InnoAppSettings _settings = new InnoAppSettings();
+        private static TACEAppSettings _settings = new TACEAppSettings();
         private static readonly object _lock = new object();
 
         public static event Action? OnSettingsChanged;
@@ -319,7 +319,7 @@ namespace TACEUI.Core
             return UnprotectSecret(_settings.GoogleAccountPasswordDpapi);
         }
 
-        public static InnoAppSettings Current => _settings;
+        public static TACEAppSettings Current => _settings;
 
         private const string DpapiPrefix = "DPAPIv1:";
         private static readonly byte[] SecretEntropy = Encoding.UTF8.GetBytes("TACE-Google-Account-v1");

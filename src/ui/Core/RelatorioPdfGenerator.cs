@@ -23,7 +23,7 @@ namespace TACEUI.Core
         private const double ContentWidth = PageWidth - (MarginX * 2);
         private const double BottomY = 778;
 
-        private const string Empresa = "InnovEdu";
+        private const string Empresa = "TACE";
         private const string Setor = "Setor Operacional";
         private const string Plataforma = "Plataforma TACE";
 
@@ -100,7 +100,7 @@ namespace TACEUI.Core
                     gfx.DrawRectangle(new XSolidBrush(CorRoxo), 0, 0, 8, PageHeight);
                     gfx.DrawRectangle(new XSolidBrush(CorRoxo), 0, 0, PageWidth, 6);
 
-                    gfx.DrawString("InnovEdu", F(25, true), XBrushes.White, new XRect(48, 48, 330, 36), XStringFormats.TopLeft);
+                    gfx.DrawString("TACE", F(25, true), XBrushes.White, new XRect(48, 48, 330, 36), XStringFormats.TopLeft);
                     gfx.DrawString("SETOR OPERACIONAL", F(8.5, true), new XSolidBrush(CorRoxoClaro), new XRect(50, 90, 330, 14), XStringFormats.TopLeft);
                     gfx.DrawLine(new XPen(CorRoxo, 2), 50, 118, 226, 118);
 
@@ -147,7 +147,7 @@ namespace TACEUI.Core
                     gfx.DrawRectangle(new XSolidBrush(CorFundoEscuro), 0, 0, PageWidth, 150);
                     gfx.DrawRectangle(new XSolidBrush(CorRoxo), 0, 150, PageWidth, 4);
 
-                    gfx.DrawString("InnovEdu", F(20, true), XBrushes.White, new XRect(40, 34, 300, 30), XStringFormats.TopLeft);
+                    gfx.DrawString("TACE", F(20, true), XBrushes.White, new XRect(40, 34, 300, 30), XStringFormats.TopLeft);
                     gfx.DrawString("SETOR OPERACIONAL", F(8, true), new XSolidBrush(CorRoxoClaro), new XRect(42, 68, 300, 14), XStringFormats.TopLeft);
                     gfx.DrawString("Ficha técnica do documento", F(24, true), XBrushes.White, new XRect(40, 98, 500, 32), XStringFormats.TopLeft);
 
@@ -214,7 +214,7 @@ namespace TACEUI.Core
                     gfx.DrawRectangle(new XSolidBrush(CorFundoEscuro), 0, 0, PageWidth, 150);
                     gfx.DrawRectangle(new XSolidBrush(CorRoxo), 0, 150, PageWidth, 4);
 
-                    gfx.DrawString("InnovEdu", F(20, true), XBrushes.White, new XRect(40, 34, 300, 30), XStringFormats.TopLeft);
+                    gfx.DrawString("TACE", F(20, true), XBrushes.White, new XRect(40, 34, 300, 30), XStringFormats.TopLeft);
                     gfx.DrawString("SETOR OPERACIONAL", F(8, true), new XSolidBrush(CorRoxoClaro), new XRect(42, 68, 300, 14), XStringFormats.TopLeft);
                     gfx.DrawString("Sumário", F(30, true), XBrushes.White, new XRect(40, 96, 400, 40), XStringFormats.TopLeft);
 
