@@ -1,6 +1,6 @@
 # TACE — Tablet Auditor & Configurator for Education
 
-![TACE Banner](docs/banner.svg)
+![TACE Banner](https://github.com/RONALDJORDAN/TACE/blob/main/docs/banner.svg)
 
 [![Build](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/tace-platform/tace)
 [![Platform](https://img.shields.io/badge/platform-Windows-blue)](https://img.shields.io/badge/platform-Windows-blue)

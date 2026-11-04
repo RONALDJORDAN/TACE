@@ -1,46 +1,19 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="360" viewBox="0 0 1200 360">
+﻿<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="400" viewBox="0 0 1280 400">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#050a18"/>
-      <stop offset="50%" stop-color="#0d1b3a"/>
-      <stop offset="100%" stop-color="#1a2f5a"/>
+      <stop offset="0%" stop-color="#0b0f1a"/>
+      <stop offset="100%" stop-color="#1b2a4a"/>
     </linearGradient>
-    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0%" stop-color="#00e5ff"/>
-      <stop offset="100%" stop-color="#7c4dff"/>
+    <linearGradient id="acc" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#ff6b6b"/>
+      <stop offset="100%" stop-color="#feca57"/>
     </linearGradient>
-    <filter id="glow">
-      <feGaussianBlur stdDeviation="4" result="b"/>
-      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
-    </filter>
   </defs>
-  <rect width="1200" height="360" fill="url(#bg)"/>
-  <!-- grid -->
-  <g stroke="#1e3a6b" stroke-width="1" opacity="0.35">
-    <line x1="0" y1="60" x2="1200" y2="60"/>
-    <line x1="0" y1="120" x2="1200" y2="120"/>
-    <line x1="0" y1="180" x2="1200" y2="180"/>
-    <line x1="0" y1="240" x2="1200" y2="240"/>
-    <line x1="0" y1="300" x2="1200" y2="300"/>
-    <line x1="120" y1="0" x2="120" y2="360"/>
-    <line x1="240" y1="0" x2="240" y2="360"/>
-    <line x1="360" y1="0" x2="360" y2="360"/>
-    <line x1="480" y1="0" x2="480" y2="360"/>
-    <line x1="600" y1="0" x2="600" y2="360"/>
-    <line x1="720" y1="0" x2="720" y2="360"/>
-    <line x1="840" y1="0" x2="840" y2="360"/>
-    <line x1="960" y1="0" x2="960" y2="360"/>
-    <line x1="1080" y1="0" x2="1080" y2="360"/>
-  </g>
-  <!-- accent bar -->
-  <rect x="60" y="60" width="8" height="240" fill="url(#accent)" filter="url(#glow)"/>
-  <!-- title -->
-  <text x="90" y="150" font-family="Segoe UI, Arial, sans-serif" font-size="84" font-weight="800" fill="#ffffff" filter="url(#glow)">TACE</text>
-  <text x="90" y="200" font-family="Segoe UI, Arial, sans-serif" font-size="26" fill="#00e5ff">Automação Robótica de Alta Performance</text>
-  <text x="90" y="240" font-family="Segoe UI, Arial, sans-serif" font-size="18" fill="#b0c4de">Motor C · Interface WPF .NET 8 · Arquitetura Híbrida Premium</text>
-  <text x="90" y="280" font-family="Segoe UI, Arial, sans-serif" font-size="16" fill="#7f8fa6">Zero-Leak · ADB Multi-Device · LeanBot IA Adaptativa</text>
-  <!-- chip -->
-  <rect x="980" y="60" width="160" height="36" rx="18" fill="url(#accent)" opacity="0.9"/>
-  <text x="1060" y="84" font-family="Segoe UI, Arial, sans-serif" font-size="14" font-weight="700" fill="#050a18" text-anchor="middle">v04.11.2026</text>
+  <rect width="1280" height="400" fill="url(#bg)"/>
+  <circle cx="1050" cy="200" r="150" fill="#ff6b6b" opacity="0.15"/>
+  <text x="80" y="170" font-family="Segoe UI, Arial, sans-serif" font-size="96" font-weight="900" fill="#ffffff">TACE</text>
+  <text x="80" y="220" font-family="Segoe UI, Arial, sans-serif" font-size="28" fill="#feca57">Tablet Auditor &amp; Configurator for Education</text>
+  <text x="80" y="260" font-family="Segoe UI, Arial, sans-serif" font-size="18" fill="#b0c4de">Automação Robótica · ADB Multi-Device · Zero-Leak</text>
+  <rect x="80" y="300" width="260" height="44" rx="22" fill="url(#acc)"/>
+  <text x="210" y="328" font-family="Segoe UI, Arial, sans-serif" font-size="16" font-weight="700" fill="#0b0f1a" text-anchor="middle">v04.11.2026</text>
 </svg>
-'@; Set-Content -Path "P:\Projetos\TACE\docs\banner.svg" -Value $svg -Encoding UTF8
