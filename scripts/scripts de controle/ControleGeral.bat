@@ -115,7 +115,7 @@ call :gen_version
 taskkill /F /IM BotRPAui.exe /T 2>nul
 
 :: PATH do GCC instalado pelo WinGet (garante que gcc sempre e encontrado)
-set "PATH=%PATH%;%USERPROFILE%\AppData\Local\Microsoft\WinGet\Packages\BrechtSanders.WinLibs.POSIX.UCRT_Microsoft.Winget.Source_8wekyb3d8bbwe\mingw64\bin"
+set "PATH=%PATH%;%USERPROFILE%\AppData\Local\Microsoft\WinGet\Packages\BrechtSanders.WinLibs.POSIX.UCRT_Microsoft.Winget.Source_8wekyb3d8bbwe\mingw64\bin;C:\ProgramData\mingw64\mingw64\bin"
 
 :: Compilar o Engine em C (DLL) - Motores Separados Vision7 e TabMulti
 mkdir "data\output" 2>nul
@@ -162,6 +162,11 @@ if not exist "data\output\municipios.csv" (
 mkdir "data\output\arquivos" 2>nul
 mkdir "data\output\arquivos\apks" 2>nul
 mkdir "data\output\arquivos\pacotes" 2>nul
+if exist "tools\reverse_tethering\gnirehtet.exe" (
+    mkdir "data\output\tools\reverse_tethering" 2>nul
+    copy /y "tools\reverse_tethering\gnirehtet.*" "data\output\tools\reverse_tethering\" >nul 2>&1
+    copy /y "tools\reverse_tethering\gnirehtet-run.cmd" "data\output\tools\reverse_tethering\" >nul 2>&1
+)
 >> "%AUDIT_DIR%\build.log" echo Resultado: SUCESSO
 echo.
 echo [+] Compilacao concluida com sucesso!

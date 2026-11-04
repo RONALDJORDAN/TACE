@@ -1,0 +1,19 @@
+{
+  "font_ui_size": 14,
+  "font_title_size": 20,
+  "font_mono_size": 13,
+  "motor_c_enabled": true,
+  "reverse_tethering_enabled": true,
+  "ai_learn_active": false,
+  "enable_device_vision7": true,
+  "enable_device_tabmulti": false,
+  "enable_device_nokia_t20": false,
+  "show_disconnected_devices": false,
+  "usb_monitor_interface": "Pro",
+  "meta_lote_total": 100,
+  "google_account_email": "",
+  "google_account_password_dpapi": "",
+  "auto_update_enabled": true,
+  "auto_update_url": "",
+  "auto_update_last_check": ""
+}

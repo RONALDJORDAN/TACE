@@ -1,163 +1,30 @@
 # ==========================================================================
 # Bot_RPA — .gitignore
-# Stack: C (motor) + C# WPF (UI) + PowerShell/Batch (scripts)
-# Referencia: AGENTS.md / memoria_bot_rpa.md
+# Configurado para rastrear todos os arquivos do projeto, ferramentas (Gnirehtet,
+# ADB, etc.), configurações, bancos, dados e recursos, ignorando apenas arquivos
+# temporários de compilação/IDE e binários que excedem o limite de 100MB do GitHub.
 # ==========================================================================
 
-# --------------------------------------------------------------------------
-# 1. Dependencias e ambientes
-# --------------------------------------------------------------------------
-node_modules/
-venv/
-env/
-.venv/
-__pycache__/
-*.py[cod]
+# 1. Limite de tamanho de arquivo do GitHub (bloqueia push > 100MB)
+data/output/BotRPAui.exe
 
-# --------------------------------------------------------------------------
-# 2. Build / Artefatos compilados
-# --------------------------------------------------------------------------
-# C (motor)
-*.o
-*.obj
-*.a
-*.lib
-*.exp
-*.pdb
-*.ilk
-*.exe
-*.dll
-
-# C# WPF (UI)
-src/ui/bin/
+# 2. Arquivos temporários e intermediários de compilação (.NET)
 src/ui/obj/
-[Bb]in/
 [Oo]bj/
-[Dd]ebug/
-[Rr]elease/
 *.wpftmp.csproj
 *.csproj.user
-*.sln.docstates
 
-# Empacotamento / release
-*.zip
-*.rar
-*.7z
-*.tar.gz
-output/
-output_teste/
-BotRPA_Release/
-InnoRPA_Release/
-FERRAMENTA_AQUI/
-data/output/
-
-# Ferramentas pesadas provisionadas por PreflightChecker/setup_adb
-tools/mingw64/
-tools/platform-tools/
-tools/*.apk
-tools/reverse_tethering/*.exe
-tools/reverse_tethering/*.apk
-
-# Ferramenta auxiliar de captura de MAC (fonte versionada, saida ignorada)
-capturamac/*.exe
-capturamac/*.csv
-capturamac/*.log
-capturamac/*.txt
-
-# --------------------------------------------------------------------------
-# 3. Cache e artefatos temporarios
-# --------------------------------------------------------------------------
-.cache/
-*.tmp
-*.temp
-*.bak
-*.old
-*.orig
-*.rej
+# 3. Cache e arquivos temporários de IDE / Editor
+.vs/
+.idea/
 *.suo
 *.user
 *.userosscache
-*.cache
-.vs/
-.idea/
-src/ui/Resources/temp/
 
-# --------------------------------------------------------------------------
-# 4. Logs e auditoria local
-# --------------------------------------------------------------------------
-# Logs de execucao de dispositivo (locais — nunca versionar)
-logs/
-docs/registros/*/*_execucao.log
-docs/registros/**/*.log
-
-# --------------------------------------------------------------------------
-# 5. Dados locais, bancos e relatorios dinamicos
-# --------------------------------------------------------------------------
-# ATENCAO: usar barra inicial. src/core/data possui fontes C versionadas.
-/data/
-/municipios.csv
-/config/municipios.csv
-/version.txt
-*.db
-*.sqlite
-*.sqlite3
-*.db-shm
-*.db-wal
-config/settings.json
-
-# --------------------------------------------------------------------------
-# 6. Ambiente, credenciais e segredos
-# --------------------------------------------------------------------------
-.env
-.env.*
-!.env.example
-!.env.template
-*.key
-*.pem
-*.pfx
-*.p12
-*.jks
-config/settings.json
-
-# Firebase (nao usado como hosting neste projeto)
-firebase.json
-.firebaserc
-firebase/
-
-# Manifests OTA gerados
-controle/ota_manifest_*.json
-
-# --------------------------------------------------------------------------
-# 7. IDEs e ferramentas de agente (local)
-# --------------------------------------------------------------------------
-.vscode/
-.clangd
-compile_commands.json
-.opencode/
-scratch/
-
-# --------------------------------------------------------------------------
-# 8. Sistema operacional
-# --------------------------------------------------------------------------
+# 4. Arquivos temporários do Sistema Operacional
 .DS_Store
 Thumbs.db
 ehthumbs.db
 Desktop.ini
 desktop.ini
 $RECYCLE.BIN/
-*.lnk
-
-# --------------------------------------------------------------------------
-# 9. XMLs de debug do UIAutomator (mantem os fixtures nomeados)
-# --------------------------------------------------------------------------
-*.xml
-!login_live.xml
-!login_app.xml
-
-# Ferramentas auxiliares e capturamac
-tools/capturamac/platform-tools/
-tools/capturamac/*.exe
-tools/capturamac/*.csv
-tools/capturamac/*.txt
-tools/qrcode_generator/teste.png
-
