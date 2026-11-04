@@ -1,0 +1,23 @@
+PROPRIETARY LICENSE
+
+Copyright (c) 2026 Bot_RPA Contributors. All rights reserved.
+
+1. Uso do Software (binários)
+   É permitido usar, executar e distribuir os binários compilados (BotEngine.dll,
+   BotRPAui.exe e instaladores) para fins pessoais ou comerciais, desde que
+   mantidos os avisos de copyright e esta licença.
+
+2. Código-Fonte
+   O código-fonte (arquivos em /src, /scripts e demais fontes) é propriedade
+   exclusiva do autor. NÃO é permitido copiar, modificar, redistribuir,
+   sublicenciar ou usar o código-fonte, total ou parcialmente, sem autorização
+   prévia e por escrito do autor.
+
+3. Engenharia Reversa
+   A engenharia reversa, descompilação ou tentativa de extrair o código-fonte
+   a partir dos binários é proibida.
+
+4. Sem Garantia
+   O software é fornecido "como está", sem garantias de qualquer tipo.
+
+Para solicitar autorização de uso do código-fonte, entre em contato com o autor.
