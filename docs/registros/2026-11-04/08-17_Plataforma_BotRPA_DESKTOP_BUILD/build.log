@@ -1,9 +1,0 @@
-Versao: 04.11.2026.0817
-Modalidade: BUILD
-Modo: TESTE
-PastaAuditoria: docs\registros\2026-11-04\08-17_Plataforma_TACE_DESKTOP_BUILD
---- gcc BotEngine.dll ---
---- dotnet publish ---
-  Determining projects to restore...
-  Restored P:\Projetos\TACE\src\ui\TACEUI.csproj (in 579 ms).
-CSC : error CS1566: Error reading resource 'TACEUI.Resources.gnirehtet.zip' -- 'Could not find a part of the path 'P:\Projetos\TACE\src\ui\Resources\gnirehtet.zip'.' [P:\Projetos\TACE\src\ui\TACEUI.csproj]

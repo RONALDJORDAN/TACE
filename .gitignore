@@ -28,3 +28,6 @@ ehthumbs.db
 Desktop.ini
 desktop.ini
 $RECYCLE.BIN/
+
+config/settings.json
+docs/registros/

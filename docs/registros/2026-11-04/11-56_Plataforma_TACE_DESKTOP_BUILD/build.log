@@ -1,9 +1,0 @@
-Versao: 04.11.2026.1156
-Modalidade: BUILD
-Modo: RELEASE
-PastaAuditoria: docs\registros\2026-11-04\11-56_Plataforma_TACE_DESKTOP_BUILD
---- gcc BotEngine.dll ---
---- dotnet publish ---
-  Determining projects to restore...
-  Restored P:\Projetos\TACE - Tablet Auditor & Configurator for Education\src\ui\BotRpaUI.csproj (in 421 ms).
-P:\Projetos\TACE - Tablet Auditor & Configurator for Education\src\ui\Core\SettingsManager.cs(395,65): error CS0246: The type or namespace name 'InnoAppSettings' could not be found (are you missing a using directive or an assembly reference?) [P:\Projetos\TACE - Tablet Auditor & Configurator for Education\src\ui\BotRpaUI_ozdn434p_wpftmp.csproj]
