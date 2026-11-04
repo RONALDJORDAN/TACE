@@ -392,7 +392,7 @@ namespace TACEUI.Core
                     if (File.Exists(configPath))
                     {
                         string json = File.ReadAllText(configPath);
-                        var loaded = JsonSerializer.Deserialize<InnoAppSettings>(json);
+                        var loaded = JsonSerializer.Deserialize<TACEAppSettings>(json);
                         if (loaded != null)
                         {
                             _settings = loaded;
