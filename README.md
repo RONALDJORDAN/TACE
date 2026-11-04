@@ -2,7 +2,7 @@
 
 ![Bot_RPA Banner](docs/banner.svg)
 
-![Build](https://img.shields.io/badge/build-passing-brightgreen) ![Platform](https://img.shields.io/badge/platform-Windows-blue) ![.NET](https://img.shields.io/badge/.NET-8.0-purple) ![C](https://img.shields.io/badge/C-GCC-orange)
+![Build](https://img.shields.io/badge/build-passing-brightgreen) ![Platform](https://img.shields.io/badge/platform-Windows-blue) ![.NET](https://img.shields.io/badge/.NET-8.0-purple) ![C](https://img.shields.io/badge/C-GCC-orange) ![C%23](https://img.shields.io/badge/C%23-WPF-239120) ![ADB](https://img.shields.io/badge/ADB-Automation-red) ![License](https://img.shields.io/badge/license-Proprietary-lightgrey) ![Status](https://img.shields.io/badge/status-Active-success) ![Architecture](https://img.shields.io/badge/architecture-Hybrid%20Premium-9cf) ![UI](https://img.shields.io/badge/UI-Glassmorphism%20Cyber--Industrial-ff69b4)
 
 > Sistema de automação robótica de alta performance com arquitetura **Híbrida Premium**: motor nativo em C + interface visual em C# WPF.
 
@@ -22,12 +22,58 @@
 
 ---
 
+## Objetivo e Impacto
+
+O **Bot_RPA** foi criado para **automatizar a configuração de dispositivos específicos** utilizados em **aplicações de avaliações municipais**, reduzindo drastically a ocorrência de erros de corrompimento de dados — de **10 para 1** — e o tempo de produção de **100 por dia para 100 por hora**, dependendo da quantidade de conexões ADB utilizadas.
+
+A ferramenta escala horizontalmente: é possível usar **1 porta USB ou 10 portas USB** simultaneamente, fazendo com que o tempo de produção diminua **exponencialmente** conforme mais dispositivos são conectados via cabo USB.
+
+Além disso, o Bot_RPA **registra todos os aparelhos conectados via ADB**, capturando:
+- Número de série
+- Endereço MAC da rede Wi-Fi (evitando MACs invisíveis/ocultos)
+
+Também gera **registro de auditoria dos equipamentos**, extraindo dados em logs e convertendo-os em informações legíveis, fornecendo **relatórios sobre os erros ocorridos nas aplicações**, permitindo correção e melhoria contínua para as próximas execuções.
+
+---
+
 ## Visão Geral
 
 O **Bot_RPA** combina a velocidade bruta do **C puro** com a excelência visual do **C# WPF**, seguindo a política de **Zero-Leak** e isolamento de camadas.
 
 - **Motor (BotEngine.dll):** C puro, gerencia ADB, dispositivos, configurações e banco offline em memória.
 - **Interface (BotRPAui.exe):** WPF .NET 8 com design *Glassmorphism Cyber-Industrial*, consumindo o motor via `DllImport`.
+
+---
+
+## Módulos e Submódulos
+
+O Bot_RPA conta com diversos módulos e submódulos organizados por responsabilidade:
+
+### Motor C (BotEngine.dll)
+
+- **Core / Drivers** — `src/core/drivers/adb.c`: comunicação ADB com dispositivos.
+- **Core / Data** — `src/core/data/`: municipios, cofre (credenciais DPAPI), paths, dispositivos.
+- **Core / Config** — `src/core/config/config.c`: configurações dinâmicas.
+- **Core / Learn (LeanBot)** — `src/core/learn/`: IA adaptativa que registra clicagens no tablet, mapeia caminhos de menu e se adapta ao equipamento. *Fase de testes/implementação.*
+- **Funções / Vision7** — `src/core/functions/vision7/`: fluxos para dispositivos Vision (f1–f8).
+- **Funções / TabMulti** — `src/core/functions/tabmulti/`: fluxos multi-tab (f1–f5 + helpers).
+- **Funções / Nokia T20** — `src/core/functions/nokia_t20/`: fluxos para Nokia T20 (f1–f3).
+- **API** — `src/api.c`: interface P/Invoke consumida pela UI.
+
+### Interface WPF (.NET 8)
+
+- **Views** — `src/ui/Views/`: telas da aplicação.
+- **Core** — `src/ui/Core/`: lógica de apoio da UI.
+- **Assets / Icons** — `src/ui/Assets/Icons/`: ícones e recursos visuais.
+- **Resources** — `src/ui/Resources/`: recursos embarcados (ex.: gnirehtet.zip).
+
+### Ferramentas e Operação
+
+- **Scripts de Controle** — `scripts/scripts de controle/ControleGeral.bat`: build, release, installer, deps, ADB, monitor.
+- **Scripts de Teste** — `scripts/scripts de teste/`: gravador de fluxo, análise de XML, monitor de tela.
+- **Auditoria** — `docs/registros/`: logs de build e execução.
+
+> ⚠️ O **LeanBot** ainda está em **fase de testes e implementação**.
 
 ---
 
