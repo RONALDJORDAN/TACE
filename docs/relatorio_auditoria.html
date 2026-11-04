@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Relatório de Auditoria — Bot_RPA (Plataforma InnovTech)</title>
+<title>Relatório de Auditoria — TACE (Plataforma InnovTech)</title>
 <style>
   :root { --bg:#0B0B13; --card:#151525; --line:#2A2A40; --txt:#E3E0F2; --mut:#85859E; --acc:#513BA6; --ok:#4EDEA3; }
   * { box-sizing:border-box; }
@@ -51,7 +51,7 @@
 </head>
 <body>
 <div class="toolbar">
-  <h1>📋 Relatório de Auditoria — Bot_RPA</h1>
+  <h1>📋 Relatório de Auditoria — TACE</h1>
   <button class="btn pdf" onclick="window.print()">🖨️ Imprimir / Salvar PDF</button>
   <button class="btn docx" id="btnDocx">📄 Baixar DOCX</button>
   <span class="hint">PDF: na janela de impressão escolha “Salvar como PDF” · DOCX: 100% offline</span>
@@ -61,23 +61,23 @@
 <script>
 /* Fonte única do relatório: renderiza o HTML e gera o DOCX */
 const DOC = [
- {t:"cover", title:"Relatório de Auditoria Completa — Bot_RPA",
+ {t:"cover", title:"Relatório de Auditoria Completa — TACE",
   lines:["Automação Robótica (RPA) de bancada · Robotic Process Automation",
-  "Escopo: C:\\Projetos\\Bot_RPA integral (código, configuração, scripts, docs, git)",
+  "Escopo: C:\\Projetos\\TACE integral (código, configuração, scripts, docs, git)",
   "Criador: Jordan R C Araujo",
   "Suporte operacional: Jordan R C Araujo",
-  "Auditoria: 25/09/2026 · Revisão 2 (pós-renomeação Bot_RPA)"]},
+  "Auditoria: 25/09/2026 · Revisão 2 (pós-renomeação TACE)"]},
  {t:"h2", text:"PARTE 1 — AUDITORIA TÉCNICA"},
  {t:"h3", text:"1. Identificação e porte"},
  {t:"table", head:["Item","Valor"], rows:[
-  ["Nome oficial","Bot_RPA (antes: Inno_RPA / InnoBotRpa / InnovPlay)"],
+  ["Nome oficial","TACE (antes: Inno_RPA / InnoTACE / InnovPlay)"],
   ["Tipo","Aplicativo desktop Windows (automação robótica — RPA)"],
   ["Stack","C nativo (motor) + C# WPF .NET 8 (interface) + SQLite + Firebase RTDB"],
   ["Porte do src/","27 .c + 28 .h + 22 .cs + 12 .xaml"],
   ["Maiores arquivos","f1_vision_tab7.c (2.378 linhas) · MonitorView.xaml.cs (2.274) · MonitorProView.xaml.cs (1.685)"],
   ["Git","4 commits (16/08 a 11/09/2026); ~20 modificados + 7 novos não commitados"]]},
  {t:"h3", text:"2. Arquitetura — híbrida em 2 camadas isoladas"},
- {t:"pre", text:"[UI C# WPF .NET 8 (BotRPAui.exe)]\n Monitor Classic/Pro, Relatórios, BotLearn, Config, Mapa Neural\n              |  [DllImport] · 36 funções exportadas\n[MOTOR C puro (BotEngine.dll, linking estático)]\n drivers/adb · data/municipios+dispositivos · learn/IA\n functions/{vision7, tabmulti, nokia_t20} (F1–F8)\n              |  ADB / UIAutomator → tablets"},
+ {t:"pre", text:"[UI C# WPF .NET 8 (TACEui.exe)]\n Monitor Classic/Pro, Relatórios, BotLearn, Config, Mapa Neural\n              |  [DllImport] · 36 funções exportadas\n[MOTOR C puro (BotEngine.dll, linking estático)]\n drivers/adb · data/municipios+dispositivos · learn/IA\n functions/{vision7, tabmulti, nokia_t20} (F1–F8)\n              |  ADB / UIAutomator → tablets"},
  {t:"p", text:"Políticas verificadas no código: Zero-Leak (memória manual no C), Zero Warnings (build de 25/09 limpo) e efeito colateral zero entre modelos (cada função no seu .c por fabricante)."},
  {t:"h3", text:"3. Motor C — inventário"},
  {t:"ul", items:[
@@ -100,23 +100,23 @@ const DOC = [
  {t:"h3", text:"8. Governança e 9. Riscos"},
  {t:"ul", items:[
   "AGENTS.md (4 Regras de Ouro) cumprido: nenhum .c de modelo tocado, memória atualizada, builds registrados.",
-  "RISCOS: (1) ~20 arquivos + 7 novos sem commit — commit urgente; (2) settings.json rastreado com dados de máquina; (3) conta de serviço ainda não cadastrada; (4) revisar memoria_bot_rpa.md antes do commit."]},
+  "RISCOS: (1) ~20 arquivos + 7 novos sem commit — commit urgente; (2) settings.json rastreado com dados de máquina; (3) conta de serviço ainda não cadastrada; (4) revisar memoria_TACE.md antes do commit."]},
  {t:"h2", text:"PARTE 2 — RESUMO COMPLETO EM LINGUAGEM SIMPLES"},
  {t:"p", text:"Esta parte foi escrita para qualquer pessoa entender — mesmo sem saber programar. Cada pergunta é respondida de forma completa, com exemplos do dia a dia."},
- {t:"h3", text:"2.1. O que é o Bot_RPA?"},
- {t:"p", text:"Imagine uma fábrica onde, em vez de pessoas repetindo a mesma tarefa o dia todo, um robô faz tudo sozinho, rápido e sem errar. O Bot_RPA é esse robô, mas em forma de programa de computador. Ele configura tablets (aqueles aparelhos usados nas provas das escolas) automaticamente: instala os aplicativos, coloca as provas dentro, faz o login, escolhe a cidade e deixa tudo pronto para uso."},
+ {t:"h3", text:"2.1. O que é o TACE?"},
+ {t:"p", text:"Imagine uma fábrica onde, em vez de pessoas repetindo a mesma tarefa o dia todo, um robô faz tudo sozinho, rápido e sem errar. O TACE é esse robô, mas em forma de programa de computador. Ele configura tablets (aqueles aparelhos usados nas provas das escolas) automaticamente: instala os aplicativos, coloca as provas dentro, faz o login, escolhe a cidade e deixa tudo pronto para uso."},
  {t:"p", text:"Na tela, a operadora vê uma central de comando: pluga o tablet no cabo USB, aperta um botão (ou deixa no automático) e acompanha o progresso como quem acompanha um pedido de delivery — cada aparelho tem sua barrinha de andamento e seu histórico."},
  {t:"h3", text:"2.2. Para que ele foi criado?"},
  {t:"p", text:"Para acabar com um trabalho cansativo e cheio de erros. Antes do robô, cada tablet precisava ser preparado à mão: instalar o aplicativo de provas, copiar o pacote de avaliações, digitar usuário e senha, escolher o município, ajustar brilho, letra e internet, e ainda anotar o número de série e o endereço de rede (MAC) numa planilha. Com dezenas de tablets por escola, isso levava minutos por aparelho — e bastava um dedo errado para um tablet sair com a prova errada."},
- {t:"p", text:"Com o Bot_RPA, a mesma rotina leva segundos por aparelho, vários tablets são preparados ao mesmo tempo e todos saem idênticos, do primeiro ao último do lote."},
+ {t:"p", text:"Com o TACE, a mesma rotina leva segundos por aparelho, vários tablets são preparados ao mesmo tempo e todos saem idênticos, do primeiro ao último do lote."},
  {t:"h3", text:"2.3. Quando e por quem foi criado?"},
- {t:"p", text:"O projeto nasceu antes de junho de 2026. A versão atual do código começou em 16 de agosto de 2026, criada por Jordan Araujo, e cresceu em etapas (como capítulos de um livro) até setembro de 2026. No dia 25 de setembro de 2026 ele ganhou o nome definitivo: Bot_RPA."},
+ {t:"p", text:"O projeto nasceu antes de junho de 2026. A versão atual do código começou em 16 de agosto de 2026, criada por Jordan Araujo, e cresceu em etapas (como capítulos de um livro) até setembro de 2026. No dia 25 de setembro de 2026 ele ganhou o nome definitivo: TACE."},
  {t:"table", head:["Data","O que aconteceu (em palavras simples)"], rows:[
   ["16/08/2026","Nasce a base do programa atual"],
   ["21/08/2026","O programa da bancada ganha atualização pela internet (OTA)"],
   ["26/08/2026","Ganha a central profissional de monitoramento de vários aparelhos"],
   ["11/09/2026","Motores e telas consolidados e organizados"],
-  ["25/09/2026","Banco compartilhado entre operadoras, login seguro na nuvem e nome Bot_RPA"]]},
+  ["25/09/2026","Banco compartilhado entre operadoras, login seguro na nuvem e nome TACE"]]},
  {t:"h3", text:"2.4. Qual a finalidade? (os 5 objetivos)"},
  {t:"ul", items:[
   "Padronizar 3 modelos de tablet numa mesma linha de produção digital.",
@@ -129,11 +129,11 @@ const DOC = [
   "Velocidade: o que levava minutos por tablet agora leva segundos, e vários de uma vez.",
   "Fim da duplicidade: o sistema reconhece se um tablet já foi cadastrado (pelo número de série ou pelo endereço de rede) e não cria cópia.",
   "Trabalho em equipe: o que uma operadora configura aparece para as colegas e nos relatórios.",
-  "Programa sempre novo: o Bot_RPA se atualiza sozinho pela internet, com checagem de segurança. Nos tablets, todo procedimento é via cabo USB.",
+  "Programa sempre novo: o TACE se atualiza sozinho pela internet, com checagem de segurança. Nos tablets, todo procedimento é via cabo USB.",
   "Prova de tudo: cada lote deixa rastro — dá para auditar o que foi instalado, quando e por quem."]},
  {t:"h3", text:"2.6. Tempo por tablet: antes (à mão) x agora (robô)"},
  {t:"p", text:"Abaixo, o passo a passo real contado por quem fazia à mão, contra o que o robô faz hoje. Tempos manuais são estimativas típicas de bancada; os automatizados vêm do pipeline (polling de 500 ms, dumps de ~100 ms) e das otimizações registradas (+30 s no F1, 8–10 s no F3)."},
- {t:"table", head:["Etapa","Antes: pessoa fazendo à mão","Agora: Bot_RPA"], rows:[
+ {t:"table", head:["Etapa","Antes: pessoa fazendo à mão","Agora: TACE"], rows:[
   ["Desbloquear e achar o armazenamento","~1 min: desbloquear a tela e fuçar menus até o armazenamento interno","Automático: o robô acorda, desbloqueia e navega sozinho"],
   ["Instalar o app via pendrive","~2–4 min: espetar pendrive com adaptador USB, achar o arquivo, instalar e confirmar telas","Automático: envia e instala pelo próprio cabo, sem pendrive"],
   ["Abrir o app","Segundos, um a um","Abertura automática no momento certo"],
@@ -168,7 +168,7 @@ const DOC = [
   ["Nuvem","Banco online com login e proteção contra duplicadas"],
   ["Entrega","Pacote pronto com 1 comando, com data e hora da versão"]]},
  {t:"h2", text:"CONCLUSÃO"},
- {t:"p", text:"O Bot_RPA cumpriu o que prometeu: transformou um trabalho manual, lento e sujeito a erros numa linha de produção confiável. Um lote de 10 tablets que tomava cerca de 30 minutos de uma pessoa — um aparelho por vez, com falhas — sai em cerca de 10 minutos: 2 levas de 5, cada tablet com verificação robótica e correção de erros. Cerca de 3 vezes mais rápido, com todos os aparelhos idênticos, rastreados por número de série e endereço de rede, registrados no banco local, na nuvem e nos relatórios."},
+ {t:"p", text:"O TACE cumpriu o que prometeu: transformou um trabalho manual, lento e sujeito a erros numa linha de produção confiável. Um lote de 10 tablets que tomava cerca de 30 minutos de uma pessoa — um aparelho por vez, com falhas — sai em cerca de 10 minutos: 2 levas de 5, cada tablet com verificação robótica e correção de erros. Cerca de 3 vezes mais rápido, com todos os aparelhos idênticos, rastreados por número de série e endereço de rede, registrados no banco local, na nuvem e nos relatórios."},
  {t:"p", text:"Somado à atualização automática do próprio programa, ao banco compartilhado entre operadoras e à trilha de auditoria de cada lote, o sistema deixou de ser uma ajuda e virou a base da operação: mais tablets prontos, menos retrabalho e prova documentada de tudo o que foi feito."},
 ];
 
@@ -186,7 +186,7 @@ DOC.forEach(b=>{
   else if(b.t==="table"){html+=`<table><tr>`+b.head.map(h=>`<th>${esc(h)}</th>`).join("")+"</tr>"+
     b.rows.map(r=>`<tr>`+r.map(c=>`<td>${esc(c)}</td>`).join("")+"</tr>").join("")+"</table>";}
 });
-html+=`<div class="foot">Fim da auditoria · Gerado em 25/09/2026 · Bot_RPA — Plataforma InnovTech</div>`;
+html+=`<div class="foot">Fim da auditoria · Gerado em 25/09/2026 · TACE — Plataforma InnovTech</div>`;
 R.innerHTML = html;
 
 /* ---- DOCX offline: ZIP "stored" + OpenXML mínimo ---- */
@@ -228,7 +228,7 @@ function buildDocx(){
     else if(b.t==="ul"){b.items.forEach(i=>{body+=wp("•  "+i,{align:"left"});});}
     else if(b.t==="table"){body+=wtable(b.head,b.rows);}
   });
-  body+=wp("Fim da auditoria · Gerado em 25/09/2026 · Bot_RPA · Robotic Process Automation",{size:20,color:"777777",align:"center"});
+  body+=wp("Fim da auditoria · Gerado em 25/09/2026 · TACE · Robotic Process Automation",{size:20,color:"777777",align:"center"});
   const doc=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><w:body>${body}<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1701" w:bottom="1134" w:left="1701" w:right="1134" w:header="720" w:footer="720"/><w:footerReference w:type="default" r:id="rFooter"/></w:sectPr></w:body></w:document>`;
   const ct=`<?xml version="1.0" encoding="UTF-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/footer1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.footer+xml"/></Types>`;
   const rels=`<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>`;
@@ -246,7 +246,7 @@ document.getElementById("btnDocx").addEventListener("click",()=>{
   try{
     const blob=new Blob([buildDocx()],{type:"application/vnd.openxmlformats-officedocument.wordprocessingml.document"});
     const a=document.createElement("a");a.href=URL.createObjectURL(blob);
-    a.download="auditoria_bot_rpa_20260925.docx";document.body.appendChild(a);a.click();
+    a.download="auditoria_TACE_20260925.docx";document.body.appendChild(a);a.click();
     setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},500);
   }catch(e){alert("Falha ao gerar DOCX: "+e.message);}
 });

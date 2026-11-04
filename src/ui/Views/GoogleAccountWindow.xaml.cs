@@ -1,7 +1,7 @@
 using System;
 using System.Windows;
 
-namespace BotRpaUI.Views
+namespace TACEUI.Views
 {
     public partial class GoogleAccountWindow : Window
     {

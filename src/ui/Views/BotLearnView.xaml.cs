@@ -10,12 +10,12 @@ using System.Windows.Threading;
 // BotLearnView — Painel do motor de estratégias adaptativas.
 // Exibe scores, acertos, falhas e o ranking heurístico de
 // seletores, além do controle de reset com confirmação dupla.
-// Autor: Jordan Araujo | BotRpa
+// Autor: Jordan Araujo | TACE
 // ============================================================
 
 using System.Windows.Data;
 
-namespace BotRpaUI.Views
+namespace TACEUI.Views
 {
     // --- Conversores para o score médio dos grupos ---
     public class GroupScoreStrConverter : IValueConverter
@@ -180,7 +180,7 @@ namespace BotRpaUI.Views
         public BotLearnView()
         {
             InitializeComponent();
-            BotRpaUI.Core.BotLearnBackupManager.ExecutarRotinaDiaria();
+            TACEUI.Core.BotLearnBackupManager.ExecutarRotinaDiaria();
             CarregarDados();
             AtualizarModo();
         }
@@ -191,7 +191,7 @@ namespace BotRpaUI.Views
             {
                 int mode = 0;
                 try { mode = Engine_Learn_GetActiveMode(); }
-                catch { mode = BotRpaUI.Core.SettingsManager.AiLearnActive ? 1 : 0; }
+                catch { mode = TACEUI.Core.SettingsManager.AiLearnActive ? 1 : 0; }
 
                 bool adaptive = mode == 1;
                 if (TxtModeBadge != null)
@@ -223,7 +223,7 @@ namespace BotRpaUI.Views
 
         private void CarregarBackups()
         {
-            var backups = BotRpaUI.Core.BotLearnBackupManager.ObterBackupsDisponiveis();
+            var backups = TACEUI.Core.BotLearnBackupManager.ObterBackupsDisponiveis();
             ListBackups.ItemsSource = backups;
 
             if (TxtBackupsEmpty != null)
@@ -234,7 +234,7 @@ namespace BotRpaUI.Views
 
             if (TxtBackupPath != null)
             {
-                try { TxtBackupPath.Text = $"Pasta de backups: {BotRpaUI.Core.BotLearnBackupManager.GetBackupDirectory()}"; }
+                try { TxtBackupPath.Text = $"Pasta de backups: {TACEUI.Core.BotLearnBackupManager.GetBackupDirectory()}"; }
                 catch { TxtBackupPath.Text = "Pasta de backups: —"; }
             }
         }
@@ -708,7 +708,7 @@ namespace BotRpaUI.Views
 
                 if (result == MessageBoxResult.Yes)
                 {
-                    bool sucesso = BotRpaUI.Core.BotLearnBackupManager.RestaurarBackup(bkpPath);
+                    bool sucesso = TACEUI.Core.BotLearnBackupManager.RestaurarBackup(bkpPath);
                     if (sucesso)
                     {
                         MessageBox.Show(

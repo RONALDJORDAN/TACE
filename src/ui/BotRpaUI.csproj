@@ -2,19 +2,19 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <AssemblyName>BotRPAui</AssemblyName>
+    <AssemblyName>TACEui</AssemblyName>
     <TargetFramework>net8.0-windows10.0.22000.0</TargetFramework>
     <SupportedOSPlatformVersion>10.0.22000.0</SupportedOSPlatformVersion>
     <TargetPlatformVersion>10.0.22000.0</TargetPlatformVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
-    <ApplicationIcon>Assets\Icons\BotRPAui.ico</ApplicationIcon>
+    <ApplicationIcon>Assets\Icons\TACEui.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
-    <Resource Include="Assets\Icons\BotRPAui.ico" />
-    <Resource Include="Assets\Icons\BotRPAui.png" />
+    <Resource Include="Assets\Icons\TACEui.ico" />
+    <Resource Include="Assets\Icons\TACEui.png" />
     <EmbeddedResource Include="Resources\gnirehtet.zip" />
   </ItemGroup>
 

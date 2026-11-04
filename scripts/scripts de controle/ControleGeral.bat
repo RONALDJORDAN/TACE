@@ -1,17 +1,17 @@
 @echo off
 setlocal enabledelayedexpansion
-title Bot_RPA - Controle Geral
+title TACE - Controle Geral
 color 0B
 
 :: ==========================================================================
-::  Plataforma Bot_RPA - CONTROLE GERAL (arquivo unico de operacoes)
+::  Plataforma TACE - CONTROLE GERAL (arquivo unico de operacoes)
 ::
 ::  Este script substitui e corrige (em um unico arquivo):
 ::    PainelBuild.bat / Build.ps1 / Terminal.bat / Terminal.ps1 / unified.bat
 ::    build.bat / build_release.bat / build_installer.bat
 ::    install_dependencies.bat / setup_adb.bat / monitor_tela.bat
 ::
-::  Auditorias: docs\registros\YYYY-MM-DD\HH-MM_Plataforma_BotRPA_DESKTOP_BUILD
+::  Auditorias: docs\registros\YYYY-MM-DD\HH-MM_Plataforma_TACE_DESKTOP_BUILD
 ::
 ::  Uso:
 ::    Duplo clique ............ menu interativo
@@ -67,7 +67,7 @@ exit /b 1
 cls
 echo.
 echo  ==============================================================
-echo    BOT_RPA  ::  PLATAFORMA DE AUTOMACAO
+echo    TACE  ::  PLATAFORMA DE AUTOMACAO
 echo  ==============================================================
 echo    Raiz     : %ROOT_DIR%
 call :read_version
@@ -77,7 +77,7 @@ echo    Ambiente : GCC %GCC_ST%   ^|   .NET %DOTNET_ST%
 echo  --------------------------------------------------------------
 echo    BUILD
 echo      [1] Teste .................. motor C + UI em data\output
-echo      [2] Release ................ pacote portatil BotRPA_Release
+echo      [2] Release ................ pacote portatil TACE_Release
 echo      [3] Instalador ............. setup.exe via Inno Setup
 echo      [4] Dependencias ........... GCC + .NET 8 SDK
 echo  --------------------------------------------------------------
@@ -112,7 +112,7 @@ echo ========================================================
 call :gen_version
 
 :: Encerra qualquer instancia da UI para liberar o executavel
-taskkill /F /IM BotRPAui.exe /T 2>nul
+taskkill /F /IM TACEui.exe /T 2>nul
 
 :: PATH do GCC instalado pelo WinGet (garante que gcc sempre e encontrado)
 set "PATH=%PATH%;%USERPROFILE%\AppData\Local\Microsoft\WinGet\Packages\BrechtSanders.WinLibs.POSIX.UCRT_Microsoft.Winget.Source_8wekyb3d8bbwe\mingw64\bin;C:\ProgramData\mingw64\mingw64\bin"
@@ -136,12 +136,12 @@ if %GCC_ERR% neq 0 (
 )
 
 :: Compilar a Interface Grafica em C# WPF (.NET 8)
-echo [*] Compilando BotRpaUI (C# WPF) Self-Contained Offline...
+echo [*] Compilando TACEUI (C# WPF) Self-Contained Offline...
 :: Reforca o encerramento da UI (pode ter sido reaberta durante o build)
-taskkill /F /IM BotRPAui.exe /T 2>nul
+taskkill /F /IM TACEui.exe /T 2>nul
 cd /d "%ROOT_DIR%\src\ui"
 >> "..\..\%AUDIT_DIR%\build.log" echo --- dotnet publish ---
-"C:\Program Files\dotnet\dotnet.exe" publish BotRpaUI.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o ..\..\data\output\ >> "..\..\%AUDIT_DIR%\build.log" 2>&1
+"C:\Program Files\dotnet\dotnet.exe" publish TACEUI.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o ..\..\data\output\ >> "..\..\%AUDIT_DIR%\build.log" 2>&1
 set DOTNET_ERR=%errorlevel%
 :: Limpar intermediarios para economizar espaco em disco
 rd /s /q obj 2>nul
@@ -171,7 +171,7 @@ if exist "tools\reverse_tethering\gnirehtet.exe" (
 echo.
 echo [+] Compilacao concluida com sucesso!
 echo [+] Motor     : data\output\BotEngine.dll
-echo [+] Interface : data\output\BotRPAui.exe
+echo [+] Interface : data\output\TACEui.exe
 echo [+] Auditoria : %AUDIT_DIR%
 echo [i] Para zipar os registros, use a opcao [9] no menu.
 
@@ -183,7 +183,7 @@ exit /b 0
 cd /d "%ROOT_DIR%"
 echo.
 echo ========================================================
-echo    [2] BUILD RELEASE - pacote portatil PnP (BotRPA_Release)
+echo    [2] BUILD RELEASE - pacote portatil PnP (TACE_Release)
 echo ========================================================
 
 :: 1. Compila no modo RELEASE (reutiliza a rotina de Build TESTE)
@@ -198,18 +198,18 @@ if errorlevel 1 (
 )
 
 :: 2. Assina os binarios antes de empacotar (o release e o instalador herdam)
-call :sign_file "data\output\BotRPAui.exe"
+call :sign_file "data\output\TACEui.exe"
 call :sign_file "data\output\BotEngine.dll"
 
 :: 3. Prepara a pasta de Release
-set "RELEASE_DIR=BotRPA_Release"
+set "RELEASE_DIR=TACE_Release"
 echo [*] Criando pasta de Release: %RELEASE_DIR%
 if exist "%RELEASE_DIR%" rmdir /s /q "%RELEASE_DIR%"
 mkdir "%RELEASE_DIR%"
 
 :: 4. Copia Executavel e Motor DLL
 echo [*] Copiando binarios...
-copy /y "data\output\BotRPAui.exe"  "%RELEASE_DIR%\" >nul
+copy /y "data\output\TACEui.exe"  "%RELEASE_DIR%\" >nul
 copy /y "data\output\BotEngine.dll" "%RELEASE_DIR%\" >nul
 
 :: 5. Copia Dependencias Estruturais (SEM tools\mingw64)
@@ -282,11 +282,11 @@ echo ========================================================
 
 :: 1. Valida o pacote portatil (gera automaticamente se necessario/desatualizado)
 set "RELEASE_VER="
-if exist "BotRPA_Release\config\version.txt" set /p RELEASE_VER=<"BotRPA_Release\config\version.txt"
+if exist "TACE_Release\config\version.txt" set /p RELEASE_VER=<"TACE_Release\config\version.txt"
 set "CURRENT_VER="
 if exist "config\version.txt" set /p CURRENT_VER=<"config\version.txt"
 
-if not exist "BotRPA_Release\BotRPAui.exe" (
+if not exist "TACE_Release\TACEui.exe" (
     echo [*] Pacote Release ausente. Executando Build RELEASE primeiro...
     call :build_release
     if errorlevel 1 (
@@ -304,8 +304,8 @@ if not exist "BotRPA_Release\BotRPAui.exe" (
     )
 )
 
-if not exist "BotRPA_Release\BotRPAui.exe" (
-    echo [ERRO] Pacote nao encontrado: BotRPA_Release\BotRPAui.exe
+if not exist "TACE_Release\TACEui.exe" (
+    echo [ERRO] Pacote nao encontrado: TACE_Release\TACEui.exe
     echo        Rode a opcao [2] Build RELEASE manualmente.
     call :pause_if_interativo
     exit /b 1
@@ -337,11 +337,11 @@ if "!ISCC!"=="" (
 echo [*] Compilador: !ISCC!
 
 :: 4. Sincroniza a versao no script do instalador
-set "BOTRPA_VER=!VER!"
-set "ISS_PATH=%~dp0BotRPA.iss"
-powershell -NoProfile -Command "$f=$env:ISS_PATH; $v=$env:BOTRPA_VER; $c=[char]34; $s=Get-Content -LiteralPath $f -Raw; $s=$s -replace '(?m)^#define AppVersion .*$', ('#define AppVersion ' + $c + $v + $c); Set-Content -LiteralPath $f -Value $s -Encoding UTF8"
+set "TACE_VER=!VER!"
+set "ISS_PATH=%~dp0TACE.iss"
+powershell -NoProfile -Command "$f=$env:ISS_PATH; $v=$env:TACE_VER; $c=[char]34; $s=Get-Content -LiteralPath $f -Raw; $s=$s -replace '(?m)^#define AppVersion .*$', ('#define AppVersion ' + $c + $v + $c); Set-Content -LiteralPath $f -Value $s -Encoding UTF8"
 if errorlevel 1 (
-    echo [ERRO] Falha ao sincronizar a versao em scripts de controle\BotRPA.iss.
+    echo [ERRO] Falha ao sincronizar a versao em scripts de controle\TACE.iss.
     call :pause_if_interativo
     exit /b 1
 )
@@ -349,17 +349,17 @@ echo [*] Versao gravada no script do instalador: !VER!
 
 :: 5. Compila o instalador
 echo [*] Compilando o instalador...
-"!ISCC!" "%~dp0BotRPA.iss" > "%TEMP%\BotRPA_iscc.log" 2>&1
+"!ISCC!" "%~dp0TACE.iss" > "%TEMP%\TACE_iscc.log" 2>&1
 set "ISCC_ERR=%errorlevel%"
 if not "%ISCC_ERR%"=="0" (
     echo [ERRO] Falha ao compilar o instalador. Log:
-    type "%TEMP%\BotRPA_iscc.log"
+    type "%TEMP%\TACE_iscc.log"
     call :pause_if_interativo
     exit /b 1
 )
 
 :: 6. Confere o resultado
-set "SETUP=%~dp0BotRPA_Instalador_!VER!.exe"
+set "SETUP=%~dp0TACE_Instalador_!VER!.exe"
 if not exist "!SETUP!" (
     echo [ERRO] Instalador nao gerado: !SETUP!
     call :pause_if_interativo
@@ -373,8 +373,8 @@ echo.
 echo [OK] Instalador gerado: !SETUP!
 for %%F in ("!SETUP!") do echo      %%~zF bytes
 echo O instalador:
-echo   - Instala em C:\Program Files\Bot_RPA
-echo   - Grava os DADOS em %%ProgramData%%\Bot_RPA
+echo   - Instala em C:\Program Files\TACE
+echo   - Grava os DADOS em %%ProgramData%%\TACE
 echo   - Atualizacao preserva os dados do usuario
 echo   - Desinstalacao preserva os dados (com opcao de apagar)
 echo ========================================================
@@ -448,7 +448,7 @@ goto :eof
 :monitor_mode
 cd /d "%ROOT_DIR%"
 echo ========================================================
-echo    [6] MONITOR CONTINUO DE TELA - Bot_RPA
+echo    [6] MONITOR CONTINUO DE TELA - TACE
 echo ========================================================
 echo.
 echo    Uso direto: ControleGeral.bat monitor "SERIAL"
@@ -606,14 +606,14 @@ goto :eof
 cls
 echo.
 echo ========================================================
-echo    Bot_RPA - CONTROLE GERAL: AJUDA
+echo    TACE - CONTROLE GERAL: AJUDA
 echo ========================================================
 echo.
 echo  MODO INTERATIVO (duplo clique) mostra o menu numerado.
 echo.
 echo  MODO DIRETO - chamadas equivalentes:
 echo    ControleGeral.bat 1 ................ Build TESTE (data\output)
-echo    ControleGeral.bat 2 ................ Build RELEASE (BotRPA_Release)
+echo    ControleGeral.bat 2 ................ Build RELEASE (TACE_Release)
 echo    ControleGeral.bat 3 ................ Build INSTALADOR (Inno Setup)
 echo    ControleGeral.bat 4 ................ Instalar dependencias
 echo    ControleGeral.bat 5 ................ Baixar ADB
@@ -628,7 +628,7 @@ echo    build ^| release ^| installer ^| deps ^| adb ^| monitor ^| tools ^|
 echo    registros ^| ajuda
 echo.
 echo  AUDITORIA DE BUILD:
-echo    docs\registros\YYYY-MM-DD\HH-MM_Plataforma_BotRPA_DESKTOP_BUILD
+echo    docs\registros\YYYY-MM-DD\HH-MM_Plataforma_TACE_DESKTOP_BUILD
 echo    (build.log do gcc e do dotnet)
 echo.
 echo  FERRAMENTAS DEV (em scripts\scripts de teste):
@@ -637,7 +637,7 @@ echo    analise_xml.ps1          (menu 7 - opcao 2)
 echo    show_zip_node.ps1        (menu 7 - opcao 3)
 echo.
 echo  ATALHOS DO INSTALADOR (somente leitura pelo menu 3):
-echo    BotRPA.iss + InstallerAssets\ permanecem na pasta
+echo    TACE.iss + InstallerAssets\ permanecem na pasta
 echo    scripts\scripts de controle\ (o Inno Setup exige os arquivos fisicos).
 call :pause_if_interativo
 goto :eof
@@ -695,7 +695,7 @@ set MIN=%datetime:~10,2%
 
 set BUILD_VER=%DD%.%MM%.%YYYY%.%HH%%MIN%
 if not defined BUILD_MODE set "BUILD_MODE=TESTE"
-set AUDIT_DIR=docs\registros\%YYYY%-%MM%-%DD%\%HH%-%MIN%_Plataforma_BotRPA_DESKTOP_BUILD
+set AUDIT_DIR=docs\registros\%YYYY%-%MM%-%DD%\%HH%-%MIN%_Plataforma_TACE_DESKTOP_BUILD
 mkdir "%ROOT_DIR%\%AUDIT_DIR%" 2>nul
 echo [*] Versao de Compilacao Gerada: %BUILD_VER%
 echo [*] Registro de build criado em: %AUDIT_DIR%
@@ -714,38 +714,38 @@ goto :eof
 :: ==========================================================================
 ::  SUB-ROTINA: ASSINATURA DE CODIGO (SignTool)
 ::  Variaveis de ambiente opcionais:
-::    BOTRPA_SIGN_CERT        = caminho para o arquivo .pfx do certificado
-::    BOTRPA_SIGN_PASSWORD    = senha do certificado .pfx
-::    BOTRPA_SIGN_REQUIRED    = se "1", falha o build se nao conseguir assinar
+::    TACE_SIGN_CERT        = caminho para o arquivo .pfx do certificado
+::    TACE_SIGN_PASSWORD    = senha do certificado .pfx
+::    TACE_SIGN_REQUIRED    = se "1", falha o build se nao conseguir assinar
 ::  Se nao encontrar o SignTool ou o certificado, pula a assinatura com aviso
-::  (a menos que BOTRPA_SIGN_REQUIRED=1).
+::  (a menos que TACE_SIGN_REQUIRED=1).
 :: ==========================================================================
 :sign_file
 set "FILE_TO_SIGN=%~1"
 if not exist "%FILE_TO_SIGN%" goto :eof
 
 :: Se assinacao e obrigatoria e nao ha certificado, falha imediatamente
-if "!BOTRPA_SIGN_REQUIRED!"=="1" (
-    if "!BOTRPA_SIGN_CERT!"=="" (
-        echo [ERRO] BOTRPA_SIGN_REQUIRED=1 mas BOTRPA_SIGN_CERT nao definido.
+if "!TACE_SIGN_REQUIRED!"=="1" (
+    if "!TACE_SIGN_CERT!"=="" (
+        echo [ERRO] TACE_SIGN_REQUIRED=1 mas TACE_SIGN_CERT nao definido.
         goto :sign_fail
     )
-    if not exist "!BOTRPA_SIGN_CERT!" (
-        echo [ERRO] BOTRPA_SIGN_REQUIRED=1 mas certificado nao encontrado: !BOTRPA_SIGN_CERT!
+    if not exist "!TACE_SIGN_CERT!" (
+        echo [ERRO] TACE_SIGN_REQUIRED=1 mas certificado nao encontrado: !TACE_SIGN_CERT!
         goto :sign_fail
     )
 )
 
 :: Assinatura desativada quando nao ha certificado configurado
-if "!BOTRPA_SIGN_CERT!"=="" (
+if "!TACE_SIGN_CERT!"=="" (
     if not defined SIGN_SKIP_NOTICE (
-        echo [i] Assinatura de codigo desativada - defina BOTRPA_SIGN_CERT para assinar.
+        echo [i] Assinatura de codigo desativada - defina TACE_SIGN_CERT para assinar.
         set "SIGN_SKIP_NOTICE=1"
     )
     goto :eof
 )
-if not exist "!BOTRPA_SIGN_CERT!" (
-    echo [AVISO] Certificado nao encontrado: !BOTRPA_SIGN_CERT! - pulando assinatura de "%FILE_TO_SIGN%"
+if not exist "!TACE_SIGN_CERT!" (
+    echo [AVISO] Certificado nao encontrado: !TACE_SIGN_CERT! - pulando assinatura de "%FILE_TO_SIGN%"
     goto :eof
 )
 
@@ -760,8 +760,8 @@ for %%P in (
 ) do if exist %%P if not defined SIGNTOOL set "SIGNTOOL=%%~P"
 
 if "!SIGNTOOL!"=="" (
-    if "!BOTRPA_SIGN_REQUIRED!"=="1" (
-        echo [ERRO] BOTRPA_SIGN_REQUIRED=1 mas SignTool nao encontrado.
+    if "!TACE_SIGN_REQUIRED!"=="1" (
+        echo [ERRO] TACE_SIGN_REQUIRED=1 mas SignTool nao encontrado.
         goto :sign_fail
     )
     echo [AVISO] SignTool nao encontrado - pulando assinatura de "%FILE_TO_SIGN%"
@@ -769,14 +769,14 @@ if "!SIGNTOOL!"=="" (
 )
 
 echo [*] Assinando "%FILE_TO_SIGN%"...
-if "!BOTRPA_SIGN_PASSWORD!"=="" (
-    "!SIGNTOOL!" sign /f "!BOTRPA_SIGN_CERT!" /t http://timestamp.digicert.com "%FILE_TO_SIGN%" >nul 2>&1
+if "!TACE_SIGN_PASSWORD!"=="" (
+    "!SIGNTOOL!" sign /f "!TACE_SIGN_CERT!" /t http://timestamp.digicert.com "%FILE_TO_SIGN%" >nul 2>&1
 ) else (
-    "!SIGNTOOL!" sign /f "!BOTRPA_SIGN_CERT!" /p "!BOTRPA_SIGN_PASSWORD!" /t http://timestamp.digicert.com "%FILE_TO_SIGN%" >nul 2>&1
+    "!SIGNTOOL!" sign /f "!TACE_SIGN_CERT!" /p "!TACE_SIGN_PASSWORD!" /t http://timestamp.digicert.com "%FILE_TO_SIGN%" >nul 2>&1
 )
 if %errorlevel% neq 0 (
-    if "!BOTRPA_SIGN_REQUIRED!"=="1" (
-        echo [ERRO] BOTRPA_SIGN_REQUIRED=1 mas falha ao assinar "%FILE_TO_SIGN%".
+    if "!TACE_SIGN_REQUIRED!"=="1" (
+        echo [ERRO] TACE_SIGN_REQUIRED=1 mas falha ao assinar "%FILE_TO_SIGN%".
         goto :sign_fail
     )
     echo [AVISO] Falha ao assinar "%FILE_TO_SIGN%" - continuando sem assinatura
@@ -794,7 +794,7 @@ exit /b 1
 cd /d "%ROOT_DIR%"
 set "DATA=%date:~6,4%-%date:~3,2%-%date:~0,2%_%time:~0,2%-%time:~3,2%-%time:~6,2%"
 set "DATA=%DATA: =0%"
-set "ZIP_NAME=RegistrosBotRPA_%DATA%.zip"
+set "ZIP_NAME=RegistrosTACE_%DATA%.zip"
 
 set "DOWNLOADS=%USERPROFILE%\Downloads"
 if not exist "%DOWNLOADS%" mkdir "%DOWNLOADS%" 2>nul

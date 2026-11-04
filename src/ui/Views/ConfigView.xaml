@@ -1,4 +1,4 @@
-<UserControl x:Class="BotRpaUI.Views.ConfigView"
+<UserControl x:Class="TACEUI.Views.ConfigView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -482,7 +482,7 @@
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel>
                         <TextBlock Text="Tecnologias &amp; Bibliotecas Open-Source" Style="{StaticResource CategoryTitle}"/>
-                        <TextBlock Text="Componentes nativos e bibliotecas de alta performance integradas à Plataforma Bot_RPA." Style="{StaticResource CategoryDesc}"/>
+                        <TextBlock Text="Componentes nativos e bibliotecas de alta performance integradas à Plataforma TACE." Style="{StaticResource CategoryDesc}"/>
 
                         <Border Style="{StaticResource CardStyle}">
                             <StackPanel>

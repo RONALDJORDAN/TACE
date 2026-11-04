@@ -1,7 +1,7 @@
-<Window x:Class="BotRpaUI.MainWindow"
+<Window x:Class="TACEUI.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Bot_RPA - Robotic Process Automation" Height="760" Width="1240"
+        Title="TACE - Robotic Process Automation" Height="760" Width="1240"
         Background="#0B0B13" WindowStartupLocation="CenterScreen"
         FontFamily="Segoe UI" WindowStyle="SingleBorderWindow" WindowState="Maximized"
         PreviewKeyDown="Window_PreviewKeyDown">
@@ -67,16 +67,16 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- 1. Identidade Visual Bot_RPA (Esquerda) -->
+                <!-- 1. Identidade Visual TACE (Esquerda) -->
                 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,16,0">
                     <Border Width="34" Height="34" CornerRadius="8" Background="#10101C" BorderBrush="#513BA6" BorderThickness="1" Margin="0,0,10,0" ClipToBounds="True">
                         <Border.Effect>
                             <DropShadowEffect Color="#513BA6" BlurRadius="14" Opacity="0.7" ShadowDepth="0"/>
                         </Border.Effect>
-                        <Image Source="/Assets/Icons/BotRPAui.png" Width="30" Height="30" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"/>
+                        <Image Source="/Assets/Icons/TACEui.png" Width="30" Height="30" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"/>
                     </Border>
                     <StackPanel VerticalAlignment="Center">
-                        <TextBlock Text="BOT_RPA" Foreground="#FFFFFF" FontWeight="Black" FontSize="13"/>
+                        <TextBlock Text="TACE" Foreground="#FFFFFF" FontWeight="Black" FontSize="13"/>
                         <TextBlock Text="Robotic Process Automation" Foreground="#8570E6" FontSize="10" FontWeight="SemiBold"/>
                     </StackPanel>
                     <Rectangle Width="1" Height="24" Fill="#2A2A42" Margin="14,0,4,0" VerticalAlignment="Center"/>

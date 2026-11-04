@@ -1,4 +1,4 @@
-<Window x:Class="BotRpaUI.Views.BrainVisualizerWindow"
+<Window x:Class="TACEUI.Views.BrainVisualizerWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Mapa 3D de Estratégias — BotLearn"

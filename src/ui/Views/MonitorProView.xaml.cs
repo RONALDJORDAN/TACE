@@ -13,9 +13,9 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
-using BotRpaUI.Core;
+using TACEUI.Core;
 
-namespace BotRpaUI.Views
+namespace TACEUI.Views
 {
     public class DeviceProModel : INotifyPropertyChanged
     {
@@ -277,24 +277,24 @@ namespace BotRpaUI.Views
 
             try
             {
-                int savedMeta = BotRpaUI.Core.SettingsManager.MetaLoteTotal;
+                int savedMeta = TACEUI.Core.SettingsManager.MetaLoteTotal;
                 _metaTotal = savedMeta < 1 ? 1 : (savedMeta > 10000 ? 10000 : savedMeta);
             }
             catch { _metaTotal = 100; }
             SyncMetaEditBox();
             UpdateKpiMetrics();
 
-            LogMessage("[PRO] Bot_RPA Studio inicializado. Cockpit e Telemetria em tempo real ativados.");
+            LogMessage("[PRO] TACE Studio inicializado. Cockpit e Telemetria em tempo real ativados.");
 
             // Subscrição para reagir imediatamente a mudanças em Configurações
-            BotRpaUI.Core.SettingsManager.OnSettingsChanged += () =>
+            TACEUI.Core.SettingsManager.OnSettingsChanged += () =>
             {
                 Dispatcher.Invoke(() =>
                 {
                     UpdateCategoryVisibility();
                     try
                     {
-                        int saved = BotRpaUI.Core.SettingsManager.MetaLoteTotal;
+                        int saved = TACEUI.Core.SettingsManager.MetaLoteTotal;
                         if (saved >= 1 && saved <= 10000 && saved != _metaTotal)
                             _metaTotal = saved;
                     }
@@ -303,7 +303,7 @@ namespace BotRpaUI.Views
                     for (int i = _devicesList.Count - 1; i >= 0; i--)
                     {
                         var d = _devicesList[i];
-                        if (!BotRpaUI.Core.DeviceFilterHelper.IsDeviceModelAllowed(d.Serial, d.Model, ""))
+                        if (!TACEUI.Core.DeviceFilterHelper.IsDeviceModelAllowed(d.Serial, d.Model, ""))
                         {
                             _devicesList.RemoveAt(i);
                         }
@@ -573,9 +573,9 @@ namespace BotRpaUI.Views
 
         public void UpdateCategoryVisibility()
         {
-            bool v7 = BotRpaUI.Core.SettingsManager.EnableDeviceVision7;
-            bool m7 = BotRpaUI.Core.SettingsManager.EnableDeviceTabMulti;
-            bool t20 = BotRpaUI.Core.SettingsManager.EnableDeviceNokiaT20;
+            bool v7 = TACEUI.Core.SettingsManager.EnableDeviceVision7;
+            bool m7 = TACEUI.Core.SettingsManager.EnableDeviceTabMulti;
+            bool t20 = TACEUI.Core.SettingsManager.EnableDeviceNokiaT20;
 
             if (BtnCategoryPositivoPro != null) BtnCategoryPositivoPro.Visibility = v7 ? Visibility.Visible : Visibility.Collapsed;
             if (BtnCategoryMultilaserPro != null) BtnCategoryMultilaserPro.Visibility = m7 ? Visibility.Visible : Visibility.Collapsed;
@@ -688,7 +688,7 @@ namespace BotRpaUI.Views
                             string macPro = dev.mac ?? "";
                             if ((macPro == "N/A" || macPro == "---" || string.IsNullOrEmpty(macPro)) && !string.IsNullOrEmpty(dev.serial))
                             {
-                                var existing = BotRpaUI.Core.SQLiteDatabaseManager.BuscarPorSerial(dev.serial);
+                                var existing = TACEUI.Core.SQLiteDatabaseManager.BuscarPorSerial(dev.serial);
                                 if (existing != null && !string.IsNullOrEmpty(existing.MAC) && existing.MAC != "N/A" && existing.MAC != "---")
                                 {
                                     macPro = existing.MAC;
@@ -696,23 +696,23 @@ namespace BotRpaUI.Views
                             }
 
                             // Registra no banco SQLite para histórico contínuo
-                            BotRpaUI.Core.SQLiteDatabaseManager.RegistrarSeNovo(dev.serial, dev.manufacturer, dev.model, macPro);
+                            TACEUI.Core.SQLiteDatabaseManager.RegistrarSeNovo(dev.serial, dev.manufacturer, dev.model, macPro);
 
                             // Garante o MAC no cadastro (motor C + ciclo de Wi-Fi se faltar)
-                            BotRpaUI.Core.MacCaptureService.GarantirMacRegistrado(dev.serial, dev.model, macPro);
+                            TACEUI.Core.MacCaptureService.GarantirMacRegistrado(dev.serial, dev.model, macPro);
 
                             // A captura pode ter gravado um MAC novo: relê do banco
-                            if (!BotRpaUI.Core.MacCaptureService.MacValido(macPro))
+                            if (!TACEUI.Core.MacCaptureService.MacValido(macPro))
                             {
-                                var gravadoPro = BotRpaUI.Core.SQLiteDatabaseManager.BuscarPorSerial(dev.serial);
-                                if (gravadoPro != null && BotRpaUI.Core.MacCaptureService.MacValido(gravadoPro.MAC))
+                                var gravadoPro = TACEUI.Core.SQLiteDatabaseManager.BuscarPorSerial(dev.serial);
+                                if (gravadoPro != null && TACEUI.Core.MacCaptureService.MacValido(gravadoPro.MAC))
                                 {
                                     macPro = gravadoPro.MAC;
                                 }
                             }
 
                             // Se o modelo deste aparelho estiver DESATIVADO em Configurações, oculta do monitor ADB
-                            if (!BotRpaUI.Core.DeviceFilterHelper.IsDeviceModelAllowed(dev.serial, dev.model, dev.manufacturer))
+                            if (!TACEUI.Core.DeviceFilterHelper.IsDeviceModelAllowed(dev.serial, dev.model, dev.manufacturer))
                             {
                                 continue;
                             }
@@ -737,18 +737,18 @@ namespace BotRpaUI.Views
                     }
 
                     // Se a opção de exibir dispositivos desconectados / histórico estiver ATIVA:
-                    if (BotRpaUI.Core.SettingsManager.ShowDisconnectedDevices)
+                    if (TACEUI.Core.SettingsManager.ShowDisconnectedDevices)
                     {
                         var connectedSerials = new System.Collections.Generic.HashSet<string>();
                         foreach (var d in tempList) connectedSerials.Add(d.Serial);
 
-                        var historico = BotRpaUI.Core.SQLiteDatabaseManager.LerTodos();
+                        var historico = TACEUI.Core.SQLiteDatabaseManager.LerTodos();
                         int slotCount = tempList.Count;
                         foreach (var h in historico)
                         {
                             if (!string.IsNullOrEmpty(h.Serial) && !connectedSerials.Contains(h.Serial))
                             {
-                                if (!BotRpaUI.Core.DeviceFilterHelper.IsDeviceModelAllowed(h.Serial, h.Modelo, h.Fabricante))
+                                if (!TACEUI.Core.DeviceFilterHelper.IsDeviceModelAllowed(h.Serial, h.Modelo, h.Fabricante))
                                 {
                                     continue;
                                 }
@@ -812,7 +812,7 @@ namespace BotRpaUI.Views
                         for (int i = _devicesList.Count - 1; i >= 0; i--)
                         {
                             var currentItem = _devicesList[i];
-                            if (!tempList.Exists(d => d.Serial == currentItem.Serial) || !BotRpaUI.Core.DeviceFilterHelper.IsDeviceModelAllowed(currentItem.Serial, currentItem.Model, ""))
+                            if (!tempList.Exists(d => d.Serial == currentItem.Serial) || !TACEUI.Core.DeviceFilterHelper.IsDeviceModelAllowed(currentItem.Serial, currentItem.Model, ""))
                             {
                                 _devicesList.RemoveAt(i);
                             }
@@ -1001,7 +1001,7 @@ namespace BotRpaUI.Views
             if (novo < 1) novo = 1;
             if (novo > 10000) novo = 10000;
             _metaTotal = novo;
-            try { BotRpaUI.Core.SettingsManager.MetaLoteTotal = novo; } catch { }
+            try { TACEUI.Core.SettingsManager.MetaLoteTotal = novo; } catch { }
             SyncMetaEditBox();
             UpdateKpiMetrics();
         }
@@ -1348,7 +1348,7 @@ namespace BotRpaUI.Views
                 string logsDir = Path.Combine(baseDir, "logs");
                 Directory.CreateDirectory(logsDir);
 
-                string fileName = $"BotRPA_Studio_Session_{DateTime.Now:yyyyMMdd_HHmmss}.txt";
+                string fileName = $"TACE_Studio_Session_{DateTime.Now:yyyyMMdd_HHmmss}.txt";
                 string fullPath = Path.Combine(logsDir, fileName);
 
                 File.WriteAllLines(fullPath, _allGlobalLogs);

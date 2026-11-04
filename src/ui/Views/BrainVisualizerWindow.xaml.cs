@@ -8,7 +8,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
 
-namespace BotRpaUI.Views
+namespace TACEUI.Views
 {
     public partial class BrainVisualizerWindow : Window
     {

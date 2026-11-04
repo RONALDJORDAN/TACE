@@ -8,7 +8,7 @@
 // BotLearn — Motor de Persistência (Parser/Writer JSON)
 // Parser JSON minimalista sem dependência externa.
 // Formato alvo: data/bot_learn.json
-// Autor: Jordan Araujo | BotRpa
+// Autor: Jordan Araujo | TACE
 // ============================================================
 
 // Instância global do banco de conhecimento

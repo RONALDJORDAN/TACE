@@ -5,7 +5,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace BotRpaUI.Core
+namespace TACEUI.Core
 {
     public class InnoAppSettings
     {
@@ -250,7 +250,7 @@ namespace BotRpaUI.Core
             get
             {
                 // 1) Variável de ambiente tem precedência (não grava em disco)
-                string? env = Environment.GetEnvironmentVariable("BOTRPA_GOOGLE_EMAIL");
+                string? env = Environment.GetEnvironmentVariable("TACE_GOOGLE_EMAIL");
                 if (!string.IsNullOrWhiteSpace(env)) return env;
                 return _settings.GoogleAccountEmail ?? "";
             }
@@ -261,7 +261,7 @@ namespace BotRpaUI.Core
             get
             {
                 // 1) Variável de ambiente tem precedência (não grava em disco)
-                string? env = Environment.GetEnvironmentVariable("BOTRPA_GOOGLE_PASSWORD");
+                string? env = Environment.GetEnvironmentVariable("TACE_GOOGLE_PASSWORD");
                 if (!string.IsNullOrWhiteSpace(env)) return env;
                 // 2) Senha criptografada no settings.json via DPAPI
                 return UnprotectSecret(_settings.GoogleAccountPasswordDpapi);
@@ -322,7 +322,7 @@ namespace BotRpaUI.Core
         public static InnoAppSettings Current => _settings;
 
         private const string DpapiPrefix = "DPAPIv1:";
-        private static readonly byte[] SecretEntropy = Encoding.UTF8.GetBytes("BotRPA-Google-Account-v1");
+        private static readonly byte[] SecretEntropy = Encoding.UTF8.GetBytes("TACE-Google-Account-v1");
 
         private static string ProtectSecret(string plainText)
         {

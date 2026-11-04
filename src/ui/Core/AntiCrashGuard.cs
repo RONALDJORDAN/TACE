@@ -6,11 +6,11 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
 
-namespace BotRpaUI.Core
+namespace TACEUI.Core
 {
     /// <summary>
     /// Sistema Anti-Crash Guard — Proteção Ativa Contra Fechamentos Inesperados e Falhas de Memória
-    /// Autor: Jordan Araujo | BotRpa
+    /// Autor: Jordan Araujo | TACE
     /// </summary>
     public static class AntiCrashGuard
     {

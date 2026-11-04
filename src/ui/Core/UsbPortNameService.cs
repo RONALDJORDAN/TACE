@@ -4,7 +4,7 @@ using System.IO;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 
-namespace BotRpaUI.Core
+namespace TACEUI.Core
 {
     /// <summary>
     /// Mantem um apelido por porta USB fisica (ex.: "1-1" -> "Mesa 1").

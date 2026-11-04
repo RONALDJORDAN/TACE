@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using Microsoft.Data.Sqlite;
 
-namespace BotRpaUI.Core
+namespace TACEUI.Core
 {
     public class AuditoriaRegistro
     {

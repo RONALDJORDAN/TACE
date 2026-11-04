@@ -5,7 +5,7 @@
 #include <string.h>
 
 // Entropia adicional amarra o blob a esta aplicação (não é segredo).
-static const char COFRE_ENTROPIA[] = "BotRPA-InnovTech-Cofre-v1";
+static const char COFRE_ENTROPIA[] = "TACE-InnovTech-Cofre-v1";
 
 // --- Base64 (suficiente para blobs DPAPI; sem dependências) ---
 static const char B64_ALFABETO[] =
@@ -78,7 +78,7 @@ int cofre_proteger(const char *texto, char *out_b64, int max_len) {
   entropia.cbData = (DWORD)(sizeof(COFRE_ENTROPIA) - 1);
   memset(&saida, 0, sizeof(saida));
 
-  if (!CryptProtectData(&entrada, L"BotRPA", &entropia, NULL, NULL,
+  if (!CryptProtectData(&entrada, L"TACE", &entropia, NULL, NULL,
                         CRYPTPROTECT_UI_FORBIDDEN, &saida)) {
     return 0;
   }

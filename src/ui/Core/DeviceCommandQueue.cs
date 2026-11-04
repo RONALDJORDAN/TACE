@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace BotRpaUI.Core
+namespace TACEUI.Core
 {
     public static class DeviceCommandQueue
     {

@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 
-namespace BotRpaUI.Core
+namespace TACEUI.Core
 {
     /// <summary>
     /// Encerra o servidor ADB iniciado pelo aplicativo.
     /// O binario fica na pasta de INSTALACAO (tools/platform-tools), que pode ser
-    /// diferente da pasta de DADOS (BOT_RPA_DATA_DIR) em instalacoes no Program Files.
+    /// diferente da pasta de DADOS (TACE_DATA_DIR) em instalacoes no Program Files.
     /// </summary>
     public static class AdbServerManager
     {

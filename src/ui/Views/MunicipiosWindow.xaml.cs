@@ -11,9 +11,9 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Media;
-using BotRpaUI.Core;
+using TACEUI.Core;
 
-namespace BotRpaUI.Views
+namespace TACEUI.Views
 {
     public partial class MunicipiosWindow : Window
     {

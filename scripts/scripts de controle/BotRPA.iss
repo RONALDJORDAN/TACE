@@ -1,24 +1,24 @@
-﻿; =============================================================================
-;  Bot_RPA - Script do Instalador (Inno Setup 6)
-;  Arquivo: scripts/scripts de controle/BotRPA.iss
+; =============================================================================
+;  TACE - Script do Instalador (Inno Setup 6)
+;  Arquivo: scripts/scripts de controle/TACE.iss
 ;
-;  Gera o instalador "BotRPA_Instalador_<versao>.exe" a partir do conteudo
-;  ja pronto em BotRPA_Release\ (mesma base do pacote portatil PnP).
+;  Gera o instalador "TACE_Instalador_<versao>.exe" a partir do conteudo
+;  ja pronto em TACE_Release\ (mesma base do pacote portatil PnP).
 ;
 ;  REGRAS:
-;   - PROGRAMAS  -> {app}  (padrao C:\Program Files\Bot_RPA)
-;   - DADOS      -> {commonappdata}\Bot_RPA  (variavel BOT_RPA_DATA_DIR)
+;   - PROGRAMAS  -> {app}  (padrao C:\Program Files\TACE)
+;   - DADOS      -> {commonappdata}\TACE  (variavel TACE_DATA_DIR)
 ;   - Atualizacao: reexecuta o instalador e PRESERVA os dados do usuario.
 ;   - Desinstalacao: remove os programas e PRESERVA os dados do usuario.
 ;   - Termos de uso OBRIGATORIOS (licenca) - autoria: Jordan R. Caraujo.
 ; =============================================================================
 
-#define AppName "Bot_RPA"
-#define AppNameLower "bot_rpa"
+#define AppName "TACE"
+#define AppNameLower "TACE"
 #define AppPublisher "Jordan R. Caraujo"
-#define AppExe "BotRPAui.exe"
+#define AppExe "TACEui.exe"
 #define AppVersion "26.10.2026.1739"
-#define DataDirName "Bot_RPA"
+#define DataDirName "TACE"
 
 [Setup]
 AppId={{7C1B9E42-3A6D-4F51-9E77-2B8D4C0A5E31}
@@ -31,7 +31,7 @@ DefaultGroupName={#AppName}
 DisableProgramGroupPage=yes
 DisableDirPage=no
 OutputDir=.
-OutputBaseFilename=BotRPA_Instalador_{#AppVersion}
+OutputBaseFilename=TACE_Instalador_{#AppVersion}
 Compression=lzma2/max
 SolidCompression=yes
 WizardStyle=modern
@@ -39,7 +39,7 @@ PrivilegesRequired=admin
 PrivilegesRequiredOverridesAllowed=dialog
 UninstallDisplayIcon={app}\{#AppExe}
 UninstallDisplayName={#AppName}
-SetupIconFile=..\..\src\ui\Assets\Icons\BotRPAui.ico
+SetupIconFile=..\..\src\ui\Assets\Icons\TACEui.ico
 WizardImageFile=InstallerAssets\WizardLarge.png
 WizardSmallImageFile=InstallerAssets\WizardSmall.png
 LicenseFile=InstallerAssets\TERMO_DE_USO.txt
@@ -62,7 +62,7 @@ Name: "brazilian"; MessagesFile: "compiler:Languages\BrazilianPortuguese.isl"
 
 [CustomMessages]
 brazilian.DataDirTitle=Pasta de dados do usuario
-brazilian.DataDirLabel=Os dados do Bot_RPA (banco de aparelhos, credenciais e pacotes dos municipios) serao gravados nesta pasta.%n%nA pasta padrao e %1.%n%nOs PROGRAMAS (arquivos do sistema) serao instalados em:%n%2%n%nSe voce desinstalar o programa, os dados desta pasta serao PRESERVADOS.
+brazilian.DataDirLabel=Os dados do TACE (banco de aparelhos, credenciais e pacotes dos municipios) serao gravados nesta pasta.%n%nA pasta padrao e %1.%n%nOs PROGRAMAS (arquivos do sistema) serao instalados em:%n%2%n%nSe voce desinstalar o programa, os dados desta pasta serao PRESERVADOS.
 
 [Messages]
 brazilian.SetupAppTitle=Instalador do Bot RPA - Jordan R. Caraujo
@@ -74,38 +74,38 @@ brazilian.LicenseLabel3=Leia atentamente os TERMOS DE USO. De acordo com as Leis
 brazilian.LicenseAccepted=Eu li e ACEITO os termos de uso acima
 brazilian.LicenseNotAccepted=Eu &Nao aceito os termos de uso
 brazilian.SelectDirDesc=Onde devo instalar o Bot RPA?
-brazilian.SelectDirLabel3=A pasta de destino do PROGRAMA (os DADOS ficam em C:\ProgramData\Bot_RPA e sao preservados nas atualizacoes).%n%nCRIACAO: Jordan R. Caraujo
+brazilian.SelectDirLabel3=A pasta de destino do PROGRAMA (os DADOS ficam em C:\ProgramData\TACE e sao preservados nas atualizacoes).%n%nCRIACAO: Jordan R. Caraujo
 brazilian.SelectDirBrowseLabel=Para continuar, clique em Avancar. Para escolher outra pasta, clique em Procurar.
 brazilian.SelectTasksLabel=Opc?es do produto - escolha os atalhos e a execucao automatica desejadas:%nCRIACAO: Jordan R. Caraujo
 brazilian.ReadyLabel1=Confirmacao final antes de executar
 brazilian.ReadyLabel2a=Programas para instalacao/atualizacao confirmados. Clique em Instalar para executar.%n%nCRIACAO: Jordan R. Caraujo
-brazilian.FinishedHeadingLabel=O Bot_RPA foi instalado com sucesso!
+brazilian.FinishedHeadingLabel=O TACE foi instalado com sucesso!
 brazilian.FinishedLabel=Obrigado pela preferencia!%n%nAutoria e propriedade EXCLUSIVA de Jordan R. Caraujo.%n%nA ferramenta esta pronta para uso.
 brazilian.FinishedLabelNoIcons=Obrigado pela preferencia!%n%nAutoria e propriedade EXCLUSIVA de Jordan R. Caraujo.%n%nA ferramenta esta pronta para uso.
-brazilian.UninstallHeadingLabel=Remover o Bot_RPA
+brazilian.UninstallHeadingLabel=Remover o TACE
 brazilian.UninstallLabel= Criacao: Jordan R. Caraujo
 
 [Tasks]
 Name: "desktopicon"; Description: "Criar atalho na &Area de Trabalho"; GroupDescription: "Atalhos do produto:"
 Name: "startmenu"; Description: "Criar atalho no menu &Iniciar"; GroupDescription: "Atalhos do produto:"
-Name: "autorun"; Description: "Executar o Bot_RPA automaticamente ao &iniciar o Windows"; GroupDescription: "Automacao:"
+Name: "autorun"; Description: "Executar o TACE automaticamente ao &iniciar o Windows"; GroupDescription: "Automacao:"
 
 [Files]
 ; --- PROGRAMAS (sobrescritos a cada instalacao/Atualizacao) ---
-Source: "..\..\BotRPA_Release\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "..\..\TACE_Release\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; Versao do build gravada na pasta de instalacao
 Source: "..\..\config\version.txt"; DestDir: "{app}\config"; Flags: ignoreversion
 
 ; --- DADOS DO USUARIO (nunca sobrescritos) ---
 ; O seed do settings.json vai para a pasta de dados apenas na primeira instalacao.
-Source: "..\..\BotRPA_Release\config\settings.json"; DestDir: "{commonappdata}\{#DataDirName}\config"; Flags: onlyifdoesntexist
-Source: "..\..\BotRPA_Release\config\first_run.json"; DestDir: "{commonappdata}\{#DataDirName}\config"; Flags: onlyifdoesntexist
-Source: "..\..\BotRPA_Release\config\municipios.csv"; DestDir: "{commonappdata}\{#DataDirName}\config"; Flags: onlyifdoesntexist
+Source: "..\..\TACE_Release\config\settings.json"; DestDir: "{commonappdata}\{#DataDirName}\config"; Flags: onlyifdoesntexist
+Source: "..\..\TACE_Release\config\first_run.json"; DestDir: "{commonappdata}\{#DataDirName}\config"; Flags: onlyifdoesntexist
+Source: "..\..\TACE_Release\config\municipios.csv"; DestDir: "{commonappdata}\{#DataDirName}\config"; Flags: onlyifdoesntexist
 ; Banco de dispositivos com o numero de patrimonio
-Source: "..\..\BotRPA_Release\data\bot_database.db"; DestDir: "{commonappdata}\{#DataDirName}\data"; Flags: onlyifdoesntexist
+Source: "..\..\TACE_Release\data\bot_database.db"; DestDir: "{commonappdata}\{#DataDirName}\data"; Flags: onlyifdoesntexist
 ; Pacotes dos municipios (APK / ZIP / Wallpaper)
-Source: "..\..\BotRPA_Release\data\input\*"; DestDir: "{commonappdata}\{#DataDirName}\data\input"; Flags: onlyifdoesntexist recursesubdirs createallsubdirs
-Source: "..\..\BotRPA_Release\Arquivos\*"; DestDir: "{commonappdata}\{#DataDirName}\Arquivos"; Flags: onlyifdoesntexist recursesubdirs createallsubdirs skipifsourcedoesntexist
+Source: "..\..\TACE_Release\data\input\*"; DestDir: "{commonappdata}\{#DataDirName}\data\input"; Flags: onlyifdoesntexist recursesubdirs createallsubdirs
+Source: "..\..\TACE_Release\Arquivos\*"; DestDir: "{commonappdata}\{#DataDirName}\Arquivos"; Flags: onlyifdoesntexist recursesubdirs createallsubdirs skipifsourcedoesntexist
 
 [Dirs]
 ; Pastas de dados do usuario (criadas se nao existirem)
@@ -146,7 +146,7 @@ Type: filesandordirs; Name: "{app}\data"
 
 [Code]
 var
-  BotRpaPath: String;
+  TACEPath: String;
 
 { ---------------------------------------------------------------- }
 {  Antes de instalar/atualizar: encerra a ferramenta E as ADB/       }
@@ -157,7 +157,7 @@ var
   ResultCode: Integer;
 begin
   Result := True;
-  Exec(ExpandConstant('{sys}\taskkill.exe'), '/F /IM BotRPAui.exe /T', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+  Exec(ExpandConstant('{sys}\taskkill.exe'), '/F /IM TACEui.exe /T', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
   Exec(ExpandConstant('{sys}\taskkill.exe'), '/F /IM adb.exe /T', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
   Exec(ExpandConstant('{sys}\taskkill.exe'), '/F /IM gnirehtet.exe /T', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
 end;
@@ -173,13 +173,13 @@ begin
   begin
     if not WizardSilent() then
     begin
-      BotRpaPath := ExpandConstant('{commonappdata}') + '\{#DataDirName}';
+      TACEPath := ExpandConstant('{commonappdata}') + '\{#DataDirName}';
       if MsgBox('Instalacao concluida!' + #13#10 + #13#10 +
                 'Programas instalados em:' + #13#10 + ExpandConstant('{app}') + #13#10 + #13#10 +
                 'Seus dados (banco de aparelhos, credenciais e pacotes dos municipios) estao em:' + #13#10 +
-                BotRpaPath + #13#10 + #13#10 +
+                TACEPath + #13#10 + #13#10 +
                 'Ao atualizar o programa, seus dados sao PRESERVADOS.' + #13#10 + #13#10 +
-                'Deseja iniciar o Bot_RPA agora?',
+                'Deseja iniciar o TACE agora?',
                 mbConfirmation, MB_YESNO) = IDYES then
       begin
         ShellExec('open', ExpandConstant('{app}') + '\{#AppExe}', '', '', SW_SHOWNORMAL, ewNoWait, ResultCode);

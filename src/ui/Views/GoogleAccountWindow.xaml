@@ -1,4 +1,4 @@
-<Window x:Class="BotRpaUI.Views.GoogleAccountWindow"
+<Window x:Class="TACEUI.Views.GoogleAccountWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Adicionar Conta Google" Height="510" Width="560"
@@ -32,7 +32,7 @@
 
         <Border Grid.Row="1" Background="#141126" CornerRadius="8" Padding="12,10" BorderBrush="#2C2C48" BorderThickness="1" Margin="0,0,0,14">
             <TextBlock Foreground="#C9C4E8" FontSize="11" TextWrapping="Wrap"
-                       Text="O Bot_RPA abre Configuracoes &gt; Adicionar conta, preenche o e-mail e a senha e aguarda a confirmacao do Google. Mantenha o tablet desbloqueado. Se o Google pedir verificacao em duas etapas, conclua no tablet: o processo aguarda ate 3 minutos. A senha nao sera salva."/>
+                       Text="O TACE abre Configuracoes &gt; Adicionar conta, preenche o e-mail e a senha e aguarda a confirmacao do Google. Mantenha o tablet desbloqueado. Se o Google pedir verificacao em duas etapas, conclua no tablet: o processo aguarda ate 3 minutos. A senha nao sera salva."/>
         </Border>
 
         <TextBlock Grid.Row="2" Text="E-mail da conta Google" Foreground="#A1A1AA" FontSize="11" FontWeight="SemiBold" Margin="0,0,0,5"/>

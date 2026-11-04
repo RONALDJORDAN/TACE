@@ -2,7 +2,7 @@ using System;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace BotRpaUI.Core
+namespace TACEUI.Core
 {
     public static class UsbPortResolver
     {

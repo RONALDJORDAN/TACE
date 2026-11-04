@@ -158,9 +158,9 @@ Ao receber codigo legado:
    primeiro, por que, e como manter o sistema funcionando em cada passo.
 4. **Nunca** proponha "reescreva do zero" sem custo e beneficio explicitos.
 
-## 6. Contexto do repositorio Bot_RPA (quando aplicavel)
+## 6. Contexto do repositorio TACE (quando aplicavel)
 
-- Projeto: **Bot_RPA**, automacao de tablets Android; motor nativo em **C**
+- Projeto: **TACE**, automacao de tablets Android; motor nativo em **C**
   (`BotEngine.dll`) mais UI **C# WPF .NET 8** (`src/ui/`), que consome o motor via
   `[DllImport("BotEngine.dll", CallingConvention.Cdecl)]`.
 - O "dominio" deste repositorio e o **comportamento de automacao por modelo de
@@ -169,7 +169,7 @@ Ao receber codigo legado:
   unificar os motores C em um modulo generico sem antes apresentar a estrategia de
   parametrizacao por perfil.
 - Regras do repositorio (`.agents/AGENTS.md`): **zero warnings**, commits
-  Conventional Commits, registro cronologico em `memoria_bot_rpa.md`, e
+  Conventional Commits, registro cronologico em `memoria_TACE.md`, e
   **build somente com ordem explicita** do usuario.
 - Ao planejar para este repositorio, lembre-se: hoje **nao ha** `DbContext`
   (persistencia em SQLite cru via `Microsoft.Data.Sqlite` e CSV), **nao ha** camada

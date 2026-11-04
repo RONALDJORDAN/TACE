@@ -1,8 +1,8 @@
-# Memória do Projeto — Bot_RPA
+# Memória do Projeto — TACE
 
-**Projeto:** Bot_RPA (Plataforma Bot_RPA / InnovTech)
+**Projeto:** TACE (Plataforma TACE / InnovTech)
 **Tipo:** Automação RPA para tablets Android via ADB + Kiosk Mode
-**Arquitetura:** Motor nativo em C (`BotEngine.dll`) + Interface WPF em C# (.NET 8, `BotRPAui.exe`)
+**Arquitetura:** Motor nativo em C (`BotEngine.dll`) + Interface WPF em C# (.NET 8, `TACEui.exe`)
 **Versão de referência:** `21.10.2026.0909`
 **Status:** Produção
 **Última atualização desta memória:** 21/10/2026
@@ -11,7 +11,7 @@
 
 ## 1. Visão Geral
 
-O Bot_RPA automatiza o provisionamento, atualização, configuração, sincronização e
+O TACE automatiza o provisionamento, atualização, configuração, sincronização e
 desligamento de tablets Android em bancada, executando pipelines determinísticos
 (F1 a F8) por modelo de equipamento, com comunicação 100% via ADB/USB.
 
@@ -48,9 +48,9 @@ Nunca há efeito colateral em outro equipamento.
 ## 3. Estrutura de Pastas
 
 ```
-Bot_RPA/
+TACE/
 ├── AGENTS.md                        # Regras de ouro do desenvolvimento
-├── memoria_bot_rpa.md               # Histórico cronológico completo (fonte oficial)
+├── memoria_TACE.md               # Histórico cronológico completo (fonte oficial)
 ├── DOCUMENTACAO_COMPLETA.md         # Documentação técnica detalhada
 ├── memmoria de desenvolvimento/     # Memória por mês/ano (esta pasta)
 │   ├── demmoria do projeto.md       # Este arquivo (visão consolidada)
@@ -71,29 +71,29 @@ Bot_RPA/
 ├── docs/                            # Relatórios técnicos e plano de melhorias
 ├── registros/                       # Auditoria de builds (YYYY-MM-DD/HH-MM_...)
 ├── logs/                            # Logs de execução
-├── BotRPA_Release/                  # Release portátil oficial (gerada pelo build)
-├── memoria_bot_rpa.md               # (histórico principal)
+├── TACE_Release/                  # Release portátil oficial (gerada pelo build)
+├── memoria_TACE.md               # (histórico principal)
 └── FERRAMENTA_AQUI/                 # (pacotes de entrega)
 ```
 
 ## 4. Build e Release
 
 - **Build de teste/dev:** `scripts/build.bat` → `data/output/` (ícone azul escuro).
-- **Build final/PnP:** `controle/Build.ps1 -Modo Final` → `BotRPA_Release/` (ícone roxo).
+- **Build final/PnP:** `controle/Build.ps1 -Modo Final` → `TACE_Release/` (ícone roxo).
 - **Política:** não compilar sem ordem explícita do usuário.
-- **Auditoria:** cada build grava registro em `registros/YYYY-MM-DD/HH-MM_Plataforma_BotRPA_DESKTOP_BUILD`.
+- **Auditoria:** cada build grava registro em `registros/YYYY-MM-DD/HH-MM_Plataforma_TACE_DESKTOP_BUILD`.
 - **Release atual:** `21.10.2026.0932` (sem Firebase/OTA/InnovStock)
-  - `BotRPAui.exe`: 194.006.309 bytes — SHA-256 `948ABEE49D13FDE74FDA687893CA226C85C3C8CEE4FFFB645D3D0E1D773FA166`
+  - `TACEui.exe`: 194.006.309 bytes — SHA-256 `948ABEE49D13FDE74FDA687893CA226C85C3C8CEE4FFFB645D3D0E1D773FA166`
   - `BotEngine.dll`: 418.471 bytes — SHA-256 `A2D67AC7307B0824CCD72CC5010782AADDE35B7E2A7BE24DEC9F0DF554432F58`
 
 ## 5. Pacotes de Entrega (FERRAMENTA_AQUI)
 
-As pastas de entrega devem ser cópias exatas da release `BotRPA_Release`. Estado atual: ainda na versão `21.10.2026.0909` (sincronização com a `0929` pendente):
+As pastas de entrega devem ser cópias exatas da release `TACE_Release`. Estado atual: ainda na versão `21.10.2026.0909` (sincronização com a `0929` pendente):
 
-- **`bot rpa instalavel/`** — versão instalável desktop (executar `BotRPAui.exe`).
+- **`bot rpa instalavel/`** — versão instalável desktop (executar `TACEui.exe`).
 - **`bot rpa movel/`** — versão móvel/portátil, mesma build, para uso em campo.
 
-Conteúdo comum: `BotRPAui.exe`, `BotEngine.dll`, `municipios.csv`, `config/`,
+Conteúdo comum: `TACEui.exe`, `BotEngine.dll`, `municipios.csv`, `config/`,
 `tools/` (ADB + Gnirehtet + APK),
 `data/bot_database.db`, `Arquivos/`, `logs/`, `registros/`.
 
@@ -108,7 +108,7 @@ Conteúdo comum: `BotRPAui.exe`, `BotEngine.dll`, `municipios.csv`, `config/`,
 ## 7. Regras de Ouro (AGENTS.md)
 
 1. **Isolamento estrito por equipamento/modelo** — zero efeito colateral entre modelos.
-2. **Rastreabilidade obrigatória** — toda alteração registrada em `memoria_bot_rpa.md`.
+2. **Rastreabilidade obrigatória** — toda alteração registrada em `memoria_TACE.md`.
 3. **Organização limpa de pastas** — sem binários/CSVs soltos na raiz.
 4. **Zero Warning & Build obrigatório** — validar compilação quando houver edição em C/C#.
 

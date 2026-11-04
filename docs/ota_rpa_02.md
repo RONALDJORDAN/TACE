@@ -1,6 +1,6 @@
 # OTA_RPA_02 — Atualização OTA pública só-leitura (sem login)
 
-**Projeto:** Bot_RPA — Plataforma Bot_RPA
+**Projeto:** TACE — Plataforma TACE
 **Data:** 28/09/2026
 **Escopo:** tornar a verificação/instalação de atualização OTA um caminho único de APENAS LEITURA, sem exigir login Firebase, mantendo todo o resto do banco InnovStock protegido por autenticação.
 **Status:** código implementado + build validado. Pendente (operador): publicar as regras abaixo no Firebase Console.
@@ -34,7 +34,7 @@ Nenhum `.c` de dispositivo tocado (Regra de Ouro #1 — isolamento por modelo pr
 - **Download do ZIP** (`DownloadAndVerifyUpdateAsync`): já era anônimo (sem auth) — inalterado.
 - **Sync InnovStock intocado:** `SQLiteDatabaseManager.cs` (linhas 571, 614, 659, 723) continua 100% via `FirebaseAuthService` autenticado.
 
-**Validação:** `scripts/build.bat` — compilação TESTE `28.09.2026.0830`, Zero Errors / Zero Warnings. Auditoria: `registros/2026-09-28/08-31_Plataforma_BotRPA_DESKTOP_BUILD`. Registro cronológico em `memoria_bot_rpa.md` (entrada `[2026-09-28 08:30]`).
+**Validação:** `scripts/build.bat` — compilação TESTE `28.09.2026.0830`, Zero Errors / Zero Warnings. Auditoria: `registros/2026-09-28/08-31_Plataforma_TACE_DESKTOP_BUILD`. Registro cronológico em `memoria_TACE.md` (entrada `[2026-09-28 08:30]`).
 
 ---
 

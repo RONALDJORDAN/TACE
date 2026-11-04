@@ -146,7 +146,7 @@ alvo** antes de recomendar.
    - `record`/`record struct` para DTOs e chave-valor; `init`/`required` onde couber.
    - Nullable annotations e `?` nos pontos de ausencia de valor.
    - **Nao** misture refatoracao de comportamento com modernizacao: separe o commit.
-3. **Zero warnings** como criterio de pronto (regra do repositorio Bot_RPA).
+3. **Zero warnings** como criterio de pronto (regra do repositorio TACE).
 4. **Nada de breaking change silencioso**: mudanca de assinatura publica exige
    camada de compatibilidade ou versao major.
 
@@ -173,10 +173,10 @@ Ao revisar, comente nesta ordem: **correcao** > **seguranca** > **contrato publi
 > **design** > **performance** > **estilo**. Para cada achado: arquivo:linha,
 **severidade** (critico/alto/medio/baixo), **por que** e **correcao sugerida**.
 
-## 7. Contexto do repositorio Bot_RPA (quando aplicavel)
+## 7. Contexto do repositorio TACE (quando aplicavel)
 
-- Projeto: **Bot_RPA**, motor nativo em **C** (`BotEngine.dll`) + UI **C# WPF .NET 8**
-  em `src/ui/` (sem `.sln`; projeto unico `BotRpaUI.csproj`).
+- Projeto: **TACE**, motor nativo em **C** (`BotEngine.dll`) + UI **C# WPF .NET 8**
+  em `src/ui/` (sem `.sln`; projeto unico `TACEUI.csproj`).
 - A UI consome o motor via `[DllImport("BotEngine.dll", CallingConvention.Cdecl)]`,
   hoje **duplicado em 7 arquivos** (61 declaracoes). Um unico wrapper
   `src/ui/Core/EngineApi.cs` e a melhoria recomendada.
@@ -186,7 +186,7 @@ Ao revisar, comente nesta ordem: **correcao** > **seguranca** > **contrato publi
 - Persistencia: SQLite cru (`Microsoft.Data.Sqlite`) em `data/bot_database.db`,
   municipios em CSV com cofre **DPAPI** (`src/core/data/cofre.c`).
 - Regras do repositorio (`.agents/AGENTS.md`): **zero warnings**, commits
-  Conventional Commits, registro cronologico em `memoria_bot_rpa.md`,
+  Conventional Commits, registro cronologico em `memoria_TACE.md`,
   **build somente com ordem explicita** do usuario, e **isolamento estrito por
   modelo de aparelho** (nunca alterar o codigo de outro equipamento junto).
 - Ao propor mudancas aqui, respeite: interface WPF nao deve bloquear a thread de UI

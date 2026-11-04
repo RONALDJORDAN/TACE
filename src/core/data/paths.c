@@ -13,7 +13,7 @@ static char g_install_dir[MAX_PATH] = {0};
 // Testa se e possivel gravar um arquivo na pasta informada.
 static int paths_is_writable(const char* dir) {
     char probe[MAX_PATH];
-    snprintf(probe, sizeof(probe), "%s\\.botrpa_write_test.tmp", dir);
+    snprintf(probe, sizeof(probe), "%s\\.TACE_write_test.tmp", dir);
 
     HANDLE h = CreateFileA(probe, GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE,
                             NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_TEMPORARY, NULL);
@@ -59,7 +59,7 @@ void paths_get_data_dir(char* out_path, int max_len) {
     char resolved[MAX_PATH] = {0};
 
     // 1) Variavel de ambiente definida pelo instalador
-    const char* env = getenv("BOT_RPA_DATA_DIR");
+    const char* env = getenv("TACE_DATA_DIR");
     if (env && env[0] != '\0') {
         DWORD attr = GetFileAttributesA(env);
         if (attr != INVALID_FILE_ATTRIBUTES && (attr & FILE_ATTRIBUTE_DIRECTORY)) {
@@ -76,7 +76,7 @@ void paths_get_data_dir(char* out_path, int max_len) {
         }
     }
 
-    // 3) Instalacao em Program Files: %ProgramData%\Bot_RPA
+    // 3) Instalacao em Program Files: %ProgramData%\TACE
     if (resolved[0] == '\0') {
         char program_data[MAX_PATH] = {0};
         DWORD r = GetEnvironmentVariableA("ProgramData", program_data, sizeof(program_data));
@@ -84,9 +84,9 @@ void paths_get_data_dir(char* out_path, int max_len) {
             program_data[0] = '\0';
         }
         if (program_data[0] != '\0') {
-            snprintf(resolved, sizeof(resolved), "%s\\Bot_RPA", program_data);
+            snprintf(resolved, sizeof(resolved), "%s\\TACE", program_data);
         } else {
-            snprintf(resolved, sizeof(resolved), "%s\\Bot_RPA", "C:\\ProgramData");
+            snprintf(resolved, sizeof(resolved), "%s\\TACE", "C:\\ProgramData");
         }
     }
 

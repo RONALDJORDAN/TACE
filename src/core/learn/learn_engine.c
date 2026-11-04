@@ -8,7 +8,7 @@
 // BotLearn — Motor de Decisão (Score Engine)
 // Implementa a busca ordenada por score, registro de hit/miss
 // e auto-discovery de novas estratégias.
-// Autor: Jordan Araujo | BotRpa
+// Autor: Jordan Araujo | TACE
 // ============================================================
 
 // --- Helper Interno: Extrai centroide do XML (mesma lógica do f1_geraldata.c)

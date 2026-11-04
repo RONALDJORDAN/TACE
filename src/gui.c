@@ -81,7 +81,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 }
 
 int init_gui(HINSTANCE hInstance, int nCmdShow) {
-    const char CLASS_NAME[] = "BotRPA Window Class";
+    const char CLASS_NAME[] = "TACE Window Class";
 
     WNDCLASS wc = {0};
     wc.lpfnWndProc = WindowProc;
@@ -94,7 +94,7 @@ int init_gui(HINSTANCE hInstance, int nCmdShow) {
     HWND hwnd = CreateWindowEx(
         0,
         CLASS_NAME,
-        "Bot_RPA - Scanner Android",
+        "TACE - Scanner Android",
         WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME ^ WS_MAXIMIZEBOX, // Janela com tamanho fixo
         CW_USEDEFAULT, CW_USEDEFAULT, 400, 340,
         NULL,

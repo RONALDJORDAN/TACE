@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using System.Reflection;
 
-namespace BotRpaUI.Core
+namespace TACEUI.Core
 {
     public static class AppInfo
     {

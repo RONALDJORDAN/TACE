@@ -59,7 +59,7 @@ static DWORD WINAPI V7_GnirehtetProgressBarThread(LPVOID lpParam) {
 // =============================================================================
 //  MÓDULO F1: SINCRONIZAÇÃO E PIPELINE COMPLETO DE PREPARAÇÃO
 //  Dispositivo Alvo: Positivo Tab Vision 7 (AllWinner / Android 14)
-//  Arquitetura: Motor C Nativo (Bot_RPA Engine)
+//  Arquitetura: Motor C Nativo (TACE Engine)
 //  Isolamento Estrito: src/core/functions/vision7/ (Regra de Ouro #1)
 // =============================================================================
 
@@ -2218,7 +2218,7 @@ int V7_Etapa2_1_AddShortcut(const char *serial, const char *package_name,
            "'intent:#Intent;action=android.intent.action.MAIN;"
            "category=android.intent.category.LAUNCHER;component=%s/"
            ".MainActivity;end' "
-           "-e Intent.EXTRA_SHORTCUT_NAME 'BotRpa'",
+           "-e Intent.EXTRA_SHORTCUT_NAME 'TACE'",
            serial, package_name);
 
   char *out = adb_exec(cmd);

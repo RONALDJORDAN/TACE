@@ -1,11 +1,11 @@
 ====================================================================
- BOT_RPA
+ TACE
  TERMO DE USO E LICENCA DE SOFTWARE
  Autoria e propriedade exclusiva: JORDAN R. CARAUJO
 ====================================================================
 
 1. IDENTIFICACAO
-A ferramenta "Bot_RPA" (a "FERRAMENTA") e obra
+A ferramenta "TACE" (a "FERRAMENTA") e obra
 de autoria exclusiva de JORDAN R. CARAUJO, unico e legitimo
 detentor(a) de todos os direitos sobre ela, quem a idealizou,
 projetou, escreveu, codificou e publicou, em C e em C# WPF
@@ -55,7 +55,7 @@ ilegal ou contrario a este termo implica revogacao da licenca.
 5. DADOS E PRIVACIDADE
 5.1. A FERRAMENTA opera com dados LOCAIS: banco de aparelhos,
 credenciais, pacotes e historico ficam na pasta de dados do
-proprio computador (padr??o C:\ProgramData\Bot_RPA), que e
+proprio computador (padr??o C:\ProgramData\TACE), que e
 PRESERVADA em atualizacoes e opcional na desinstalacao.
 5.2. A FERRAMENTA, por si so, nao envia dados do usuario a
 servicos externos. A comunicacao com aparelhos Android via ADB
@@ -87,7 +87,7 @@ Aplica-se a legislacao brasileira (Leis no 9.609/98 e 9.610/98
 e codigo civil correspondente).
 
 ====================================================================
- Bot_RPA - (c) Jordan R. Caraujo - Todos os direitos reservados
+ TACE - (c) Jordan R. Caraujo - Todos os direitos reservados
  CRIACAO ORIGINAL: Jordan R. Caraujo
  Assinatura do criador e detentor: Jordan R. Caraujo
 ====================================================================

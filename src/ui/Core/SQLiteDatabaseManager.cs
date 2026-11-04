@@ -4,7 +4,7 @@ using System.IO;
 using System.Text;
 using Microsoft.Data.Sqlite;
 
-namespace BotRpaUI.Core
+namespace TACEUI.Core
 {
     public class DispositivoDB
     {
@@ -1100,7 +1100,7 @@ namespace BotRpaUI.Core
         {
             try
             {
-                string baseDir = BotRpaUI.Core.PathHelper.GetRootDirectory();
+                string baseDir = TACEUI.Core.PathHelper.GetRootDirectory();
                 string dataDir = System.IO.Path.Combine(baseDir, "data");
                 if (!System.IO.Directory.Exists(dataDir)) System.IO.Directory.CreateDirectory(dataDir);
 

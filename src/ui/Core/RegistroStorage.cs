@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 using System.IO;
 using System.Text;
 
-namespace BotRpaUI.Core
+namespace TACEUI.Core
 {
     /// <summary>
     /// Organiza os registros em disco por data, hora e modalidade.
@@ -13,7 +13,7 @@ namespace BotRpaUI.Core
     ///   docs/registros/AAAA-MM-DD/SISTEMA/HH-mm_sistema.log
     ///
     /// Builds continuam no caminho canonico exigido pelo AGENTS:
-    ///   docs/registros/AAAA-MM-DD/HH-MM_Plataforma_BotRPA_DESKTOP_BUILD
+    ///   docs/registros/AAAA-MM-DD/HH-MM_Plataforma_TACE_DESKTOP_BUILD
     /// </summary>
     public static class RegistroStorage
     {
@@ -137,7 +137,7 @@ namespace BotRpaUI.Core
         {
             var sb = new StringBuilder();
             sb.AppendLine("============================================================");
-            sb.AppendLine("Bot_RPA - Registro de Execucao");
+            sb.AppendLine("TACE - Registro de Execucao");
             sb.AppendLine($"Data/Hora : {data:yyyy-MM-dd HH:mm:ss}");
             sb.AppendLine($"Modalidade: {modalidade}");
             sb.AppendLine($"Referencia: {identificador}");

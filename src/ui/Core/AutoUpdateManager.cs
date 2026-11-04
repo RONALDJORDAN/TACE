@@ -7,7 +7,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-namespace BotRpaUI.Core
+namespace TACEUI.Core
 {
     public class VersaoRemota
     {
@@ -41,7 +41,7 @@ namespace BotRpaUI.Core
 
         static AutoUpdateManager()
         {
-            _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("BotRPA-AutoUpdate/1.0");
+            _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("TACE-AutoUpdate/1.0");
         }
 
         public static void Configurar(string urlVersaoRemota, string pastaDownloads)
@@ -130,7 +130,7 @@ namespace BotRpaUI.Core
 
                 string nomeArquivo = Path.GetFileName(urlDownload);
                 if (string.IsNullOrWhiteSpace(nomeArquivo))
-                    nomeArquivo = $"BotRPA_Instalador_{ObterVersaoAtual()}.exe";
+                    nomeArquivo = $"TACE_Instalador_{ObterVersaoAtual()}.exe";
 
                 string destino = Path.Combine(PastaDownloads, nomeArquivo);
 

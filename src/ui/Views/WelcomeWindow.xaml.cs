@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 
-namespace BotRpaUI
+namespace TACEUI
 {
     public partial class WelcomeWindow : Window
     {
@@ -38,19 +38,19 @@ namespace BotRpaUI
             try
             {
                 // Roda a checagem que valida extração de arquivos embutidos (ex: gnirehtet)
-                BotRpaUI.Core.PreflightChecker.CheckAndRepair();
+                TACEUI.Core.PreflightChecker.CheckAndRepair();
 
                 LblStatus.Text = "Verificando Engine de Banco de Dados...";
                 await Task.Delay(1000);
 
                 // Inicializa o BD (Isso cria o arquivo .db se não existir)
-                BotRpaUI.Core.SQLiteDatabaseManager.InitializeDatabase();
+                TACEUI.Core.SQLiteDatabaseManager.InitializeDatabase();
 
                 LblStatus.Text = "Tudo pronto! Carregando Sistema...";
                 await Task.Delay(1000);
 
                 // Grava a flag de primeiro boot
-                string baseDir = BotRpaUI.Core.PathHelper.GetRootDirectory();
+                string baseDir = TACEUI.Core.PathHelper.GetRootDirectory();
                 string configDir = Path.Combine(baseDir, "config");
                 if (!Directory.Exists(configDir))
                 {

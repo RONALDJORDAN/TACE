@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 
-namespace BotRpaUI.Core
+namespace TACEUI.Core
 {
     public static class PathHelper
     {
@@ -10,13 +10,13 @@ namespace BotRpaUI.Core
         /// Definida pelo instalador (machine-wide) quando o programa e
         /// instalado em "C:\Program Files" (sem permissao de escrita).
         /// </summary>
-        public const string EnvDataDir = "BOT_RPA_DATA_DIR";
+        public const string EnvDataDir = "TACE_DATA_DIR";
 
         private static string? _dataDirCache;
 
         /// <summary>
         /// Pasta onde ficam os PROGRAMAS (binarios, tools, scripts).
-        /// Sempre a pasta de instalacao (ex.: C:\Program Files\Bot_RPA).
+        /// Sempre a pasta de instalacao (ex.: C:\Program Files\TACE).
         /// </summary>
         public static string GetInstallDirectory()
         {
@@ -39,9 +39,9 @@ namespace BotRpaUI.Core
         /// credenciais, pacotes dos municipios, logs e registros).
         ///
         /// Resolucao:
-        ///   1) Variavel de ambiente BOT_RPA_DATA_DIR (definida pelo instalador);
+        ///   1) Variavel de ambiente TACE_DATA_DIR (definida pelo instalador);
         ///   2) A propria pasta de instalacao, se for gravavel (modo portatil);
-        ///   3) %ProgramData%\Bot_RPA (instalacao em Program Files).
+        ///   3) %ProgramData%\TACE (instalacao em Program Files).
         /// </summary>
         public static string GetRootDirectory()
         {
@@ -69,7 +69,7 @@ namespace BotRpaUI.Core
                     string programData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
                     if (string.IsNullOrWhiteSpace(programData))
                         programData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-                    resolved = Path.Combine(programData, "Bot_RPA");
+                    resolved = Path.Combine(programData, "TACE");
                 }
             }
 
@@ -94,7 +94,7 @@ namespace BotRpaUI.Core
         {
             try
             {
-                string probe = Path.Combine(dir, ".botrpa_write_test.tmp");
+                string probe = Path.Combine(dir, ".TACE_write_test.tmp");
                 using (var fs = new FileStream(probe, FileMode.Create, FileAccess.Write, FileShare.ReadWrite))
                 {
                     fs.WriteByte(0);

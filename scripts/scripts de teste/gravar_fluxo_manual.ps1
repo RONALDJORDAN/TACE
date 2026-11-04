@@ -1,6 +1,6 @@
-﻿# =============================================================================
-# Bot_RPA - Gravador de Fluxo Manual via ADB
-# Desenvolvedor: Jordan Araujo | Bot_RPA
+# =============================================================================
+# TACE - Gravador de Fluxo Manual via ADB
+# Desenvolvedor: Jordan Araujo | TACE
 # Descricao: Captura o estado da tela do tablet (XML + foco da janela) a cada
 #            passo executado manualmente, gerando um log para mapeamento da
 #            automacao real.
@@ -34,8 +34,8 @@ New-Item -ItemType Directory -Force -Path $OutputDir | Out-Null
 
 Write-Host ""
 Write-Host "============================================================" -ForegroundColor Cyan
-Write-Host "  GRAVADOR DE FLUXO MANUAL - Bot_RPA" -ForegroundColor Cyan
-Write-Host "  Bot_RPA | Desenvolvido por Jordan Araujo" -ForegroundColor DarkCyan
+Write-Host "  GRAVADOR DE FLUXO MANUAL - TACE" -ForegroundColor Cyan
+Write-Host "  TACE | Desenvolvido por Jordan Araujo" -ForegroundColor DarkCyan
 Write-Host "============================================================" -ForegroundColor Cyan
 Write-Host ""
 
@@ -200,7 +200,7 @@ foreach ($entry in $Log) {
 
 $reportLines += "---"
 $reportLines += ""
-$reportLines += "> Relatorio gerado automaticamente pelo Gravador de Fluxo Manual do Bot_RPA - Bot_RPA"
+$reportLines += "> Relatorio gerado automaticamente pelo Gravador de Fluxo Manual do TACE - TACE"
 
 $reportLines | Out-File $reportPath -Encoding UTF8
 Write-Host ""

@@ -1,8 +1,8 @@
-﻿@echo off
+@echo off
 :: =============================================================================
-:: Bot_RPA - Monitor Continuo de Tela via ADB
+:: TACE - Monitor Continuo de Tela via ADB
 :: Captura XML + Screenshot a cada 2 segundos automaticamente
-:: Desenvolvedor: Jordan Araujo ^| Bot_RPA
+:: Desenvolvedor: Jordan Araujo ^| TACE
 :: =============================================================================
 
 set "ROOT=%~dp0..\.."
@@ -16,7 +16,7 @@ mkdir "%OUTDIR%" 2>nul
 
 echo.
 echo ============================================================
-echo   MONITOR CONTINUO DE TELA - Bot_RPA
+echo   MONITOR CONTINUO DE TELA - TACE
 echo   Dispositivo: %SERIAL%
 echo   Capturas em: %OUTDIR%
 echo ============================================================

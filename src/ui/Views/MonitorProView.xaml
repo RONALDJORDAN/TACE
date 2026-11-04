@@ -1,4 +1,4 @@
-<UserControl x:Class="BotRpaUI.Views.MonitorProView"
+<UserControl x:Class="TACEUI.Views.MonitorProView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              Background="#0B0B13"
@@ -798,7 +798,7 @@
                     <TabItem Header="Global (Sistema)">
                         <TextBox x:Name="TxtLogGlobalPro" Background="#0A0A0F" Foreground="#4EDEA3" BorderBrush="Transparent" BorderThickness="0"
                                  FontFamily="Consolas, Cascadia Code, Courier New" FontSize="11.5" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" IsReadOnly="True"
-                                 Padding="8,8,8,8" Margin="0,2,0,0" Text="[00:00:00] Bot_RPA RPA Studio (Layout Pro) inicializado. Monitorando portas ADB...&#x0a;"/>
+                                 Padding="8,8,8,8" Margin="0,2,0,0" Text="[00:00:00] TACE RPA Studio (Layout Pro) inicializado. Monitorando portas ADB...&#x0a;"/>
                     </TabItem>
                 </TabControl>
             </Grid>

@@ -1,11 +1,12 @@
 # ==========================================================================
-# Bot_RPA — .gitignore
+# TACE — .gitignore
 # Configurado para rastrear todos os arquivos do projeto, ferramentas (Gnirehtet,
 # ADB, etc.), configurações, bancos, dados e recursos, ignorando apenas arquivos
 # temporários de compilação/IDE e binários que excedem o limite de 100MB do GitHub.
 # ==========================================================================
 
 # 1. Limite de tamanho de arquivo do GitHub (bloqueia push > 100MB)
+data/output/TACEui.exe
 data/output/BotRPAui.exe
 
 # 2. Arquivos temporários e intermediários de compilação (.NET)
@@ -13,7 +14,6 @@ src/ui/obj/
 [Oo]bj/
 *.wpftmp.csproj
 *.csproj.user
-
 # 3. Cache e arquivos temporários de IDE / Editor
 .vs/
 .idea/

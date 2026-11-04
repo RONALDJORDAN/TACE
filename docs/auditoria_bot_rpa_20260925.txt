@@ -1,6 +1,6 @@
 ================================================================================
- AUDITORIA COMPLETA - Bot_RPA (Plataforma InnovTech)
- Data da auditoria: 25/09/2026 | Escopo: C:\Projetos\Bot_RPA integral
+ AUDITORIA COMPLETA - TACE (Plataforma InnovTech)
+ Data da auditoria: 25/09/2026 | Escopo: C:\Projetos\TACE integral
  (codigo, configuracao, scripts, documentacao, git)
 ================================================================================
 
@@ -8,7 +8,7 @@ PARTE 1 - AUDITORIA TECNICA
 --------------------------------------------------------------------------------
 
 1. IDENTIFICACAO E PORTE
-  Nome oficial .....: Bot_RPA - Plataforma InnovTech (antes: inno_botRpa / BotRpa)
+  Nome oficial .....: TACE - Plataforma InnovTech (antes: inno_TACE / TACE)
   Tipo .............: Aplicativo desktop Windows (automacao robotica - RPA)
   Stack ............: C nativo (motor) + C# WPF .NET 8 (interface) + SQLite + Firebase RTDB
   Tamanho do src/ ..: 27 arquivos .c + 28 .h + 22 .cs + 12 .xaml
@@ -19,7 +19,7 @@ PARTE 1 - AUDITORIA TECNICA
 
 2. ARQUITETURA - HIBRIDA EM 2 CAMADAS ISOLADAS
 
-  [UI - C# WPF .NET 8 (BotRPAui.exe)]
+  [UI - C# WPF .NET 8 (TACEui.exe)]
    Monitor Classic/Pro, Relatorios, BotLearn, Config, Mapa Neural
    Tema Glassmorphism Cyber-Industrial
               |
@@ -116,7 +116,7 @@ PARTE 2 - RESUMO EXECUTIVO
 ================================================================================
 
 O QUE ELE E
-  O Bot_RPA e o robo de bancada da InnovTech: um programa de Windows que
+  O TACE e o robo de bancada da InnovTech: um programa de Windows que
   configura, instala e gerencia tablets Android em lote, via cabo USB,
   com supervisao visual em tempo real.
 
@@ -131,7 +131,7 @@ PARA QUE FOI CRIADO
 QUANDO E POR QUEM
   Iniciado antes de junho/2026 na InnovTech, com o codigo atual nascido
   em 16/08/2026 (commit inicial de Jordan Araujo, conta RONALDJORDAN) a
-  partir do projeto antecessor inno_botRpa/BotRpa; evoluido em sprints
+  partir do projeto antecessor inno_TACE/TACE; evoluido em sprints
   ate setembro/2026 (OTA em 21/08, algoritmos e Monitor Pro em 26/08,
   sync cloud e autenticacao em 25/09).
 
@@ -153,7 +153,7 @@ COMO FOI CRIADO
   Em arquitetura hibrida: o MOTOR em C (BotEngine.dll, ~27 fontes)
   cuida da velocidade bruta - ADB, UIAutomator, cliques por centroides,
   batching de comandos e IA de seletores; a INTERFACE em C# WPF
-  (BotRPAui.exe, 22 fontes + 12 telas) cuida da experiencia - monitores
+  (TACEui.exe, 22 fontes + 12 telas) cuida da experiencia - monitores
   Classic/Pro, relatorios, mapa neural da IA, Central OTA e paineis de
   configuracao - conversando via [DllImport] (36 funcoes). Build em um
   comando (build.bat/build_release.bat), versionamento por data/hora e

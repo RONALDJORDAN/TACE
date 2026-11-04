@@ -5,7 +5,7 @@
 // BotLearn — Motor de Decisão (Score Engine)
 // Interface pública para os motores F1/F2 consultarem e
 // retroalimentarem o sistema de aprendizado.
-// Autor: Jordan Araujo | BotRpa
+// Autor: Jordan Araujo | TACE
 // ============================================================
 
 #include "learn_db.h"

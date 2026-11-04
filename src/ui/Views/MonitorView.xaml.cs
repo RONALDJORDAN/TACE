@@ -6,7 +6,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Threading;
 
-namespace BotRpaUI.Views
+namespace TACEUI.Views
 {
     public class DeviceModel : System.ComponentModel.INotifyPropertyChanged
     {
@@ -112,7 +112,7 @@ namespace BotRpaUI.Views
             }
         }
 
-        public string UsbPortExibicao => BotRpaUI.Core.UsbPortNameService.ObterExibicao(_usbPort);
+        public string UsbPortExibicao => TACEUI.Core.UsbPortNameService.ObterExibicao(_usbPort);
 
         private string _battery = string.Empty;
         public string Battery { 
@@ -239,7 +239,7 @@ namespace BotRpaUI.Views
                     var m = _municipiosArray[idx];
                     
                     // O executável roda em data/output/, mas os caminhos do CSV são data/input/
-                    string baseDir = BotRpaUI.Core.PathHelper.GetRootDirectory();
+                    string baseDir = TACEUI.Core.PathHelper.GetRootDirectory();
                     
                     apkPath = GetDynamicApkPath(m.Nome);
                     if (!string.IsNullOrEmpty(apkPath) && !System.IO.Path.IsPathRooted(apkPath))
@@ -331,7 +331,7 @@ namespace BotRpaUI.Views
                 if (idx >= 0 && idx < _comboList.Count)
                 {
                     var m = _municipiosArray[idx];
-                    string baseDir = BotRpaUI.Core.PathHelper.GetRootDirectory();
+                    string baseDir = TACEUI.Core.PathHelper.GetRootDirectory();
                     
                     apkPath = GetDynamicApkPath(m.Nome);
                     if (!string.IsNullOrEmpty(apkPath) && !System.IO.Path.IsPathRooted(apkPath))
@@ -411,7 +411,7 @@ namespace BotRpaUI.Views
                 if (idx >= 0 && idx < _comboList.Count)
                 {
                     var m = _municipiosArray[idx];
-                    string baseDir = BotRpaUI.Core.PathHelper.GetRootDirectory();
+                    string baseDir = TACEUI.Core.PathHelper.GetRootDirectory();
                     
                     apkPath = GetDynamicApkPath(m.Nome);
                     if (!string.IsNullOrEmpty(apkPath) && !System.IO.Path.IsPathRooted(apkPath))
@@ -484,7 +484,7 @@ namespace BotRpaUI.Views
             if (idx >= 0 && idx < _comboList.Count)
             {
                 var m = _municipiosArray[idx];
-                string baseDir = BotRpaUI.Core.PathHelper.GetRootDirectory();
+                string baseDir = TACEUI.Core.PathHelper.GetRootDirectory();
                 
                 apkPath = GetDynamicApkPath(m.Nome);
                 if (!string.IsNullOrEmpty(apkPath) && !System.IO.Path.IsPathRooted(apkPath))
@@ -826,11 +826,11 @@ namespace BotRpaUI.Views
 
             LoadMunicipios();
 
-            LogMessage("Motor Bot_RPA inicializado. Aguardando conexão de aparelhos ADB...");
+            LogMessage("Motor TACE inicializado. Aguardando conexão de aparelhos ADB...");
             UpdateCategoryVisibility();
             
             // Subscrição para reagir imediatamente quando o usuário altera chaves em Configurações
-            BotRpaUI.Core.SettingsManager.OnSettingsChanged += () =>
+            TACEUI.Core.SettingsManager.OnSettingsChanged += () =>
             {
                 Dispatcher.BeginInvoke(() =>
                 {
@@ -838,7 +838,7 @@ namespace BotRpaUI.Views
                     for (int i = _devicesList.Count - 1; i >= 0; i--)
                     {
                         var d = _devicesList[i];
-                        if (!BotRpaUI.Core.DeviceFilterHelper.IsDeviceModelAllowed(d.Serial, d.Model, ""))
+                        if (!TACEUI.Core.DeviceFilterHelper.IsDeviceModelAllowed(d.Serial, d.Model, ""))
                         {
                             _devicesList.RemoveAt(i);
                             _knownSerials.Remove(d.Serial);
@@ -931,7 +931,7 @@ namespace BotRpaUI.Views
                 }
 
                 // Wallpaper File
-                string baseDir = BotRpaUI.Core.PathHelper.GetRootDirectory();
+                string baseDir = TACEUI.Core.PathHelper.GetRootDirectory();
                 string wpRaw = m.WallpaperPath;
                 string fullWp = "";
                 if (!string.IsNullOrEmpty(wpRaw))
@@ -990,7 +990,7 @@ namespace BotRpaUI.Views
                             string mac = dev.authorized == 1 ? dev.mac : "N/A";
                             if ((mac == "N/A" || mac == "---" || string.IsNullOrEmpty(mac)) && !string.IsNullOrEmpty(serial))
                             {
-                                var existing = BotRpaUI.Core.SQLiteDatabaseManager.BuscarPorSerial(serial);
+                                var existing = TACEUI.Core.SQLiteDatabaseManager.BuscarPorSerial(serial);
                                 if (existing != null && !string.IsNullOrEmpty(existing.MAC) && existing.MAC != "N/A" && existing.MAC != "---")
                                 {
                                     mac = existing.MAC;
@@ -1000,24 +1000,24 @@ namespace BotRpaUI.Views
 
                             string usbPort = dev.usb_port ?? string.Empty;
                             if (string.IsNullOrWhiteSpace(usbPort) && dev.authorized == 1 && !string.IsNullOrWhiteSpace(serial))
-                                usbPort = BotRpaUI.Core.UsbPortResolver.ObterPorta(serial);
+                                usbPort = TACEUI.Core.UsbPortResolver.ObterPorta(serial);
 
                             // Registra no banco SQLite para manter permanentemente para o futuro
                             if (dev.authorized == 1)
                             {
-                                BotRpaUI.Core.SQLiteDatabaseManager.RegistrarSeNovo(serial, dev.manufacturer, model, mac);
+                                TACEUI.Core.SQLiteDatabaseManager.RegistrarSeNovo(serial, dev.manufacturer, model, mac);
 
                                 // Garante o MAC no cadastro: o motor C ja devolve o endereco no
                                 // refresh (batched); se faltar, o servico extrai com o ciclo
                                 // de Wi-Fi (liga -> extrai -> restaura) e grava no banco.
-                                BotRpaUI.Core.MacCaptureService.GarantirMacRegistrado(serial, model, mac);
+                                TACEUI.Core.MacCaptureService.GarantirMacRegistrado(serial, model, mac);
 
                                 // A captura pode ter gravado um MAC novo: relê do banco para
                                 // exibir na lista ja neste ciclo.
-                                if (!BotRpaUI.Core.MacCaptureService.MacValido(mac))
+                                if (!TACEUI.Core.MacCaptureService.MacValido(mac))
                                 {
-                                    var gravado = BotRpaUI.Core.SQLiteDatabaseManager.BuscarPorSerial(serial);
-                                    if (gravado != null && BotRpaUI.Core.MacCaptureService.MacValido(gravado.MAC))
+                                    var gravado = TACEUI.Core.SQLiteDatabaseManager.BuscarPorSerial(serial);
+                                    if (gravado != null && TACEUI.Core.MacCaptureService.MacValido(gravado.MAC))
                                     {
                                         mac = gravado.MAC;
                                     }
@@ -1025,7 +1025,7 @@ namespace BotRpaUI.Views
                             }
 
                             // Se o modelo deste aparelho estiver DESATIVADO em Configurações, oculta do monitor ADB
-                            if (!BotRpaUI.Core.DeviceFilterHelper.IsDeviceModelAllowed(serial, model, dev.manufacturer))
+                            if (!TACEUI.Core.DeviceFilterHelper.IsDeviceModelAllowed(serial, model, dev.manufacturer))
                             {
                                 continue;
                             }
@@ -1045,17 +1045,17 @@ namespace BotRpaUI.Views
                     }
 
                     // Se a opção de exibir dispositivos desconectados / histórico estiver ATIVA:
-                    if (BotRpaUI.Core.SettingsManager.ShowDisconnectedDevices)
+                    if (TACEUI.Core.SettingsManager.ShowDisconnectedDevices)
                     {
                         var connectedSerials = new System.Collections.Generic.HashSet<string>();
                         foreach (var d in newDevices) connectedSerials.Add(d.Serial);
 
-                        var historico = BotRpaUI.Core.SQLiteDatabaseManager.LerTodos();
+                        var historico = TACEUI.Core.SQLiteDatabaseManager.LerTodos();
                         foreach (var h in historico)
                         {
                             if (!string.IsNullOrEmpty(h.Serial) && !connectedSerials.Contains(h.Serial))
                             {
-                                if (!BotRpaUI.Core.DeviceFilterHelper.IsDeviceModelAllowed(h.Serial, h.Modelo, h.Fabricante))
+                                if (!TACEUI.Core.DeviceFilterHelper.IsDeviceModelAllowed(h.Serial, h.Modelo, h.Fabricante))
                                 {
                                     continue;
                                 }
@@ -1088,7 +1088,7 @@ namespace BotRpaUI.Views
                         for (int i = _devicesList.Count - 1; i >= 0; i--)
                         {
                             var currentItem = _devicesList[i];
-                            if (!currentSerials.Contains(currentItem.Serial) || !BotRpaUI.Core.DeviceFilterHelper.IsDeviceModelAllowed(currentItem.Serial, currentItem.Model, ""))
+                            if (!currentSerials.Contains(currentItem.Serial) || !TACEUI.Core.DeviceFilterHelper.IsDeviceModelAllowed(currentItem.Serial, currentItem.Model, ""))
                             {
                                 _devicesList.RemoveAt(i);
                                 _knownSerials.Remove(currentItem.Serial);
@@ -1462,7 +1462,7 @@ namespace BotRpaUI.Views
             {
                 if (!string.IsNullOrWhiteSpace(targetSerial))
                 {
-                    BotRpaUI.Core.RegistroStorage.RegistrarExecucao(targetSerial, displayMsg);
+                    TACEUI.Core.RegistroStorage.RegistrarExecucao(targetSerial, displayMsg);
                 }
             }
             catch { }
@@ -1484,12 +1484,12 @@ namespace BotRpaUI.Views
                 return;
             }
 
-            var result = BotRpaUI.Core.DeviceCommandQueue.Enqueue(serial, commandKey, action);
-            if (result.Status == BotRpaUI.Core.DeviceCommandQueue.EnqueueStatus.Duplicate)
+            var result = TACEUI.Core.DeviceCommandQueue.Enqueue(serial, commandKey, action);
+            if (result.Status == TACEUI.Core.DeviceCommandQueue.EnqueueStatus.Duplicate)
             {
                 LogMessage($"[{serial}] {label} ja esta em execucao ou na fila. Clique ignorado.");
             }
-            else if (result.Status == BotRpaUI.Core.DeviceCommandQueue.EnqueueStatus.Queued)
+            else if (result.Status == TACEUI.Core.DeviceCommandQueue.EnqueueStatus.Queued)
             {
                 LogMessage($"[{serial}] {label} na fila (posicao {result.Position}).");
             }
@@ -1529,7 +1529,7 @@ namespace BotRpaUI.Views
                 if (idx >= 0 && idx < _comboList.Count)
                 {
                     var m = _municipiosArray[idx];
-                    string baseDir = BotRpaUI.Core.PathHelper.GetRootDirectory();
+                    string baseDir = TACEUI.Core.PathHelper.GetRootDirectory();
                     
                     apkPath = GetDynamicApkPath(m.Nome);
                     if (!string.IsNullOrEmpty(apkPath) && !System.IO.Path.IsPathRooted(apkPath))
@@ -1638,7 +1638,7 @@ namespace BotRpaUI.Views
                 if (idx >= 0 && idx < _comboList.Count)
                 {
                     var m = _municipiosArray[idx];
-                    string baseDir = BotRpaUI.Core.PathHelper.GetRootDirectory();
+                    string baseDir = TACEUI.Core.PathHelper.GetRootDirectory();
                     
                     apkPath = GetDynamicApkPath(m.Nome);
                     if (!string.IsNullOrEmpty(apkPath) && !System.IO.Path.IsPathRooted(apkPath))
@@ -1761,8 +1761,8 @@ namespace BotRpaUI.Views
                 return;
             }
 
-            string email = BotRpaUI.Core.SettingsManager.GoogleAccountEmail.Trim();
-            string senha = BotRpaUI.Core.SettingsManager.GetGoogleAccountPassword();
+            string email = TACEUI.Core.SettingsManager.GoogleAccountEmail.Trim();
+            string senha = TACEUI.Core.SettingsManager.GetGoogleAccountPassword();
 
             if (string.IsNullOrWhiteSpace(email))
             {
@@ -1975,7 +1975,7 @@ namespace BotRpaUI.Views
                 return false;
             }
 
-            string baseDir = BotRpaUI.Core.PathHelper.GetRootDirectory();
+            string baseDir = TACEUI.Core.PathHelper.GetRootDirectory();
             if (!System.IO.Path.IsPathRooted(wpPath))
             {
                 wpPath = System.IO.Path.GetFullPath(System.IO.Path.Combine(baseDir, wpPath));
@@ -2179,7 +2179,7 @@ namespace BotRpaUI.Views
                 if (idx >= 0 && idx < _comboList.Count)
                 {
                     var m = _municipiosArray[idx];
-                    string baseDir = BotRpaUI.Core.PathHelper.GetRootDirectory();
+                    string baseDir = TACEUI.Core.PathHelper.GetRootDirectory();
                     
                     apkPath = GetDynamicApkPath(m.Nome);
                     if (!string.IsNullOrEmpty(apkPath) && !System.IO.Path.IsPathRooted(apkPath))
@@ -2223,7 +2223,7 @@ namespace BotRpaUI.Views
 
         private void BtnStop_Click(object sender, RoutedEventArgs e)
         {
-            int pendentes = BotRpaUI.Core.DeviceCommandQueue.ClearAll();
+            int pendentes = TACEUI.Core.DeviceCommandQueue.ClearAll();
             if (pendentes > 0)
                 LogMessage($"[PARADO] {pendentes} comando(s) pendente(s) removido(s) da fila.");
             try { Engine_CancelAll(); } catch { }
@@ -2330,7 +2330,7 @@ namespace BotRpaUI.Views
                 if (idx >= 0 && idx < _comboList.Count)
                 {
                     var m = _municipiosArray[idx];
-                    string baseDir = BotRpaUI.Core.PathHelper.GetRootDirectory();
+                    string baseDir = TACEUI.Core.PathHelper.GetRootDirectory();
                     apkPath = GetDynamicApkPath(m.Nome);
                     if (!string.IsNullOrEmpty(apkPath) && !System.IO.Path.IsPathRooted(apkPath))
                         apkPath = System.IO.Path.GetFullPath(System.IO.Path.Combine(baseDir, apkPath));
@@ -2436,7 +2436,7 @@ namespace BotRpaUI.Views
                 if (idx >= 0 && idx < _comboList.Count)
                 {
                     var m = _municipiosArray[idx];
-                    string baseDir = BotRpaUI.Core.PathHelper.GetRootDirectory();
+                    string baseDir = TACEUI.Core.PathHelper.GetRootDirectory();
                     
                     apkPath = GetDynamicApkPath(m.Nome);
                     if (!string.IsNullOrEmpty(apkPath) && !System.IO.Path.IsPathRooted(apkPath))
@@ -2568,9 +2568,9 @@ namespace BotRpaUI.Views
 
         public void UpdateCategoryVisibility()
         {
-            bool v7 = BotRpaUI.Core.SettingsManager.EnableDeviceVision7;
-            bool m7 = BotRpaUI.Core.SettingsManager.EnableDeviceTabMulti;
-            bool t20 = BotRpaUI.Core.SettingsManager.EnableDeviceNokiaT20;
+            bool v7 = TACEUI.Core.SettingsManager.EnableDeviceVision7;
+            bool m7 = TACEUI.Core.SettingsManager.EnableDeviceTabMulti;
+            bool t20 = TACEUI.Core.SettingsManager.EnableDeviceNokiaT20;
 
             if (BtnCategoryPositivo != null) BtnCategoryPositivo.Visibility = v7 ? Visibility.Visible : Visibility.Collapsed;
             if (BtnCategoryMultilaser != null) BtnCategoryMultilaser.Visibility = m7 ? Visibility.Visible : Visibility.Collapsed;
@@ -2623,7 +2623,7 @@ namespace BotRpaUI.Views
         {
             if (DateTime.Now.Subtract(_lastEscTime).TotalSeconds < 1.0)
             {
-                int pendentes = BotRpaUI.Core.DeviceCommandQueue.ClearAll();
+                int pendentes = TACEUI.Core.DeviceCommandQueue.ClearAll();
                 Engine_CancelAll();
                 LogMessage($"[ALERTA] PARADA GERAL ENVIADA (Duplo ESC) — {pendentes} comando(s) pendente(s) removido(s).");
                 _isPaused = true;
@@ -2637,12 +2637,12 @@ namespace BotRpaUI.Views
     
         private string GetDynamicApkPath(string municipio)
         {
-            return BotRpaUI.Core.PathHelper.GetDynamicApkPath(municipio);
+            return TACEUI.Core.PathHelper.GetDynamicApkPath(municipio);
         }
 
         private string GetDynamicPacotePath(string municipio)
         {
-            return BotRpaUI.Core.PathHelper.GetDynamicPacotePath(municipio);
+            return TACEUI.Core.PathHelper.GetDynamicPacotePath(municipio);
         }
 
         private void Window_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)

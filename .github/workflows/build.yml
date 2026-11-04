@@ -1,4 +1,4 @@
-name: Build Bot_RPA
+name: Build TACE
 
 on:
   push:
@@ -23,7 +23,7 @@ on:
         type: boolean
 
 env:
-  BOTRPA_ROOT: ${{ github.workspace }}
+  TACE_ROOT: ${{ github.workspace }}
   DOTNET_VERSION: '8.0.x'
 
 jobs:
@@ -71,11 +71,11 @@ jobs:
           gcc -shared src\api.c src\core\drivers\adb.c src\core\data\municipios.c src\core\data\cofre.c src\core\data\paths.c src\core\data\dispositivos.c src\core\config\config.c src\core\learn\learn_db.c src\core\learn\learn_engine.c src\core\functions\vision7\f1_vision_tab7.c src\core\functions\vision7\f2_vision_tab7.c src\core\functions\vision7\f3_vision_tab7.c src\core\functions\vision7\f4_vision_tab7.c src\core\functions\vision7\f5_vision_tab7.c src\core\functions\vision7\f6_vision_tab7.c src\core\functions\vision7\f8_vision_tab7.c src\core\functions\tabmulti\f1_tabmulti_m7.c src\core\functions\tabmulti\f2_tabmulti_m7.c src\core\functions\tabmulti\f3_tabmulti_m7.c src\core\functions\tabmulti\f4_tabmulti_m7.c src\core\functions\tabmulti\f5_tabmulti_m7.c src\core\functions\tabmulti\m7_helpers.c src\core\functions\nokia_t20\f1_nokia_t20.c src\core\functions\nokia_t20\f2_nokia_t20.c src\core\functions\nokia_t20\f3_nokia_t20.c -o data\output\BotEngine.dll -static -lcomctl32 -lgdi32 -luser32 -lcrypt32 -mwindows -D_WIN32_WINNT=0x0A00 -DWINVER=0x0A00
           if %errorlevel% neq 0 exit /b %errorlevel%
 
-      - name: Compilar UI C# (BotRPAui.exe)
+      - name: Compilar UI C# (TACEui.exe)
         shell: pwsh
         run: |
           cd src\ui
-          dotnet publish BotRpaUI.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o ..\..\data\output\
+          dotnet publish TACEUI.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o ..\..\data\output\
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Copiar BotEngine.dll para output da UI
@@ -83,14 +83,14 @@ jobs:
         run: |
           Copy-Item "data\output\BotEngine.dll" "src\ui\bin\Release\net8.0-windows10.0.22000.0\win-x64\BotEngine.dll" -Force
 
-      - name: Criar pacote Release (BotRPA_Release)
+      - name: Criar pacote Release (TACE_Release)
         if: ${{ github.event.inputs.build_mode != 'teste' || github.event_name == 'push' }}
         shell: cmd
         run: |
-          set "RELEASE_DIR=BotRPA_Release"
+          set "RELEASE_DIR=TACE_Release"
           if exist "%RELEASE_DIR%" rmdir /s /q "%RELEASE_DIR%"
           mkdir "%RELEASE_DIR%"
-          copy /y "data\output\BotRPAui.exe" "%RELEASE_DIR%\" >nul
+          copy /y "data\output\TACEui.exe" "%RELEASE_DIR%\" >nul
           copy /y "data\output\BotEngine.dll" "%RELEASE_DIR%\" >nul
           xcopy /s /i /y "config" "%RELEASE_DIR%\config" >nul
           mkdir "%RELEASE_DIR%\tools" 2>nul
@@ -106,10 +106,10 @@ jobs:
         if: ${{ github.event.inputs.sign == 'true' || github.event_name == 'push' }}
         shell: pwsh
         run: |
-          $cert = $env:BOTRPA_SIGN_CERT
-          $pass = $env:BOTRPA_SIGN_PASSWORD
+          $cert = $env:TACE_SIGN_CERT
+          $pass = $env:TACE_SIGN_PASSWORD
           if (-not $cert -or -not (Test-Path $cert)) {
-            Write-Host "AVISO: BOTRPA_SIGN_CERT não definido ou não encontrado. Pulando assinatura."
+            Write-Host "AVISO: TACE_SIGN_CERT não definido ou não encontrado. Pulando assinatura."
             exit 0
           }
           $signtool = Get-ChildItem -Path "C:\Program Files (x86)\Windows Kits\10\bin\x64\signtool.exe", "C:\Program Files\Windows Kits\10\bin\x64\signtool.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
@@ -117,7 +117,7 @@ jobs:
             Write-Host "AVISO: SignTool não encontrado. Pulando assinatura."
             exit 0
           }
-          $files = @("data\output\BotRPAui.exe", "data\output\BotEngine.dll", "BotRPA_Release\BotRPAui.exe", "BotRPA_Release\BotEngine.dll")
+          $files = @("data\output\TACEui.exe", "data\output\BotEngine.dll", "TACE_Release\TACEui.exe", "TACE_Release\BotEngine.dll")
           foreach ($f in $files) {
             if (Test-Path $f) {
               Write-Host "Assinando $f..."
@@ -131,7 +131,7 @@ jobs:
       - name: Gerar SHA256SUMS
         shell: pwsh
         run: |
-          $files = Get-ChildItem "data\output\BotRPAui.exe", "data\output\BotEngine.dll", "BotRPA_Release\*" -Recurse -File | Where-Object { $_.Extension -ne '.pdb' }
+          $files = Get-ChildItem "data\output\TACEui.exe", "data\output\BotEngine.dll", "TACE_Release\*" -Recurse -File | Where-Object { $_.Extension -ne '.pdb' }
           $hashes = @()
           foreach ($f in $files) {
             $hash = Get-FileHash -Path $f.FullName -Algorithm SHA256
@@ -144,9 +144,9 @@ jobs:
         with:
           name: bot-rpa-build
           path: |
-            data\output\BotRPAui.exe
+            data\output\TACEui.exe
             data\output\BotEngine.dll
-            BotRPA_Release\
+            TACE_Release\
             SHA256SUMS.txt
           retention-days: 30
 
@@ -162,13 +162,13 @@ jobs:
             exit /b 1
           )
           set /p VER=<config\version.txt
-          powershell -NoProfile -Command "$f='scripts\scripts de controle\BotRPA.iss'; $v='%VER%'; $c=[char]34; $s=Get-Content -LiteralPath $f -Raw; $s=$s -replace '(?m)^#define AppVersion .*$', ('#define AppVersion ' + $c + $v + $c); Set-Content -LiteralPath $f -Value $s -Encoding UTF8"
-          "%ISCC%" "scripts\scripts de controle\BotRPA.iss"
+          powershell -NoProfile -Command "$f='scripts\scripts de controle\TACE.iss'; $v='%VER%'; $c=[char]34; $s=Get-Content -LiteralPath $f -Raw; $s=$s -replace '(?m)^#define AppVersion .*$', ('#define AppVersion ' + $c + $v + $c); Set-Content -LiteralPath $f -Value $s -Encoding UTF8"
+          "%ISCC%" "scripts\scripts de controle\TACE.iss"
 
       - name: Publicar instalador
         if: ${{ github.event.inputs.build_mode == 'installer' || github.event_name == 'push' }}
         uses: actions/upload-artifact@v4
         with:
           name: bot-rpa-installer
-          path: "scripts\scripts de controle\BotRPA_Instalador_*.exe"
+          path: "scripts\scripts de controle\TACE_Instalador_*.exe"
           retention-days: 30

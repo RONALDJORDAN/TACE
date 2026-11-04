@@ -1,7 +1,7 @@
 <Window x:Class="PrototipoConsole.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Bot_RPA · Bancada"
+        Title="TACE · Bancada"
         Width="1440"
         Height="900"
         MinWidth="1180"
@@ -45,7 +45,7 @@
                                    HorizontalAlignment="Center"
                                    VerticalAlignment="Center"/>
                     </Border>
-                    <TextBlock Text="Bot_RPA"
+                    <TextBlock Text="TACE"
                                FontFamily="{StaticResource Font.Display}"
                                FontSize="13"
                                FontWeight="SemiBold"

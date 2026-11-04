@@ -1,7 +1,7 @@
 using System.Windows;
-using BotRpaUI.Views;
+using TACEUI.Views;
 
-namespace BotRpaUI
+namespace TACEUI
 {
     public partial class MainWindow : Window
     {
@@ -21,8 +21,8 @@ namespace BotRpaUI
         {
             InitializeComponent();
             
-            string versionStr = BotRpaUI.Core.AppInfo.CurrentVersion;
-            Title = $"Bot_RPA - v{versionStr}";
+            string versionStr = TACEUI.Core.AppInfo.CurrentVersion;
+            Title = $"TACE - v{versionStr}";
             TxtHeaderVersion.Text = versionStr;
 
             // Timer para telemetria contínua de dispositivos conectados no cabeçalho
@@ -57,16 +57,16 @@ namespace BotRpaUI
             NavigateToDefaultMonitor();
 
             // Escuta mudanças de configuração em tempo de execução
-            BotRpaUI.Core.SettingsManager.OnSettingsChanged += () =>
+            TACEUI.Core.SettingsManager.OnSettingsChanged += () =>
             {
                 Dispatcher.Invoke(() =>
                 {
                     UpdateMonitorNavigationVisibility();
-                    if (MainContent.Content is MonitorView && BotRpaUI.Core.SettingsManager.UsbMonitorInterface.Equals("Pro", StringComparison.OrdinalIgnoreCase))
+                    if (MainContent.Content is MonitorView && TACEUI.Core.SettingsManager.UsbMonitorInterface.Equals("Pro", StringComparison.OrdinalIgnoreCase))
                     {
                         NavigateToMonitorPro();
                     }
-                    else if (MainContent.Content is MonitorProView && !BotRpaUI.Core.SettingsManager.UsbMonitorInterface.Equals("Pro", StringComparison.OrdinalIgnoreCase))
+                    else if (MainContent.Content is MonitorProView && !TACEUI.Core.SettingsManager.UsbMonitorInterface.Equals("Pro", StringComparison.OrdinalIgnoreCase))
                     {
                         NavigateToMonitor();
                     }
@@ -76,7 +76,7 @@ namespace BotRpaUI
 
         public void UpdateMonitorNavigationVisibility()
         {
-            bool isPro = BotRpaUI.Core.SettingsManager.UsbMonitorInterface.Equals("Pro", StringComparison.OrdinalIgnoreCase);
+            bool isPro = TACEUI.Core.SettingsManager.UsbMonitorInterface.Equals("Pro", StringComparison.OrdinalIgnoreCase);
             if (isPro)
             {
                 BtnMenuMonitor.Visibility = Visibility.Collapsed;
@@ -92,7 +92,7 @@ namespace BotRpaUI
         public void NavigateToDefaultMonitor()
         {
             UpdateMonitorNavigationVisibility();
-            if (BotRpaUI.Core.SettingsManager.UsbMonitorInterface.Equals("Pro", StringComparison.OrdinalIgnoreCase))
+            if (TACEUI.Core.SettingsManager.UsbMonitorInterface.Equals("Pro", StringComparison.OrdinalIgnoreCase))
             {
                 NavigateToMonitorPro();
             }

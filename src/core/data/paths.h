@@ -6,17 +6,17 @@
 // ============================================================================
 //  RESOLUCAO DE PASTAS: PROGRAMAS (instalacao) x DADOS (usuario)
 // ============================================================================
-//  O Bot_RPA grava na propria pasta: banco de dispositivos, cofre de
+//  O TACE grava na propria pasta: banco de dispositivos, cofre de
 //  credenciais (municipios.csv), pacotes dos municipios, logs e registros.
 //
 //  Em instalacao em "C:\Program Files" essa pasta nao e gravavel pelo
 //  usuario comum. Por isso o instalador define a variavel de ambiente
-//  machine-wide BOT_RPA_DATA_DIR apontando para %ProgramData%\Bot_RPA.
+//  machine-wide TACE_DATA_DIR apontando para %ProgramData%\TACE.
 //
 //  Resolucao (identica a PathHelper.GetRootDirectory do lado C#):
-//    1) BOT_RPA_DATA_DIR (definida pelo instalador);
+//    1) TACE_DATA_DIR (definida pelo instalador);
 //    2) a propria pasta do executavel, se for gravavel (modo portatil);
-//    3) %ProgramData%\Bot_RPA.
+//    3) %ProgramData%\TACE.
 //
 //  O mesmo valor e gravado no arquivo "%DATA_DIR%\data_dir.txt" para que
 //  o lado C# e o lado C concordem mesmo sem a variavel de ambiente.

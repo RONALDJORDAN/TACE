@@ -1,15 +1,15 @@
-# Plano de Melhoria — Bot_RPA (Plataforma InnovTech)
+# Plano de Melhoria — TACE (Plataforma InnovTech)
 
 > Criado em 24/09/2026 a partir da auditoria técnica da sessão.
 > Como usar: cada item tem `[ ]` de status. Marque `[x]` ao concluir e registre o
-> detalhamento cronológico em `memoria_bot_rpa.md` (Regra de Ouro #2).
+> detalhamento cronológico em `memoria_TACE.md` (Regra de Ouro #2).
 > Legenda: 🔴 alto impacto · 🟡 médio · 🟢 higiene | Esforço: P/M/G.
 
 ## FASE 1 — Segurança e LGPD (fazer primeiro)
 
 - [ ] **🔴 Cofre de senhas (DPAPI) — esforço M**
   Problema: `config/municipios.csv` guarda `login;senha` em texto puro e é copiado
-  para `data/output/`, `BotRPA_Release/` e runtime. Quem recebe a release leva as
+  para `data/output/`, `TACE_Release/` e runtime. Quem recebe a release leva as
   credenciais de todos os municípios.
   Proposta: cifrar a coluna com DPAPI do Windows (`CryptProtectData`, sem senha
   mestra). Separar seed público de cofre local.
@@ -65,7 +65,7 @@
 ## FASE 4 — Performance e distribuição
 
 - [ ] **🟡 EXE de ~185MB — esforço M**
-  Problema: single-file self-contained sem trimming (`BotRpaUI.csproj`); cada OTA
+  Problema: single-file self-contained sem trimming (`TACEUI.csproj`); cada OTA
   baixa ~185MB.
   Proposta: avaliar `PublishTrimmed` (cuidado com WPF/reflection) ou
   `InvariantGlobalization`.
@@ -78,7 +78,7 @@
   canônico.   (Correção `wmic` → `Get-Date` feita em 24/09/2026.)
 
 - [x] **🟢 Terminal de controle — implementado 25/09/2026**
-  `scripts/scripts de controle/Terminal.ps1` + `Terminal.bat`: REPL `BotRPA>` com `ajuda`, `build teste`,
+  `scripts/scripts de controle/Terminal.ps1` + `Terminal.bat`: REPL `TACE>` com `ajuda`, `build teste`,
   `build final`, `versao`, `dispositivos` (adb), `ota`, `deps`, `limpar`, `sair`.
   Testado funcionalmente (sintaxe 0 erros, comandos leitura/ajuda validados).
 
@@ -90,7 +90,7 @@
   respondendo) + Unity para funções puras em C (`normalize_char`, fuzzy, parse CSV).
 
 - [ ] **🟢 README fiel à realidade — esforço P**
-  Problema: cita `docs/`, `archive/`, `data/input/`, `BotRPAui.exe` — nada existe.
+  Problema: cita `docs/`, `archive/`, `data/input/`, `TACEui.exe` — nada existe.
   Proposta: reescrever espelhando o mapa do `AGENTS.md`.
 
 - [ ] **🟢 Rotação de logs/registros — esforço P**
@@ -192,18 +192,18 @@ Itens ficam `[ ]` até a validação e passam a `[x]` após build/teste.
 
 ## Fase 5 — Menu superior (identidade visual)
 - [x] Substituir o bloco "BR"/logo textual do menu superior padrão (MainWindow) pelo
-  ícone da ferramenta (`Assets/Icons/BotRPAui.ico` ou imagem equivalente), ao lado do
-  texto "Bot_RPA", preservando tamanho, alinhamento e comportamento em todas as páginas.
+  ícone da ferramenta (`Assets/Icons/TACEui.ico` ou imagem equivalente), ao lado do
+  texto "TACE", preservando tamanho, alinhamento e comportamento em todas as páginas.
 - [x] Validar em janela normal, maximizada e fullscreen.
 
 ## Fase 6 — Validação
 - [x] `dotnet build` sem novos warnings; build TESTE via `ControleGeral.bat 1` conforme AGENTS.
 - [x] Testar Registros (legado + novo), Auditoria (filtros), PDF (capa/contracapa/sumário/
   gráficos/anexo), Sobre e menu superior.
-- [x] Registrar o detalhamento e o build em `memoria_bot_rpa.md`; marcar este plano.
+- [x] Registrar o detalhamento e o build em `memoria_TACE.md`; marcar este plano.
 
 **Concluído em 26/10/2026:** build `26.10.2026.2120`, auditoria em
-`docs/registros/2026-10-26/21-20_Plataforma_BotRPA_DESKTOP_BUILD`.
+`docs/registros/2026-10-26/21-20_Plataforma_TACE_DESKTOP_BUILD`.
 Registros: 317 total, 24 hoje, 72 builds e 245 execuções. Sobre: 463 dispositivos,
 400 patrimônios, 406 MACs, 1.136 eventos e 86,4% de cobertura. PDF real: 30 páginas
 (compactado para 18 páginas em 27/10/2026; ver plano seguinte).
@@ -225,7 +225,7 @@ Registros: 317 total, 24 hoje, 72 builds e 245 execuções. Sobre: 463 dispositi
 - `src/ui/Views/AboutView.xaml`
 - `src/ui/Views/AboutView.xaml.cs`
 - `scripts/scripts de controle/ControleGeral.bat`
-- `docs/plano_melhorias.md`, `memoria de desenvolvimento/memoria_bot_rpa.md`
+- `docs/plano_melhorias.md`, `memoria de desenvolvimento/memoria_TACE.md`
 
 ## Riscos e mitigação
 - Fonte ausente no PDF: fallback para Arial/DejaVu instalado no Windows.
@@ -279,10 +279,10 @@ tela Gerenciar Municípios; (c) revisar Configurações e remover opções sem e
 - [x] UIAutomation: lista de municípios com “Boca da Mata”/“aplicador”, busca e estado vazio;
   Configurações com selos, versão e card de licença.
 - [x] Exportação de backup validada em runtime; ZIP aberto e banco conferido.
-- [x] Registrar detalhamento e build em `memoria_bot_rpa.md`.
+- [x] Registrar detalhamento e build em `memoria_TACE.md`.
 
 **Concluído em 27/10/2026:** build `27.10.2026.0049`, auditoria em
-`docs/registros/2026-10-27/00-49_Plataforma_BotRPA_DESKTOP_BUILD`.
+`docs/registros/2026-10-27/00-49_Plataforma_TACE_DESKTOP_BUILD`.
 Relatório compacto: 463 dispositivos em 18 páginas. Backup: 289 entradas e snapshot
 SQLite íntegro. Municípios/Configurações validados por UIAutomation.
 
@@ -295,7 +295,7 @@ SQLite íntegro. Municípios/Configurações validados por UIAutomation.
 - `src/ui/Core/SQLiteDatabaseManager.cs`
 - `src/ui/Core/SettingsManager.cs`
 - `config/version.txt`
-- `docs/plano_melhorias.md`, `memoria de desenvolvimento/memoria_bot_rpa.md`
+- `docs/plano_melhorias.md`, `memoria de desenvolvimento/memoria_TACE.md`
 
 ## Riscos e mitigação
 - Banco em uso: snapshot SQLite consistente em vez de copiar o arquivo aberto.

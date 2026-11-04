@@ -5,7 +5,7 @@ using System.Net.Http;
 using System.Reflection;
 using System.Windows;
 
-namespace BotRpaUI.Core
+namespace TACEUI.Core
 {
     public static class PreflightChecker
     {
@@ -14,7 +14,7 @@ namespace BotRpaUI.Core
             try
             {
                 // Caminho da pasta de PROGRAMAS (tools/ fica junto dos binarios)
-                string baseDir = BotRpaUI.Core.PathHelper.GetInstallDirectory();
+                string baseDir = TACEUI.Core.PathHelper.GetInstallDirectory();
                 
                 string toolsDir = Path.Combine(baseDir, "tools", "reverse_tethering");
                 string gnirehtetExe = Path.Combine(toolsDir, "gnirehtet.exe");
@@ -26,7 +26,7 @@ namespace BotRpaUI.Core
                 if (!File.Exists(adbExe))
                 {
                     MessageBox.Show(
-                        "O BotRpa RPA detectou que o motor de comunicacao ADB nao esta instalado.\n" +
+                        "O TACE RPA detectou que o motor de comunicacao ADB nao esta instalado.\n" +
                         "Iniciando o download e a configuracao automatica do ADB oficial do Google. Por favor, aguarde.",
                         "Configuracao PnP do ADB",
                         MessageBoxButton.OK,
@@ -55,7 +55,7 @@ namespace BotRpaUI.Core
 
                     // Extraindo o recurso embutido (Zip invisível compilado dentro do próprio .exe)
                     var assembly = Assembly.GetExecutingAssembly();
-                    string resourceName = "BotRpaUI.Resources.gnirehtet.zip";
+                    string resourceName = "TACEUI.Resources.gnirehtet.zip";
 
                     using (Stream? stream = assembly.GetManifestResourceStream(resourceName))
                     {

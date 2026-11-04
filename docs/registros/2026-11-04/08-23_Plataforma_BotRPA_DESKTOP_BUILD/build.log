@@ -1,12 +1,12 @@
 Versao: 04.11.2026.0823
 Modalidade: BUILD
 Modo: TESTE
-PastaAuditoria: docs\registros\2026-11-04\08-23_Plataforma_BotRPA_DESKTOP_BUILD
+PastaAuditoria: docs\registros\2026-11-04\08-23_Plataforma_TACE_DESKTOP_BUILD
 --- gcc BotEngine.dll ---
 --- dotnet publish ---
   Determining projects to restore...
-  Restored P:\Projetos\Bot_RPA\src\ui\BotRpaUI.csproj (in 414 ms).
-  BotRpaUI -> P:\Projetos\Bot_RPA\src\ui\bin\Release\net8.0-windows10.0.22000.0\win-x64\BotRPAui.dll
+  Restored P:\Projetos\TACE\src\ui\TACEUI.csproj (in 414 ms).
+  TACEUI -> P:\Projetos\TACE\src\ui\bin\Release\net8.0-windows10.0.22000.0\win-x64\TACEui.dll
           1 file(s) copied.
-  BotRpaUI -> P:\Projetos\Bot_RPA\data\output\
+  TACEUI -> P:\Projetos\TACE\data\output\
 Resultado: SUCESSO

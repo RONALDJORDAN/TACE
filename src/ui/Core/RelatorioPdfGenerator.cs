@@ -9,7 +9,7 @@ using PdfSharpCore;
 using PdfSharpCore.Drawing;
 using PdfSharpCore.Pdf;
 
-namespace BotRpaUI.Core
+namespace TACEUI.Core
 {
     /// <summary>
     /// Gera o relatório executivo vertical em PDF com capa, contracapa, sumário,
@@ -25,7 +25,7 @@ namespace BotRpaUI.Core
 
         private const string Empresa = "InnovEdu";
         private const string Setor = "Setor Operacional";
-        private const string Plataforma = "Plataforma Bot_RPA";
+        private const string Plataforma = "Plataforma TACE";
 
         private static readonly XColor CorTexto = XColor.FromArgb(28, 28, 40);
         private static readonly XColor CorSuave = XColor.FromArgb(105, 105, 125);
@@ -60,11 +60,11 @@ namespace BotRpaUI.Core
             {
                 try
                 {
-                    _doc.Info.Title = "Relatório Executivo de Dispositivos — Bot_RPA";
+                    _doc.Info.Title = "Relatório Executivo de Dispositivos — TACE";
                     _doc.Info.Author = Empresa;
                     _doc.Info.Subject = "Inventário, conformidade e rastreabilidade da frota de dispositivos";
                     _doc.Info.Creator = Plataforma;
-                    _doc.Info.Keywords = "InnovEdu, Operacional, Bot_RPA, dispositivos, inventário, auditoria";
+                    _doc.Info.Keywords = "InnovEdu, Operacional, TACE, dispositivos, inventário, auditoria";
 
                     DesenharCapa(lista, somenteSelecionados);
                     DesenharContracapa(lista, somenteSelecionados);
@@ -110,7 +110,7 @@ namespace BotRpaUI.Core
 
                     DesenharParagrafo(
                         gfx,
-                        "Inventário, conformidade e rastreabilidade dos equipamentos registrados na Plataforma Bot_RPA.",
+                        "Inventário, conformidade e rastreabilidade dos equipamentos registrados na Plataforma TACE.",
                         F(11), new XSolidBrush(XColor.FromArgb(190, 190, 206)),
                         50, 362, 398, 16);
 
@@ -182,7 +182,7 @@ namespace BotRpaUI.Core
 
                     y = DesenharParagrafo(
                         gfx,
-                        "Este documento consolida a posição da frota de dispositivos gerenciada pela Plataforma Bot_RPA. "
+                        "Este documento consolida a posição da frota de dispositivos gerenciada pela Plataforma TACE. "
                         + "Os indicadores apresentados apoiam a operação na conferência patrimonial, na validação de endereços MAC e na identificação de lacunas de cadastro.",
                         F(9), new XSolidBrush(CorTexto), MarginX, y, ContentWidth, 14);
 

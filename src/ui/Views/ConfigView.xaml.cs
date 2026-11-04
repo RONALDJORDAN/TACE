@@ -7,9 +7,9 @@ using System.Windows.Controls;
 using Microsoft.Win32;
 using System.Net.NetworkInformation;
 using System.Collections.ObjectModel;
-using BotRpaUI.Core;
+using TACEUI.Core;
 
-namespace BotRpaUI.Views
+namespace TACEUI.Views
 {
     public partial class ConfigView : UserControl
     {
@@ -351,7 +351,7 @@ namespace BotRpaUI.Views
         {
             if (nomeEntrada.EndsWith(".db", StringComparison.OrdinalIgnoreCase))
             {
-                string snapshot = Path.Combine(Path.GetTempPath(), $"bot_rpa_backup_{Guid.NewGuid():N}.db");
+                string snapshot = Path.Combine(Path.GetTempPath(), $"TACE_backup_{Guid.NewGuid():N}.db");
                 try
                 {
                     if (SQLiteDatabaseManager.CriarSnapshotBackup(snapshot))
@@ -375,7 +375,7 @@ namespace BotRpaUI.Views
             {
                 SaveFileDialog sfd = new SaveFileDialog();
                 sfd.Filter = "Inno Backup (*.zip)|*.zip";
-                sfd.FileName = "Backup_BotRPA_" + DateTime.Now.ToString("yyyy-MM-dd");
+                sfd.FileName = "Backup_TACE_" + DateTime.Now.ToString("yyyy-MM-dd");
                 
                 if (sfd.ShowDialog() == true)
                 {
@@ -385,7 +385,7 @@ namespace BotRpaUI.Views
                     TxtStatusProgresso.Text = "Aguarde, calculando arquivos...";
                     BarraProgresso.Value = 0;
                     
-                    string rootPath = BotRpaUI.Core.PathHelper.GetRootDirectory();
+                    string rootPath = TACEUI.Core.PathHelper.GetRootDirectory();
                     string targetFile = sfd.FileName;
                     
                     await Task.Run(() =>
@@ -514,7 +514,7 @@ namespace BotRpaUI.Views
                     TxtStatusProgresso.Text = "Aguarde, lendo pacote...";
                     BarraProgresso.Value = 0;
                     
-                    string rootPath = BotRpaUI.Core.PathHelper.GetRootDirectory();
+                    string rootPath = TACEUI.Core.PathHelper.GetRootDirectory();
                     string sourceFile = ofd.FileName;
                     int entradasIgnoradas = 0;
                     

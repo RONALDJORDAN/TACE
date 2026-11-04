@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
-using BotRpaUI.Core;
+using TACEUI.Core;
 
-namespace BotRpaUI.Views
+namespace TACEUI.Views
 {
     public sealed class PortaUsbNomeItem
     {

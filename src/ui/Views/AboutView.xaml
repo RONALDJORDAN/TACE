@@ -1,4 +1,4 @@
-<UserControl x:Class="BotRpaUI.Views.AboutView"
+<UserControl x:Class="TACEUI.Views.AboutView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -139,7 +139,7 @@
                 <StackPanel Grid.Row="0" Margin="0,0,0,20">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="4,4,0,12">
                         <Border Width="42" Height="42" CornerRadius="10" Background="#10101C" BorderBrush="#513BA6" BorderThickness="1" Margin="0,0,10,0">
-                            <Image Source="/Assets/Icons/BotRPAui.png" Width="36" Height="36" Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality"/>
+                            <Image Source="/Assets/Icons/TACEui.png" Width="36" Height="36" Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality"/>
                         </Border>
                         <StackPanel VerticalAlignment="Center">
                             <TextBlock Text="Sobre &amp; Ajuda" Foreground="#FFFFFF" FontSize="16" FontWeight="Black"/>
@@ -193,11 +193,11 @@
                                 </Grid.ColumnDefinitions>
 
                                 <Border Grid.Column="0" Width="92" Height="92" CornerRadius="18" Background="#0B0B13" BorderBrush="#513BA6" BorderThickness="1" Margin="0,0,20,0">
-                                    <Image Source="/Assets/Icons/BotRPAui.png" Width="78" Height="78" Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality"/>
+                                    <Image Source="/Assets/Icons/TACEui.png" Width="78" Height="78" Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality"/>
                                 </Border>
 
                                 <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                    <TextBlock Text="PLATAFORMA BOT_RPA" Foreground="#4EDEA3" FontSize="10" FontWeight="Bold"/>
+                                    <TextBlock Text="PLATAFORMA TACE" Foreground="#4EDEA3" FontSize="10" FontWeight="Bold"/>
                                     <TextBlock Text="Central de operações e conhecimento" Foreground="#FFFFFF" FontSize="24" FontWeight="Black" Margin="0,4,0,5"/>
                                     <TextBlock Text="Automação robótica educacional para provisionamento, auditoria e gestão de tablets em escala."
                                                Foreground="#CFC9E6" FontSize="12" TextWrapping="Wrap" MaxWidth="560"/>
@@ -258,7 +258,7 @@
                         <Border Style="{StaticResource CardStyle}">
                             <StackPanel>
                                 <TextBlock Text="Visão geral do sistema" Style="{StaticResource SectionTitle}"/>
-                                <TextBlock Text="O Bot_RPA integra um motor nativo de automação ADB a uma interface executiva WPF, mantendo banco local, auditoria e registros técnicos no mesmo ambiente."
+                                <TextBlock Text="O TACE integra um motor nativo de automação ADB a uma interface executiva WPF, mantendo banco local, auditoria e registros técnicos no mesmo ambiente."
                                            Style="{StaticResource MutedText}" Margin="0,0,0,14"/>
 
                                 <Grid>
@@ -643,7 +643,7 @@
                             <StackPanel>
                                 <TextBlock Text="Licenciamento, autoria e propriedade intelectual" Style="{StaticResource SectionTitle}"/>
                                 <TextBlock Text="© 2026 InnovEdu · Setor Operacional. Todos os direitos reservados." Foreground="#E3E0F2" FontSize="12" FontWeight="SemiBold" Margin="0,0,0,8"/>
-                                <TextBlock Text="A Plataforma Bot_RPA, sua identidade visual, o ícone do sistema e os artefatos de automação foram criados e são de titularidade do autor do projeto. O uso é destinado à operação educacional autorizada."
+                                <TextBlock Text="A Plataforma TACE, sua identidade visual, o ícone do sistema e os artefatos de automação foram criados e são de titularidade do autor do projeto. O uso é destinado à operação educacional autorizada."
                                            Style="{StaticResource MutedText}" Margin="0,0,0,8"/>
                                 <TextBlock Text="Componentes de terceiros seguem suas respectivas licenças: .NET, WPF, Microsoft.Data.Sqlite, PdfSharpCore, QRCoder e ADB." Style="{StaticResource MutedText}"/>
                             </StackPanel>

@@ -5,7 +5,7 @@
 
 // =============================================================================
 //  PIPELINE F1: POSITIVO TAB VISION 7 (ANDROID 14)
-//  Plataforma Bot_RPA - Bot_RPA Engine
+//  Plataforma TACE - TACE Engine
 //  Isolamento Estrito por Equipamento (Regra de Ouro #1)
 // =============================================================================
 

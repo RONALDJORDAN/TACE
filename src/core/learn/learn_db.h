@@ -5,7 +5,7 @@
 // BotLearn — Motor de Persistência de Conhecimento de UI
 // Armazena estratégias de localização de elementos, scores e
 // coordenadas fallback aprendidas em execuções anteriores.
-// Autor: Jordan Araujo | BotRpa
+// Autor: Jordan Araujo | TACE
 // ============================================================
 
 #define LEARN_MAX_STRATEGIES     16

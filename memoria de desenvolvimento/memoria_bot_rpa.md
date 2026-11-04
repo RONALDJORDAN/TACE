@@ -1,13 +1,13 @@
-# Memória do Projeto - Bot_RPA
+# Memória do Projeto - TACE
 
 ## Visão Geral
-**Nome do Projeto:** Bot_RPA (Plataforma InnovTech)
+**Nome do Projeto:** TACE (Plataforma InnovTech)
 **Data de Criação Inicial:** Anterior a Junho 2026 (Atualizado em 25/06/2026)
 **Objetivo:** Sistema de automação robótica (RPA) de alta performance e interação visual para gerenciamento de dispositivos Android via ADB e Kiosk Mode.
 
 ## Decisões Arquiteturais e Padrões (Arquitetura Híbrida Google-Style)
 - **Motor Backend (C Puro):** A biblioteca `BotEngine.dll` é compilada em C nativo com política de "Zero-Leak" (gerenciamento manual de memória) e sem números mágicos. Ela interage diretamente com APIs do SO e do hardware (ADB) garantindo velocidade bruta.
-- **Frontend / Interface Gráfica (C# WPF / .NET 8):** Interface `BotRPAui.exe` projetada seguindo as diretrizes corporativas (Glassmorphism Cyber-Industrial). O C# consome a biblioteca em C via `[DllImport]`, mantendo as lógicas pesadas no C e a renderização fluida no C#.
+- **Frontend / Interface Gráfica (C# WPF / .NET 8):** Interface `TACEui.exe` projetada seguindo as diretrizes corporativas (Glassmorphism Cyber-Industrial). O C# consome a biblioteca em C via `[DllImport]`, mantendo as lógicas pesadas no C e a renderização fluida no C#.
 - **Design System:** Utilização da paleta corporativa com foco no tom primário Roxo (`#513BA6`) e um fundo neutro escuro (`#404C4F`) para redução da fadiga ocular.
 - **Gestão de Dependências e Build:** A execução de build se dá via arquivo batch, garantindo o versionamento e mantendo registros de compilação em `registros/`. As dependências são provisionadas automaticamente (`scripts/install_dependencies.bat`).
 
@@ -39,7 +39,7 @@
   - Implementação da função **F4 (Desligamento Remoto)**: Desativação de Wi-Fi, Bluetooth, Localização e execução do `reboot -p` via ADB, com interface nativa e integração direta na DLL do motor C.
 - **14/07/2026:**
   - Inicialização do Reverse Tethering (ponte de internet PC -> Android) via Gnirehtet para o dispositivo conectado por ADB.
-  - Registro de execução criado em [15-32_reverse_tethering_gnirehtet.log](file:///c:/PROJETOS/Bot_RPA/registros/2026-07-14/15-32_reverse_tethering_gnirehtet.log).
+  - Registro de execução criado em [15-32_reverse_tethering_gnirehtet.log](file:///c:/PROJETOS/TACE/registros/2026-07-14/15-32_reverse_tethering_gnirehtet.log).
   - Implementação de verificação de conectividade ativa do Gnirehtet na função **F7 (Tab-MULTI)** (`f7_tabmulti.c`) antes da etapa de login, com reativação automática da VPN (`F1_Etapa2_5`) caso ela oscile ou caia durante a preparação e instalação do APK no dispositivo.
   - Ajuste de PnP na UI C# (`PreflightChecker.cs`): se os binários do motor de comunicação ADB estiverem ausentes no primeiro acesso ou se forem deletados acidentalmente, o software realiza o download do ZIP oficial das platform-tools do Google e faz a extração de forma 100% automatizada e transparente para o usuário.
 - **15/07/2026:**
@@ -54,7 +54,7 @@
   - **Aprimoramento do Empacotamento de Release:** Atualizado o `build_release.bat` para gerar a subpasta `registros/municipios` e copiar o banco seed `municipios.csv` para distribuição.
   - **Melhoria no Utilitário de Backup (Exportação/Importação):** Ampliada a lógica de Backup em `ConfigView.xaml.cs` para incluir o banco SQLite de dispositivos (`data\bot_database.db`), registros de aprendizado de IA (`data\bot_learn.json`), diretório de pacotes e APKs (`data\input\apps`), além de implementar recarga dinâmica de visualizações (`ReloadAllViewsData` na `MainWindow`) após a restauração.
   - **Ciclo de Vida do ADB:** Implementada a rotina `OnExit` no ciclo global (`App.xaml.cs`) para encerrar de forma silenciosa e invisível o servidor ADB (`adb kill-server`) ao fechar a aplicação, liberando portas e recursos.
-  - **Geração e validação da build de Release Final para o usuário (`BotRPA_Release`), registrada sob o log de auditoria em `registros/2026-07-15/17-37_Plataforma_BotRpa_DESKTOP_BUILD`.**
+  - **Geração e validação da build de Release Final para o usuário (`TACE_Release`), registrada sob o log de auditoria em `registros/2026-07-15/17-37_Plataforma_TACE_DESKTOP_BUILD`.**
 - **16/07/2026:**
   - **Estabilização do BotLearn (Motor Determinístico):** Visando mitigar instabilidades sazonais causadas por cliques cegos e derivação de scores, desativamos as rotinas dinâmicas de aprendizado. As funções `learn_record_hit`, `learn_record_miss`, `learn_save_fallback_coord` e `learn_auto_discover` viraram *stubs* (no-ops). A persistência em arquivo (`learn_db_save` e `learn_db_load`) foi redirecionada para usar estritamente os seeds compilados estáticos do motor. Eliminados os riscos de desalinhamento de cliques por resolução.
   - **Correção da Carga de Email (EditText Focus):** Ajustadas as sementes de `campo_email` e `f7_campo_email` para priorizar a busca pela classe genérica `class="android.widget.EditText"` (score=90). Isso previne cliques falsos em elementos de texto estático (`TextView` com o mesmo label "E-mail ou Usuário") que não focavam o teclado e impediam o login.
@@ -68,7 +68,7 @@
     - Redesenhada a barra inferior em `MonitorView.xaml`. Introduzido seletor de modelos: `Tab Vision 7` (Positivo) e `Tab-Multi` (Multilaser).
     - A seleção do modelo alterna dinamicamente o painel de botões do respectivo dispositivo, reduzindo a poluição visual e garantindo mapeamento limpo de atalhos (como F1 para Tab-MULTI no painel Multilaser).
   - **Simplificação e Mudança de Caminho do `municipios.csv`:**
-    - O banco de municípios `municipios.csv` foi movido da subpasta `registros/municipios/` para o diretório raiz, ficando armazenado diretamente ao lado do executável (`BotRPAui.exe`). Modificações aplicadas em `municipios.c` e nos scripts de compilação.
+    - O banco de municípios `municipios.csv` foi movido da subpasta `registros/municipios/` para o diretório raiz, ficando armazenado diretamente ao lado do executável (`TACEui.exe`). Modificações aplicadas em `municipios.c` e nos scripts de compilação.
   - **Padronização e Arquivamento com a pasta "Arquivos":**
     - Criada a pasta `Arquivos` (anteriormente `Arquivos de implementação`, alterada para evitar problemas de caracteres especiais em caminhos de arquivos) na raiz do sistema (tanto em desenvolvimento quanto na release).
     - Em `MunicipiosWindow.xaml.cs`, o seletor de arquivos de APK/ZIP/Wallpaper passa a usar a subpasta `Arquivos\<Nome_do_Municipio>` como diretório inicial.
@@ -79,7 +79,7 @@
   - **Barra de Progresso (Cópia Não-Bloqueante):**
     - Adicionado controle `ProgressBar` no `MunicipiosWindow.xaml` com cor verde e estilo moderno.
     - Lógica assíncrona baseada em stream buffers de 1MB com `IProgress<double>` para reportar o progresso em tempo real sem travar a interface do usuário. A janela é travada temporariamente durante a cópia para segurança de I/O.
-  - Compilação geral e empacotamento da nova release estável (`BotRPA_Release`) sob o registro de auditoria `registros/2026-07-16/09-12_Plataforma_BotRpa_DESKTOP_BUILD`.
+  - Compilação geral e empacotamento da nova release estável (`TACE_Release`) sob o registro de auditoria `registros/2026-07-16/09-12_Plataforma_TACE_DESKTOP_BUILD`.
 - **21/07/2026:**
   - Implementação da função **F8 (Conexão Ativa via Gnirehtet)** para dispositivos Tab Vision 7.
   - Exportação da API DLL em C puro `Engine_ExecuteF8_ActiveConnection` em `src/api.c` vinculada ao motor `V7_Etapa2_5`.
@@ -89,52 +89,52 @@
   - Adicionada a opção `[F8] Conexão Ativa (Gnirehtet)` ao ComboBox `ComboAutoAction` ("Automação ao Conectar") tanto no layout XAML (`MonitorView.xaml`) quanto na reinicialização dinâmica por categoria de marca (`BtnCategoryPositivo_Click`), além do suporte no gatilho de conexão automática (`RunAutoInstallForDevice`).
   - Atualizada a função **F5 (Desligamento Remoto)** em `v7_shutdown.c` e `f5_shutdown.c` para desativar previamente o túnel **Gnirehtet** (`gnirehtet stop <serial>`) de forma limpa e assíncrona antes de desligar Wi-Fi, Bluetooth, Localização e emitir o `reboot -p`.
 - **25/07/2026:**
-  - Correção na temporização do pipeline F1 (Tab Vision 7) em [v7_pipeline.c](file:///c:/PROJETOS/Bot_RPA/src/core/functions/vision7/v7_pipeline.c): Inserido delay de 5 segundos (`Sleep(5000)`) no início de [F1_Etapa7_CloseApps](file:///c:/PROJETOS/Bot_RPA/src/core/functions/vision7/v7_pipeline.c#L1587) logo após a seleção do pacote ZIP no File Picker. Isso garante a estabilização de tela durante a transição do gerenciador de arquivos de volta para o aplicativo principal, evitando dumps de tela vazios ou falhas de comunicação com o ADB.
+  - Correção na temporização do pipeline F1 (Tab Vision 7) em [v7_pipeline.c](file:///c:/PROJETOS/TACE/src/core/functions/vision7/v7_pipeline.c): Inserido delay de 5 segundos (`Sleep(5000)`) no início de [F1_Etapa7_CloseApps](file:///c:/PROJETOS/TACE/src/core/functions/vision7/v7_pipeline.c#L1587) logo após a seleção do pacote ZIP no File Picker. Isso garante a estabilização de tela durante a transição do gerenciador de arquivos de volta para o aplicativo principal, evitando dumps de tela vazios ou falhas de comunicação com o ADB.
 - **29/07/2026:**
   - **Refatoração e Otimização Expressa da Função F3 (Atualização de Pacote Avaliativo):**
-    - Alinhada a etapa de limpeza e envio do F3 em [v7_refresh.c](file:///c:/PROJETOS/Bot_RPA/src/core/functions/vision7/v7_refresh.c) e [f3_update.c](file:///c:/PROJETOS/Bot_RPA/src/core/functions/f3_update.c) com a rotina `V7_Etapa1_6` / `F1_Etapa1_6`. Executa a purga do armazenamento `/sdcard` (preservando `Android` e `Pictures`), recria `/sdcard/avaliacoes/` e envia o APK e o Pacote ZIP atualizados com nomes sanitizados (`adb_get_safe_path`).
+    - Alinhada a etapa de limpeza e envio do F3 em [v7_refresh.c](file:///c:/PROJETOS/TACE/src/core/functions/vision7/v7_refresh.c) e [f3_update.c](file:///c:/PROJETOS/TACE/src/core/functions/f3_update.c) com a rotina `V7_Etapa1_6` / `F1_Etapa1_6`. Executa a purga do armazenamento `/sdcard` (preservando `Android` e `Pictures`), recria `/sdcard/avaliacoes/` e envia o APK e o Pacote ZIP atualizados com nomes sanitizados (`adb_get_safe_path`).
   - **Padronização Global de Otimização e Sistema (F1, F2, F3 e F7 Tab-MULTI):**
-    - Aplicada a chamada batched acelerada de preparação ADB shell (`svc wifi disable && svc bluetooth disable && settings put secure location_mode 0 && settings put global wifi_scan_always_enabled 0 && settings put global ble_scan_always_enabled 0 && settings put system screen_brightness_mode 0 && settings put system screen_brightness 178 && settings put system font_scale 1.5 && wm user-rotation lock 0`) universalmente nas etapas de inicialização de hardware dos fluxos **F1** ([v7_pipeline.c](file:///c:/PROJETOS/Bot_RPA/src/core/functions/vision7/v7_pipeline.c) / [f1_geraldata.c](file:///c:/PROJETOS/Bot_RPA/src/core/functions/f1_geraldata.c)), **F2** ([v7_update.c](file:///c:/PROJETOS/Bot_RPA/src/core/functions/vision7/v7_update.c) / [f2_data.c](file:///c:/PROJETOS/Bot_RPA/src/core/functions/f2_data.c)), **F3** ([v7_refresh.c](file:///c:/PROJETOS/Bot_RPA/src/core/functions/vision7/v7_refresh.c) / [f3_update.c](file:///c:/PROJETOS/Bot_RPA/src/core/functions/f3_update.c)) e **F7 (Tab-MULTI)** ([f7_tabmulti.c](file:///c:/PROJETOS/Bot_RPA/src/core/functions/f7_tabmulti.c) / [m7_pipeline.c](file:///c:/PROJETOS/Bot_RPA/src/core/functions/tabmulti/m7_pipeline.c)).
+    - Aplicada a chamada batched acelerada de preparação ADB shell (`svc wifi disable && svc bluetooth disable && settings put secure location_mode 0 && settings put global wifi_scan_always_enabled 0 && settings put global ble_scan_always_enabled 0 && settings put system screen_brightness_mode 0 && settings put system screen_brightness 178 && settings put system font_scale 1.5 && wm user-rotation lock 0`) universalmente nas etapas de inicialização de hardware dos fluxos **F1** ([v7_pipeline.c](file:///c:/PROJETOS/TACE/src/core/functions/vision7/v7_pipeline.c) / [f1_geraldata.c](file:///c:/PROJETOS/TACE/src/core/functions/f1_geraldata.c)), **F2** ([v7_update.c](file:///c:/PROJETOS/TACE/src/core/functions/vision7/v7_update.c) / [f2_data.c](file:///c:/PROJETOS/TACE/src/core/functions/f2_data.c)), **F3** ([v7_refresh.c](file:///c:/PROJETOS/TACE/src/core/functions/vision7/v7_refresh.c) / [f3_update.c](file:///c:/PROJETOS/TACE/src/core/functions/f3_update.c)) e **F7 (Tab-MULTI)** ([f7_tabmulti.c](file:///c:/PROJETOS/TACE/src/core/functions/f7_tabmulti.c) / [m7_pipeline.c](file:///c:/PROJETOS/TACE/src/core/functions/tabmulti/m7_pipeline.c)).
     - Garantida a escala de fonte **1.5** e a trava de rotação da tela em **Retrato / Portrait (`wm user-rotation lock 0`)** em todas as esteiras de automação de dispositivos.
   - **Aceleração Expressa do Pipeline F1 (Instalação Completa):**
     - **Isolamento de Bloatwares Batched (Etapa 1.5):** Substituídas 25 chamadas individuais do ADB por uma única instrução shell batched (`pm disable-user --user 0 ... && pm suspend ...`), economizando ~4.5s.
     - **Permissões em Lote Batched (Etapa 3):** Concessão de permissões de câmera, armazenamento e localização agrupada em comando único ADB.
     - **Limpeza de Launcher Otimizada (Etapa 1.9):** Agrupado `pm clear launcher3; pm clear sec.android.launcher` com sleep reduzido para 300ms.
     - **Ajuste de Delays Internos (Etapa 1.2, 4.5 e 7a):** Agrupamento do Dark Mode e redução de tempos estáticos em pós-login e estabilização de importação de 5s para 2s. Redução de mais de 30s no tempo total de execução por dispositivo.
-  - **Manutenção de Zero Warnings:** Corrigidos avisos CS8618 em [ConfigView.xaml.cs](file:///c:/PROJETOS/Bot_RPA/src/ui/Views/ConfigView.xaml.cs) e CS0414 em [MonitorView.xaml.cs](file:///c:/PROJETOS/Bot_RPA/src/ui/Views/MonitorView.xaml.cs).
-  - Execução e validação dos scripts de build (`scripts/build.bat` e `scripts/build_release.bat`), gerando nova compilação limpa do motor `BotEngine.dll`, da UI `BotRPAui.exe` e do pacote de distribuição portátil Plug-and-Play em `BotRPA_Release` com todas as ferramentas inclusas (`platform-tools` ADB, Gnirehtet Reverse Tethering, banco seed de municípios, `bot_database.db`, `bot_learn.json` e pacotes de municípios).
-  - Registro de auditoria gerado em `registros/2026-07-29/20-21_Plataforma_BotRpa_DESKTOP_BUILD`.
+  - **Manutenção de Zero Warnings:** Corrigidos avisos CS8618 em [ConfigView.xaml.cs](file:///c:/PROJETOS/TACE/src/ui/Views/ConfigView.xaml.cs) e CS0414 em [MonitorView.xaml.cs](file:///c:/PROJETOS/TACE/src/ui/Views/MonitorView.xaml.cs).
+  - Execução e validação dos scripts de build (`scripts/build.bat` e `scripts/build_release.bat`), gerando nova compilação limpa do motor `BotEngine.dll`, da UI `TACEui.exe` e do pacote de distribuição portátil Plug-and-Play em `TACE_Release` com todas as ferramentas inclusas (`platform-tools` ADB, Gnirehtet Reverse Tethering, banco seed de municípios, `bot_database.db`, `bot_learn.json` e pacotes de municípios).
+  - Registro de auditoria gerado em `registros/2026-07-29/20-21_Plataforma_TACE_DESKTOP_BUILD`.
 - **30/07/2026:**
-  - **Atualização do Fluxo de Importação/Atualização de Pacotes ([v7_refresh.c](file:///c:/PROJETOS/Bot_RPA/src/core/functions/vision7/v7_refresh.c), [f3_update.c](file:///c:/PROJETOS/Bot_RPA/src/core/functions/f3_update.c) e [m7_pipeline.c](file:///c:/PROJETOS/Bot_RPA/src/core/functions/tabmulti/m7_pipeline.c)):**
+  - **Atualização do Fluxo de Importação/Atualização de Pacotes ([v7_refresh.c](file:///c:/PROJETOS/TACE/src/core/functions/vision7/v7_refresh.c), [f3_update.c](file:///c:/PROJETOS/TACE/src/core/functions/f3_update.c) e [m7_pipeline.c](file:///c:/PROJETOS/TACE/src/core/functions/tabmulti/m7_pipeline.c)):**
     - Adicionado loop de polling (`dump_and_read_xml`) que aguarda até 2 minutos pela reativação do botão "Procurar arquivo" após o clique de importação do pacote ZIP.
     - Implementada a rotina completa de encerramento de aplicativos (`input keyevent 3` / HOME, acionamento do menu de recentes via `input keyevent 187` + clique automático em 'Limpar tudo', `am force-stop` no app principal e no DocumentsUI, `am kill-all`).
     - Adicionada a rotina de desativação de redes/VPN e comando de **Shutdown físico** (`reboot -p`) alinhado com o travamento da orientação da tela em **Modo Vertical (Portrait / Lock 0)** como a primeiríssima instrução executada no F3.
-  - **Otimizações de Ultra-Velocidade no F3 Express ([v7_refresh.c](file:///c:/PROJETOS/Bot_RPA/src/core/functions/vision7/v7_refresh.c), [f3_update.c](file:///c:/PROJETOS/Bot_RPA/src/core/functions/f3_update.c) e [m7_pipeline.c](file:///c:/PROJETOS/Bot_RPA/src/core/functions/tabmulti/m7_pipeline.c)):**
+  - **Otimizações de Ultra-Velocidade no F3 Express ([v7_refresh.c](file:///c:/PROJETOS/TACE/src/core/functions/vision7/v7_refresh.c), [f3_update.c](file:///c:/PROJETOS/TACE/src/core/functions/f3_update.c) e [m7_pipeline.c](file:///c:/PROJETOS/TACE/src/core/functions/tabmulti/m7_pipeline.c)):**
     - Agrupamento batched do comando de inicialização ADB shell (orientação vertical, desativação de Wi-Fi/BT/GPS, brilho 70% e fonte 1.5 em chamada única).
     - Redução do tempo inicial de checagem pós-clique de importação de 5s para 2s com sondagem responsiva de término.
     - Agrupamento batched da animação da tela de recentes (`keyevent 3 && keyevent 187 && swipe 200 300 800 300 300`).
     - Agrupamento batched do encerramento de processos, kill background e desligamento de redes (`keyevent 3 && am force-stop ... && am kill-all && svc wifi disable ...`).
     - Ganho total obtido: ~8 a 10 segundos economizados por dispositivo no F3.
-  - **Limpeza Manual e Visual Explícita de Aplicativos Recentes ([v7_refresh.c](file:///c:/PROJETOS/Bot_RPA/src/core/functions/vision7/v7_refresh.c), [f3_update.c](file:///c:/PROJETOS/Bot_RPA/src/core/functions/f3_update.c), [m7_pipeline.c](file:///c:/PROJETOS/Bot_RPA/src/core/functions/tabmulti/m7_pipeline.c), [f5_shutdown.c](file:///c:/PROJETOS/Bot_RPA/src/core/functions/f5_shutdown.c) e [v7_shutdown.c](file:///c:/PROJETOS/Bot_RPA/src/core/functions/vision7/v7_shutdown.c)):**
+  - **Limpeza Manual e Visual Explícita de Aplicativos Recentes ([v7_refresh.c](file:///c:/PROJETOS/TACE/src/core/functions/vision7/v7_refresh.c), [f3_update.c](file:///c:/PROJETOS/TACE/src/core/functions/f3_update.c), [m7_pipeline.c](file:///c:/PROJETOS/TACE/src/core/functions/tabmulti/m7_pipeline.c), [f5_shutdown.c](file:///c:/PROJETOS/TACE/src/core/functions/f5_shutdown.c) e [v7_shutdown.c](file:///c:/PROJETOS/TACE/src/core/functions/vision7/v7_shutdown.c)):**
     - Refatorada a rotina de encerramento para ser **100% visual e manual no display do tablet**:
       1. Garante tela acesa e desbloqueada.
       2. Executa `KEYEVENT 187` com delay dedicado (1200ms) para que o SO desenhe a UI dos cartões abertos visivelmente.
       3. Realiza deslizes manuais visíveis (`input swipe 150 500 850 500 250`) percorrendo os cartões abertos até revelar o botão 'Limpar tudo'.
       4. Captura o XML e clica com precisão no centroide do botão 'Limpar tudo' / 'Clear all' / 'Fechar tudo', com toque de fallback em coordenadas conhecidas caso necessário.
       5. Aguarda a destruição visual dos cartões, retorna para a HOME limpa (`KEYEVENT 3`) e encerra os processos em background (`am force-stop` + `am kill-all`).
-  - **Sistema de Abas por Perfil de Hardware e Submódulos no BotLearn ([BotLearnView.xaml](file:///c:/PROJETOS/Bot_RPA/src/ui/Views/BotLearnView.xaml) e [BotLearnView.xaml.cs](file:///c:/PROJETOS/Bot_RPA/src/ui/Views/BotLearnView.xaml.cs)):**
+  - **Sistema de Abas por Perfil de Hardware e Submódulos no BotLearn ([BotLearnView.xaml](file:///c:/PROJETOS/TACE/src/ui/Views/BotLearnView.xaml) e [BotLearnView.xaml.cs](file:///c:/PROJETOS/TACE/src/ui/Views/BotLearnView.xaml.cs)):**
     - Adicionada uma barra de abas interativas no topo da tabela de conhecimento da IA:
       - 🌐 **TODOS OS PERFIS** (exibe todas as estratégias da plataforma).
       - 📱 **POSITIVO TAB VISION 7 (V7)** (filtra estritamente os alvos do modelo Positivo Vision 7).
       - 📱 **MULTILASER TABMULTI M7** (filtra estritamente os alvos do modelo Multilaser M7).
       - 🖥️ **GERAL / MULTILASER PADRÃO** (filtra estritamente os alvos do motor padrão F1-F6).
     - Dentro de cada aba selecionada, os elementos são **separados e agrupados visualmente por submódulos (F1, F2, F3, F5, F7, V7)**, exibindo o indicador de progresso da etapa, score, hits/misses, taxa de precisão e histórico neural visual.
-  - **Isolamento de Seletores de IA para Positivo Tab Vision 7 (`v7_*`) ([learn_db.c](file:///c:/PROJETOS/Bot_RPA/src/core/learn_db.c), [v7_pipeline.c](file:///c:/PROJETOS/Bot_RPA/src/core/functions/vision7/v7_pipeline.c) e [BotLearnView.xaml.cs](file:///c:/PROJETOS/Bot_RPA/src/ui/Views/BotLearnView.xaml.cs)):**
+  - **Isolamento de Seletores de IA para Positivo Tab Vision 7 (`v7_*`) ([learn_db.c](file:///c:/PROJETOS/TACE/src/core/learn_db.c), [v7_pipeline.c](file:///c:/PROJETOS/TACE/src/core/functions/vision7/v7_pipeline.c) e [BotLearnView.xaml.cs](file:///c:/PROJETOS/TACE/src/ui/Views/BotLearnView.xaml.cs)):**
     - Identificada a causa da aba *Positivo Tab Vision 7* aparecer vazia: o pipeline do Vision 7 estava chamando seletores genéricos em vez dos identificadores dedicados do modelo.
     - Injetados os seeds específicos `v7_spinner_municipio`, `v7_campo_email`, `v7_campo_senha`, `v7_botao_entrar`, `v7_botao_importar_zip` e `v7_btn_procurar_arquivo` no banco C (`learn_db.c`).
     - Atualizados todos os pontos de consulta e registro de acertos/falhas (`learn_find_element`, `learn_record_hit`, `learn_record_miss`, `learn_save_fallback_coord`) em `v7_pipeline.c` para operar estritamente sob a chave `v7_*`.
-    - Mapeados os rótulos amigáveis no C# WPF ([BotLearnView.xaml.cs](file:///c:/PROJETOS/Bot_RPA/src/ui/Views/BotLearnView.xaml.cs)), permitindo que a aba **📱 POSITIVO TAB VISION 7 (V7)** exiba os scores, precisão e histórico específico desse modelo.
-  - **Agrupamento Estrito de Estratégias por Etapas 1 a 7 ([BotLearnView.xaml.cs](file:///c:/PROJETOS/Bot_RPA/src/ui/Views/BotLearnView.xaml.cs)):**
+    - Mapeados os rótulos amigáveis no C# WPF ([BotLearnView.xaml.cs](file:///c:/PROJETOS/TACE/src/ui/Views/BotLearnView.xaml.cs)), permitindo que a aba **📱 POSITIVO TAB VISION 7 (V7)** exiba os scores, precisão e histórico específico desse modelo.
+  - **Agrupamento Estrito de Estratégias por Etapas 1 a 7 ([BotLearnView.xaml.cs](file:///c:/PROJETOS/TACE/src/ui/Views/BotLearnView.xaml.cs)):**
     - Mapeados todos os alvos de IA para suas respectivas **Etapas formais dos pipelines**:
       - **Etapa 2: Seleção de Município** (`spinner_municipio` / `v7_spinner_municipio` / `f7_spinner_municipio`)
       - **Etapa 3: Injeção de E-mail do Aplicador** (`campo_email` / `v7_campo_email` / `f7_campo_email`)
@@ -144,14 +144,14 @@
       - **Etapa 6: Seleção de Arquivo no Storage** (`f1_btn_procurar_arquivo` / `v7_btn_procurar_arquivo` / `f7_btn_procurar_arquivo`)
       - **Etapa F6: Sincronização Direta de Dados** (`v7_btn_sincronizar_agora` / `f6_btn_sincronizar_agora`)
     - Ao selecionar qualquer aba de modelo (Vision 7, TabMulti M7, Geral), a tela agrupa e ordena visualmente as estratégias exatamente na sequência executada de **Etapa em Etapa**.
-  - **Atualização da Nomenclatura Corporativa para InnovTech ([BotLearnView.xaml](file:///c:/PROJETOS/Bot_RPA/src/ui/Views/BotLearnView.xaml), [RelatoriosView.xaml](file:///c:/PROJETOS/Bot_RPA/src/ui/Views/RelatoriosView.xaml), [RelatoriosView.xaml.cs](file:///c:/PROJETOS/Bot_RPA/src/ui/Views/RelatoriosView.xaml.cs) e [scripts/build.bat](file:///c:/PROJETOS/Bot_RPA/scripts/build.bat)):**
-    - Atualizados todos os textos, títulos de janelas, cabeçalhos de visualização de IA e relatórios/etiquetas em PDF de `INNOVPLAY PLATFORM` / `BotRpa` para **`INNOVTECH PLATFORM` / `InnovTech`**.
+  - **Atualização da Nomenclatura Corporativa para InnovTech ([BotLearnView.xaml](file:///c:/PROJETOS/TACE/src/ui/Views/BotLearnView.xaml), [RelatoriosView.xaml](file:///c:/PROJETOS/TACE/src/ui/Views/RelatoriosView.xaml), [RelatoriosView.xaml.cs](file:///c:/PROJETOS/TACE/src/ui/Views/RelatoriosView.xaml.cs) e [scripts/build.bat](file:///c:/PROJETOS/TACE/scripts/build.bat)):**
+    - Atualizados todos os textos, títulos de janelas, cabeçalhos de visualização de IA e relatórios/etiquetas em PDF de `INNOVPLAY PLATFORM` / `TACE` para **`INNOVTECH PLATFORM` / `InnovTech`**.
     - Atualizada a nomenclatura dos logs de auditoria de compilação em `scripts/build.bat` para `registros/YYYY-MM-DD/HH-MM_Plataforma_InnovTech_DESKTOP_BUILD`.
-  - **Evolução Next-Gen do Mapa Neural ([BrainVisualizerWindow.xaml](file:///c:/PROJETOS/Bot_RPA/src/ui/Views/BrainVisualizerWindow.xaml) e [BrainVisualizerWindow.xaml.cs](file:///c:/PROJETOS/Bot_RPA/src/ui/Views/BrainVisualizerWindow.xaml.cs)):**
+  - **Evolução Next-Gen do Mapa Neural ([BrainVisualizerWindow.xaml](file:///c:/PROJETOS/TACE/src/ui/Views/BrainVisualizerWindow.xaml) e [BrainVisualizerWindow.xaml.cs](file:///c:/PROJETOS/TACE/src/ui/Views/BrainVisualizerWindow.xaml.cs)):**
     - **Filtros por Perfil de Hardware**: Adicionada barra superior para alternar dinamicamente a topologia do grafo entre `🌐 TODOS`, `📱 VISION 7 (V7)`, `📱 TABMULTI M7` e `🖥️ GERAL`.
     - **Statistics HUD (Canto Superior Esquerdo)**: Exibição em tempo real do número de nós ativos, total de sinapses e a taxa de precisão global (%) calculada dinamicamente.
     - **Card Holográfico de Inspeção Lateral**: Ao clicar em qualquer nó do grafo, um gaveteiro lateral de inspeção é ativado mostrando a query completa do seletor, score, taxa de precisão individual, total de acertos/falhas e os 10 indicadores de acerto mais recentes (pontos verdes/vermelhos).
-    - **Correção da Exceção XamlParseException no Mapa Neural ([BrainVisualizerWindow.xaml](file:///c:/PROJETOS/Bot_RPA/src/ui/Views/BrainVisualizerWindow.xaml) e [BrainVisualizerWindow.xaml.cs](file:///c:/PROJETOS/Bot_RPA/src/ui/Views/BrainVisualizerWindow.xaml.cs))**:
+    - **Correção da Exceção XamlParseException no Mapa Neural ([BrainVisualizerWindow.xaml](file:///c:/PROJETOS/TACE/src/ui/Views/BrainVisualizerWindow.xaml) e [BrainVisualizerWindow.xaml.cs](file:///c:/PROJETOS/TACE/src/ui/Views/BrainVisualizerWindow.xaml.cs))**:
       - Identificada a causa do crash ao abrir o Mapa Neural: `HorizontalAlignment="SpaceBetween"` não é um enum válido no WPF (é uma sintaxe de CSS/Flexbox).
       - Refatorados os cartões do gaveteiro lateral para utilizarem `Grid` com alinhamentos `Left` e `Right` nativos do WPF.
       - Adicionados blocos de proteção `try-catch` e verificações de inicialização `IsLoaded` para garantir estabilidade 100% à prova de falhas.
@@ -172,9 +172,9 @@
     - Removidas pastas e resíduos de extrações e compilações antigas na raiz (`inno novo`, `awbms_extracted`, `framework_extracted`, `dump.xml`, `dump2.xml`, logs/txt residuais soltos e arquivos `.wpftmp.csproj`).
   - **Padronização Única dos Ambientes de Build:**
     - **Ambiente de Testes / Desenvolvimento:** `data\output\` (gerado via `scripts\build.bat`).
-    - **Ambiente de Release Portátil (PnP):** `BotRPA_Release\` (gerado via `scripts\build_release.bat`).
+    - **Ambiente de Release Portátil (PnP):** `TACE_Release\` (gerado via `scripts\build_release.bat`).
   - Atualizado `scripts\build.bat` para garantir a criação limpa de `data\output\` e purga automática de intermediários de compilação em `src\ui\bin` e `src\ui\obj`.
-  - Atualizado `.gitignore` para bloquear o rastreamento de `data/output/`, `BotRPA_Release/` e arquivos temporários do MSBuild (`*.wpftmp.csproj`).
+  - Atualizado `.gitignore` para bloquear o rastreamento de `data/output/`, `TACE_Release/` e arquivos temporários do MSBuild (`*.wpftmp.csproj`).
   - **Reestruturação Modular e Autônoma do Motor Nocional em C (`src/core/functions/`):**
     - Separação completa de cada função em arquivos `.c` e `.h` dedicados e 100% autônomos por modelo de dispositivo:
       - **Positivo Tab Vision 7 (`vision7/`):** `f1_vision_tab7.c/.h`, `f2_vision_tab7.c/.h`, `f3_vision_tab7.c/.h`, `f4_vision_tab7.c/.h`, `f5_vision_tab7.c/.h`, `f6_vision_tab7.c/.h`, `f8_vision_tab7.c/.h`.
@@ -182,7 +182,7 @@
       - **Nokia T20 (`nokia_t20/`):** `f1_nokia_t20.c/.h`, `f2_nokia_t20.c/.h`, `f3_nokia_t20.c/.h`.
     - Eliminados todos os arquivos monolíticos residuais soltos na raiz de `functions/` (`f1_geraldata.c`, `f2_data.c`, `f3_update.c`, `f4_terminal.c`, `f5_shutdown.c`, `f6_sync.c`, `f7_tabmulti.c`).
     - Cada arquivo de função agora possui o código integral e independente, sem dependência de etapas compiladas em arquivos `f1_*` vizinhos.
-    - Atualizados `src/api.c` e `scripts/build.bat` mantendo 100% de compatibilidade DLL (`BotEngine.dll`) com a interface C# WPF (`BotRpaUI`).
+    - Atualizados `src/api.c` e `scripts/build.bat` mantendo 100% de compatibilidade DLL (`BotEngine.dll`) com a interface C# WPF (`TACEUI`).
   - **Organização Completa e Categorização por Subpastas (`src/core/` e `src/ui/`):**
     - **`src/core/drivers/`**: `adb.c` e `adb.h` (Comunicação ADB e UIAutomator).
     - **`src/core/learn/`**: `learn_db.c/.h` e `learn_engine.c/.h` (InnoAI e inteligência visual).
@@ -199,7 +199,7 @@
     - `docs/relatorio_funcoes_multilaser_tabmulti_m7.md`: Relatório completo das funções F1 a F4 e utilitários do Multilaser TabMulti M7.
     - `docs/relatorio_funcoes_nokia_t20.md`: Relatório completo das funções F1 a F3 do Nokia T20.
   - **Sistema Anti-Crash Guard & Resiliência Dupla (C e C# WPF):**
-    - Criada a classe `BotRpaUI.Core.AntiCrashGuard` com Triplo Handler de Exceções (`DispatcherUnhandledException`, `AppDomain.UnhandledException`, `TaskScheduler.UnobservedTaskException`) e Purgador de Memória Ativo.
+    - Criada a classe `TACEUI.Core.AntiCrashGuard` com Triplo Handler de Exceções (`DispatcherUnhandledException`, `AppDomain.UnhandledException`, `TaskScheduler.UnobservedTaskException`) e Purgador de Memória Ativo.
     - Registrado o filtro SEH Top-Level `InnoUnhandledExceptionFilter` na DLL C `BotEngine.dll` para capturar violações de acesso sem derrubar o processo `.exe`.
     - Criada a rotina `adb_ensure_app_running` no driver ADB para relançar o aplicativo `InnovAva` no tablet caso o Android o encerre por falta de RAM durante a automação.
   - **Atualização do Mapa Neural & Otimização de Performance para PCs de Baixa Especificação:**
@@ -218,14 +218,14 @@
       - Implementada a checagem em tempo real do XML de interface antes de acionar o botão *Entrar* em todos os 3 tablets (Vision 7, TabMulti M7 e Nokia T20). Se o município não estiver visível no seletor, o motor re-executa a abertura da gaveta e re-seleciona o município alvo de forma automatizada.
     - **Padronização e Resolução de Codificação UTF-8 Transparente:**
       - Corrigida a ponte de conversão entre a DLL C `BotEngine.dll` (`municipios.c`) e o C# WPF P/Invoke (`CharSet.Ansi`). Adicionadas as rotinas `convert_utf8_to_ansi` e `convert_ansi_to_utf8` garantindo exibição de acentos (`Demonstração`, `Pão de Açúcar`) 100% perfeita sem distorções de caracteres (`Ã§`, `Ã£` ou `??`).
-      - Sanitizados em UTF-8 nativo todos os arquivos `municipios.csv` em `registros/municipios/`, `BotRPA_Release/` e `data/output/`.
+      - Sanitizados em UTF-8 nativo todos os arquivos `municipios.csv` em `registros/municipios/`, `TACE_Release/` e `data/output/`.
     - **Checagem Inteligente de Instalação do Gnirehtet:**
       - Atualizadas todas as funções de todos os aparelhos para checar a presença do pacote `com.genymobile.gnirehtet` via ADB antes de reinstalar o APK, reduzindo de 3 a 5 segundos no tempo de conexão.
     - **Builds de Desenvolvimento e Release de Alta Performance:**
       - Validados com 100% de sucesso os compilados sob os registros `09-59_Plataforma_InnovTech_DESKTOP_BUILD` (Desenvolvimento - Ícone Azul Escuro) e `10-01_Plataforma_InnovTech_DESKTOP_BUILD` (Release Portátil - Ícone Roxo Oficial).
-    - **Geração e Validação da Release Final Portátil Plug-and-Play (`BotRPA_Release`):**
-      - Compilação do motor `BotEngine.dll` em C nativo com linking estático e da UI C# WPF `BotRPAui.exe` em pacote standalone Self-Contained `.NET 8` com aplicação do Ícone Roxo Oficial.
-      - Pacote portátil gerado na pasta `BotRPA_Release\` contendo todas as dependências e ferramentas necessárias (`config/tools/platform-tools/adb.exe`, `tools/reverse_tethering/gnirehtet.exe`, `gnirehtet.apk`, banco `municipios.csv`, `bot_database.db` SQLite, `bot_learn.json` da IA InnoAI e diretório `Arquivos/`).
+    - **Geração e Validação da Release Final Portátil Plug-and-Play (`TACE_Release`):**
+      - Compilação do motor `BotEngine.dll` em C nativo com linking estático e da UI C# WPF `TACEui.exe` em pacote standalone Self-Contained `.NET 8` com aplicação do Ícone Roxo Oficial.
+      - Pacote portátil gerado na pasta `TACE_Release\` contendo todas as dependências e ferramentas necessárias (`config/tools/platform-tools/adb.exe`, `tools/reverse_tethering/gnirehtet.exe`, `gnirehtet.apk`, banco `municipios.csv`, `bot_database.db` SQLite, `bot_learn.json` da IA InnoAI e diretório `Arquivos/`).
       - Registro de auditoria oficial gravado sob `registros/2026-08-06/10-34_Plataforma_InnovTech_DESKTOP_BUILD`.
 - **11/08/2026:**
   - **Ajuste na Função F3 (Atualização de Pacote Positivo Vision 7):**
@@ -245,34 +245,34 @@
       - Atualizadas as rotinas da interface C# WPF (`PreflightChecker.cs`, `App.xaml.cs`) para apontar para `tools/platform-tools/adb.exe`.
       - Ajustados os scripts de build e utilitários (`scripts/setup_adb.bat`, `scripts/monitor_tela.bat`, `scripts/gravar_fluxo_manual.ps1`, `scripts/build_release.bat`).
     - **Compilação e Validação de Builds:**
-      - Recompilados com 100% de sucesso (Zero Errors / Zero Warnings) o motor nativo em C (`BotEngine.dll`) e a interface WPF (`BotRPAui.exe`) nos ambientes de desenvolvimento (`data/output/`) e release portátil PnP (`BotRPA_Release/`).
+      - Recompilados com 100% de sucesso (Zero Errors / Zero Warnings) o motor nativo em C (`BotEngine.dll`) e a interface WPF (`TACEui.exe`) nos ambientes de desenvolvimento (`data/output/`) e release portátil PnP (`TACE_Release/`).
       - Registros de auditoria oficial gerados sob `registros/2026-08-14/10-40_Plataforma_InnovTech_DESKTOP_BUILD` e `10-41_Plataforma_InnovTech_DESKTOP_BUILD`.
   - **Formalização das Diretrizes Globais de Isolamento e Rastreabilidade (`AGENTS.md` e `.agents/AGENTS.md`):**
-    - Criados os arquivos de diretrizes formais [AGENTS.md](file:///c:/PROJETOS/Bot_RPA/AGENTS.md) e [.agents/AGENTS.md](file:///c:/PROJETOS/Bot_RPA/.agents/AGENTS.md) estabelecendo:
+    - Criados os arquivos de diretrizes formais [AGENTS.md](file:///c:/PROJETOS/TACE/AGENTS.md) e [.agents/AGENTS.md](file:///c:/PROJETOS/TACE/.agents/AGENTS.md) estabelecendo:
       1. **Regra de Isolamento Estrito de Equipamentos:** Edições em funções de um modelo específico (ex: F1 no Positivo Tab Vision 7) devem ocorrer estritamente em seu próprio arquivo (`f1_vision_tab7.c`) com **ZERO efeito colateral** nos demais modelos (TabMulti M7 ou Nokia T20).
-      2. **Regra de Rastreabilidade Total:** Registro obrigatório de todo histórico de ajustes em `memoria_bot_rpa.md` e versionamento limpo via Git.
+      2. **Regra de Rastreabilidade Total:** Registro obrigatório de todo histórico de ajustes em `memoria_TACE.md` e versionamento limpo via Git.
   - **Implementação do Pilar 1: Automação Concorrente Multi-Dispositivo (Paralelismo Real):**
-    - **Isolamento de Dump XML em C Nativo:** Atualizadas as rotinas em [f1_vision_tab7.c](file:///c:/PROJETOS/Bot_RPA/src/core/functions/vision7/f1_vision_tab7.c) e [f1_tabmulti_m7.c](file:///c:/PROJETOS/Bot_RPA/src/core/functions/tabmulti/f1_tabmulti_m7.c) para gerar e puxar dumps XML isolados por serial (`window_dump_%s.xml`), garantindo execução paralela sem qualquer colisão de I/O em disco.
+    - **Isolamento de Dump XML em C Nativo:** Atualizadas as rotinas em [f1_vision_tab7.c](file:///c:/PROJETOS/TACE/src/core/functions/vision7/f1_vision_tab7.c) e [f1_tabmulti_m7.c](file:///c:/PROJETOS/TACE/src/core/functions/tabmulti/f1_tabmulti_m7.c) para gerar e puxar dumps XML isolados por serial (`window_dump_%s.xml`), garantindo execução paralela sem qualquer colisão de I/O em disco.
     - **Gestão Isolada do Gnirehtet:** Garantida a execução de `gnirehtet stop <serial>` para encerramento isolado por dispositivo sem derrubar o `relay` em execuções paralelas.
     - **Compilação e Auditoria:** Validados os compilados em `registros/2026-08-14/10-54_Plataforma_InnovTech_DESKTOP_BUILD` e `10-55_Plataforma_InnovTech_DESKTOP_BUILD`.
   - **Implementação do Pilar 2: Telemetria & Painel ao Vivo no MonitorView (HUD de Dispositivos):**
-    - **Pílulas de Status Semânticas em Tempo Real:** Adicionada a coluna *Status ao Vivo* na `ListView` (`ListDevices`) em [MonitorView.xaml](file:///c:/PROJETOS/Bot_RPA/src/ui/Views/MonitorView.xaml) e [MonitorView.xaml.cs](file:///c:/PROJETOS/Bot_RPA/src/ui/Views/MonitorView.xaml.cs) exibindo a pílula de estado (`Pronto`, `Executando`, `Concluído`, `Erro`) com cores semânticas ativas.
+    - **Pílulas de Status Semânticas em Tempo Real:** Adicionada a coluna *Status ao Vivo* na `ListView` (`ListDevices`) em [MonitorView.xaml](file:///c:/PROJETOS/TACE/src/ui/Views/MonitorView.xaml) e [MonitorView.xaml.cs](file:///c:/PROJETOS/TACE/src/ui/Views/MonitorView.xaml.cs) exibindo a pílula de estado (`Pronto`, `Executando`, `Concluído`, `Erro`) com cores semânticas ativas.
     - **Coluna de Telemetria Android:** Adicionada a exibição dinâmica da versão do sistema operacional Android (`Android 11`, `Android 10`).
     - **Trigger Automático via Logging:** Integrado o método `UpdateDeviceStatus` diretamente nas rotinas de callback do log (`LogMessage`), atualizando instantaneamente a cor e a pílula de status do dispositivo conforme a evolução do pipeline.
     - **Compilação e Auditoria:** Validados os compilados em `registros/2026-08-14/11-15_Plataforma_InnovTech_DESKTOP_BUILD` e `11-16_Plataforma_InnovTech_DESKTOP_BUILD`.
   - **Implementação do Pilar 3: Otimização Acelerada de Dump XML (Fast UI Parser em Memória RAM):**
-    - **Engine Fast-Path StdOut:** Implementadas as funções `adb_dump_stdout` e `adb_get_current_focus` em [adb.h](file:///c:/PROJETOS/Bot_RPA/src/core/drivers/adb.h) e [adb.c](file:///c:/PROJETOS/Bot_RPA/src/core/drivers/adb.c) para captura direta da árvore XML em memória RAM via stream do ADB (`exec-out uiautomator dump /dev/stdout`), reduzindo o tempo de dump de ~1.5s para ~100ms.
-    - **Integração no Motor Multimodelo:** Atualizadas as rotinas de dump e leitura de XML nos modelos [f1_vision_tab7.c](file:///c:/PROJETOS/Bot_RPA/src/core/functions/vision7/f1_vision_tab7.c), [f2_vision_tab7.c](file:///c:/PROJETOS/Bot_RPA/src/core/functions/vision7/f2_vision_tab7.c), [f3_vision_tab7.c](file:///c:/PROJETOS/Bot_RPA/src/core/functions/vision7/f3_vision_tab7.c), [f2_tabmulti_m7.c](file:///c:/PROJETOS/Bot_RPA/src/core/functions/tabmulti/f2_tabmulti_m7.c), [f2_nokia_t20.c](file:///c:/PROJETOS/Bot_RPA/src/core/functions/nokia_t20/f2_nokia_t20.c) e [f3_nokia_t20.c](file:///c:/PROJETOS/Bot_RPA/src/core/functions/nokia_t20/f3_nokia_t20.c) com fallback transparente para arquivo em disco se o stream StdOut for indisponível.
+    - **Engine Fast-Path StdOut:** Implementadas as funções `adb_dump_stdout` e `adb_get_current_focus` em [adb.h](file:///c:/PROJETOS/TACE/src/core/drivers/adb.h) e [adb.c](file:///c:/PROJETOS/TACE/src/core/drivers/adb.c) para captura direta da árvore XML em memória RAM via stream do ADB (`exec-out uiautomator dump /dev/stdout`), reduzindo o tempo de dump de ~1.5s para ~100ms.
+    - **Integração no Motor Multimodelo:** Atualizadas as rotinas de dump e leitura de XML nos modelos [f1_vision_tab7.c](file:///c:/PROJETOS/TACE/src/core/functions/vision7/f1_vision_tab7.c), [f2_vision_tab7.c](file:///c:/PROJETOS/TACE/src/core/functions/vision7/f2_vision_tab7.c), [f3_vision_tab7.c](file:///c:/PROJETOS/TACE/src/core/functions/vision7/f3_vision_tab7.c), [f2_tabmulti_m7.c](file:///c:/PROJETOS/TACE/src/core/functions/tabmulti/f2_tabmulti_m7.c), [f2_nokia_t20.c](file:///c:/PROJETOS/TACE/src/core/functions/nokia_t20/f2_nokia_t20.c) e [f3_nokia_t20.c](file:///c:/PROJETOS/TACE/src/core/functions/nokia_t20/f3_nokia_t20.c) com fallback transparente para arquivo em disco se o stream StdOut for indisponível.
     - **Compilação e Auditoria:** Validados os compilados em `registros/2026-08-14/16-13_Plataforma_InnovTech_DESKTOP_BUILD` e `16-19_Plataforma_InnovTech_DESKTOP_BUILD`.
 - **18/08/2026:**
   - **Implementação do Sistema de Atualização Remota via OTA (Over-The-Air) & Telemetria Web (Firebase):**
     - **Painel Web de Controle OTA (`web/ota_dashboard.html`):** Desenvolvida interface Web em HTML5 / Vanilla CSS Glassmorphic conectada ao Firebase Realtime Database e Storage para upload direto de pacotes `.ZIP`, cálculo automático de SHA-256, extração automática da versão por timestamp, proteção contra fechamento acidental da aba durante uploads (`beforeunload`), substituição automática da versão ativa (`ota/manifest`) e histórico de releases publicadas (`ota/history`) com opção de rollback e reativação em 1 clique.
-    - **Motor de Atualização OTA & Telemetria C# (`OtaUpdateManager.cs`):** Desenvolvido serviço em [OtaUpdateManager.cs](file:///c:/PROJETOS/Bot_RPA/src/ui/Core/OtaUpdateManager.cs) com envio automático de pings de telemetria (hostname, SO, versão instalada, status), checagem de manifesto na nuvem, download assíncrono com progresso, validação de integridade por Hash SHA-256 e acionamento do script de atualização transparente [apply_ota_update.bat](file:///c:/PROJETOS/Bot_RPA/scripts/apply_ota_update.bat).
+    - **Motor de Atualização OTA & Telemetria C# (`OtaUpdateManager.cs`):** Desenvolvido serviço em [OtaUpdateManager.cs](file:///c:/PROJETOS/TACE/src/ui/Core/OtaUpdateManager.cs) com envio automático de pings de telemetria (hostname, SO, versão instalada, status), checagem de manifesto na nuvem, download assíncrono com progresso, validação de integridade por Hash SHA-256 e acionamento do script de atualização transparente [apply_ota_update.bat](file:///c:/PROJETOS/TACE/scripts/apply_ota_update.bat).
     - **Integração na Interface WPF (`ConfigView.xaml` / `ConfigView.xaml.cs`):** Adicionado o card e botão `🔄 Atualização OTA` na barra lateral de configurações com exibição de versão instalada, consulta na nuvem, aviso de nova versão disponível, barra de progresso de download e botão de ativação de telemetria.
-    - **Módulo de Controle e Geração de Releases (`controle/Atualizacao.bat` & `controle/Atualizacao.ps1`):** Criada a pasta `controle/` na raiz do repositório contendo os scripts de automação de build para o desenvolvedor. O script gera o número de versão com timestamp (`DD.MM.YYYY.HHMM`), compila o motor C e a UI C# WPF, grava em `config/version.txt` e empacota o arquivo `.zip` pronto para envio diretamente dentro da própria pasta `controle/BotRPA_v<versão>.zip`.
-    - **Isolamento de Ferramentas de Administração (`controle/` e `web/`):** A estrutura do empacotador de Release (`build_release.bat`) foi configurada para manter as pastas de administração (`controle/` e `web/`) restritas ao ambiente de desenvolvimento do administrador, gerando a pasta `BotRPA_Release` 100% limpa para distribuição ao usuário final.
+    - **Módulo de Controle e Geração de Releases (`controle/Atualizacao.bat` & `controle/Atualizacao.ps1`):** Criada a pasta `controle/` na raiz do repositório contendo os scripts de automação de build para o desenvolvedor. O script gera o número de versão com timestamp (`DD.MM.YYYY.HHMM`), compila o motor C e a UI C# WPF, grava em `config/version.txt` e empacota o arquivo `.zip` pronto para envio diretamente dentro da própria pasta `controle/TACE_v<versão>.zip`.
+    - **Isolamento de Ferramentas de Administração (`controle/` e `web/`):** A estrutura do empacotador de Release (`build_release.bat`) foi configurada para manter as pastas de administração (`controle/` e `web/`) restritas ao ambiente de desenvolvimento do administrador, gerando a pasta `TACE_Release` 100% limpa para distribuição ao usuário final.
     - **Reestruturação da Central de Ajuda & FAQ (`AboutView.xaml` / `AboutView.xaml.cs`):** Reorganizada a tela "Sobre" em 3 abas de navegação: *🗺️ Guia de Módulos (O que procurar e Onde encontrar)* com mapeamento visual de cada menu, *❓ Central de Dúvidas (FAQ)* com respostas para problemas e dúvidas comuns de uso (reconhecimento USB, OTA, banco de dados, localização de APKs e resiliência) e *🛡️ Arquitetura, Engenharia & Licenciamento*.
-    - **Busca Automática e Atualização Obrigatória no Boot (`App.xaml.cs` / `MainWindow.xaml.cs` / `OtaMandatoryUpdateWindow`):** Implementado o disparo assíncrono em 2º plano no startup. Caso o computador esteja online e haja uma nova versão publicada na nuvem, o aplicativo abre a tela modal `OtaMandatoryUpdateWindow`, baixa o pacote de atualização, valida o SHA-256 e executa a reinicialização atualizada obrigatoriamente. Se offline, o Bot_RPA abre normalmente.
+    - **Busca Automática e Atualização Obrigatória no Boot (`App.xaml.cs` / `MainWindow.xaml.cs` / `OtaMandatoryUpdateWindow`):** Implementado o disparo assíncrono em 2º plano no startup. Caso o computador esteja online e haja uma nova versão publicada na nuvem, o aplicativo abre a tela modal `OtaMandatoryUpdateWindow`, baixa o pacote de atualização, valida o SHA-256 e executa a reinicialização atualizada obrigatoriamente. Se offline, o TACE abre normalmente.
 
 
 
@@ -342,24 +342,24 @@
         - **Diferença F2:** Omite a Etapa 1.5 (mantém os apps do sistema/menu quietos sem desativação) e a Etapa 7 (mantém a interface aberta ao final sem fechar apps).
       - **Encerramento sem Desligar (`T20_Etapa7_CloseApps`):** executa `am force-stop` nos apps, faz a limpeza visual da tela de recentes (HOME ➔ RECENTES ➔ Swipe ➔ HOME) e mantêm o Nokia T20 100% **LIGADO** na tela inicial.
     - Compilação do motor em C nativo e da UI C# WPF concluída com sucesso sob o registro de auditoria em `registros/2026-08-04/11-15_Plataforma_InnovTech_DESKTOP_BUILD`.
-    - **Ajuste de Pipeline F1/F2 Nokia T20:** Removidas todas as etapas subsequentes ao clique no menu hambúrguer "Importar ZIP" (`T20_Etapa5`) em [t20_pipeline.c](file:///c:/PROJETOS/Bot_RPA/src/core/functions/nokia_t20/t20_pipeline.c).
+    - **Ajuste de Pipeline F1/F2 Nokia T20:** Removidas todas as etapas subsequentes ao clique no menu hambúrguer "Importar ZIP" (`T20_Etapa5`) em [t20_pipeline.c](file:///c:/PROJETOS/TACE/src/core/functions/nokia_t20/t20_pipeline.c).
     - **Reconstrução Passo 1 (Nokia T20):** Adicionada a rotina de localização e clique no botão **"PROCURAR ARQUIVO .ZIP"** via leitura XML/Fuzzy em `T20_Etapa5`.
     - **Reconstrução Passo 2 (Nokia T20):** Adicionada verificação de abertura direta na pasta `innovava` com clique único de seleção no pacote ZIP disponível na tela.
     - **Reconstrução Passo 3 (Nokia T20):** Implementada a esteira completa de navegação secundária (Drawer → Nokia T20 → innovava → ZIP).
     - **[2026-08-05] Bug Root-Cause (Nokia T20 ZIP Selection):** Diagnosticado via gravação ADB em tempo real com `monitor_tela.bat`. O DocumentsUI (`com.google.android.documentsui/PickActivity`) abre **diretamente** na pasta `innovava` com o arquivo `pda21072025.zip` visível. O bug estava em `t20_get_centroid_from_xml_fuzzy`: ao encontrar `text="pda21072025.zip"` em nó `clickable="false"`, a função buscava o **próximo** `clickable="true"` adiante no XML — encontrando o `preview_icon` (ícone de olho, centroide 739,450) em vez do `item_root` pai (centroide 600,635). O clique ia no ícone de visualização, não na seleção do arquivo.
-    - **[2026-08-05] Solução Definitiva de Seleção Multi-Camada (Nokia T20):** Testada e validada diretamente no dispositivo físico via ADB em tempo real. No Android 11 DocumentsUI (`com.android.documentsui/PickActivity`), a navegação nativa de teclado físico **DPAD_DOWN (`input keyevent 20`) + DPAD_CENTER (`input keyevent 23`)** foca e seleciona instantaneamente o pacote ZIP sem depender de coordenadas de tela ou micro-deslizes. Caso o DPAD não finalize, o sistema aplica Toque Direto + ENTER (Camada 2) ou Toque Longo Humanizado (Camada 3) com botão SELECIONAR. Implementado em `t20_long_press_and_confirm_select` em [t20_pipeline.c](file:///c:/PROJETOS/Bot_RPA/src/core/functions/nokia_t20/t20_pipeline.c#L625). Compilação validada com sucesso sob `registros/2026-08-05/09-26_Plataforma_InnovTech_DESKTOP_BUILD`.
-    - **[2026-08-05] Novo Módulo F3 (Nokia T20 - Atualização Expressa de Pacote):** Criado o orquestrador `T20_ExecutarPipelineF3_AtualizarPacote` em [t20_pipeline.c](file:///c:/PROJETOS/Bot_RPA/src/core/functions/nokia_t20/t20_pipeline.c#L1405) e exportado via DLL em `Engine_ExecuteF3_NokiaT20` ([api.c](file:///c:/PROJETOS/Bot_RPA/src/api.c#L111)). O fluxo acorda a tela (`T20_Etapa1`), envia o pacote atualizado via ADB (`T20_Etapa1_6`), abre o aplicativo **InnovAva** diretamente via Intent/Monkey (`br.com.yantec.innovava`) e executa a esteira `T20_Etapa5` com a seleção multi-camada por DPAD/XML. Integrado ao C# WPF ([MonitorView.xaml.cs](file:///c:/PROJETOS/Bot_RPA/src/ui/Views/MonitorView.xaml.cs#L297)). Compilação final concluída sob `registros/2026-08-05/09-39_Plataforma_InnovTech_DESKTOP_BUILD`.
+    - **[2026-08-05] Solução Definitiva de Seleção Multi-Camada (Nokia T20):** Testada e validada diretamente no dispositivo físico via ADB em tempo real. No Android 11 DocumentsUI (`com.android.documentsui/PickActivity`), a navegação nativa de teclado físico **DPAD_DOWN (`input keyevent 20`) + DPAD_CENTER (`input keyevent 23`)** foca e seleciona instantaneamente o pacote ZIP sem depender de coordenadas de tela ou micro-deslizes. Caso o DPAD não finalize, o sistema aplica Toque Direto + ENTER (Camada 2) ou Toque Longo Humanizado (Camada 3) com botão SELECIONAR. Implementado em `t20_long_press_and_confirm_select` em [t20_pipeline.c](file:///c:/PROJETOS/TACE/src/core/functions/nokia_t20/t20_pipeline.c#L625). Compilação validada com sucesso sob `registros/2026-08-05/09-26_Plataforma_InnovTech_DESKTOP_BUILD`.
+    - **[2026-08-05] Novo Módulo F3 (Nokia T20 - Atualização Expressa de Pacote):** Criado o orquestrador `T20_ExecutarPipelineF3_AtualizarPacote` em [t20_pipeline.c](file:///c:/PROJETOS/TACE/src/core/functions/nokia_t20/t20_pipeline.c#L1405) e exportado via DLL em `Engine_ExecuteF3_NokiaT20` ([api.c](file:///c:/PROJETOS/TACE/src/api.c#L111)). O fluxo acorda a tela (`T20_Etapa1`), envia o pacote atualizado via ADB (`T20_Etapa1_6`), abre o aplicativo **InnovAva** diretamente via Intent/Monkey (`br.com.yantec.innovava`) e executa a esteira `T20_Etapa5` com a seleção multi-camada por DPAD/XML. Integrado ao C# WPF ([MonitorView.xaml.cs](file:///c:/PROJETOS/TACE/src/ui/Views/MonitorView.xaml.cs#L297)). Compilação final concluída sob `registros/2026-08-05/09-39_Plataforma_InnovTech_DESKTOP_BUILD`.
     - **[2026-08-05] Ajuste no Pipeline F2 & Validação de Paridade F1/F2/F3 (Nokia T20):**
-      1. **Conexão Túnel em F2:** Garantida a execução de `T20_Etapa3` (Túnel de Internet USB Gnirehtet) antes do login em `T20_Etapa4`, seguida da rotina `T20_Etapa4_5_StopGnirehtet` para fechar a conexão túnel pós-autenticação em [t20_pipeline.c](file:///c:/PROJETOS/Bot_RPA/src/core/functions/nokia_t20/t20_pipeline.c#L1395).
+      1. **Conexão Túnel em F2:** Garantida a execução de `T20_Etapa3` (Túnel de Internet USB Gnirehtet) antes do login em `T20_Etapa4`, seguida da rotina `T20_Etapa4_5_StopGnirehtet` para fechar a conexão túnel pós-autenticação em [t20_pipeline.c](file:///c:/PROJETOS/TACE/src/core/functions/nokia_t20/t20_pipeline.c#L1395).
       2. **Desligamento Automático em F2:** Ao selecionar o pacote ZIP na `T20_Etapa5`, o pipeline F2 executa `T20_Etapa7_PowerOff`, desligando automaticamente o tablet Nokia T20.
       3. **Verificação de Paridade:** Confirmado que a rotina de importação do ZIP (`T20_Etapa5` com a seleção multi-camada por DPAD/XML) é **100% idêntica e compartilhada entre os fluxos F1, F2 e F3**. Compilação concluída sob `registros/2026-08-05/09-45_Plataforma_InnovTech_DESKTOP_BUILD`.
-    - **[2026-08-05] Conclusão da Importação e Encerramento de Apps em F1 (Nokia T20):** Implementada a rotina `T20_Etapa6_AguardarConclusaoImportacao` em [t20_pipeline.c](file:///c:/PROJETOS/Bot_RPA/src/core/functions/nokia_t20/t20_pipeline.c#L1239). Após a seleção do pacote ZIP na `T20_Etapa5`, o motor monitora a tela via XML em tempo real até o reaparecimento do botão **"PROCURAR ARQUIVO .ZIP"** (indicando que o InnovAva concluiu o desempacotamento e a carga local dos dados). Em seguida, executa a `T20_Etapa7_CloseApps`, fechando todos os aplicativos abertos e limpando os recentes. Compilação final validada sob `registros/2026-08-05/09-49_Plataforma_InnovTech_DESKTOP_BUILD`.
+    - **[2026-08-05] Conclusão da Importação e Encerramento de Apps em F1 (Nokia T20):** Implementada a rotina `T20_Etapa6_AguardarConclusaoImportacao` em [t20_pipeline.c](file:///c:/PROJETOS/TACE/src/core/functions/nokia_t20/t20_pipeline.c#L1239). Após a seleção do pacote ZIP na `T20_Etapa5`, o motor monitora a tela via XML em tempo real até o reaparecimento do botão **"PROCURAR ARQUIVO .ZIP"** (indicando que o InnovAva concluiu o desempacotamento e a carga local dos dados). Em seguida, executa a `T20_Etapa7_CloseApps`, fechando todos os aplicativos abertos e limpando os recentes. Compilação final validada sob `registros/2026-08-05/09-49_Plataforma_InnovTech_DESKTOP_BUILD`.
     - **[2026-08-05] Integração da Interface C# WPF (Nokia T20 - Botão F3 & Filtro de Automação):**
-      1. **Botão F3 na Barra de Funções:** Adicionado o botão `[F3] Atualizar Pacote` ao painel de ações rápida do Nokia T20 (`GridNokiaActions`) em [MonitorView.xaml](file:///c:/PROJETOS/Bot_RPA/src/ui/Views/MonitorView.xaml#L428), vinculado ao evento `BtnNokiaF3_Click`.
-      2. **Filtro de Automação (ComboBox):** Atualizada a rotina `BtnCategoryNokia_Click` em [MonitorView.xaml.cs](file:///c:/PROJETOS/Bot_RPA/src/ui/Views/MonitorView.xaml.cs#L1760) para popular as opções `[F1] Sincronização + Instalação`, `[F2] Reinstalação (Preserva Apps)` e `[F3] Atualizar Pacote`.
+      1. **Botão F3 na Barra de Funções:** Adicionado o botão `[F3] Atualizar Pacote` ao painel de ações rápida do Nokia T20 (`GridNokiaActions`) em [MonitorView.xaml](file:///c:/PROJETOS/TACE/src/ui/Views/MonitorView.xaml#L428), vinculado ao evento `BtnNokiaF3_Click`.
+      2. **Filtro de Automação (ComboBox):** Atualizada a rotina `BtnCategoryNokia_Click` em [MonitorView.xaml.cs](file:///c:/PROJETOS/TACE/src/ui/Views/MonitorView.xaml.cs#L1760) para popular as opções `[F1] Sincronização + Instalação`, `[F2] Reinstalação (Preserva Apps)` e `[F3] Atualizar Pacote`.
       3. **Despacho Automático:** Adicionado o tratamento para `isNokiaGrid` no método `RunAutoInstallForDevice`, garantindo que os disparos via filtro acionem corretamente as rotinas `Engine_ExecuteF1_NokiaT20`, `Engine_ExecuteF2_NokiaT20` e `Engine_ExecuteF3_NokiaT20`. Compilação validada sob `registros/2026-08-05/10-05_Plataforma_InnovTech_DESKTOP_BUILD`.
     - **[2026-08-05] Padronização Global de Fonte (1.15), Pausa de 5s Pós-Seleção e Encerramento sem Desligamento (Nokia T20):**
-      1. **Escala de Fonte Padrão (1.15):** Incluído o comando `adb shell settings put system font_scale 1.15` na inicialização do sistema (`T20_Etapa1` e `T20_Etapa1_2_DarkMode` em [t20_pipeline.c](file:///c:/PROJETOS/Bot_RPA/src/core/functions/nokia_t20/t20_pipeline.c#L90)), garantindo que qualquer execução em F1, F2 ou F3 aplique a fonte 1.15.
+      1. **Escala de Fonte Padrão (1.15):** Incluído o comando `adb shell settings put system font_scale 1.15` na inicialização do sistema (`T20_Etapa1` e `T20_Etapa1_2_DarkMode` em [t20_pipeline.c](file:///c:/PROJETOS/TACE/src/core/functions/nokia_t20/t20_pipeline.c#L90)), garantindo que qualquer execução em F1, F2 ou F3 aplique a fonte 1.15.
       2. **Pausa de 5s Pós-Seleção do ZIP:** Adicionado `Sleep(5000)` obrigatório em `T20_Etapa6_AguardarConclusaoImportacao` para aguardar a transição de tela antes de iniciar o monitoramento XML do botão **"PROCURAR ARQUIVO .ZIP"**.
       3. **Manutenção do Tablet Ligado:** Padronizada a finalização em F1, F2 e F3 para fechar todos os aplicativos e limpar recentes (`T20_Etapa7_CloseApps`), mantendo o tablet **LIGADO** na tela inicial sem efetuar o desligamento físico. Compilação final validada sob `registros/2026-08-05/10-18_Plataforma_InnovTech_DESKTOP_BUILD`.
     - **[2026-08-05] Atualização Completa dos Nós Neurais do Nokia T20 (BotLearn & BrainVisualizer):**
@@ -380,7 +380,7 @@
     - Identificada e corrigida a causa raiz da seleção incorreta de pacotes fantasma (ex: município "Pão de Açúcar" mantinha o pacote antigo `PDA-15-07-2026.zip` mesmo após anexar um novo pacote `pda10082026.zip`).
     - **Reordenação de Prioridade Máxima no `PathHelper`:** Os métodos estáticos `GetDynamicPacotePath` e `GetDynamicApkPath` foram unificados e atualizados no `PathHelper.cs` para pesquisar **PRIMEIRO** na pasta oficial recém-anexada `data/output/arquivos/pacotes/<clean>` e `data/output/arquivos/pacotes/<cleanAscii>` antes das pastas legadas `Arquivos/`.
     - **Purga de Resíduos Fantasma em `CopiarArquivo`:** Atualizada a rotina `CopiarArquivo` em `MunicipiosWindow.xaml.cs` para expurgar automaticamente resíduos de pacotes antigos em todas as subpastas candidatas legadas (`Arquivos/`, `data/input/municipios/`) no momento em que um novo arquivo é anexado.
-    - **Sincronização Visual e Auditoria:** Unificados os exibidores da `MunicipiosWindow` e `MonitorView` para consultarem o `PathHelper`, garantindo paridade 100% exata entre o cadastro e a execução das automações F1-F8. Removidos os pacotes obsoletos residuais e recompilados o motor em C (`BotEngine.dll`) e a UI em C# WPF (`BotRPAui.exe`).
+    - **Sincronização Visual e Auditoria:** Unificados os exibidores da `MunicipiosWindow` e `MonitorView` para consultarem o `PathHelper`, garantindo paridade 100% exata entre o cadastro e a execução das automações F1-F8. Removidos os pacotes obsoletos residuais e recompilados o motor em C (`BotEngine.dll`) e a UI em C# WPF (`TACEui.exe`).
     4. **Rolagem Automática de Lista (Swipe ADB):** Adicionado deslize suave na lista de municípios caso a opção desejada esteja localizada abaixo da área visível inicial.
     5. Auditado sob o registro `registros/2026-08-06/01-28_Plataforma_InnovTech_DESKTOP_BUILD`.
   - **Automação Completa da Importação do ZIP e Encerramento de Apps em F1 (Multilazer Tab M7):**
@@ -394,7 +394,7 @@
     - **Diagnóstico e Resolução do Crash no F1 do Multilazer Tab M7 (Violação de Acesso em C Nativo):**
     - **Causa Raiz Identificada:** No passo 5 da automação de carga do ZIP (`M7_ExecutarImportacaoEFecharApps` em `m7_pipeline.c`), a instrução `f7_get_centroid_fuzzy(xml_wait, "Procurar arquivo", NULL, NULL, 0)` passava `out_cx` e `out_cy` como `NULL`. Ao localizar o elemento no XML, a função tentava desreferenciar e gravar diretamente nos ponteiros nulos (`*out_cx = ...; *out_cy = ...;`), causando uma exceção nativa de Violação de Acesso (*Access Violation 0xc0000005* / *SEGFAULT*) no C# e derrubando a aplicação.
     - **Blindagem Nula Universal (Zero-Leak & Crash-Free):** Injetada validação rigorosa de nulidade de ponteiros (`if (out_cx) *out_cx = ...; if (out_cy) *out_cy = ...;`) e sanitização de entradas (`if (!xml || !search_str) return 0;`) nas rotinas `f7_get_centroid_fuzzy`, `f7_get_centroid_nocase`, `f7_stristr_fuzzy` and `f7_stristr_ascii` em todos os motores C nativos (`m7_pipeline.c`, `f7_tabmulti.c`, `learn_engine.c`, `v7_pipeline.c` e `t20_pipeline.c`).
-    - **Compilação & Release:** Recompilado com 100% de sucesso (Zero Errors / Zero Warnings) e auditado sob a build `registros/2026-08-06/04-40_Plataforma_InnovTech_DESKTOP_BUILD`, com pacotes atualizados na release executável `BotRPA_Release`.
+    - **Compilação & Release:** Recompilado com 100% de sucesso (Zero Errors / Zero Warnings) e auditado sob a build `registros/2026-08-06/04-40_Plataforma_InnovTech_DESKTOP_BUILD`, com pacotes atualizados na release executável `TACE_Release`.
    - **Encerramento com Shutdown Físico no F1 (Multilazer Tab M7):**
      1. **Desligamento Automático (`reboot -p`):** Atualizada a etapa final (`final_step` em `m7_pipeline.c`) para que, imediatamente após o término do fechamento manual/visual de todos os aplicativos e a limpeza da tela de recentes em `M7_ExecutarImportacaoEFecharApps`, o motor desative as conexões/varreduras de rede (Wi-Fi, Bluetooth, Localização) e emita o comando de shutdown físico (`reboot -p`).
      2. **Auditado:** Compilado e auditado sob o registro de build `registros/2026-08-06/06-19_Plataforma_InnovTech_DESKTOP_BUILD`.
@@ -413,23 +413,23 @@
     - **Proteção Contra Erros de Caracteres Especiais e Acentuação:**
       - Injetadas chamadas `adb_get_safe_path` para conversão 8.3 / fallback Unicode em cache ASCII em todas as operações de `adb push` e `adb install`.
       - Atualizados os localizadores dinâmicos no C# WPF ([MonitorView.xaml.cs](file:///p:/src/ui/Views/MonitorView.xaml.cs)) (`GetDynamicApkPath` e `GetDynamicPacotePath`) para buscar arquivos de municípios em pastas com acentos (ex: `Pão de Açúcar`), sem acentos (`Pao_de_Acucar`), ASCII sanitizadas ou no diretório oficial `Arquivos/`.
-    - Motores DLL C (`BotEngine.dll`) e UI C# WPF (`BotRPAui.exe`) recompilados com 100% de sucesso (Zero Errors / Zero Warnings) nos ambientes de Desenvolvimento ([data/output/BotRPAui.exe](file:///p:/data/output/BotRPAui.exe) - Ícone Azul Escuro) e Release Portátil ([BotRPA_Release/BotRPAui.exe](file:///p:/BotRPA_Release/BotRPAui.exe) - Ícone Roxo Oficial). Registros de auditoria gerados sob `registros/2026-08-10/15-45_Plataforma_InnovTech_DESKTOP_BUILD` e `15-46_Plataforma_InnovTech_DESKTOP_BUILD`.
+    - Motores DLL C (`BotEngine.dll`) e UI C# WPF (`TACEui.exe`) recompilados com 100% de sucesso (Zero Errors / Zero Warnings) nos ambientes de Desenvolvimento ([data/output/TACEui.exe](file:///p:/data/output/TACEui.exe) - Ícone Azul Escuro) e Release Portátil ([TACE_Release/TACEui.exe](file:///p:/TACE_Release/TACEui.exe) - Ícone Roxo Oficial). Registros de auditoria gerados sob `registros/2026-08-10/15-45_Plataforma_InnovTech_DESKTOP_BUILD` e `15-46_Plataforma_InnovTech_DESKTOP_BUILD`.
 - **19/08/2026:**
-  - **Refatoração e Alinhamento de Alta Performance da Esteira F1 do Multilaser TabMulti M7 ([f1_tabmulti_m7.c](file:///c:/PROJETOS/Bot_RPA/src/core/functions/tabmulti/f1_tabmulti_m7.c)):**
+  - **Refatoração e Alinhamento de Alta Performance da Esteira F1 do Multilaser TabMulti M7 ([f1_tabmulti_m7.c](file:///c:/PROJETOS/TACE/src/core/functions/tabmulti/f1_tabmulti_m7.c)):**
     - **Otimização do Shell Batching de Formatação (`Etapa 1.6`):** Substituído o loop iterativo C de deleção item a item por comando composto otimizado no Android (`cd /sdcard && ls | grep -vwE 'Android|classjava|cstore' | grep -vi 'dump' | xargs rm -rf`), economizando de 5 a 10 segundos na limpeza inicial de armazenamento.
     - **Desduplicação e Consolidação de Rede (`Etapa 0 & 2.5`):** Eliminada a chamada duplicada de `M7_StartGnirehtet` no Passo 0 e desativadas as antenas Wi-Fi/Bluetooth no boot batched inicial, operando 100% via Reverse Tethering USB (Gnirehtet) durante a fase de autenticação.
     - **Adição da Etapa 1.9 (Limpeza do Launcher):** Inserida a limpeza silenciosa de atalhos e widgets (`pm clear com.android.launcher3`).
-    - **Padronização dos Logs de Auditoria:** Unificados os prefixos dos callbacks para `[F1 - TabMulti M7 - Etapa X.X]`, alinhando com o benchmark do Positivo Tab Vision 7 ([f1_vision_tab7.c](file:///c:/PROJETOS/Bot_RPA/src/core/functions/vision7/f1_vision_tab7.c)).
-    - **Correção Crítica no Reconhecimento de Dispositivos Conectados na UI ([MonitorView.xaml.cs](file:///c:/PROJETOS/Bot_RPA/src/ui/Views/MonitorView.xaml.cs)):**
+    - **Padronização dos Logs de Auditoria:** Unificados os prefixos dos callbacks para `[F1 - TabMulti M7 - Etapa X.X]`, alinhando com o benchmark do Positivo Tab Vision 7 ([f1_vision_tab7.c](file:///c:/PROJETOS/TACE/src/core/functions/vision7/f1_vision_tab7.c)).
+    - **Correção Crítica no Reconhecimento de Dispositivos Conectados na UI ([MonitorView.xaml.cs](file:///c:/PROJETOS/TACE/src/ui/Views/MonitorView.xaml.cs)):**
       - Identificada a causa raiz do alerta falso *"Nenhum aparelho Android conectado para executar Tab-MULTI!"*: a função `GetTargetDevices()` filtrava `dev.Status == "Autorizado"`, enquanto os dispositivos reconhecidos e autorizados eram registrados com o status `"Pronto"`, `"Executando"`, `"Concluído"`, etc.
       - Corrigido o filtro em `GetTargetDevices()` para aceitar qualquer dispositivo conectado e autorizado cujo status seja diferente de `"Pendente"` (`dev.Status != "Pendente"`), restaurando o disparo imediato de todas as automações (F1 a F8).
     - **Padronização Global de Armazenamento (`/sdcard/innovava`):**
-      - Ajustada a Etapa 1.6 de todos os motores nativos em C ([`f1_tabmulti_m7.c`](file:///c:/PROJETOS/Bot_RPA/src/core/functions/tabmulti/f1_tabmulti_m7.c) e [`f1_vision_tab7.c`](file:///c:/PROJETOS/Bot_RPA/src/core/functions/vision7/f1_vision_tab7.c)) para executar a purga limpa inicial de `/sdcard/` (preservando `Android` e `Pictures`), criar obrigatoriamente a pasta oficial `/sdcard/innovava` (e o alias `/sdcard/InnovAva`), e transmitir (`adb push`) o APK e o Pacote ZIP diretamente para `/sdcard/innovava/`.
-    - **Exclusão Física Completa de Pastas de Município ([`PathHelper.cs`](file:///c:/PROJETOS/Bot_RPA/src/ui/Core/PathHelper.cs) e [`MunicipiosWindow.xaml.cs`](file:///c:/PROJETOS/Bot_RPA/src/ui/Views/MunicipiosWindow.xaml.cs)):**
+      - Ajustada a Etapa 1.6 de todos os motores nativos em C ([`f1_tabmulti_m7.c`](file:///c:/PROJETOS/TACE/src/core/functions/tabmulti/f1_tabmulti_m7.c) e [`f1_vision_tab7.c`](file:///c:/PROJETOS/TACE/src/core/functions/vision7/f1_vision_tab7.c)) para executar a purga limpa inicial de `/sdcard/` (preservando `Android` e `Pictures`), criar obrigatoriamente a pasta oficial `/sdcard/innovava` (e o alias `/sdcard/InnovAva`), e transmitir (`adb push`) o APK e o Pacote ZIP diretamente para `/sdcard/innovava/`.
+    - **Exclusão Física Completa de Pastas de Município ([`PathHelper.cs`](file:///c:/PROJETOS/TACE/src/ui/Core/PathHelper.cs) e [`MunicipiosWindow.xaml.cs`](file:///c:/PROJETOS/TACE/src/ui/Views/MunicipiosWindow.xaml.cs)):**
       - Criado o método auxiliar `DeleteMunicipioFolders(string municipio)` em `PathHelper.cs`. Ao excluir um município da lista/cofre, a aplicação solicita confirmação e realiza a deleção física completa do diretório e todos os arquivos APK/ZIP/Wallpapers armazenados em `Arquivos/`, `data/output/arquivos/apks/`, `data/output/arquivos/pacotes/` e `data/input/municipios/`.
-    - **Aprimoramento do Mapa Neural com Dados de Conexão em Tempo Real ([`BrainVisualizerWindow.xaml`](file:///c:/PROJETOS/Bot_RPA/src/ui/Views/BrainVisualizerWindow.xaml) e [`BrainVisualizerWindow.xaml.cs`](file:///c:/PROJETOS/Bot_RPA/src/ui/Views/BrainVisualizerWindow.xaml.cs)):**
+    - **Aprimoramento do Mapa Neural com Dados de Conexão em Tempo Real ([`BrainVisualizerWindow.xaml`](file:///c:/PROJETOS/TACE/src/ui/Views/BrainVisualizerWindow.xaml) e [`BrainVisualizerWindow.xaml.cs`](file:///c:/PROJETOS/TACE/src/ui/Views/BrainVisualizerWindow.xaml.cs)):**
       - Adicionado o badge HUD `CONECTADOS` no topo do Mapa Neural para exibir dinamicamente os tablets lidos via USB (`Engine_RefreshDevices`), alinhando os nós e sinapses com o quantitativo de parâmetros neurais e estado dos dispositivos conectados.
-    - **Reforço na Ferramenta de Desligamento F4 do TabMulti M7 ([`f4_tabmulti_m7.c`](file:///c:/PROJETOS/Bot_RPA/src/core/functions/tabmulti/f4_tabmulti_m7.c)):**
+    - **Reforço na Ferramenta de Desligamento F4 do TabMulti M7 ([`f4_tabmulti_m7.c`](file:///c:/PROJETOS/TACE/src/core/functions/tabmulti/f4_tabmulti_m7.c)):**
       - Atualizada a rotina `M7_DesligarAparelho` para executar a desativação em múltiplas camadas do túnel de internet USB (Gnirehtet + `am force-stop`), antenas Wi-Fi (`svc wifi disable`, `wifi_on 0`, `wifi_scan_always_enabled 0`), antenas Bluetooth (`svc bluetooth disable`, `cmd bluetooth disable`, `service call bluetooth_manager 8`, `ble_scan_always_enabled 0`) e serviços de Localização (GPS), encerrando os aplicativos ativos antes de emitir o comando de desligamento físico (`reboot -p`).
 - **26/08/2026:**
   - **Implementação e Upgrade Completo do Monitor Pro (Studio - Layout Alternativo Avançado):**
@@ -457,7 +457,7 @@
         4. Realiza o mapeamento visual dos elementos via UIAutomator XML Dump e busca o campo de Endereço MAC do Wi-Fi com suporte a rolagem suave.
         5. Aplica fallback resiliente via interface `wlan0` do kernel e exibe o MAC obtido em destaque verde no console.
         6. Retorna o aparelho com segurança para a tela inicial (Home).
-    - Compilação do motor nativo em C (`BotEngine.dll`) e da UI C# WPF (`BotRPAui.exe`) validada com 100% de sucesso sob a política de **Zero Warnings e Zero Errors**, auditada sob o registro `registros/2026-08-26/16-46_Plataforma_InnovTech_DESKTOP_BUILD`.
+    - Compilação do motor nativo em C (`BotEngine.dll`) e da UI C# WPF (`TACEui.exe`) validada com 100% de sucesso sob a política de **Zero Warnings e Zero Errors**, auditada sob o registro `registros/2026-08-26/16-46_Plataforma_InnovTech_DESKTOP_BUILD`.
 
 
 ## Submódulo: Funcionamento Analítico do InnoAI
@@ -514,8 +514,8 @@ O **InnoAI** é o motor de inteligência e automação visual da Plataforma Inno
   - **Camada 2 (Fallback Logcat):** Varredura do buffer de logs do driver via regex genérico de 6 octetos hexadecimais (filtrando MACs nulos/fictícios como `00:00:00:00:00:00`, `ff:ff:ff:ff:ff:ff`, `02:00:00:00:00:00`).
   - **Camada 3 (Fallback Visual):** Inicialização rápida da tela *"Sobre o tablet"* (`DEVICE_INFO_SETTINGS`), swipe e leitura por dump em memória (`adb_dump_stdout`).
   - **Desativação Imediata:** Desliga o rádio Wi-Fi (`svc wifi disable`) logo após a leitura para economia de bateria e manutenção do tablet em modo offline.
-- **Arquivos Atualizados:** [`src/core/functions/vision7/f1_vision_tab7.c`](file:///c:/Users/Administrator/Pictures/projetos/Bot_RPA/src/core/functions/vision7/f1_vision_tab7.c), [`src/core/functions/vision7/f4_vision_tab7.c`](file:///c:/Users/Administrator/Pictures/projetos/Bot_RPA/src/core/functions/vision7/f4_vision_tab7.c).
-- **Auditoria de Build:** Compilação C (`BotEngine.dll`) e WPF (`BotRPAui.exe`) concluída com 100% de sucesso (Zero Errors / Zero Warnings) registrada em [`registros/2026-09-03/20-42_Plataforma_InnovTech_DESKTOP_BUILD`](file:///c:/Users/Administrator/Pictures/projetos/Bot_RPA/registros/2026-09-03/20-42_Plataforma_InnovTech_DESKTOP_BUILD).
+- **Arquivos Atualizados:** [`src/core/functions/vision7/f1_vision_tab7.c`](file:///c:/Users/Administrator/Pictures/projetos/TACE/src/core/functions/vision7/f1_vision_tab7.c), [`src/core/functions/vision7/f4_vision_tab7.c`](file:///c:/Users/Administrator/Pictures/projetos/TACE/src/core/functions/vision7/f4_vision_tab7.c).
+- **Auditoria de Build:** Compilação C (`BotEngine.dll`) e WPF (`TACEui.exe`) concluída com 100% de sucesso (Zero Errors / Zero Warnings) registrada em [`registros/2026-09-03/20-42_Plataforma_InnovTech_DESKTOP_BUILD`](file:///c:/Users/Administrator/Pictures/projetos/TACE/registros/2026-09-03/20-42_Plataforma_InnovTech_DESKTOP_BUILD).
 
 ### [2026-09-03 21:30] - Integração de Registro Seguro no Banco de Dispositivos com Anti-Duplicidade
 - **Objetivo:** Registrar automaticamente o endereço MAC Wi-Fi capturado (na Etapa 1.1 do F1 e Ação 11 do F4) no banco de dispositivos SQLite (`bot_database.db`) e exportação CSV (`dispositivos_registrados.csv`), garantindo estrita política anti-duplicidade.
@@ -529,15 +529,15 @@ O **InnoAI** é o motor de inteligência e automação visual da Plataforma Inno
     - Sincronização automática do arquivo `data/dispositivos_registrados.csv` delimitado por ponto e vírgula (`;`).
     - Atualização imediata do cache em memória RAM (`g_cached_devices`) da DLL `BotEngine.dll`.
   - **Integração no F1 e F4:**
-    - [`src/core/functions/vision7/f1_vision_tab7.c`](file:///c:/Users/Administrator/Pictures/projetos/Bot_RPA/src/core/functions/vision7/f1_vision_tab7.c): Chamada em `V7_Etapa1_1_CapturaMac` logo após confirmação de 17 caracteres do MAC.
-    - [`src/core/functions/vision7/f4_vision_tab7.c`](file:///c:/Users/Administrator/Pictures/projetos/Bot_RPA/src/core/functions/vision7/f4_vision_tab7.c): Chamada na ferramenta de hardware (Ação 11).
+    - [`src/core/functions/vision7/f1_vision_tab7.c`](file:///c:/Users/Administrator/Pictures/projetos/TACE/src/core/functions/vision7/f1_vision_tab7.c): Chamada em `V7_Etapa1_1_CapturaMac` logo após confirmação de 17 caracteres do MAC.
+    - [`src/core/functions/vision7/f4_vision_tab7.c`](file:///c:/Users/Administrator/Pictures/projetos/TACE/src/core/functions/vision7/f4_vision_tab7.c): Chamada na ferramenta de hardware (Ação 11).
   - **Camada C# UI (`SQLiteDatabaseManager.cs`, `MonitorView.xaml.cs`, `MonitorProView.xaml.cs`):**
     - Reforço em `RegistrarSeNovo`: se o dispositivo já estiver no cache mas tiver `MAC` como `"N/A"` e agora houver um MAC válido, realiza `UPDATE` seguro.
   - **Vinculação Estrita de N/S (Serial) e MAC:**
     - Garantido que tanto o **Número de Série de hardware** (`ro.serialno` / `ro.boot.serialno`) quanto o **Endereço MAC Wi-Fi** sejam armazenados juntos como um par inseparável na base de dados (`Dispositivos`) e na planilha `dispositivos_registrados.csv`.
-    - Criado arquivo complementar de exportação direta [`data/relatorio_serial_mac.csv`](file:///c:/Users/Administrator/Pictures/projetos/Bot_RPA/data/relatorio_serial_mac.csv) com as colunas `Serial;MAC;Fabricante;Modelo;DataRegistro`.
+    - Criado arquivo complementar de exportação direta [`data/relatorio_serial_mac.csv`](file:///c:/Users/Administrator/Pictures/projetos/TACE/data/relatorio_serial_mac.csv) com as colunas `Serial;MAC;Fabricante;Modelo;DataRegistro`.
     - Ajustadas as mensagens de log no console (`cb`) em `f1_vision_tab7.c` e `f4_vision_tab7.c` para expor visualmente ambos os identificadores no padrão: `[+] SUCESSO: Aparelho Identificado -> N/S: [SERIAL] | MAC Wi-Fi: [MAC]`.
-- **Auditoria de Build:** Compilação do motor C (`BotEngine.dll`) e da UI (`BotRPAui.exe`) realizada com 100% de sucesso (Zero Errors / Zero Warnings) registrada em [`registros/2026-09-03/21-34_Plataforma_InnovTech_DESKTOP_BUILD`](file:///c:/Users/Administrator/Pictures/projetos/Bot_RPA/registros/2026-09-03/21-34_Plataforma_InnovTech_DESKTOP_BUILD).
+- **Auditoria de Build:** Compilação do motor C (`BotEngine.dll`) e da UI (`TACEui.exe`) realizada com 100% de sucesso (Zero Errors / Zero Warnings) registrada em [`registros/2026-09-03/21-34_Plataforma_InnovTech_DESKTOP_BUILD`](file:///c:/Users/Administrator/Pictures/projetos/TACE/registros/2026-09-03/21-34_Plataforma_InnovTech_DESKTOP_BUILD).
 
 ### [2026-09-03 21:55] - Extração Automática de Endereço MAC via USB (Plug & Play - Padrão InnoCore)
 - **Demanda do Usuário:** Ao conectar qualquer tablet Android via cabo USB, o sistema deve extrair automaticamente o endereço MAC de fábrica em background (como o InnoCore faz), vinculando N/S e MAC no banco SQLite e preenchendo a interface sem congelar a UI e sem prender a nenhum serial fixo.
@@ -590,21 +590,21 @@ O **InnoAI** é o motor de inteligência e automação visual da Plataforma Inno
 - **Ação Solicitada pelo Usuário:** Remoção de scripts avulsos da pasta raiz (`innocore.bat`, `innocore.ps1`, `listar_dispositivos.bat`, `obter_mac.bat`) para manter a raiz limpa e sem poluição.
 - **Estruturação de Pastas e Migração:**
   - Removidos 100% dos arquivos soltos da raiz: `innocore.bat`, `innocore.ps1`, `listar_dispositivos.bat` e `obter_mac.bat`.
-  - Criada a pasta oficial [`scripts/testes/`](file:///c:/Users/Administrator/Pictures/projetos/Bot_RPA/scripts/testes) reunindo todos os utilitários de testes operacionais e bancada:
-    - [`listar_dispositivos.bat`](file:///c:/Users/Administrator/Pictures/projetos/Bot_RPA/scripts/testes/listar_dispositivos.bat) & [`listar_dispositivos.ps1`](file:///c:/Users/Administrator/Pictures/projetos/Bot_RPA/scripts/testes/listar_dispositivos.ps1) (Listagem instantânea de tablets conectados via USB).
-    - [`obter_mac.bat`](file:///c:/Users/Administrator/Pictures/projetos/Bot_RPA/scripts/testes/obter_mac.bat) & [`obter_mac.ps1`](file:///c:/Users/Administrator/Pictures/projetos/Bot_RPA/scripts/testes/obter_mac.ps1) (Diagnóstico e extração de endereço MAC Wi-Fi via ADB).
+  - Criada a pasta oficial [`scripts/testes/`](file:///c:/Users/Administrator/Pictures/projetos/TACE/scripts/testes) reunindo todos os utilitários de testes operacionais e bancada:
+    - [`listar_dispositivos.bat`](file:///c:/Users/Administrator/Pictures/projetos/TACE/scripts/testes/listar_dispositivos.bat) & [`listar_dispositivos.ps1`](file:///c:/Users/Administrator/Pictures/projetos/TACE/scripts/testes/listar_dispositivos.ps1) (Listagem instantânea de tablets conectados via USB).
+    - [`obter_mac.bat`](file:///c:/Users/Administrator/Pictures/projetos/TACE/scripts/testes/obter_mac.bat) & [`obter_mac.ps1`](file:///c:/Users/Administrator/Pictures/projetos/TACE/scripts/testes/obter_mac.ps1) (Diagnóstico e extração de endereço MAC Wi-Fi via ADB).
     - Scripts de verificação técnica: `test_dll_mac.ps1`, `test_extract.ps1` e `test_print_line.ps1`.
-  - O executável principal de orquestração DevOps continua centralizado em [`scripts/innocore.bat`](file:///c:/Users/Administrator/Pictures/projetos/Bot_RPA/scripts/innocore.bat) e [`scripts/innocore.ps1`](file:///c:/Users/Administrator/Pictures/projetos/Bot_RPA/scripts/innocore.ps1).
+  - O executável principal de orquestração DevOps continua centralizado em [`scripts/innocore.bat`](file:///c:/Users/Administrator/Pictures/projetos/TACE/scripts/innocore.bat) e [`scripts/innocore.ps1`](file:///c:/Users/Administrator/Pictures/projetos/TACE/scripts/innocore.ps1).
   - **Diretriz de Build:** Build autorizado explicitamente pelo usuário e executado com sucesso às 22:52 via `scripts/build.bat`.
 
 ---
 
 ### [2026-09-03 22:52] - Compilação Completa com Sucesso (Build Autorizado)
 - **Gatilho:** Comando explícito do usuário ("build").
-- **Script Executado:** [`scripts/build.bat`](file:///c:/Users/Administrator/Pictures/projetos/Bot_RPA/scripts/build.bat) acionando `innocore.ps1 -Action BuildDev -NoPause`.
+- **Script Executado:** [`scripts/build.bat`](file:///c:/Users/Administrator/Pictures/projetos/TACE/scripts/build.bat) acionando `innocore.ps1 -Action BuildDev -NoPause`.
 - **Motor C (`BotEngine.dll`):** Compilado via MinGW64 GCC com 100% de sucesso (Zero Warnings / Zero Errors), incorporando as correções de extração de MAC idênticas ao InnoCore.
-- **Frontend WPF (`BotRPAui.exe`):** Publicado em modo Self-Contained Offline (.NET 8 Release win-x64).
-- **Versão Gerada:** `03.09.2026.2252` em [`config/version.txt`](file:///c:/Users/Administrator/Pictures/projetos/Bot_RPA/config/version.txt).
+- **Frontend WPF (`TACEui.exe`):** Publicado em modo Self-Contained Offline (.NET 8 Release win-x64).
+- **Versão Gerada:** `03.09.2026.2252` em [`config/version.txt`](file:///c:/Users/Administrator/Pictures/projetos/TACE/config/version.txt).
 - **Registro de Auditoria:** Criado em `registros/2026-09-03/22-52_Plataforma_InnovTech_DESKTOP_BUILD`.
 
 ---
@@ -612,9 +612,9 @@ O **InnoAI** é o motor de inteligência e automação visual da Plataforma Inno
 ---
 
 ### [2026-09-03 22:48] - Unificação Rigorosa da Extração de MAC com Benchmark do InnoCore
-- **Diagnóstico da Discrepância de MAC (InnoCore vs Bot_RPA):**
+- **Diagnóstico da Discrepância de MAC (InnoCore vs TACE):**
   - O InnoCore extraía o endereço físico de hardware real (`44:0B:AB:00:E8:CB`) varrendo diretamente a linha de driver de fábrica no logcat (`Primary factory MAC address retrieved:`).
-  - O motor C do Bot_RPA possuía a chamada `ip link show wlan0` como prioridade #1. No Android 14 com política de MAC Randomization, a interface `wlan0` expunha o MAC virtual/aleatório local (`DE:8B:01:F1:16:2D`).
+  - O motor C do TACE possuía a chamada `ip link show wlan0` como prioridade #1. No Android 14 com política de MAC Randomization, a interface `wlan0` expunha o MAC virtual/aleatório local (`DE:8B:01:F1:16:2D`).
 - **Alinhamento Arquitetural (C Puro = InnoCore Benchmark):**
   - **Eliminação de `ip link`:** Removida completamente qualquer captura de `ip link show wlan0` ou `link/ether` que retornasse o endereço temporário randomizado pelo Android.
   - **Adopção Estrita do Algoritmo InnoCore:**
@@ -622,7 +622,7 @@ O **InnoAI** é o motor de inteligência e automação visual da Plataforma Inno
     - Executa varredura direta no buffer do `logcat -d` buscando o marcador `Primary factory MAC address retrieved:` (e fallbacks de fábrica `factory MAC address:`, `factory MAC:`).
     - Fallback resiliente idêntico ao InnoCore: acionamento rápido de `DEVICE_INFO_SETTINGS`, espera de 600ms, segunda leitura e retorno à tela Home (`input keyevent 3`).
     - Desativação limpa imediata do rádio Wi-Fi (`svc wifi disable && settings put global wifi_on 0`).
-  - **Arquivos Atualizados:** [`src/core/drivers/adb.c`](file:///c:/Users/Administrator/Pictures/projetos/Bot_RPA/src/core/drivers/adb.c), [`src/core/functions/vision7/f1_vision_tab7.c`](file:///c:/Users/Administrator/Pictures/projetos/Bot_RPA/src/core/functions/vision7/f1_vision_tab7.c), [`src/core/functions/vision7/f4_vision_tab7.c`](file:///c:/Users/Administrator/Pictures/projetos/Bot_RPA/src/core/functions/vision7/f4_vision_tab7.c).
+  - **Arquivos Atualizados:** [`src/core/drivers/adb.c`](file:///c:/Users/Administrator/Pictures/projetos/TACE/src/core/drivers/adb.c), [`src/core/functions/vision7/f1_vision_tab7.c`](file:///c:/Users/Administrator/Pictures/projetos/TACE/src/core/functions/vision7/f1_vision_tab7.c), [`src/core/functions/vision7/f4_vision_tab7.c`](file:///c:/Users/Administrator/Pictures/projetos/TACE/src/core/functions/vision7/f4_vision_tab7.c).
   - **Higienização de Registros Anteriores:** Corrigido o registro do aparelho `T30764F2412001995` no banco SQLite (`bot_database.db`) e nos arquivos CSV (`dispositivos_registrados.csv` e `relatorio_serial_mac.csv`), substituindo o valor randomizado antigo (`DE:...`) pelo endereço de fábrica verdadeiro (`44:0B:AB:00:E8:CB`).
   - **Diretriz de Build:** Conforme regra do usuário, nenhuma compilação foi realizada, aguardando comando explícito.
 
@@ -631,15 +631,15 @@ O **InnoAI** é o motor de inteligência e automação visual da Plataforma Inno
 ### [2026-09-03 23:05] - Isolamento de `obter_mac.bat` na Pasta de Teste de Implementação 01
 - **Ação Solicitada pelo Usuário:** Separar o script `obter_mac.bat` dentro de uma pasta dedicada como teste de implementação 01 para trabalho e refinamentos isolados de bancada.
 - **Estruturação Realizada:**
-  - Criada a pasta oficial [`scripts/testes/teste_implementacao_01/`](file:///c:/Users/Administrator/Pictures/projetos/Bot_RPA/scripts/testes/teste_implementacao_01).
-  - Implementado o script de orquestração autônomo [`scripts/testes/teste_implementacao_01/obter_mac.bat`](file:///c:/Users/Administrator/Pictures/projetos/Bot_RPA/scripts/testes/teste_implementacao_01/obter_mac.bat) com posicionamento relativo à raiz do projeto.
-  - Implementado o motor de extração [`scripts/testes/teste_implementacao_01/obter_mac.ps1`](file:///c:/Users/Administrator/Pictures/projetos/Bot_RPA/scripts/testes/teste_implementacao_01/obter_mac.ps1), incorporando:
+  - Criada a pasta oficial [`scripts/testes/teste_implementacao_01/`](file:///c:/Users/Administrator/Pictures/projetos/TACE/scripts/testes/teste_implementacao_01).
+  - Implementado o script de orquestração autônomo [`scripts/testes/teste_implementacao_01/obter_mac.bat`](file:///c:/Users/Administrator/Pictures/projetos/TACE/scripts/testes/teste_implementacao_01/obter_mac.bat) com posicionamento relativo à raiz do projeto.
+  - Implementado o motor de extração [`scripts/testes/teste_implementacao_01/obter_mac.ps1`](file:///c:/Users/Administrator/Pictures/projetos/TACE/scripts/testes/teste_implementacao_01/obter_mac.ps1), incorporando:
     - Identificação dinâmica de ADB (`tools/platform-tools/adb.exe` ou PATH).
     - Suporte a múltiplos dispositivos simultâneos conectados no barramento USB.
     - Captura rápida do MAC de hardware (NVRAM/eFuse) via ativação de Wi-Fi e varredura de buffer logcat com fallback.
     - Desativação limpa do Wi-Fi ao término.
     - Apresentação em formato de resumo Cyber-Industrial com contagem de tempo de ciclo por aparelho.
-  - Configurado o script original [`scripts/testes/obter_mac.bat`](file:///c:/Users/Administrator/Pictures/projetos/Bot_RPA/scripts/testes/obter_mac.bat) para encaminhar chamadas transparentemente para a nova pasta isolada.
+  - Configurado o script original [`scripts/testes/obter_mac.bat`](file:///c:/Users/Administrator/Pictures/projetos/TACE/scripts/testes/obter_mac.bat) para encaminhar chamadas transparentemente para a nova pasta isolada.
   - Validada a extração com sucesso no tablet conectado `T30764G2601007854` (Positivo T307G) retornando o MAC de fábrica `8c:92:53:c4:d5:49` em ~3.8 segundos.
   - **Diretriz de Build:** Nenhuma compilação executada, respeitando a regra estrita de aguardar comando explícito do usuário.
 
@@ -649,21 +649,21 @@ O **InnoAI** é o motor de inteligência e automação visual da Plataforma Inno
 - **Ação Solicitada pelo Usuário:** Remover completamente qualquer rotina, chamada ou dependência referente à extração de endereço MAC de todos os cores do projeto, mantendo os experimentos exclusivamente no ambiente isolado `scripts/testes/teste_implementacao_01/`.
 - **Arquivos e Módulos Higienizados:**
   1. **Motor C Nativo (`src/core/functions/vision7/`):**
-     - [`f1_vision_tab7.c`](file:///c:/Users/Administrator/Pictures/projetos/Bot_RPA/src/core/functions/vision7/f1_vision_tab7.c) & [`f1_vision_tab7.h`](file:///c:/Users/Administrator/Pictures/projetos/Bot_RPA/src/core/functions/vision7/f1_vision_tab7.h): Removidos a função `V7_Etapa1_1_CapturaMac`, o helper `v7_extract_mac_from_text` e o disparo da Etapa 1.1 em `V7_Pipeline_Executar`.
-     - [`f4_vision_tab7.c`](file:///c:/Users/Administrator/Pictures/projetos/Bot_RPA/src/core/functions/vision7/f4_vision_tab7.c): Removida a ferramenta 11 (Captura de MAC) e o helper `f4_extract_mac_from_text`, restaurando a validação estrita de ferramentas de 1 a 10.
+     - [`f1_vision_tab7.c`](file:///c:/Users/Administrator/Pictures/projetos/TACE/src/core/functions/vision7/f1_vision_tab7.c) & [`f1_vision_tab7.h`](file:///c:/Users/Administrator/Pictures/projetos/TACE/src/core/functions/vision7/f1_vision_tab7.h): Removidos a função `V7_Etapa1_1_CapturaMac`, o helper `v7_extract_mac_from_text` e o disparo da Etapa 1.1 em `V7_Pipeline_Executar`.
+     - [`f4_vision_tab7.c`](file:///c:/Users/Administrator/Pictures/projetos/TACE/src/core/functions/vision7/f4_vision_tab7.c): Removida a ferramenta 11 (Captura de MAC) e o helper `f4_extract_mac_from_text`, restaurando a validação estrita de ferramentas de 1 a 10.
      - Removido o arquivo de banco intermediário `src/core/functions/vision7/v7_db_mac.h`.
   2. **Drivers e API C Nativa (`src/core/drivers/` e `src/api.c`):**
-     - [`src/core/drivers/adb.c`](file:///c:/Users/Administrator/Pictures/projetos/Bot_RPA/src/core/drivers/adb.c) & [`src/core/drivers/adb.h`](file:///c:/Users/Administrator/Pictures/projetos/Bot_RPA/src/core/drivers/adb.h): Removidas as funções `adb_get_mac` e `find_mac_in_text`.
-     - [`src/api.c`](file:///c:/Users/Administrator/Pictures/projetos/Bot_RPA/src/api.c): Removida a exportação da DLL `Engine_GetDeviceMac`.
+     - [`src/core/drivers/adb.c`](file:///c:/Users/Administrator/Pictures/projetos/TACE/src/core/drivers/adb.c) & [`src/core/drivers/adb.h`](file:///c:/Users/Administrator/Pictures/projetos/TACE/src/core/drivers/adb.h): Removidas as funções `adb_get_mac` e `find_mac_in_text`.
+     - [`src/api.c`](file:///c:/Users/Administrator/Pictures/projetos/TACE/src/api.c): Removida a exportação da DLL `Engine_GetDeviceMac`.
   3. **Camada C# UI Core (`src/ui/`):**
      - Removido o arquivo `src/ui/Core/UsbMacAutoExtractor.cs`.
-     - [`MonitorView.xaml.cs`](file:///c:/Users/Administrator/Pictures/projetos/Bot_RPA/src/ui/Views/MonitorView.xaml.cs) e [`MonitorProView.xaml.cs`](file:///c:/Users/Administrator/Pictures/projetos/Bot_RPA/src/ui/Views/MonitorProView.xaml.cs): Eliminadas as chamadas assíncronas em background de `UsbMacAutoExtractor.CheckAndExtractMacAsync` ao conectar dispositivos via USB.
+     - [`MonitorView.xaml.cs`](file:///c:/Users/Administrator/Pictures/projetos/TACE/src/ui/Views/MonitorView.xaml.cs) e [`MonitorProView.xaml.cs`](file:///c:/Users/Administrator/Pictures/projetos/TACE/src/ui/Views/MonitorProView.xaml.cs): Eliminadas as chamadas assíncronas em background de `UsbMacAutoExtractor.CheckAndExtractMacAsync` ao conectar dispositivos via USB.
   4. **CLI DevOps InnoCore (`scripts/innocore.ps1` e `scripts/desenvolvimento/innocore.ps1`):**
      - Removida a função `Invoke-InnoGetMac`.
      - Removidas as opções de comando `"GetMac"` e `"TestMac"`.
      - Removida a opção [6] do menu interativo, reordenando as opções de [1] a [10].
   5. **Wrappers de Testes:**
-     - [`scripts/testes/obter_mac.ps1`](file:///c:/Users/Administrator/Pictures/projetos/Bot_RPA/scripts/testes/obter_mac.ps1), [`scripts/desenvolvimento/obter_mac.bat`](file:///c:/Users/Administrator/Pictures/projetos/Bot_RPA/scripts/desenvolvimento/obter_mac.bat) e [`scripts/desenvolvimento/obter_mac.ps1`](file:///c:/Users/Administrator/Pictures/projetos/Bot_RPA/scripts/desenvolvimento/obter_mac.ps1): Ajustados para delegar exclusivamente para a pasta isolada [`scripts/testes/teste_implementacao_01/`](file:///c:/Users/Administrator/Pictures/projetos/Bot_RPA/scripts/testes/teste_implementacao_01/).
+     - [`scripts/testes/obter_mac.ps1`](file:///c:/Users/Administrator/Pictures/projetos/TACE/scripts/testes/obter_mac.ps1), [`scripts/desenvolvimento/obter_mac.bat`](file:///c:/Users/Administrator/Pictures/projetos/TACE/scripts/desenvolvimento/obter_mac.bat) e [`scripts/desenvolvimento/obter_mac.ps1`](file:///c:/Users/Administrator/Pictures/projetos/TACE/scripts/desenvolvimento/obter_mac.ps1): Ajustados para delegar exclusivamente para a pasta isolada [`scripts/testes/teste_implementacao_01/`](file:///c:/Users/Administrator/Pictures/projetos/TACE/scripts/testes/teste_implementacao_01/).
 - **Diretriz de Build:** Nenhuma compilação disparada, preservando a diretriz de aguardar comando explícito.
 
 ---
@@ -671,7 +671,7 @@ O **InnoAI** é o motor de inteligência e automação visual da Plataforma Inno
 ### [2026-09-03 23:25] - Calibração Multi-Dispositivos no `obter_mac.bat` (Teste de Implementação 01)
 - **Ação Solicitada pelo Usuário:** Corrigir/aprimorar a ferramenta batch `obter_mac.bat` para capturar automaticamente o endereço MAC de múltiplos dispositivos Android conectados simultaneamente ao computador/bancada.
 - **Implementação Realizada:**
-  - **Múltiplos Dispositivos Automáticos:** O script [`scripts/testes/teste_implementacao_01/obter_mac.ps1`](file:///c:/Users/Administrator/Pictures/projetos/Bot_RPA/scripts/testes/teste_implementacao_01/obter_mac.ps1) agora varre o barramento USB, identifica 100% dos aparelhos no estado `device` e itera por cada um sequencialmente sem interrupções.
+  - **Múltiplos Dispositivos Automáticos:** O script [`scripts/testes/teste_implementacao_01/obter_mac.ps1`](file:///c:/Users/Administrator/Pictures/projetos/TACE/scripts/testes/teste_implementacao_01/obter_mac.ps1) agora varre o barramento USB, identifica 100% dos aparelhos no estado `device` e itera por cada um sequencialmente sem interrupções.
   - **Identificação e Alertas de Status:** Aparelhos com status `unauthorized` ou `offline` geram avisos imediatos e instruções na tela para o operador (ex: autorizar depuração USB ou checar cabo).
   - **Pipeline de Extração Otimizado Batched:**
     - Leitura batched de metadados (fabricante, modelo e versão Android) em chamada ADB unificada.
@@ -679,9 +679,9 @@ O **InnoAI** é o motor de inteligência e automação visual da Plataforma Inno
     - Múltiplas camadas de fallback: marcador do driver NVRAM/eFuse, sysfs `wlan0/address`, acionamento rápido de `DEVICE_INFO_SETTINGS` e dumpsys connectivity.
     - Desativação limpa imediata do rádio Wi-Fi de cada aparelho ao término do teste.
   - **Painel Consolidado de Bancada:** Geração de tabela formatada na tela com colunas `# | SERIAL | FABRICANTE | MODELO | VERSAO | MAC ADDRESS | TEMPO`, além de resumo de sucessos e falhas.
-  - **Exportação e Sincronização CSV:** Gravação automática sem duplicidade no CSV local [`relatorio_macs_extraidos.csv`](file:///c:/Users/Administrator/Pictures/projetos/Bot_RPA/scripts/testes/teste_implementacao_01/relatorio_macs_extraidos.csv) e sincronização com `data/relatorio_serial_mac.csv`.
+  - **Exportação e Sincronização CSV:** Gravação automática sem duplicidade no CSV local [`relatorio_macs_extraidos.csv`](file:///c:/Users/Administrator/Pictures/projetos/TACE/scripts/testes/teste_implementacao_01/relatorio_macs_extraidos.csv) e sincronização com `data/relatorio_serial_mac.csv`.
   - **Ciclo Contínuo de Bancada (Loop de Lotes):** Ao finalizar um lote de tablets, o operador pode simplesmente pressionar `[ENTER]` para escanear a próxima remessa de aparelhos conectados sem fechar a janela.
-  - **Ajuste da Janela Batch:** [`scripts/testes/teste_implementacao_01/obter_mac.bat`](file:///c:/Users/Administrator/Pictures/projetos/Bot_RPA/scripts/testes/teste_implementacao_01/obter_mac.bat) calibrado com largura de 105 colunas e título explicativo.
+  - **Ajuste da Janela Batch:** [`scripts/testes/teste_implementacao_01/obter_mac.bat`](file:///c:/Users/Administrator/Pictures/projetos/TACE/scripts/testes/teste_implementacao_01/obter_mac.bat) calibrado com largura de 105 colunas e título explicativo.
 - **Diretriz de Build:** Nenhuma compilação disparada, preservando a regra estrita de aguardar comando explícito.
 
 ---
@@ -690,7 +690,7 @@ O **InnoAI** é o motor de inteligência e automação visual da Plataforma Inno
 - **Ação Solicitada pelo Usuário:** Eliminar a mensagem de erro terminal de ADB ausente ("[-] ADB nao localizado... Pressione [ENTER] para sair...") substituindo o comportamento estático por uma interface de uso completa, interativa e visual.
 - **Implementação Realizada:**
   - **Interface Gráfica Visual (WPF Dark Theme Cyber-Industrial):**
-    - A ferramenta [`scripts/testes/teste_implementacao_01/obter_mac.bat`](file:///c:/Users/Administrator/Pictures/projetos/Bot_RPA/scripts/testes/teste_implementacao_01/obter_mac.bat) e [`obter_mac.ps1`](file:///c:/Users/Administrator/Pictures/projetos/Bot_RPA/scripts/testes/teste_implementacao_01/obter_mac.ps1) agora inicializam diretamente uma janela gráfica moderna (`Show-WpfGuiWindow`), eliminando mensagens de erro cegas no console CMD.
+    - A ferramenta [`scripts/testes/teste_implementacao_01/obter_mac.bat`](file:///c:/Users/Administrator/Pictures/projetos/TACE/scripts/testes/teste_implementacao_01/obter_mac.bat) e [`obter_mac.ps1`](file:///c:/Users/Administrator/Pictures/projetos/TACE/scripts/testes/teste_implementacao_01/obter_mac.ps1) agora inicializam diretamente uma janela gráfica moderna (`Show-WpfGuiWindow`), eliminando mensagens de erro cegas no console CMD.
     - Suporte a modo console preservado caso executado com `-Console`, `-Cli` ou em ambientes headless.
   - **Subsistema de Auto-Recuperação do ADB (Zero Dead-Ends):**
     - Se o binário `adb.exe` não estiver presente em `tools\platform-tools\` nem no PATH, a interface exibe um card de assistência em destaque na própria janela com botão de **download e instalação automatizada oficial do Google Platform-Tools (1-Clique)**, além de seletor manual via `OpenFileDialog`.
@@ -700,7 +700,7 @@ O **InnoAI** é o motor de inteligência e automação visual da Plataforma Inno
     - Botão `EXTRAIR MAC (TODOS)`: Processa todos os aparelhos conectados sequencialmente com atualização visual linha a linha em tempo real sem travar a interface gráfica.
     - Botão `Copiar Lista (MACs)`: Copia todos os seriais e MACs extraídos no formato `Serial;MAC;Fabricante;Modelo` diretamente para a Área de Transferência.
     - Atalho de Duplo Clique: Clicar duas vezes em qualquer linha copia instantaneamente o endereço MAC daquele aparelho para o clipboard.
-    - Botão `Abrir Relatório CSV`: Abre imediatamente o arquivo [`relatorio_macs_extraidos.csv`](file:///c:/Users/Administrator/Pictures/projetos/Bot_RPA/scripts/testes/teste_implementacao_01/relatorio_macs_extraidos.csv) no Excel/leitor padrão.
+    - Botão `Abrir Relatório CSV`: Abre imediatamente o arquivo [`relatorio_macs_extraidos.csv`](file:///c:/Users/Administrator/Pictures/projetos/TACE/scripts/testes/teste_implementacao_01/relatorio_macs_extraidos.csv) no Excel/leitor padrão.
     - `Monitor de Bancada (Auto-scan)`: Timer de atualização periódica no barramento USB para detecção de novos tablets plugados.
     - Console interno de logs com timestamp para rastreabilidade de cada comando executado.
   - **Validação Prática em Hardware Real:**
@@ -715,15 +715,15 @@ O **InnoAI** é o motor de inteligência e automação visual da Plataforma Inno
 ### [2026-09-03 23:38] - Sanitização e Confirmação de Remoção de MAC no F1 (Positivo Tab Vision 7)
 - **Ação Solicitada pelo Usuário:** Garantir a remoção completa e irrestrita de qualquer rotina ou menção à extração de endereço MAC da função F1 do Positivo Tab Vision 7.
 - **Auditoria e Ajustes Realizados:**
-  1. **[`src/core/functions/vision7/f1_vision_tab7.c`](file:///c:/Users/Administrator/Pictures/projetos/Bot_RPA/src/core/functions/vision7/f1_vision_tab7.c):**
+  1. **[`src/core/functions/vision7/f1_vision_tab7.c`](file:///c:/Users/Administrator/Pictures/projetos/TACE/src/core/functions/vision7/f1_vision_tab7.c):**
      - O código executável da função `V7_Etapa1_1_CapturaMac` e sua chamada no orquestrador `V7_ExecutarPipelineCompleto` já haviam sido eliminados.
      - Removida a linha remanescente de documentação/comentário no cabeçalho do fluxo (`[1.1] Etapa 1.1: Captura Instantânea do MAC Address...`), zerando 100% das menções à captura de MAC no arquivo.
      - Removidos espaçamentos residuais.
-  2. **[`src/core/functions/vision7/f1_vision_tab7.h`](file:///c:/Users/Administrator/Pictures/projetos/Bot_RPA/src/core/functions/vision7/f1_vision_tab7.h):**
+  2. **[`src/core/functions/vision7/f1_vision_tab7.h`](file:///c:/Users/Administrator/Pictures/projetos/TACE/src/core/functions/vision7/f1_vision_tab7.h):**
      - Higienizado o protótipo e cabeçalhos de etapas.
-  3. **[`src/core/drivers/adb.c`](file:///c:/Users/Administrator/Pictures/projetos/Bot_RPA/src/core/drivers/adb.c):**
+  3. **[`src/core/drivers/adb.c`](file:///c:/Users/Administrator/Pictures/projetos/TACE/src/core/drivers/adb.c):**
      - Removida a requisição de MAC (`echo MAC:$(cat /sys/class/net/wlan0/address...)`) e o seu respectivo parser da função de listagem de dispositivos (`adb_list_devices`).
-  4. **[`src/ui/Views/MonitorView.xaml.cs`](file:///c:/Users/Administrator/Pictures/projetos/Bot_RPA/src/ui/Views/MonitorView.xaml.cs):**
+  4. **[`src/ui/Views/MonitorView.xaml.cs`](file:///c:/Users/Administrator/Pictures/projetos/TACE/src/ui/Views/MonitorView.xaml.cs):**
      - Removida a opção 11 de captura visual de MAC do menu interativo do F4, restaurando a validação de ferramentas para 1 a 10.
   5. **Status de Build:** Nenhuma compilação disparada, aguardando ordem expressa do usuário.
 
@@ -733,24 +733,24 @@ O **InnoAI** é o motor de inteligência e automação visual da Plataforma Inno
 - **Ação Solicitada pelo Usuário:** Correção imediata de todos os erros, inconsistências e bugs diagnosticados durante a auditoria completa do sistema.
 - **Implementação Realizada:**
   1. **Resolução de Diretórios e Persistência do Banco de Dados:**
-     - [`src/ui/Core/PathHelper.cs`](file:///c:/Users/Administrator/Pictures/projetos/Bot_RPA/src/ui/Core/PathHelper.cs): Substituída a subida estática de diretório (`..\\..`) por busca recursiva ascendente localizando simultaneamente os marcadores de raiz (`tools` e `config`). Isso previne falhas de "ADB não encontrado" e resolve caminhos tanto em Debug quanto Release.
-     - [`src/ui/Core/SQLiteDatabaseManager.cs`](file:///c:/Users/Administrator/Pictures/projetos/Bot_RPA/src/ui/Core/SQLiteDatabaseManager.cs): Alinhado o caminho do banco `bot_database.db` e a importação legada para `PathHelper.GetRootDirectory()`, unificando a base com a pasta `data/` do projeto.
+     - [`src/ui/Core/PathHelper.cs`](file:///c:/Users/Administrator/Pictures/projetos/TACE/src/ui/Core/PathHelper.cs): Substituída a subida estática de diretório (`..\\..`) por busca recursiva ascendente localizando simultaneamente os marcadores de raiz (`tools` e `config`). Isso previne falhas de "ADB não encontrado" e resolve caminhos tanto em Debug quanto Release.
+     - [`src/ui/Core/SQLiteDatabaseManager.cs`](file:///c:/Users/Administrator/Pictures/projetos/TACE/src/ui/Core/SQLiteDatabaseManager.cs): Alinhado o caminho do banco `bot_database.db` e a importação legada para `PathHelper.GetRootDirectory()`, unificando a base com a pasta `data/` do projeto.
   2. **Isolamento Estrito de Hardware (Regra de Ouro #1):**
-     - [`src/ui/Views/MonitorProView.xaml.cs`](file:///c:/Users/Administrator/Pictures/projetos/Bot_RPA/src/ui/Views/MonitorProView.xaml.cs): Adicionado chaveamento estrito por modelo nos botões F2 (`BtnF2_Click`), F3 (`BtnF3_Click`), F4 (`BtnF4_Click`) e F5 (`BtnF5_Click`). Modelos Nokia T20 acionam `Engine_ExecuteF2_NokiaT20` / `Engine_ExecuteF3_NokiaT20`, modelos Multilaser TabMulti M7 acionam `Engine_ExecuteF2_TabMulti_Atualizar` / `Engine_ExecuteF3_TabMulti_Terminal` / `Engine_ExecuteF4_TabMulti_Desligar`, e modelos Positivo Vision 7 acionam as rotinas dedicadas (`Engine_ExecuteF2_Reinstall` / `Engine_ExecuteF4_Terminal`).
-     - [`src/ui/Views/MonitorView.xaml.cs`](file:///c:/Users/Administrator/Pictures/projetos/Bot_RPA/src/ui/Views/MonitorView.xaml.cs): Adicionado chaveamento estrito no `BtnF2_Click`, direcionando Nokia T20 para `Engine_ExecuteF2_NokiaT20` e M7 para `Engine_ExecuteF2_TabMulti_Atualizar`.
+     - [`src/ui/Views/MonitorProView.xaml.cs`](file:///c:/Users/Administrator/Pictures/projetos/TACE/src/ui/Views/MonitorProView.xaml.cs): Adicionado chaveamento estrito por modelo nos botões F2 (`BtnF2_Click`), F3 (`BtnF3_Click`), F4 (`BtnF4_Click`) e F5 (`BtnF5_Click`). Modelos Nokia T20 acionam `Engine_ExecuteF2_NokiaT20` / `Engine_ExecuteF3_NokiaT20`, modelos Multilaser TabMulti M7 acionam `Engine_ExecuteF2_TabMulti_Atualizar` / `Engine_ExecuteF3_TabMulti_Terminal` / `Engine_ExecuteF4_TabMulti_Desligar`, e modelos Positivo Vision 7 acionam as rotinas dedicadas (`Engine_ExecuteF2_Reinstall` / `Engine_ExecuteF4_Terminal`).
+     - [`src/ui/Views/MonitorView.xaml.cs`](file:///c:/Users/Administrator/Pictures/projetos/TACE/src/ui/Views/MonitorView.xaml.cs): Adicionado chaveamento estrito no `BtnF2_Click`, direcionando Nokia T20 para `Engine_ExecuteF2_NokiaT20` e M7 para `Engine_ExecuteF2_TabMulti_Atualizar`.
   3. **Correção de Marshaling UTF-8 (Acentuação e Nomes de Municípios):**
-     - [`src/ui/Views/MonitorProView.xaml.cs`](file:///c:/Users/Administrator/Pictures/projetos/Bot_RPA/src/ui/Views/MonitorProView.xaml.cs) e [`src/ui/Views/MonitorView.xaml.cs`](file:///c:/Users/Administrator/Pictures/projetos/Bot_RPA/src/ui/Views/MonitorView.xaml.cs): Todas as declarações de P/Invoke que trafegam strings foram atualizadas para `[MarshalAs(UnmanagedType.LPUTF8Str)]`, eliminando a conversão ANSI/Windows-1252 que truncava ou alterava nomes de cidades acentuadas.
+     - [`src/ui/Views/MonitorProView.xaml.cs`](file:///c:/Users/Administrator/Pictures/projetos/TACE/src/ui/Views/MonitorProView.xaml.cs) e [`src/ui/Views/MonitorView.xaml.cs`](file:///c:/Users/Administrator/Pictures/projetos/TACE/src/ui/Views/MonitorView.xaml.cs): Todas as declarações de P/Invoke que trafegam strings foram atualizadas para `[MarshalAs(UnmanagedType.LPUTF8Str)]`, eliminando a conversão ANSI/Windows-1252 que truncava ou alterava nomes de cidades acentuadas.
   4. **Motor C (Robustez e Resolução de P/Invoke EntryPoint):**
-     - [`src/api.c`](file:///c:/Users/Administrator/Pictures/projetos/Bot_RPA/src/api.c): Adicionada a exportação de compatibilidade `Engine_ExecuteF4_Terminal(const char* serial, LogCallback cb)` delegando para ativação do Kiosk, prevenindo `EntryPointNotFoundException`.
-     - [`src/api.c`](file:///c:/Users/Administrator/Pictures/projetos/Bot_RPA/src/api.c): Corrigido especificador de formato de `%08X` para `%08lX` no filtro anti-crash SEH, eliminando warning de compilação MinGW GCC.
-     - [`src/core/drivers/adb.c`](file:///c:/Users/Administrator/Pictures/projetos/Bot_RPA/src/core/drivers/adb.c): Otimizada a leitura do pipe do processo filho com cópia direta indexada via `memcpy`, eliminando o gargalo de performance de múltiplos `strcat` em dumps XML de UIAutomator. Adicionado `TerminateProcess` em caso de timeout no `WaitForSingleObject` para evitar processos órfãos.
-     - [`src/core/functions/tabmulti/m7_helpers.c`](file:///c:/Users/Administrator/Pictures/projetos/Bot_RPA/src/core/functions/tabmulti/m7_helpers.c) e [`src/core/functions/nokia_t20/f1_nokia_t20.c`](file:///c:/Users/Administrator/Pictures/projetos/Bot_RPA/src/core/functions/nokia_t20/f1_nokia_t20.c): Expandidos buffers de caminhos para 512 bytes eliminando warnings de truncamento de `snprintf`.
+     - [`src/api.c`](file:///c:/Users/Administrator/Pictures/projetos/TACE/src/api.c): Adicionada a exportação de compatibilidade `Engine_ExecuteF4_Terminal(const char* serial, LogCallback cb)` delegando para ativação do Kiosk, prevenindo `EntryPointNotFoundException`.
+     - [`src/api.c`](file:///c:/Users/Administrator/Pictures/projetos/TACE/src/api.c): Corrigido especificador de formato de `%08X` para `%08lX` no filtro anti-crash SEH, eliminando warning de compilação MinGW GCC.
+     - [`src/core/drivers/adb.c`](file:///c:/Users/Administrator/Pictures/projetos/TACE/src/core/drivers/adb.c): Otimizada a leitura do pipe do processo filho com cópia direta indexada via `memcpy`, eliminando o gargalo de performance de múltiplos `strcat` em dumps XML de UIAutomator. Adicionado `TerminateProcess` em caso de timeout no `WaitForSingleObject` para evitar processos órfãos.
+     - [`src/core/functions/tabmulti/m7_helpers.c`](file:///c:/Users/Administrator/Pictures/projetos/TACE/src/core/functions/tabmulti/m7_helpers.c) e [`src/core/functions/nokia_t20/f1_nokia_t20.c`](file:///c:/Users/Administrator/Pictures/projetos/TACE/src/core/functions/nokia_t20/f1_nokia_t20.c): Expandidos buffers de caminhos para 512 bytes eliminando warnings de truncamento de `snprintf`.
   5. **Script de Atualização:**
-     - [`controle/Atualizacao.bat`](file:///c:/Users/Administrator/Pictures/projetos/Bot_RPA/controle/Atualizacao.bat): Atualizado para incluir tanto o MinGW MSVCRT quanto UCRT no PATH.
+     - [`controle/Atualizacao.bat`](file:///c:/Users/Administrator/Pictures/projetos/TACE/controle/Atualizacao.bat): Atualizado para incluir tanto o MinGW MSVCRT quanto UCRT no PATH.
   6. **Auditoria de Compilação (Regra de Ouro #4):**
-     - Motor C compilado com MinGW GCC 64-bit gerando [`data/output/BotEngine.dll`](file:///c:/Users/Administrator/Pictures/projetos/Bot_RPA/data/output/BotEngine.dll).
-     - Interface C# compilada com `dotnet build src/ui/BotRpaUI.csproj -c Release` finalizando com **0 Erros e 0 Warnings**.
-     - Publicação standalone gerada em [`data/output/BotRPAui.exe`](file:///c:/Users/Administrator/Pictures/projetos/Bot_RPA/data/output/BotRPAui.exe).
+     - Motor C compilado com MinGW GCC 64-bit gerando [`data/output/BotEngine.dll`](file:///c:/Users/Administrator/Pictures/projetos/TACE/data/output/BotEngine.dll).
+     - Interface C# compilada com `dotnet build src/ui/TACEUI.csproj -c Release` finalizando com **0 Erros e 0 Warnings**.
+     - Publicação standalone gerada em [`data/output/TACEui.exe`](file:///c:/Users/Administrator/Pictures/projetos/TACE/data/output/TACEui.exe).
 
 ---
 
@@ -759,7 +759,7 @@ O **InnoAI** é o motor de inteligência e automação visual da Plataforma Inno
 - **Implementação Realizada:**
   1. **Configurações e Persistência (`config/settings.json` & `SettingsManager.cs`):**
      - Adicionada a propriedade `[JsonPropertyName("usb_monitor_interface")] public string UsbMonitorInterface` com padrão `"Classic"`.
-     - Implementado getter/setter estático em [`src/ui/Core/SettingsManager.cs`](file:///c:/Users/Administrator/Pictures/projetos/Bot_RPA/src/ui/Core/SettingsManager.cs) com salvamento atômico automático em disco.
+     - Implementado getter/setter estático em [`src/ui/Core/SettingsManager.cs`](file:///c:/Users/Administrator/Pictures/projetos/TACE/src/ui/Core/SettingsManager.cs) com salvamento atômico automático em disco.
   2. **Interface Gráfica Interativa (`ConfigView.xaml` & `ConfigView.xaml.cs`):**
      - Inserido card de destaque no topo de **1. Sistema & Controle** com dois cards visuais interativos:
        - 📟 **Monitor Clássico (ADB)**: Interface tradicional em lista tabular com terminal interativo Kiosk.
@@ -769,21 +769,21 @@ O **InnoAI** é o motor de inteligência e automação visual da Plataforma Inno
      - Implementado o método `UpdateMonitorNavigationVisibility()`, que oculta completamente o botão da interface não selecionada no menu superior (`BtnMenuMonitor` vs `BtnMenuMonitorPro`).
      - Integração com `SettingsManager.OnSettingsChanged`: ao alterar a opção nas Configurações, a barra superior oculta o monitor anterior, exibe o novo e troca a tela ativa em tempo real sem necessidade de reiniciar.
   4. **Compilação e Auditoria (Regra de Ouro #4):**
-     - Compilação executada via `dotnet build src/ui/BotRpaUI.csproj -c Release` finalizando com **0 Erros e 0 Warnings**.
-     - Publicação standalone atualizada com sucesso em [`data/output/BotRPAui.exe`](file:///c:/Users/Administrator/Pictures/projetos/Bot_RPA/data/output/BotRPAui.exe).
+     - Compilação executada via `dotnet build src/ui/TACEUI.csproj -c Release` finalizando com **0 Erros e 0 Warnings**.
+     - Publicação standalone atualizada com sucesso em [`data/output/TACEui.exe`](file:///c:/Users/Administrator/Pictures/projetos/TACE/data/output/TACEui.exe).
 
 - **04/09/2026:**
   - **Resolução de Diagnóstico do Language Server C (clangd / IntelliSense) em todo o `src`:**
     - Identificada a causa do alerta falso-positivo `In included file: 'windows.h' file not found` presente em múltiplos arquivos de `src`: ausência de base de compilação unificada para o LSP `clangd`.
-    - Gerado o banco oficial [`compile_commands.json`](file:///c:/Users/Administrator/Pictures/projetos/Bot_RPA/compile_commands.json) cobrindo todos os 27 arquivos `.c` do projeto, mapeando o MinGW GCC local (`tools/mingw64/bin/gcc.exe`), sysroot e diretórios de sistema.
-    - Configurado [`.clangd`](file:///c:/Users/Administrator/Pictures/projetos/Bot_RPA/.clangd), [`.vscode/c_cpp_properties.json`](file:///c:/Users/Administrator/Pictures/projetos/Bot_RPA/.vscode/c_cpp_properties.json) e [`.vscode/settings.json`](file:///c:/Users/Administrator/Pictures/projetos/Bot_RPA/.vscode/settings.json).
+    - Gerado o banco oficial [`compile_commands.json`](file:///c:/Users/Administrator/Pictures/projetos/TACE/compile_commands.json) cobrindo todos os 27 arquivos `.c` do projeto, mapeando o MinGW GCC local (`tools/mingw64/bin/gcc.exe`), sysroot e diretórios de sistema.
+    - Configurado [`.clangd`](file:///c:/Users/Administrator/Pictures/projetos/TACE/.clangd), [`.vscode/c_cpp_properties.json`](file:///c:/Users/Administrator/Pictures/projetos/TACE/.vscode/c_cpp_properties.json) e [`.vscode/settings.json`](file:///c:/Users/Administrator/Pictures/projetos/TACE/.vscode/settings.json).
     - Reiniciado o processo ativo do `clangd` no IDE.
     - Validação com `clangd --check` em todos os 27 arquivos em `src`: **100% dos arquivos com 0 erros**.
-    - Compilação global executada via [`scripts/build.bat`](file:///c:/Users/Administrator/Pictures/projetos/Bot_RPA/scripts/build.bat): **0 Erros e 0 Warnings**.
+    - Compilação global executada via [`scripts/build.bat`](file:///c:/Users/Administrator/Pictures/projetos/TACE/scripts/build.bat): **0 Erros e 0 Warnings**.
   - **Aprimoramento do Painel OTA Dash (`web/ota_dashboard.html`):**
     - Implementada a funcionalidade de exclusão física e lógica de arquivos de atualização diretamente no painel web.
     - Adicionado botão de ação `[Apagar]` na tabela de histórico de releases com modal de confirmação Cyber-Glassmorphic (`#delete-modal-overlay`).
-    - Exclusão do arquivo `.zip` correspondente no **Firebase Storage** (`inno_botAtualizações/BotRPA_v{versao}.zip`) e remoção do registro no Realtime Database (`ota/history/{versao}`).
+    - Exclusão do arquivo `.zip` correspondente no **Firebase Storage** (`inno_botAtualizações/TACE_v{versao}.zip`) e remoção do registro no Realtime Database (`ota/history/{versao}`).
     - Integração de segurança para **Bloqueio Imediato de Atualizações nos Dispositivos**: caso a versão apagada seja a versão atualmente ativa (ou através do novo botão `[Bloquear Atualizações]` no card de Versão Ativa), o manifesto `ota/manifest` é removido da nuvem. Dispositivos clientes consultando `ota/manifest.json` recebem `null` e interrompem qualquer tentativa de atualização automaticamente.
 
 ---
@@ -807,8 +807,8 @@ O **InnoAI** é o motor de inteligência e automação visual da Plataforma Inno
   3. **Auditoria de Compilação com Zero Warnings (Regra de Ouro #4):**
      - Executada verificação sintática com GCC `-Wall -Wextra` em **100% dos arquivos `.c` do diretório `src/` e `src/core/`**: resultado com **0 Erros e 0 Warnings**.
      - Compilação do motor nativo executada com sucesso: `data/output/BotEngine.dll`.
-     - Compilação da interface C# executada com sucesso via `dotnet build src/ui/BotRpaUI.csproj -c Release`: **0 Avisos e 0 Erros**.
-     - Publicação atualizada em `data/output/BotRPAui.exe`.
+     - Compilação da interface C# executada com sucesso via `dotnet build src/ui/TACEUI.csproj -c Release`: **0 Avisos e 0 Erros**.
+     - Publicação atualizada em `data/output/TACEui.exe`.
 
 ---
 
@@ -836,7 +836,7 @@ O **InnoAI** é o motor de inteligência e automação visual da Plataforma Inno
      - **Botões de Ação Rápida (F1 a F8 e Parar):** Efeito de brilho neon translúcido (`DropShadowEffect` com a cor da borda), tipografia de alta legibilidade e espaçamento ergonômico.
   5. **Auditoria de Compilação (Regra de Ouro #4):**
      - Executado `scripts/build.bat` com sucesso total (**0 Erros e 0 Warnings**).
-     - Binários gerados e validados em `data/output/BotEngine.dll` e `data/output/BotRPAui.exe`.
+     - Binários gerados e validados em `data/output/BotEngine.dll` e `data/output/TACEui.exe`.
 
 ---
 
@@ -862,7 +862,7 @@ O **InnoAI** é o motor de inteligência e automação visual da Plataforma Inno
      - Linhas zebradas com histórico visual de acertos e falhas recentes em tempo real (`🟢 🟢 🟢 🟢 🟢`).
   5. **Auditoria de Compilação com Zero Warnings (Regra de Ouro #4):**
      - Executado `scripts/build.bat` com sucesso total (**0 Erros e 0 Warnings**).
-     - Binários atualizados em `data/output/BotEngine.dll` e `data/output/BotRPAui.exe`.
+     - Binários atualizados em `data/output/BotEngine.dll` e `data/output/TACEui.exe`.
 
 ---
 
@@ -892,7 +892,7 @@ O **InnoAI** é o motor de inteligência e automação visual da Plataforma Inno
      - Ao clicar em qualquer neurônio orbital, abre o painel holográfico lateral de inspeção detalhada com acertos, falhas e seletor.
   6. **Auditoria de Compilação com Zero Warnings (Regra de Ouro #4):**
      - Executado `scripts/build.bat` com sucesso total (**0 Erros e 0 Warnings**).
-     - Binários atualizados em `data/output/BotEngine.dll` e `data/output/BotRPAui.exe`.
+     - Binários atualizados em `data/output/BotEngine.dll` e `data/output/TACEui.exe`.
 
 ---
 
@@ -915,7 +915,7 @@ O **InnoAI** é o motor de inteligência e automação visual da Plataforma Inno
      - Redução drástica de chamadas de layout/redesenho por frame, resultando em taxa de quadros estável a 60 FPS com aceleração de hardware nativa Direct3D e consumo mínimo de CPU.
 - **Auditoria de Compilação com Zero Warnings (Regra de Ouro #4):**
   - Executado `scripts/build.bat` com sucesso total (**0 Erros e 0 Warnings**).
-  - Binários gerados e prontos em `data/output/BotEngine.dll` e `data/output/BotRPAui.exe`.
+  - Binários gerados e prontos em `data/output/BotEngine.dll` e `data/output/TACEui.exe`.
 
 ---
 
@@ -930,7 +930,7 @@ O **InnoAI** é o motor de inteligência e automação visual da Plataforma Inno
      - Botão de abertura atualizado de `🧠 MAPA NEURAL 3D` para `🧠 REDE NEURAL 3D`.
 - **Auditoria de Compilação com Zero Warnings (Regra de Ouro #4):**
   - Executado `scripts/build.bat` com sucesso (**0 Erros e 0 Warnings**).
-  - Binários atualizados em `data/output/BotEngine.dll` e `data/output/BotRPAui.exe`.
+  - Binários atualizados em `data/output/BotEngine.dll` e `data/output/TACEui.exe`.
 
 ---
 
@@ -962,7 +962,7 @@ O **InnoAI** é o motor de inteligência e automação visual da Plataforma Inno
      - HUD dinâmico reflete a densidade ampliada: **mais de 90 nós neurais** e **mais de 130 sinapses ativas**.
 - **Auditoria de Compilação com Zero Warnings (Regra de Ouro #4):**
   - Executado `scripts/build.bat` com sucesso (**0 Erros e 0 Warnings**).
-  - Binários atualizados em `data/output/BotEngine.dll` e `data/output/BotRPAui.exe`.
+  - Binários atualizados em `data/output/BotEngine.dll` e `data/output/TACEui.exe`.
 
 ---
 
@@ -975,7 +975,7 @@ O **InnoAI** é o motor de inteligência e automação visual da Plataforma Inno
      - O valor reflete a soma ponderada de atributos de decisão dos nós, conexões sinápticas e calibrações globais de hardware em memória RAM.
 - **Auditoria de Compilação com Zero Warnings (Regra de Ouro #4):**
   - Executado `scripts/build.bat` com sucesso total (**0 Erros e 0 Warnings**).
-  - Binários gerados e prontos em `data/output/BotEngine.dll` e `data/output/BotRPAui.exe`.
+  - Binários gerados e prontos em `data/output/BotEngine.dll` e `data/output/TACEui.exe`.
 
 ---
 
@@ -997,7 +997,7 @@ O **InnoAI** é o motor de inteligência e automação visual da Plataforma Inno
      - **`ASSERTIVIDADE:`** Taxa matemática real de acertos operacionais.
 - **Auditoria de Compilação com Zero Warnings (Regra de Ouro #4):**
   - Executado `scripts/build.bat` com sucesso total (**0 Erros e 0 Warnings**).
-  - Binários gerados e prontos em `data/output/BotEngine.dll` e `data/output/BotRPAui.exe`.
+  - Binários gerados e prontos em `data/output/BotEngine.dll` e `data/output/TACEui.exe`.
 
 ### [2026-09-04 14:32] - Tags Holográficas em Todos os Pontos da Rede Neural 3D e Barra Interativa de Filtro de Tags
 - **Demanda do Usuário:** Habilitar badges/tags visuais em todos os pontos da rede neural tridimensional e fornecer um filtro interativo para escolher quais categorias de tags exibir no espaço 3D.
@@ -1022,33 +1022,33 @@ O **InnoAI** é o motor de inteligência e automação visual da Plataforma Inno
      - Renderização fluida sem impacto na performance de FPS em PCs de qualquer configuração.
 - **Auditoria de Compilação com Zero Warnings (Regra de Ouro #4):**
   - Executado `scripts/build.bat` com sucesso total (**0 Erros e 0 Warnings**).
-  - Binários gerados e prontos em `data/output/BotEngine.dll` e `data/output/BotRPAui.exe`.
+  - Binários gerados e prontos em `data/output/BotEngine.dll` e `data/output/TACEui.exe`.
 
 ---
 
 ### [2026-09-24] - Organização e Higienização da Raiz (Regra de Ouro #3)
-- **Motivação:** Binários compilados (`BotEngine.dll` 393KB + `BotRPAui.exe` 194MB, build 05/09) estavam soltos na raiz, junto de duplicatas `municipios.csv` e `version.txt`. Todos já eram ignorados pelo Git (`*.dll`, `*.exe`, `/municipios.csv`, `/version.txt`), mas poluíam a raiz e confundiam o runtime.
+- **Motivação:** Binários compilados (`BotEngine.dll` 393KB + `TACEui.exe` 194MB, build 05/09) estavam soltos na raiz, junto de duplicatas `municipios.csv` e `version.txt`. Todos já eram ignorados pelo Git (`*.dll`, `*.exe`, `/municipios.csv`, `/version.txt`), mas poluíam a raiz e confundiam o runtime.
 - **Preservação de dados antes da remoção:**
   - `municipios.csv` da raiz era o ÚNICO com linha de dados (`Boca da Mata;aplicador;bm@12345;`). Linha migrada para o seed versionado `config/municipios.csv` e para o runtime `data/output/municipios.csv` (o motor C resolve o CSV ao lado do executável via `municipios_get_csv_path` em `src/core/data/municipios.c`).
   - `version.txt` da raiz (`18.08.2026.1728`) migrado para `config/version.txt` (estava vazio, é o caminho oficial lido pelo OTA em `OtaUpdateManager.cs`).
-- **Removidos da raiz (filesystem, todos gitignored, sem perda):** `BotEngine.dll`, `BotRPAui.exe`, `municipios.csv`, `version.txt`. Canônicos permanecem em `data/output/`.
-- **Mantidos na raiz:** `.gitignore`, `README.md`, `AGENTS.md`, `memoria_bot_rpa.md`, pastas do projeto e dot-configs locais de IDE (`compile_commands.json`, `.clangd` — necessários ao clangd, ignorados pelo Git).
+- **Removidos da raiz (filesystem, todos gitignored, sem perda):** `BotEngine.dll`, `TACEui.exe`, `municipios.csv`, `version.txt`. Canônicos permanecem em `data/output/`.
+- **Mantidos na raiz:** `.gitignore`, `README.md`, `AGENTS.md`, `memoria_TACE.md`, pastas do projeto e dot-configs locais de IDE (`compile_commands.json`, `.clangd` — necessários ao clangd, ignorados pelo Git).
 - **AGENTS.md x .agents/AGENTS.md:** Verificado conteúdo 100% idêntico — nada a migrar. Adicionado o "Mapa oficial de arquivos" na Regra de Ouro #3 em ambos os arquivos (espelho sincronizado), documentando onde mora cada artefato (binários, CSV seed/runtime, versão).
 - **Diretriz de Build:** Nenhuma compilação executada (alterações só em docs/CSV/TXT + remoção de ignorados; sem toque em C/C#).
 
 ---
 
 ### [2026-09-24] - Sessão Completa: Estudo do Projeto + Central de Build com Testes TESTE/FINAL
-- **1. Estudo do projeto (pedido do usuário):** Levantamento integral da arquitetura híbrida (motor C `BotEngine.dll` + UI C# WPF `BotRPAui.exe`), isolamento por modelo (Vision 7 F1-F8, TabMulti M7 F1-F5, Nokia T20 F1-F3), InnoAI 2.0, Monitor Clássico vs Pro, OTA Firebase, fluxos `build.bat`/`build_release.bat`/`Atualizacao.*` e regras do `AGENTS.md`.
-- **2. Organização da raiz:** Ver entrada própria desta data nesta memória (remoção de `BotEngine.dll`/`BotRPAui.exe`/`municipios.csv`/`version.txt` soltos, preservação de `Boca da Mata` e da versão em `config/`, mapa oficial de arquivos no `AGENTS.md`).
+- **1. Estudo do projeto (pedido do usuário):** Levantamento integral da arquitetura híbrida (motor C `BotEngine.dll` + UI C# WPF `TACEui.exe`), isolamento por modelo (Vision 7 F1-F8, TabMulti M7 F1-F5, Nokia T20 F1-F3), InnoAI 2.0, Monitor Clássico vs Pro, OTA Firebase, fluxos `build.bat`/`build_release.bat`/`Atualizacao.*` e regras do `AGENTS.md`.
+- **2. Organização da raiz:** Ver entrada própria desta data nesta memória (remoção de `BotEngine.dll`/`TACEui.exe`/`municipios.csv`/`version.txt` soltos, preservação de `Boca da Mata` e da versão em `config/`, mapa oficial de arquivos no `AGENTS.md`).
 - **3. Nova ferramenta `controle/Build.ps1` + `controle/Build.bat`:**
-  - Painel interativo colorido: `[1] Build TESTE` → `data/output/` (ícone azul), `[2] Build FINAL` → `BotRPA_Release/` PnP (ícone roxo), `[0] Sair`. Cada versão tem sua pasta própria, verificada ao final do build.
-  - Robustez: detecção de GCC (PATH + 2 caminhos WinGet MSVCRT/UCRT) e dotnet, checagem de fontes obrigatórias, fecha `BotRPAui.exe` aberto, alimenta ENTER no `pause` dos `.bat`, captura saída, valida artefatos por tamanho, confirmação antes do FINAL, transcript em `logs/controle_build_*.log`, modo direto `-Modo Teste|Final [-Sim]` e exit codes.
+  - Painel interativo colorido: `[1] Build TESTE` → `data/output/` (ícone azul), `[2] Build FINAL` → `TACE_Release/` PnP (ícone roxo), `[0] Sair`. Cada versão tem sua pasta própria, verificada ao final do build.
+  - Robustez: detecção de GCC (PATH + 2 caminhos WinGet MSVCRT/UCRT) e dotnet, checagem de fontes obrigatórias, fecha `TACEui.exe` aberto, alimenta ENTER no `pause` dos `.bat`, captura saída, valida artefatos por tamanho, confirmação antes do FINAL, transcript em `logs/controle_build_*.log`, modo direto `-Modo Teste|Final [-Sim]` e exit codes.
 - **4. Correção crítica de build (bug real encontrado no teste):** `scripts/build.bat` e `controle/Atualizacao.bat` usavam `wmic os get localdatetime` (removido no Windows 11 24H2 — máquina `10.0.26200`), o que quebrava 100% dos builds. Substituído por `powershell Get-Date -Format yyyyMMddHHmm` (mesmo layout de substring, versão `DD.MM.YYYY.HHMM` preservada). Também blindado o wrapper contra stderr virar exceção fatal (`ErrorActionPreference` local `Continue` no `Invoke-BatchFile`).
 - **5. Testes reais executados (ordem explícita do usuário, liberando a regra "não buildar sem mandar"):**
   - Painel validado (opção 0, exit 0, GCC/dotnet/versão detectados) e sintaxe PowerShell 0 erros (AST Parser).
-  - **TESTE:** SUCESSO, versão `24.09.2026.1815`, `data/output/BotEngine.dll` (384KB) + `BotRPAui.exe` (~185MB), auditoria `registros/2026-09-24/18-16_Plataforma_InnovTech_DESKTOP_BUILD`, Zero Warnings.
-  - **FINAL:** SUCESSO, versão `24.09.2026.1817`, pacote `BotRPA_Release/` completo (`BotRPAui.exe`, `BotEngine.dll`, `config/`, `tools/`, `data/`, `municipios.csv`, `logs/`, `registros/`, `Arquivos/`), auditoria `registros/2026-09-24/18-17_Plataforma_InnovTech_DESKTOP_BUILD`.
+  - **TESTE:** SUCESSO, versão `24.09.2026.1815`, `data/output/BotEngine.dll` (384KB) + `TACEui.exe` (~185MB), auditoria `registros/2026-09-24/18-16_Plataforma_InnovTech_DESKTOP_BUILD`, Zero Warnings.
+  - **FINAL:** SUCESSO, versão `24.09.2026.1817`, pacote `TACE_Release/` completo (`TACEui.exe`, `BotEngine.dll`, `config/`, `tools/`, `data/`, `municipios.csv`, `logs/`, `registros/`, `Arquivos/`), auditoria `registros/2026-09-24/18-17_Plataforma_InnovTech_DESKTOP_BUILD`.
   - Observação: o FINAL recompila em modo RELEASE por cima de `data/output/` (comportamento herdado do `build_release.bat`), então o exe de dev ficou com ícone roxo até o próximo TESTE.
 
 ---
@@ -1070,7 +1070,7 @@ O **InnoAI** é o motor de inteligência e automação visual da Plataforma Inno
   - Após cada pull, PUT-back individual só dos seriais tocados (convergência sem clobber em massa); `BaixarDoInnovStockAsync` agora retorna `(importados, atualizados, afetados)` (chamada nos Relatórios ajustada com `_`).
   - `App.xaml.cs` trocou o pull avulso por `CloudAutoSyncService.Start()` (pull imediato respeitando `cloud_pull_auto` + timer + hook de rede).
   - Configurações: toggle único master (`CloudPullAuto` + `CloudAutoSync` juntos) + ComboBox de intervalo (5/10/15/30/60) com `RestartTimer()` ao vivo; `config/settings.json` com as 3 chaves.
-- **Terminal de controle (`controle/Terminal.ps1` + `Terminal.bat`):** REPL `BotRPA>` com todas as funções admin: `ajuda`, `build teste`, `build final` (delega ao `Build.ps1 -Modo`), `versao`, `dispositivos` (`adb devices -l` com auto-detecção), `ota` e `deps` (com confirmação), `limpar`, `sair` (+ modo direto `-Comando`). Sintaxe 0 erros; teste funcional com `ajuda/versao/dispositivos/sair`, exit 0.
+- **Terminal de controle (`controle/Terminal.ps1` + `Terminal.bat`):** REPL `TACE>` com todas as funções admin: `ajuda`, `build teste`, `build final` (delega ao `Build.ps1 -Modo`), `versao`, `dispositivos` (`adb devices -l` com auto-detecção), `ota` e `deps` (com confirmação), `limpar`, `sair` (+ modo direto `-Comando`). Sintaxe 0 erros; teste funcional com `ajuda/versao/dispositivos/sair`, exit 0.
 - **Validação:** Build TESTE `25.09.2026.0815` (fechou UI aberta sozinha, como projetado), zero warnings, auditoria `registros/2026-09-25/08-16_Plataforma_InnovTech_DESKTOP_BUILD`. Plano atualizado em `docs/plano_melhorias.md`.
 - **Isolamento:** só camada C# UI + `controle/`; nenhum `.c` de dispositivo tocado.
 
@@ -1122,9 +1122,9 @@ O **InnoAI** é o motor de inteligência e automação visual da Plataforma Inno
 
 
 ### [2026-09-25 09-35] - Release nao embarca mais aparelhos de teste
-- **Problema:** toda compilacao/distribuicao ja abria com 2 aparelhos registrados. Causa: scripts/build_release.bat copiava data/output/data/bot_database.db (residuo de bancada de 03/09 com T30764G2601007854 e T30764F2412001995) para BotRPA_Release/data/; como a Release portatil tem 	ools/+config/ proprios, o PathHelper usa ela como raiz e sempre carrega esse banco velho.
+- **Problema:** toda compilacao/distribuicao ja abria com 2 aparelhos registrados. Causa: scripts/build_release.bat copiava data/output/data/bot_database.db (residuo de bancada de 03/09 com T30764G2601007854 e T30764F2412001995) para TACE_Release/data/; como a Release portatil tem 	ools/+config/ proprios, o PathHelper usa ela como raiz e sempre carrega esse banco velho.
 - **Correcao:** Release passa a sair SEM bot_database.db (bloco de copia removido + del de garantia); cada PC cria banco vazio via InitializeDatabase() no primeiro uso e puxa o banco compartilhado da nuvem (/rpa_devices).
-- **Limpeza imediata:** data/output/data/bot_database.db e BotRPA_Release/data/bot_database.db removidos, com backups em data/backups/ (bot_database_output_20260925.bak, bot_database_release_20260925.db). Banco de dev data/bot_database.db (5 registros) preservado.
+- **Limpeza imediata:** data/output/data/bot_database.db e TACE_Release/data/bot_database.db removidos, com backups em data/backups/ (bot_database_output_20260925.bak, bot_database_release_20260925.db). Banco de dev data/bot_database.db (5 registros) preservado.
 - **Nota:** sem alteracao em C/C#, sem build necessario (so .bat). Isolamento: so scripts/ + arquivos locais gitignorados.
 
 
@@ -1142,19 +1142,19 @@ O **InnoAI** é o motor de inteligência e automação visual da Plataforma Inno
 - **Validacao:** DOCX gerado e verificado via Node (assinatura PK, 3 partes, document.xml valido com 40 paragrafos e 3 tabelas). Correcao de 1 byte faltante no header central do ZIP durante os testes.
 
 
-### [2026-09-25] - Renomeacao total Inno_RPA -> Bot_RPA (apelido inno_bot)
-- **Decisao:** sistema passa a se chamar Bot_RPA, apelido inno_bot (titulos: 'Bot_RPA (inno_bot)'). Mantidos: nos Firebase (/rpa_devices, /rpa_ota), InnovTech, InnovStock.
-- **Alcance:** pasta Inno_RPA/ -> Bot_RPA/; namespace InnovPlayUI -> BotRpaUI (.csproj, 12 XAML, 22 .cs); InnoEngine.dll -> BotEngine.dll (36 DllImports); InnoRPAui.exe -> BotRPAui.exe (+ icons); InnoLearn -> BotLearn (views, backup manager, ot_learn.json); InnoRPA_Release/ -> BotRPA_Release/; memoria_inno_rpa.md -> memoria_bot_rpa.md; AGENTS/docs/README atualizados; atalho Android 'InnovPlay' -> 'BotRpa'; origem do payload -> 'Bot_RPA'.
+### [2026-09-25] - Renomeacao total Inno_RPA -> TACE (apelido inno_bot)
+- **Decisao:** sistema passa a se chamar TACE, apelido inno_bot (titulos: 'TACE (inno_bot)'). Mantidos: nos Firebase (/rpa_devices, /rpa_ota), InnovTech, InnovStock.
+- **Alcance:** pasta Inno_RPA/ -> TACE/; namespace InnovPlayUI -> TACEUI (.csproj, 12 XAML, 22 .cs); InnoEngine.dll -> BotEngine.dll (36 DllImports); InnoRPAui.exe -> TACEui.exe (+ icons); InnoLearn -> BotLearn (views, backup manager, ot_learn.json); InnoRPA_Release/ -> TACE_Release/; memoria_inno_rpa.md -> memoria_TACE.md; AGENTS/docs/README atualizados; atalho Android 'InnovPlay' -> 'TACE'; origem do payload -> 'TACE'.
 - **Dados preservados:** ot_database.db com 410 registros (copia de inno_database.db); migracao automatica do legado no primeiro uso (db + learn). Titulos de janela e About com alias.
 - **Validacao:** builds TESTE 25.09.2026.1020 (antiga pasta) e 25.09.2026.1024 (nova pasta), zero warnings, auditorias  9-.../10-20 e 10-25_Plataforma_InnovTech_DESKTOP_BUILD. Pasta antiga removida apos mover item a item (processo antigo segurava handle).
 
 
-### [2026-09-25] - Desvinculacao da marca: so Bot_RPA + ocultar barra de status
-- **Pedido:** selo INNOTECH_RPA vira Bot_RPA; remover qualquer mencao direta do sistema com 'innov'; apelido inno_bot removido por completo; ocultar pIlulas ADB ATIVO / DISPOSITIVOS / [ESC] Pausa / F11.
-- **Feito:** badge INNOTECH RPA -> BOT_RPA; INNOTECH COGNITIVE PLATFORM -> BOT_RPA COGNITIVE PLATFORM; InnoAI -> BotAI (telas, mapa neural, menu); Plataforma InnovTech -> Plataforma Bot_RPA; titulos Bot_RPA - ... (alias e-valuador removidos); MsgBox/OTA/PDF InnovTech -> Bot_RPA; padrao de auditoria Plataforma_InnovTech_DESKTOP_BUILD -> Plataforma_BotRPA_DESKTOP_BUILD (scripts + AGENTS); AGENTS/README atualizados.
+### [2026-09-25] - Desvinculacao da marca: so TACE + ocultar barra de status
+- **Pedido:** selo INNOTECH_RPA vira TACE; remover qualquer mencao direta do sistema com 'innov'; apelido inno_bot removido por completo; ocultar pIlulas ADB ATIVO / DISPOSITIVOS / [ESC] Pausa / F11.
+- **Feito:** badge INNOTECH RPA -> TACE; INNOTECH COGNITIVE PLATFORM -> TACE COGNITIVE PLATFORM; InnoAI -> BotAI (telas, mapa neural, menu); Plataforma InnovTech -> Plataforma TACE; titulos TACE - ... (alias e-valuador removidos); MsgBox/OTA/PDF InnovTech -> TACE; padrao de auditoria Plataforma_InnovTech_DESKTOP_BUILD -> Plataforma_TACE_DESKTOP_BUILD (scripts + AGENTS); AGENTS/README atualizados.
 - **PIlulas ocultas:** MainWindow.xaml com Visibility=Collapsed (controles e timers preservados, ESC/F11 seguem funcionando).
 - **Preservado de proposito:** InnovStock, pacote Android, nos Firebase, URLs, e o corpo historico da memoria (fatos datados).
-- **Validacao:** build TESTE 25.09.2026.1032, zero warnings, auditoria egistros/2026-09-25/10-33_Plataforma_BotRPA_DESKTOP_BUILD.
+- **Validacao:** build TESTE 25.09.2026.1032, zero warnings, auditoria egistros/2026-09-25/10-33_Plataforma_TACE_DESKTOP_BUILD.
 
 
 ### [2026-09-25] - Relatorio HTML: Parte 2 reescrita em linguagem simples
@@ -1171,7 +1171,7 @@ O **InnoAI** é o motor de inteligência e automação visual da Plataforma Inno
 
 ### [2026-09-25] - Correcao importante: OTA nao atualiza tablets a distancia
 - **Correcao do usuario (correta):** o OTA atualiza apenas o programa da bancada; todo procedimento no tablet exige cabo USB/ADB. Nao existe atualizacao remota nos aparelhos.
-- **Ajustado:** 5 trechos do docs/relatorio_auditoria.html (linha do tempo, objetivo, resultado, F4/F5, cardapio OTA + linha da nuvem) e 2 linhas do docs/auditoria_bot_rpa_20260925.txt.
+- **Ajustado:** 5 trechos do docs/relatorio_auditoria.html (linha do tempo, objetivo, resultado, F4/F5, cardapio OTA + linha da nuvem) e 2 linhas do docs/auditoria_TACE_20260925.txt.
 - **Validacao:** DOCX regenerado e verificado (72 paragrafos, 5 tabelas).
 
 
@@ -1220,7 +1220,7 @@ O **InnoAI** é o motor de inteligência e automação visual da Plataforma Inno
   - Inspector alvo lista queries ordenadas + etapa + histórico agregado real; cognitivos/micros marcados SIMULADO sem números fake.
   - Throttle 30fps + pausa quando minimizado/oculto; drag da janela pelo header; ordenação por Etapa 2-8 (`GetEtapaOrder/Label`); legenda/cores unificadas (`>50 verde, 1-50 amarelo, 0 cinza, <0 vermelho`).
 - **Arquivos:** `src/core/learn/learn_db.c/h`, `learn_engine.c`, `src/core/config/config.c/h`, `src/api.c`, `src/ui/Core/SettingsManager.cs`, `src/ui/Views/ConfigView.xaml/cs`, `BotLearnView.xaml/cs`, `BrainVisualizerWindow.xaml/cs`, `config/settings.json`.
-- **Build 25/09/2026 16:06:** `scripts/build.bat` executado sob ordem explícita do usuário. GCC sem warnings/errors (`BotEngine.dll` 398.791 bytes), `dotnet publish` sem warnings (`BotRPAui.exe` 194MB self-contained). Auditoria em `registros/2026-09-25/16-06_Plataforma_BotRPA_DESKTOP_BUILD`. Versão `25.09.2026.1605`.
+- **Build 25/09/2026 16:06:** `scripts/build.bat` executado sob ordem explícita do usuário. GCC sem warnings/errors (`BotEngine.dll` 398.791 bytes), `dotnet publish` sem warnings (`TACEui.exe` 194MB self-contained). Auditoria em `registros/2026-09-25/16-06_Plataforma_TACE_DESKTOP_BUILD`. Versão `25.09.2026.1605`.
 
 
 ### [2026-09-28 08:30] - OTA público só-leitura, sem login obrigatório
@@ -1231,13 +1231,13 @@ O **InnoAI** é o motor de inteligência e automação visual da Plataforma Inno
   - `SendTelemetryPingAsync`: PUT anônimo best-effort + fallback autenticado; falha nunca bloqueia o update.
   - Download do ZIP já era anônimo (sem auth) — inalterado.
 - **Pendente do operador (Firebase Console):** abrir leitura pública só do manifesto — rules: `"ota": { "manifest": { ".read": true, ".write": false } }`. Sem isso o GET anônimo recebe `Permission denied` e cai no fallback.
-- **Validação:** `scripts/build.bat` executado (compilação TESTE `28.09.2026.0830`, Zero Errors/Zero Warnings), auditoria `registros/2026-09-28/08-31_Plataforma_BotRPA_DESKTOP_BUILD`. Isolamento: só camada C# Core.
+- **Validação:** `scripts/build.bat` executado (compilação TESTE `28.09.2026.0830`, Zero Errors/Zero Warnings), auditoria `registros/2026-09-28/08-31_Plataforma_TACE_DESKTOP_BUILD`. Isolamento: só camada C# Core.
 - **Documento:** histórico completo + regras Firebase validadas registrados em `docs/ota_rpa_02.md`.
 
-### [2026-09-28 09:00] - Unificação OTA InnovStock -> Bot_RPA (protocolo único ota/manifest)
-- **Diagnóstico (ota_rpa_01 + ota_rpa_02):** painel InnovStock publicava `rpa_ota/target` (sem sha256, URL Drive placeholder) enquanto o Bot_RPA lia `ota/manifest` (exige version+download_url+sha256) — publicação nunca chegava ao app. `database.rules.json` não tinha nem um nó (tudo negado). ZIP OTA com `version.txt` na raiz vs `config/version.txt` (loop), `apply_ota` quebrava com espaços, `mandatory` ignorado no boot, fallback `CurrentVersion=DateTime.Now` suprimia updates.
+### [2026-09-28 09:00] - Unificação OTA InnovStock -> TACE (protocolo único ota/manifest)
+- **Diagnóstico (ota_rpa_01 + ota_rpa_02):** painel InnovStock publicava `rpa_ota/target` (sem sha256, URL Drive placeholder) enquanto o TACE lia `ota/manifest` (exige version+download_url+sha256) — publicação nunca chegava ao app. `database.rules.json` não tinha nem um nó (tudo negado). ZIP OTA com `version.txt` na raiz vs `config/version.txt` (loop), `apply_ota` quebrava com espaços, `mandatory` ignorado no boot, fallback `CurrentVersion=DateTime.Now` suprimia updates.
 - **Correções (nenhum `.c` de dispositivo tocado — Ouro #1 preservado):**
-  - `src/ui/Core/OtaUpdateManager.cs`: fallback `CurrentVersion` virou `0.0.0` (nunca mascara update); `ApplyUpdate` com path robusto (`scripts/apply_ota_update.bat` + args quotados) e `CreateApplyUpdateScript` reescrito (taskkill, log em `logs/ota_update_*.log`, `Expand-Archive -LiteralPath` com espaços, detecta `BotRPAui.exe` na raiz ou `data/output/`).
+  - `src/ui/Core/OtaUpdateManager.cs`: fallback `CurrentVersion` virou `0.0.0` (nunca mascara update); `ApplyUpdate` com path robusto (`scripts/apply_ota_update.bat` + args quotados) e `CreateApplyUpdateScript` reescrito (taskkill, log em `logs/ota_update_*.log`, `Expand-Archive -LiteralPath` com espaços, detecta `TACEui.exe` na raiz ou `data/output/`).
   - `src/ui/Views/MainWindow.xaml.cs`: boot só abre modal quando `manifest.mandatory==true`; opcional aparece só em Configurações → OTA.
   - `scripts/apply_ota_update.bat`: mesmos fixes (quoting, log, detecção de exe).
   - `controle/Atualizacao.ps1/.bat`: ZIP com estrutura `config/version.txt` + `scripts/apply_ota_update.bat`, cálculo de SHA-256 e modelo `ota_manifest_<ver>.json`, instruções apontando ao painel canônico InnovStock (sem `web/ota_dashboard.html` deletado).
@@ -1251,23 +1251,23 @@ O **InnoAI** é o motor de inteligência e automação visual da Plataforma Inno
 - **Erro 4 (segurança) — credenciais no git:** `config/settings.json` versionado com `firebase_email` + `firebase_password` em plaintext. **Correção:** e-mail/senha zerados no arquivo local, `config/settings.json` adicionado ao `.gitignore` e removido do índice (`git rm --cached`, arquivo local preservado). **Pendente do operador:** trocar a senha no Firebase Console (histórico do git ainda a contém) e recadastrar a conta em Configurações → Conta InnovStock.
 - **Validação:** `ConfigView.xaml` XML bem-formado; `innobot.js` (`node --check`) e `database.rules.json` revalidados; referências C# conferidas por grep. Sem build (aguardando ordem explícita). Nenhum `.c` de dispositivo tocado.
 
-### [2026-09-28 09:10] - Build FINAL de usuário (BotRPA_Release portátil PnP)
+### [2026-09-28 09:10] - Build FINAL de usuário (TACE_Release portátil PnP)
 - **Pedido do usuário:** compilar a versão final do usuário com todos os arquivos necessários (incl. tools) + embarcar os registros dos aparelhos no banco do sistema.
 - **Ajustes no `scripts/build_release.bat` (só scripts, nenhum `.c` tocado):**
   - Tools seletivas: `platform-tools` + `reverse_tethering` + `mac_address_finder.apk` (26.8MB). `tools\mingw64` (~968MB de compilador) NÃO vai para o usuário.
   - Novo passo 4b: embarca `scripts\apply_ota_update.bat` (usado pelo OTA no PC do usuário).
   - Passo 5 invertido por ordem explícita (revoga decisão de 25/09): embarca `data\bot_database.db` com os **410 aparelhos** — `InitializeDatabase()` usa `CREATE TABLE IF NOT EXISTS`, então o banco é preservado e Relatórios > Banco de Dados abre com os registros.
-- **Build:** `scripts\build_release.bat` executado — GCC silencioso (zero warnings), `dotnet publish` self-contained sem warnings, ícone Roxo oficial, versão `28.09.2026.0910`. Auditoria `registros/2026-09-28/09-11_Plataforma_BotRPA_DESKTOP_BUILD`.
-- **Conteúdo validado:** `BotRPAui.exe` 185.1MB + `BotEngine.dll` 389KB + `config/` (version.txt, settings.json SEM credenciais, municipios.csv, first_run) + `tools/` (adb, gnirehtet) + `scripts/apply_ota_update.bat` + `data/bot_database.db` (410 registros conferidos via sqlite3) + `municipios.csv` + pastas `logs/registros/data/input/Arquivos`. Total ~212MB. Sem `mingw64`, sem `bot_learn` residual.
+- **Build:** `scripts\build_release.bat` executado — GCC silencioso (zero warnings), `dotnet publish` self-contained sem warnings, ícone Roxo oficial, versão `28.09.2026.0910`. Auditoria `registros/2026-09-28/09-11_Plataforma_TACE_DESKTOP_BUILD`.
+- **Conteúdo validado:** `TACEui.exe` 185.1MB + `BotEngine.dll` 389KB + `config/` (version.txt, settings.json SEM credenciais, municipios.csv, first_run) + `tools/` (adb, gnirehtet) + `scripts/apply_ota_update.bat` + `data/bot_database.db` (410 registros conferidos via sqlite3) + `municipios.csv` + pastas `logs/registros/data/input/Arquivos`. Total ~212MB. Sem `mingw64`, sem `bot_learn` residual.
 - **Pendente no PC do usuário:** cadastrar Conta InnovStock (sync nuvem) e Telemetria vem ativada por padrão.
 
 ### [2026-10-01 09:31] - Correção do .gitignore (blindagem contra vazamento de dados/binários)
-- **Diagnóstico (auditoria de 01/10 no repo `RONALDJORDAN/Inno_RPA`):** binários pesados e dumps já estavam commitados (ignore não retroage): `tools/platform-tools/*` (adb.exe, dlls), `tools/reverse_tethering/gnirehtet.exe/.apk`, `tools/mac_address_finder.apk`, `src/ui/Resources/temp/*`, `scratch/*` (incl. `wifi_dump.txt` com SSID/BSSID/MAC/IP internos + `test_db.exe`). `BotRPA_Release/` (~212MB, com `bot_database.db` de 410 aparelhos + `settings.json`) e `BotRPA_Release.rar` (72MB) não tinham regra de ignore (só existiam `InnoRPA_Release/` legado e `*.zip`, sem `*.rar`) — apareciam como `??`, prontos para vazar no próximo `git add .`.
+- **Diagnóstico (auditoria de 01/10 no repo `RONALDJORDAN/Inno_RPA`):** binários pesados e dumps já estavam commitados (ignore não retroage): `tools/platform-tools/*` (adb.exe, dlls), `tools/reverse_tethering/gnirehtet.exe/.apk`, `tools/mac_address_finder.apk`, `src/ui/Resources/temp/*`, `scratch/*` (incl. `wifi_dump.txt` com SSID/BSSID/MAC/IP internos + `test_db.exe`). `TACE_Release/` (~212MB, com `bot_database.db` de 410 aparelhos + `settings.json`) e `TACE_Release.rar` (72MB) não tinham regra de ignore (só existiam `InnoRPA_Release/` legado e `*.zip`, sem `*.rar`) — apareciam como `??`, prontos para vazar no próximo `git add .`.
 - **Correções (só `.gitignore` + índice, nenhum `.c`/`.cs` tocado — Ouro #1 preservado, sem build necessário pela Ouro #4):**
-  - `.gitignore`: adicionados `BotRPA_Release/`, `*.rar`; granularizado o `tools/` (`platform-tools/`, `tools/*.apk`, `reverse_tethering/*.exe|*.apk`, mantendo os scripts leves `.ps1/.bat/.md/.cmd` versionados); adicionados `src/ui/Resources/temp/`, `*.apk`, `*.pdb`, `*.bak`, `.cache/`, `controle/ota_manifest_*.json`.
+  - `.gitignore`: adicionados `TACE_Release/`, `*.rar`; granularizado o `tools/` (`platform-tools/`, `tools/*.apk`, `reverse_tethering/*.exe|*.apk`, mantendo os scripts leves `.ps1/.bat/.md/.cmd` versionados); adicionados `src/ui/Resources/temp/`, `*.apk`, `*.pdb`, `*.bak`, `.cache/`, `controle/ota_manifest_*.json`.
   - Índice: `git rm --cached -r` nos 27 binários/dumps (arquivos locais 100% preservados, validados via `Test-Path`).
-- **Validação:** `git check-ignore -v` confirma as 15 regras (release, rar, tools, temp, scratch, data, logs, registros, settings, cache); `docs/`, `memoria_bot_rpa.md`, `config/municipios.csv`, scripts de `tools/` seguem versionáveis (não ignorados). **Nada foi commitado.**
-- **Pendente do operador (exige decisão, fora deste escopo):** `git commit` quando quiser; limpar histórico (URL Firebase em `HEAD:config/settings.json`, via BFG/filter-repo) + rotacionar `firebase_api_key` (default em `SettingsManager.cs:47`); remover senha `bm@12345` de `config/municipios.csv`; `git add docs/ memoria_bot_rpa.md controle/Build.*` após revisar segredos em `ota_rpa_02.md`.
+- **Validação:** `git check-ignore -v` confirma as 15 regras (release, rar, tools, temp, scratch, data, logs, registros, settings, cache); `docs/`, `memoria_TACE.md`, `config/municipios.csv`, scripts de `tools/` seguem versionáveis (não ignorados). **Nada foi commitado.**
+- **Pendente do operador (exige decisão, fora deste escopo):** `git commit` quando quiser; limpar histórico (URL Firebase em `HEAD:config/settings.json`, via BFG/filter-repo) + rotacionar `firebase_api_key` (default em `SettingsManager.cs:47`); remover senha `bm@12345` de `config/municipios.csv`; `git add docs/ memoria_TACE.md controle/Build.*` após revisar segredos em `ota_rpa_02.md`.
 
 ### [2026-10-01] - Monitor Pro: HUD com funcionalidade real (meta editável + cálculos corretos)
 - **Pedido:** topo do Monitor Pro exibia quantitativo avulso (meta fixa 100) e cálculos incorretos; solicitado tempo médio por tablet, ritmo com 3-4 em paralelo, tabs/hora e ETA para acabar o lote.
@@ -1280,7 +1280,7 @@ O **InnoAI** é o motor de inteligência e automação visual da Plataforma Inno
 ### [2026-10-01 10:42] - Build TESTE após HUD real do Monitor Pro (ordem explícita)
 - **Gatilho:** comando explícito do usuário (`builda agora por favor`).
 - **Script:** `scripts/build.bat` (modo TESTE, ícone Azul Escuro).
-- **Resultado:** GCC `BotEngine.dll` (398.791 bytes) silencioso + `dotnet publish` self-contained sem warnings/errors — `BotRPAui.exe` 194MB. Versão `01.10.2026.1041` em `config/version.txt`. Auditoria `registros/2026-10-01/10-42_Plataforma_BotRPA_DESKTOP_BUILD`.
+- **Resultado:** GCC `BotEngine.dll` (398.791 bytes) silencioso + `dotnet publish` self-contained sem warnings/errors — `TACEui.exe` 194MB. Versão `01.10.2026.1041` em `config/version.txt`. Auditoria `registros/2026-10-01/10-42_Plataforma_TACE_DESKTOP_BUILD`.
 - **Escopo validado:** HUD Monitor Pro com meta persistente/editável, média/throughput/ETA corrigidos; nenhum `.c` de dispositivo tocado.
 
 ### [2026-10-01] - Correção nominal: Relatórios -> Gestão (só topo)
@@ -1306,7 +1306,7 @@ O **InnoAI** é o motor de inteligência e automação visual da Plataforma Inno
 - **Correção Limpar (só UI C#):**
   - `MonitorView BtnClearLog_Click`: não limpa mais `TxtLogGlobal`; percorre `_deviceLogBoxes`, remove a aba (`LogTabs`) + barra de progresso (`GlobalProgressPanel`) somente se `ProgressBar.Value >= 100` (ou `Status=Concluído`); demais (<100%) preservados; loga quantos foram removidos.
   - `MonitorProView BtnClearLogPro_Click`: não limpa mais global/`_allGlobalLogs`; remove `TabItem` do `LogTabsPro` somente se `ProgressValue >= 100` ou `Status=Concluído`, resetando o card para `Pronto/0%` para o próximo lote; em andamento preservados.
-- **Validação:** com ordem explícita do usuário (`quando terminar build por favor`), executado `scripts/build.bat` (TESTE, ícone Azul): 1ª passada `05.10.2026.1200` com 1 warning CS8602 em `MonitorProView.xaml.cs:1397` (`tab.Header.ToString()` possivelmente nulo); corrigido para `tab.Header?.ToString() ?? string.Empty` e recompilado `05.10.2026.1201` com **zero warnings / zero errors** (`BotEngine.dll` + `BotRPAui.exe` em `data/output/`). Auditorias `registros/2026-10-05/12-01` e `12-02_Plataforma_BotRPA_DESKTOP_BUILD`.
+- **Validação:** com ordem explícita do usuário (`quando terminar build por favor`), executado `scripts/build.bat` (TESTE, ícone Azul): 1ª passada `05.10.2026.1200` com 1 warning CS8602 em `MonitorProView.xaml.cs:1397` (`tab.Header.ToString()` possivelmente nulo); corrigido para `tab.Header?.ToString() ?? string.Empty` e recompilado `05.10.2026.1201` com **zero warnings / zero errors** (`BotEngine.dll` + `TACEui.exe` em `data/output/`). Auditorias `registros/2026-10-05/12-01` e `12-02_Plataforma_TACE_DESKTOP_BUILD`.
 
 ### [2026-10-05] - Botão Limpar Logs: limpeza total + fecha abas órfãs ([LIMPEZA]/[PARADO])
 - **Pedido:** o botão "Limpar Logs" deve limpar TODOS os logs da interface, inclusive fechar as abas abertas de dispositivos que não estão mais em uso (print mostrava abas fantasmas `[LIMPEZA]` e `[PARADO]` ao lado da aba Global).
@@ -1315,12 +1315,12 @@ O **InnoAI** é o motor de inteligência e automação visual da Plataforma Inno
   - `MonitorView BtnClearLog_Click`: remove TODAS as abas de dispositivo (`_deviceLogBoxes` + barras do `GlobalProgressPanel`), limpa `TxtLogGlobal`, zera `ExecutionProgress`/`LblProgress`; varredura final remove qualquer aba órfã restante preservando só a "Global (Sistema)".
   - `MonitorProView BtnClearLogPro_Click`: mesma limpeza total (`LogTabsPro`, `_allGlobalLogs`, `TxtLogGlobalPro`, `TxtLogFilterPro`, `ExecutionProgressPro`/`LblProgressPro`), resetando cada card para `Pronto/0%`.
   - `MonitorProView LogMessage`: guard estendido com `PARADO`, `LIMPEZA`, `ERRO`, `ERROR`, `BATCH` para essas tags nunca mais criarem aba de dispositivo.
-- **Validação:** com ordem explícita do usuário (`quando terminar buil por favor`), executado `scripts/build.bat` (TESTE, ícone Azul): compilação `05.10.2026.1429` com **zero warnings / zero errors** (`BotEngine.dll` + `BotRPAui.exe` em `data/output/`). Auditoria `registros/2026-10-05/14-29_Plataforma_BotRPA_DESKTOP_BUILD`.
+- **Validação:** com ordem explícita do usuário (`quando terminar buil por favor`), executado `scripts/build.bat` (TESTE, ícone Azul): compilação `05.10.2026.1429` com **zero warnings / zero errors** (`BotEngine.dll` + `TACEui.exe` em `data/output/`). Auditoria `registros/2026-10-05/14-29_Plataforma_TACE_DESKTOP_BUILD`.
 
 ### [2026-10-05] - F2 Vision 7: removida etapa 1.9 (Limpeza do Launcher)
 - **Pedido:** remover a etapa 1.9 do F2 do Tab Vision 7.
 - **Alteração (só `src/core/functions/vision7/f2_vision_tab7.c`, zero colateral):** excluída a chamada `V7_Etapa1_9_ClearLauncher` do `F2_ExecutarPipelineCompleto` e renumerados os passos seguintes (5-14). A função `V7_Etapa1_9_ClearLauncher` em `f1_vision_tab7.c` permanece intacta (F1 inalterado).
-- **Validação:** com ordem explícita do usuário (`build por favor`), executado `scripts/build.bat` (TESTE, ícone Azul): compilação `05.10.2026.1433` com **zero warnings / zero errors** (`BotEngine.dll` + `BotRPAui.exe` em `data/output/`). Auditoria `registros/2026-10-05/14-33_Plataforma_BotRPA_DESKTOP_BUILD`.
+- **Validação:** com ordem explícita do usuário (`build por favor`), executado `scripts/build.bat` (TESTE, ícone Azul): compilação `05.10.2026.1433` com **zero warnings / zero errors** (`BotEngine.dll` + `TACEui.exe` em `data/output/`). Auditoria `registros/2026-10-05/14-33_Plataforma_TACE_DESKTOP_BUILD`.
 
 ### [2026-10-05] - F2 Vision 7: pausa pós-ZIP de 5s para 3s (só F2)
 - **Pedido:** reduzir de 5 para 3 segundos a pausa após selecionar o ZIP no F2.
@@ -1330,13 +1330,13 @@ O **InnoAI** é o motor de inteligência e automação visual da Plataforma Inno
 ### [2026-10-05] - F2 Vision 7: final com redes off + brilho 70% + desligamento
 - **Pedido:** após a pausa/monitoramento do ZIP, manter o fechamento do InnovAva, confirmar Wi-Fi/Bluetooth/Localização desligados, brilho em 70% e desligar o aparelho.
 - **Alteração (só `src/core/functions/vision7/f2_vision_tab7.c`, zero colateral):** `F2_Etapa7_CloseApps` estendida — após `force-stop` do InnovAva/DocumentsUI + `kill-all`, executa comando batched (`svc wifi disable && svc bluetooth disable && location_mode 0 && scans off && brightness_mode 0 && brightness 178`) e `reboot -p`. Removida `F2_Etapa_Offline` (modo avião; sem sentido com aparelho desligado) e atualizadas as mensagens de início/fim do pipeline.
-- **Validação:** com ordem explícita do usuário (`build`), executado `scripts/build.bat` (TESTE, ícone Azul): compilação `05.10.2026.1451` com **zero warnings / zero errors** (`BotEngine.dll` + `BotRPAui.exe` em `data/output/`). Auditoria `registros/2026-10-05/14-51_Plataforma_BotRPA_DESKTOP_BUILD`.
+- **Validação:** com ordem explícita do usuário (`build`), executado `scripts/build.bat` (TESTE, ícone Azul): compilação `05.10.2026.1451` com **zero warnings / zero errors** (`BotEngine.dll` + `TACEui.exe` em `data/output/`). Auditoria `registros/2026-10-05/14-51_Plataforma_TACE_DESKTOP_BUILD`.
 
 ### [2026-10-05] - F2 Monitor clássico: corrigida lógica invertida do [ERRO] final
 - **Sintoma:** ao fim do F2 (com sucesso), o log exibia `[ERRO] Reinstalação interrompida ou falhou.`
 - **Causa raiz:** o motor C usa `PIPELINE_SUCCESS=1` / `PIPELINE_ERROR=0` (`src/core/functions/pipeline.h`), mas o handler do F2 em `MonitorView.xaml.cs:1479` testava `if (result != 0)` — ou seja, tratava o SUCESSO (1) como erro. Bug pré-existente, só ficou visível agora que o F2 chega ao fim com sucesso. (No Monitor Pro o retorno nem é checado — sem esse falso erro.)
 - **Correção (só UI C#):** condição invertida para `if (result == 0)`.
-- **Validação:** com ordem explícita do usuário (`buil por favor`), executado `scripts/build.bat` (TESTE, ícone Azul): compilação `05.10.2026.1459` com **zero warnings / zero errors** (`BotEngine.dll` + `BotRPAui.exe` em `data/output/`). Auditoria `registros/2026-10-05/14-59_Plataforma_BotRPA_DESKTOP_BUILD`.
+- **Validação:** com ordem explícita do usuário (`buil por favor`), executado `scripts/build.bat` (TESTE, ícone Azul): compilação `05.10.2026.1459` com **zero warnings / zero errors** (`BotEngine.dll` + `TACEui.exe` em `data/output/`). Auditoria `registros/2026-10-05/14-59_Plataforma_TACE_DESKTOP_BUILD`.
 
 ### [2026-10-05] - F1 Vision 7: otimização geral de tempo (todas as etapas)
 - **Pedido:** otimizar o tempo do F1 em todas as etapas, incluindo a de desativar apps.
@@ -1351,7 +1351,7 @@ O **InnoAI** é o motor de inteligência e automação visual da Plataforma Inno
   - **7b PowerOff:** removida a contagem regressiva de 5s; visuais 600→500/1000→800/400→300/800→600/800→600/1000→800ms; removida var `msg` órfã (zero warnings).
   - **2.1 Atalho:** 1000→600ms.
 - **Ganho estimado:** ~25–35s por aparelho. Etapas V7 compartilhadas repassam o ganho ao F2/F3 do Vision 7 (efeito positivo, mesmo modelo).
-- **Validação:** com ordem explícita do usuário (`buil pro favor`), executado `scripts/build.bat` (TESTE, ícone Azul): compilação `05.10.2026.1534` com **zero warnings / zero errors** (`BotEngine.dll` + `BotRPAui.exe` em `data/output/`). Auditoria `registros/2026-10-05/15-34_Plataforma_BotRPA_DESKTOP_BUILD`.
+- **Validação:** com ordem explícita do usuário (`buil pro favor`), executado `scripts/build.bat` (TESTE, ícone Azul): compilação `05.10.2026.1534` com **zero warnings / zero errors** (`BotEngine.dll` + `TACEui.exe` em `data/output/`). Auditoria `registros/2026-10-05/15-34_Plataforma_TACE_DESKTOP_BUILD`.
 
 ### [2026-10-05] - Cofre DPAPI: login/senha de municípios criptografados (Fase 1)
 - **Pedido:** implementar o ponto 1 (cofre de senhas) para testar.
@@ -1361,7 +1361,7 @@ O **InnoAI** é o motor de inteligência e automação visual da Plataforma Inno
   - `municipios.h`: `login/senha` 128→512 (cabe o blob); `municipios.c`: revela ao carregar, cifra ao salvar (legado em claro segue legível e migra no próximo save).
   - `MonitorView.xaml.cs`: `MunicipioModel.Login/Senha` SizeConst 128→512 (struct único compartilhado).
   - `scripts/build.bat`: `cofre.c` no `SRCS_CORE` + `-lcrypt32`.
-- **Validação:** teste round-trip dedicado (14/14 OK: proteger/revelar, CSV-safe sem `;`, idempotência, legado intacto) + `-Wall -Wextra` limpo; build `05.10.2026.1752` **zero warnings / zero errors**, auditoria `registros/2026-10-05/17-52_Plataforma_BotRPA_DESKTOP_BUILD`.
+- **Validação:** teste round-trip dedicado (14/14 OK: proteger/revelar, CSV-safe sem `;`, idempotência, legado intacto) + `-Wall -Wextra` limpo; build `05.10.2026.1752` **zero warnings / zero errors**, auditoria `registros/2026-10-05/17-52_Plataforma_TACE_DESKTOP_BUILD`.
 - **Limites conhecidos (Fase 1):** o arquivo só abre no mesmo usuário/máquina (DPAPI user-scope) — release para outro PC exige recadastrar; seed `config/municipios.csv` segue em claro até a Fase 2 (seed público sem credenciais + cofre local). Para testar: abrir Gerenciar Municípios, salvar → `municipios.csv` passa a exibir `DPAPIv1:...`.
 - **Commits (working tree limpo):** `f308f7b fix: gitignore data/ abrangente ignorava fontes C de src/core/data` (a regra `data/` sem âncora escondia arquivos novos em `src/core/data/`, ex: `cofre.c`; trocada por `/data/`) + `f0823e1 feat: cofre DPAPI para login/senha de municipios` (8 arquivos). Sem push. Pendente: `config/municipios.csv` segue com senha real no histórico (rotação pendente desde 01/10).
 
@@ -1370,18 +1370,18 @@ O **InnoAI** é o motor de inteligência e automação visual da Plataforma Inno
 - **Alterações (`MonitorView.xaml` + handler em `MonitorView.xaml.cs`, sem mudar o motor F4):**
   - Faixa de perfis no topo: `🛡️ Blindar Tudo` (sequência `11,1,2,5,10`) e `🔄 Restaurar Tudo` (`12,3,4,6`) via novo `BtnKioskProfile_Click` → `ExecuteF4Command` (lote já suportado, inclui wallpaper? não — 7 exige município com wallpaper e abortaria o lote, por isso fora do perfil).
   - Cards compactos: sem descrições longas (viraram `ToolTip`), sem números visíveis (só `Tag`), títulos curtos; todas as 12 ações seguem acessíveis individualmente + campo de lote intacto.
-- **Validação:** com ordem explícita do usuário (`buil`), executado `scripts/build.bat` (TESTE, ícone Azul): compilação `05.10.2026.1726` com **zero warnings / zero errors** (`BotEngine.dll` + `BotRPAui.exe` em `data/output/`). Auditoria `registros/2026-10-05/17-27_Plataforma_BotRPA_DESKTOP_BUILD`.
+- **Validação:** com ordem explícita do usuário (`buil`), executado `scripts/build.bat` (TESTE, ícone Azul): compilação `05.10.2026.1726` com **zero warnings / zero errors** (`BotEngine.dll` + `TACEui.exe` em `data/output/`). Auditoria `registros/2026-10-05/17-27_Plataforma_TACE_DESKTOP_BUILD`.
 
 ### [2026-10-05] - UI: botão F1 do Vision 7 renomeado para Conf. Geral
 - **Pedido:** mudar o nome do F1 do Tab Vision 7 para "Conf. Geral".
 - **Alteração (só `MonitorView.xaml`, painel Positivo):** botão F1 `[F1] Sincronização + Instalação` → `[F1] Conf. Geral`. Nokia, combo "Automação ao Conectar" e Monitor Pro mantidos. Despacho é por `SelectedIndex`, texto é só rótulo (sem impacto funcional).
-- **Validação:** incluído no build `05.10.2026.1726` (**zero warnings / zero errors**, auditoria `registros/2026-10-05/17-27_Plataforma_BotRPA_DESKTOP_BUILD`).
+- **Validação:** incluído no build `05.10.2026.1726` (**zero warnings / zero errors**, auditoria `registros/2026-10-05/17-27_Plataforma_TACE_DESKTOP_BUILD`).
 
 ### [2026-10-05] - Monitor clássico: progresso 0-100 cobrindo todas as etapas do F2
 - **Pedido:** cada etapa do pipeline deve refletir um % até 100%.
 - **Diagnóstico:** `UpdateProgress` (`MonitorView.xaml.cs`) mapeava F1/F3/F5 mas deixava 6 marcadores do F2 sem regra (início F2, 1.2, 1.7, 2.1, 2.5, 4.5 e `[F2 - Etapa 7]`) — a barra ficava parada nesses trechos. (Monitor Pro já tinha mapa próprio 15→98 por `etapa N`.)
 - **Correção (só UI C#):** novas regras — início F2→5%, 1.2→15%, 1.7→35%, 2.1→48%, 2.5→51%, 4.5→70%, `[F2 - Etapa 7]`→92% (100% já era `CONCLUIDO COM SUCESSO`). Mapa final F2: 5/10/15/30/35/45/48/51/55/65/70/75/85/92/100, monotônico e sem colisão de substring com as regras existentes (também refina o F1, que usa os mesmos marcadores).
-- **Validação:** incluído no build `05.10.2026.1726` (**zero warnings / zero errors**, auditoria `registros/2026-10-05/17-27_Plataforma_BotRPA_DESKTOP_BUILD`).
+- **Validação:** incluído no build `05.10.2026.1726` (**zero warnings / zero errors**, auditoria `registros/2026-10-05/17-27_Plataforma_TACE_DESKTOP_BUILD`).
 
 ### [2026-10-05] - Estudos: Etapa 1.5 debloat + análise geral do projeto + backlog de melhorias
 - **Estudo Etapa 1.5 (`V7_Etapa1_5`, `f1_vision_tab7.c:139-273`):** lista `V7_DEBLOAT_PACKAGES` (~55 pacotes/19 grupos: câmeras, Chrome, Maps, YouTube, Play Store etc.); isolamento em 3 níveis (`disable-user` + `suspend` + `uninstall -k --user 0`) em lotes de 6 ADB; `DocumentsUI` preservado de propósito (SAF do ZIP); reversível via `install-existing`/`pm enable`; só o F1 executa (F2 pula). Confirmado: Google Fotos (`com.google.android.apps.photos`) está no grupo 8. Base para a otimização uninstall-first aplicada no mesmo dia.
@@ -1414,7 +1414,7 @@ O **InnoAI** é o motor de inteligência e automação visual da Plataforma Inno
 ### [2026-10-09] - Build TESTE validando lote 1a + ponto 2 (ordem explícita)
 - **Gatilho:** comando explícito do usuário (`build`).
 - **Script:** `scripts/build.bat` (modo TESTE, ícone Azul Escuro).
-- **Resultado:** GCC `BotEngine.dll` (397,2KB) silencioso + `dotnet publish` sem warnings/errors — `BotRPAui.exe` 185,1MB. Versão `09.10.2026.1613` em `config/version.txt`. Auditoria `registros/2026-10-09/16-14_Plataforma_BotRPA_DESKTOP_BUILD`.
+- **Resultado:** GCC `BotEngine.dll` (397,2KB) silencioso + `dotnet publish` sem warnings/errors — `TACEui.exe` 185,1MB. Versão `09.10.2026.1613` em `config/version.txt`. Auditoria `registros/2026-10-09/16-14_Plataforma_TACE_DESKTOP_BUILD`.
 - **Escopo validado:** seed `config/municipios.csv` sem credenciais, fallback de seed no `build.bat`, seed sanitizado na Release, OTA sem `municipios.csv`, `cofre.c`+`-lcrypt32` nos scripts OTA, subtítulo do BotLearn por modo + Reset por modo. Vault de dev `data/output/municipios.csv` preservado intacto (guard `if not exist`).
 - **Isolamento:** nenhum `.c` de dispositivo tocado (só scripts/CSV/UI).
 
@@ -1424,7 +1424,7 @@ O **InnoAI** é o motor de inteligência e automação visual da Plataforma Inno
   - Header virou `GlassCard` (`BorderBrush #2D1F5E`): selos + botões, título, subtítulo por modo (mantido do ponto 2) e **faixa de telemetria moderna** embutida (fundo `#0C0C16`, divisórias, ícones 🛰🎯📈🛡️) com os mesmos dados: dispositivos `LblActive/LblTotal` (timer 5s + null-guards), alvos `LblTotalTargets` + legenda viva `LblTotalQueries` ("Com N queries", sem número fixo), taxa `LblSuccessRate` + hits/misses, Zero-Drift estático.
   - Matriz: grupos de etapa viraram `Expander` (seta recolhe/expande, `IsExpanded=True` por padrão, `HorizontalContentAlignment=Stretch`); botões `＋ Todas` / `－ Todas` no cabeçalho da matriz via `FindVisualChildren<Expander>` (sem novo using, `VisualTreeHelper` fully-qualified).
   - Busca com placeholder visível (`TxtSearchWatermark`, alternado no `TextChanged` existente); colunas da matriz 1030→950px totais (ELEMENTO 170, QUERY 240, STATUS 100, AVALIAÇÃO 120) contra corte em janela estreita.
-- **Validação:** com ordem explícita do usuário (`build`), executado `scripts/build.bat` (TESTE, ícone Azul): compilação `09.10.2026.1634` com **zero warnings / zero errors** (`BotEngine.dll` + `BotRPAui.exe` em `data/output/`). Auditoria `registros/2026-10-09/16-35_Plataforma_BotRPA_DESKTOP_BUILD`.
+- **Validação:** com ordem explícita do usuário (`build`), executado `scripts/build.bat` (TESTE, ícone Azul): compilação `09.10.2026.1634` com **zero warnings / zero errors** (`BotEngine.dll` + `TACEui.exe` em `data/output/`). Auditoria `registros/2026-10-09/16-35_Plataforma_TACE_DESKTOP_BUILD`.
 
 ### [2026-10-09] - BotLearnView: scroll da matriz não rolava a página (fix)
 - **Sintoma:** com o mouse sobre a matriz, a roda não rolava nada.
@@ -1435,14 +1435,14 @@ O **InnoAI** é o motor de inteligência e automação visual da Plataforma Inno
 ### [2026-10-09] - BotLearnView: faixa de telemetria do header removida (pedido do usuário)
 - **Pedido:** remover a faixa de stats (🛰🎯📈🛡️) recém-criada no card superior; o header volta a ter só selos + título + subtítulo + botões.
 - **Alterações (só `BotLearnView.xaml/.cs`):** excluído o `Border` da faixa (Linha 3) e sua `RowDefinition`; removidos timer de 5s (`_timer`/`Timer_Tick`/`UpdateDashboardStats` — construtor chama `UpdateIaModeBadge()` direto) e o bloco de resumo no `CarregarDados`. Sem referências pendentes (só `LblTotalStrategies` da matriz permanece, existindo nos dois lados).
-- **Validação:** com ordem explícita do usuário (`build`), executado `scripts/build.bat` (TESTE, ícone Azul): compilação `09.10.2026.1641` com **zero warnings / zero errors** (`BotEngine.dll` + `BotRPAui.exe` em `data/output/`). Auditoria `registros/2026-10-09/16-42_Plataforma_BotRPA_DESKTOP_BUILD`.
+- **Validação:** com ordem explícita do usuário (`build`), executado `scripts/build.bat` (TESTE, ícone Azul): compilação `09.10.2026.1641` com **zero warnings / zero errors** (`BotEngine.dll` + `TACEui.exe` em `data/output/`). Auditoria `registros/2026-10-09/16-42_Plataforma_TACE_DESKTOP_BUILD`.
 
 ### [2026-10-20] - Build FINAL (Release PnP) com todas as ferramentas obrigatórias
 - **Pedido:** gerar a versão final portátil, com todas as ferramentas necessárias ao uso completo do produto.
 - **Comando:** `controle/Build.ps1 -Modo Final -Sim` (orquestrador canônico) → `scripts/build_release.bat` → `scripts/build.bat` com `BUILD_MODE=RELEASE` (ícone Roxo Oficial).
-- **Resultado:** compilação `20.10.2026.0931` com **zero warnings / zero errors** — GCC (motor C: V7 + M7 + T20) e `dotnet publish` self-contained single-file. Auditoria `registros/2026-10-20/09-32_Plataforma_BotRPA_DESKTOP_BUILD` (com `build.log` gravado, contendo hashes SHA-256 e checklist de conteúdo).
-- **Conteúdo entregue em `BotRPA_Release/` (212,3 MB):** `BotRPAui.exe` (189.519 KB) · `BotEngine.dll` (397 KB) · `municipios.csv` (seed público sanitizado) · `tools/platform-tools` (ADB oficial, 14 arquivos) · `tools/reverse_tethering` (Gnirehtet: `.exe`/`.apk`/`.cmd` + scripts, 6 arquivos) · `tools/mac_address_finder.apk` · `config/` (settings, first_run, version, municipios) · `scripts/apply_ota_update.bat` (OTA) · `data/bot_database.db` (registros embarcados) · `data/input/municipios` e `data/input/apps` · `Arquivos/` · `logs/` · `registros/`. **Sem** `tools/mingw64` (toolchain de dev).
-- **SHA-256:** `BotRPAui.exe` = `DBD1E88C99231122E7830CCCAB1F1BD4EC349E8D5A39AFDFA6C2AAD6BFE99A47` · `BotEngine.dll` = `B4238CB23624F1DDD40B8587C23E8DAA5337B35BC1A52178896E24D97E1EC699`.
+- **Resultado:** compilação `20.10.2026.0931` com **zero warnings / zero errors** — GCC (motor C: V7 + M7 + T20) e `dotnet publish` self-contained single-file. Auditoria `registros/2026-10-20/09-32_Plataforma_TACE_DESKTOP_BUILD` (com `build.log` gravado, contendo hashes SHA-256 e checklist de conteúdo).
+- **Conteúdo entregue em `TACE_Release/` (212,3 MB):** `TACEui.exe` (189.519 KB) · `BotEngine.dll` (397 KB) · `municipios.csv` (seed público sanitizado) · `tools/platform-tools` (ADB oficial, 14 arquivos) · `tools/reverse_tethering` (Gnirehtet: `.exe`/`.apk`/`.cmd` + scripts, 6 arquivos) · `tools/mac_address_finder.apk` · `config/` (settings, first_run, version, municipios) · `scripts/apply_ota_update.bat` (OTA) · `data/bot_database.db` (registros embarcados) · `data/input/municipios` e `data/input/apps` · `Arquivos/` · `logs/` · `registros/`. **Sem** `tools/mingw64` (toolchain de dev).
+- **SHA-256:** `TACEui.exe` = `DBD1E88C99231122E7830CCCAB1F1BD4EC349E8D5A39AFDFA6C2AAD6BFE99A47` · `BotEngine.dll` = `B4238CB23624F1DDD40B8587C23E8DAA5337B35BC1A52178896E24D97E1EC699`.
 - **Pendências registradas na auditoria:** (1) `config/settings.json` embarcado ainda com `firebase_api_key` em texto plano; (2) cofre DPAPI é por máquina/usuário → o operador recadastra as credenciais 1x em Gerenciar Municípios; (3) `data/bot_learn.json` ausente por Expected (`learn_db_save` é no-op no modo estático do BotLearn); (4) build executado sobre o working tree com as alterações de 09/10 ainda não commitadas.
 - **Regra de Ouro #1 preservada:** nenhum `.c` de dispositivo foi tocado (build e empacotamento apenas).
 
@@ -1454,7 +1454,7 @@ O **InnoAI** é o motor de inteligência e automação visual da Plataforma Inno
   - `F2_Etapa7_CloseApps` passou a chamar essa rotina **antes** dos `force-stop` (para que os cards ainda existam na tela de Recentes) e recebeu `am force-stop com.android.chrome`.
   - `char cmd[256]` → `char cmd[512]` no `F2_Etapa7_CloseApps` (evita truncar o `force-stop` com `package_name` longo).
   - Ordem final do F2: importa o ZIP → **fecha visualmente todos os apps** → `force-stop` app principal + Chrome + DocumentsUI → `am kill-all` → Wi-Fi/BT/Localização off + brilho 70% → `reboot -p`.
-- **Validação:** compilação isolada de `f2_vision_tab7.c` com `-Wall -Wextra` → **zero warnings**; build completo `scripts/build.bat` (TESTE) → versão `20.10.2026.1035` com **zero warnings / zero errors** (`BotEngine.dll` + `BotRPAui.exe` em `data/output/`). Auditoria `registros/2026-10-20/10-36_Plataforma_BotRPA_DESKTOP_BUILD`.
+- **Validação:** compilação isolada de `f2_vision_tab7.c` com `-Wall -Wextra` → **zero warnings**; build completo `scripts/build.bat` (TESTE) → versão `20.10.2026.1035` com **zero warnings / zero errors** (`BotEngine.dll` + `TACEui.exe` em `data/output/`). Auditoria `registros/2026-10-20/10-36_Plataforma_TACE_DESKTOP_BUILD`.
 - **Pendente para a bancada:** o toque de fallback (`tap 300 950`) e os deslizes usam as coordenadas já validadas do Vision 7 no F5 — confirmar visualmente o "Limpar tudo" no display antes da entrega em lote.
 - **Backlog da auditoria do F2 (ainda não aplicado):** escape de credenciais sem limite (`f1_vision_tab7.c:10-24`), sucesso falso quando o pacote não é importado, `municipio` NULL não validado, `V7_Etapa2_5` sempre retornando sucesso, `taskkill` global do Gnirehtet atingindo aparelhos em paralelo, `Engine_ResetCancel` ausente no F2 do Monitor clássico e retorno ignorado no Monitor Pro.
 
@@ -1466,7 +1466,7 @@ O **InnoAI** é o motor de inteligência e automação visual da Plataforma Inno
 ### [2026-10-20] - `.agents/`: agentes de assistência .NET (arquitetura e desenvolvimento)
 - **Pedido:** criar e salvar na pasta de agentes dois prompts de sistema: **.NET Architect** (Clean Architecture, DDD, CQRS) e **C# & .NET Senior Developer** (diretrizes oficiais de design da Microsoft, modernização para C# 12/13/14 e .NET 8/9/10).
 - **Arquivos criados (somente documentação, nenhuma alteração de runtime):**
-  - `.agents/dotnet-architect.md` (163 linhas): identidade, 10 princípios inegociáveis (dependências para dentro, domínio sem tecnologia, uma fronteira transacional por agregado, contratos/portas, CQRS pragmático, migrations versionadas), fluxo em 7 passos (contexto → bounded contexts → modelo de domínio → commands/queries → EF Core por contexto → apresentação/DI → testes/observabilidade/segurança), formato obrigatório de saída em 13 seções com diagramas mermaid, seção de refatoração de legado (Strangler Fig) e o contexto do Bot_RPA.
+  - `.agents/dotnet-architect.md` (163 linhas): identidade, 10 princípios inegociáveis (dependências para dentro, domínio sem tecnologia, uma fronteira transacional por agregado, contratos/portas, CQRS pragmático, migrations versionadas), fluxo em 7 passos (contexto → bounded contexts → modelo de domínio → commands/queries → EF Core por contexto → apresentação/DI → testes/observabilidade/segurança), formato obrigatório de saída em 13 seções com diagramas mermaid, seção de refatoração de legado (Strangler Fig) e o contexto do TACE.
   - `.agents/csharp-dotnet-senior-developer.md` (169 linhas): nomenclatura oficial, estilo de código, async/await (`CancellationToken`, nunca `async void`, sem `.Result`), nullable reference types, performance (alocações, deferred execution do LINQ), segurança (validação, `System.Text.Json` estrito, escape de shell), checklist de testes, tabela de recursos por versão (C# 12/13/14 e .NET 8/9/10), procedimento de modernização em etapas, formato de saída e checklist de code review ordered por severidade.
   - `.agents/README.md` (31 linhas): índice dos agentes e como usar cada um (Custom GPT, subagente, checklist de review) + as 5 regras comuns do repositório.
 - **Validacao:** varredura de caracteres corrompidos (CJK/substituicao) = 0 em todos os arquivos.
@@ -1496,19 +1496,19 @@ O **InnoAI** é o motor de inteligência e automação visual da Plataforma Inno
 - **Validação:**
   - Harness C# com `Microsoft.Data.Sqlite` rodando a **exata** lógica de migração sobre cópia do banco real: `6..438 / 433 linhas` → **`1..433 / 433 linhas`**, cols = `[ID, Patrimonio, Serial, Fabricante, Modelo, Versao_Android, API_Level, Bateria, IMEI, MAC]`, ordem e seriais preservados, `Patrimonio` vazio em 100% das linhas, seriais únicos preservados.
   - Insert pós-migração → ID 434 (sequência segue corretamente); delete + renumeração → volta a `1..N` contíguo.
-  - **Bancos migrados de fato:** `data/bot_database.db` e `BotRPA_Release/data/bot_database.db` → ambos `min=1 max=433 count=433`, contíguos, 433 seriais únicos.
-  - Builds `20.10.2026.1543`, `.1546` e `.1555` (TESTE) com **zero warnings / zero errors** (`BotEngine.dll` + `BotRPAui.exe` em `data/output/`). Auditorias `registros/2026-10-20/15-44`, `15-47` e `15-55_Plataforma_BotRPA_DESKTOP_BUILD`.
+  - **Bancos migrados de fato:** `data/bot_database.db` e `TACE_Release/data/bot_database.db` → ambos `min=1 max=433 count=433`, contíguos, 433 seriais únicos.
+  - Builds `20.10.2026.1543`, `.1546` e `.1555` (TESTE) com **zero warnings / zero errors** (`BotEngine.dll` + `TACEui.exe` em `data/output/`). Auditorias `registros/2026-10-20/15-44`, `15-47` e `15-55_Plataforma_TACE_DESKTOP_BUILD`.
 - **Isolamento:** nenhum `.c` de dispositivo tocado (só camada C# de UI/Core + banco SQLite). Ouro #1 preservado.
 - **Pendente para o operador:** preencher manualmente o **Nº de Patrimônio** dos 433 tablets (coluna vazia por padrão — a migração não inventa valores).
 
 ### [2026-10-20 16:03] - Build FINAL (Release PnP) com o banco migrado + Nº de Patrimônio
 - **Pedido do usuário:** "build a nova versão".
 - **Comando:** `controle/Build.ps1 -Modo Final -Sim` (orquestrador canônico) → `scripts/build_release.bat` → `scripts/build.bat` com `BUILD_MODE=RELEASE` (ícone Roxo Oficial).
-- **Resultado:** compilação `20.10.2026.1603` com **zero warnings / zero errors** (GCC + `dotnet publish` self-contained single-file). Auditoria `registros/2026-10-20/16-03_Plataforma_BotRPA_DESKTOP_BUILD` (com `build.log` gravado: hashes SHA-256, checklist de conteúdo e schema do banco).
-- **Conteúdo em `BotRPA_Release/` (212,4 MB):** `BotRPAui.exe` (194.075.941 B) · `BotEngine.dll` (409.817 B) · `municipios.csv` (seed sanitizado) · `tools/platform-tools` (14 arquivos) · `tools/reverse_tethering` (6 arquivos) · `tools/mac_address_finder.apk` · `config/` · `scripts/apply_ota_update.bat` · `data/bot_database.db` · `data/input/{municipios,apps}` · `Arquivos/` · `logs/` · `registros/`. **Sem** `tools/mingw64`.
-- **SHA-256:** `BotRPAui.exe` = `06C50514FA744566F48019C17ECA04EC191C048AD01BBD57220E0FEDD54750DB` · `BotEngine.dll` = `4F494091E6F74454D120B821DE5A29F76DCD7C288340641AC8A161A6329CC629`.
+- **Resultado:** compilação `20.10.2026.1603` com **zero warnings / zero errors** (GCC + `dotnet publish` self-contained single-file). Auditoria `registros/2026-10-20/16-03_Plataforma_TACE_DESKTOP_BUILD` (com `build.log` gravado: hashes SHA-256, checklist de conteúdo e schema do banco).
+- **Conteúdo em `TACE_Release/` (212,4 MB):** `TACEui.exe` (194.075.941 B) · `BotEngine.dll` (409.817 B) · `municipios.csv` (seed sanitizado) · `tools/platform-tools` (14 arquivos) · `tools/reverse_tethering` (6 arquivos) · `tools/mac_address_finder.apk` · `config/` · `scripts/apply_ota_update.bat` · `data/bot_database.db` · `data/input/{municipios,apps}` · `Arquivos/` · `logs/` · `registros/`. **Sem** `tools/mingw64`.
+- **SHA-256:** `TACEui.exe` = `06C50514FA744566F48019C17ECA04EC191C048AD01BBD57220E0FEDD54750DB` · `BotEngine.dll` = `4F494091E6F74454D120B821DE5A29F76DCD7C288340641AC8A161A6329CC629`.
 - **Banco embarcado validado:** schema `[ID, Patrimonio, Serial, Fabricante, Modelo, Versao_Android, API_Level, Bateria, IMEI, MAC]` · 433 dispositivos · `min=1 max=433` (contíguo 1..N) · 433 seriais únicos · `Patrimonio` vazio em todas as linhas (a preencher manualmente pelo operador).
-- **Pacote de distribuição:** `controle/BotRPA_Release_20.10.2026.1603.zip` (91.727.571 bytes, 33 entradas) — verificado: exes, DLL, banco, config, `apply_ota_update.bat`, ADB e Gnirehtet presentes.
+- **Pacote de distribuição:** `controle/TACE_Release_20.10.2026.1603.zip` (91.727.571 bytes, 33 entradas) — verificado: exes, DLL, banco, config, `apply_ota_update.bat`, ADB e Gnirehtet presentes.
 - **Pendências registradas na auditoria:** (1) `config/settings.json` embarcado ainda com `firebase_api_key` em texto plano; (2) cofre DPAPI é por máquina/usuário → o operador recadastra as credenciais 1x em Gerenciar Municípios; (3) `data/bot_learn.json` ausente por Expected (`learn_db_save` é no-op no modo estático); (4) working tree com alterações de 20/10 ainda não commitadas (F2 CleanRecents, bordas do botão Limpar Logs, banco/Patrimônio, `.agents/`).
 - **Regra de Ouro #1 preservada:** nenhum `.c` de dispositivo tocado nesta rodada.
 
@@ -1536,7 +1536,7 @@ O **InnoAI** é o motor de inteligência e automação visual da Plataforma Inno
   - Painel confere **2 colunas de conteúdo** (`ColumnDefinition Width="*"` / `"10"` gutter / `"*"`) com 6 cards à esquerda e 3 à direita.
   - **Todas as 12 ações F4 presentes** (`Tag` 1..12) e **5 handlers** com binding correto (XAML + code-behind, 1 definição cada).
   - Identificadores `x:Name` batem com as referências do code-behind (`PanelGestaoAparelho`, `BtnSairGestao`, `TxtGestaoStatus`, `TxtGestaoBatchInput`).
-  - Build `20.10.2026.1743` e `20.10.2026.1748` (TESTE) com **zero warnings / zero errors** (`BotEngine.dll` + `BotRPAui.exe` em `data/output/`). Auditorias `registros/2026-10-20/17-44` e `17-48_Plataforma_BotRPA_DESKTOP_BUILD`.
+  - Build `20.10.2026.1743` e `20.10.2026.1748` (TESTE) com **zero warnings / zero errors** (`BotEngine.dll` + `TACEui.exe` em `data/output/`). Auditorias `registros/2026-10-20/17-44` e `17-48_Plataforma_TACE_DESKTOP_BUILD`.
 - **Nota:** o F8 permanece **inalterado** (o usuário descartou a alteração de F8 para "Restauração de Fábrica").
 
 ### [2026-10-20 17:58] - F4: card "Automação F4 ao Conectar" substitui o card geral no painel do aparelho
@@ -1557,25 +1557,25 @@ O **InnoAI** é o motor de inteligência e automação visual da Plataforma Inno
   - **Refactor `ResolverWallpaperF4(out string wpPath)`**: a lógica de resolução do wallpaper do município (seleção, caminho absoluto, existence check, mensagens de erro) foi extraída de `ExecuteF4Command` para um método reutilizável, usado tanto pelo comando manual quanto pela automação F4 — **sem duplicar código nem alterar o comportamento existente**.
 - **Correção colateral (obrigatória para compilar):** uma ferramenta externa ao meu trabalho (`capturamac.exe`, criada na raiz durante a sessão) wrote `src/ui/Core/MonitorMAC.cs` e alterou `src/ui/App.xaml.cs` (novo monitor automático de captura de MAC Wi-Fi), deixando a solução **fora do estado compilável**:
   - `MonitorMAC.cs:75` — `if (!dev.authorized ...)` → **CS0023** (`authorized` é `int`, não `bool`): corrigido para `dev.authorized == 0`.
-  - `App.xaml.cs` — **CS0103** `MonitorMAC` não encontrado (a classe vive em `BotRpaUI.Core`): adicionado `using BotRpaUI.Core;`; a indentação do bloco `OnExit` também foi normalizada.
+  - `App.xaml.cs` — **CS0103** `MonitorMAC` não encontrado (a classe vive em `TACEUI.Core`): adicionado `using TACEUI.Core;`; a indentação do bloco `OnExit` também foi normalizada.
   - Nenhuma funcionalidade externa foi removida — apenas os 2 erros de compilação foram corrigidos.
 - **Validação:**
   - `MonitorView.xaml` bem formado (parse XML) após as alterações.
-  - Build `20.10.2026.1755` (1ª tentativa, **falhou** por esses 2 erros externos) → `20.10.2026.1757` (TESTE) com **zero warnings / zero errors**. Auditoria `registros/2026-10-20/17-58_Plataforma_BotRPA_DESKTOP_BUILD`.
+  - Build `20.10.2026.1755` (1ª tentativa, **falhou** por esses 2 erros externos) → `20.10.2026.1757` (TESTE) com **zero warnings / zero errors**. Auditoria `registros/2026-10-20/17-58_Plataforma_TACE_DESKTOP_BUILD`.
   - `.agents/` e `capturamac/` seguem **fora** do meu escopo (não rastreados pelo Git).
 
 ### [2026-10-20 17:59] - Build FINAL (Release PnP) com Gestão do Aparelho + Automação F4
 - **Comando:** `controle/Build.ps1 -Modo Final -Sim` (orquestrador canônico) → `scripts/build_release.bat` → `scripts/build.bat` com `BUILD_MODE=RELEASE` (ícone Roxo Oficial).
-- **Resultado:** compilação `20.10.2026.1759` com **zero warnings / zero errors**. Auditoria `registros/2026-10-20/17-59_Plataforma_BotRPA_DESKTOP_BUILD` (com `build.log` gravado: hashes SHA-256, checklist de conteúdo, schema do banco e resumo das novidades).
+- **Resultado:** compilação `20.10.2026.1759` com **zero warnings / zero errors**. Auditoria `registros/2026-10-20/17-59_Plataforma_TACE_DESKTOP_BUILD` (com `build.log` gravado: hashes SHA-256, checklist de conteúdo, schema do banco e resumo das novidades).
 - **Artefatos e SHA-256:**
-  - `BotRPAui.exe` — 194.084.133 B (185,1 MB) · `8B95F321A5BEF6EB7224CB5304F3664FEEAF35E4F994ED1EB2FBF92761596A75`
+  - `TACEui.exe` — 194.084.133 B (185,1 MB) · `8B95F321A5BEF6EB7224CB5304F3664FEEAF35E4F994ED1EB2FBF92761596A75`
   - `BotEngine.dll` — 411.416 B (402 KB) · `36C0B3C643EA5CA6964BB465011C5604D7982186A15080A78E070DDD0EF8BD61`
 - **Auditoria independente (verificada por script):** release confere byte a byte com `data/output` (mesmos SHA-256) · `config/version.txt` = `20.10.2026.1759` · todos os itens obrigatórios presentes (ADB 14 arq., Gnirehtet 6 arq., `mac_address_finder.apk`, `apply_ota_update.bat`, `config/`, `data/`, `Arquivos/`, `logs/`, `registros/`) · **sem** `tools/mingw64` · banco embarcado com schema `[ID, Patrimonio, Serial, ...]`, 433 aparelhos, IDs contíguos 1..433, 433 seriais únicos.
-- **Pacote de distribuição:** `controle/BotRPA_Release_20.10.2026.1759.zip` (91.731.533 B, 33 entradas) — integridade do ZIP conferida (`testzip` = OK) e banco interno relido: schema novo, IDs 1..433.
+- **Pacote de distribuição:** `controle/TACE_Release_20.10.2026.1759.zip` (91.731.533 B, 33 entradas) — integridade do ZIP conferida (`testzip` = OK) e banco interno relido: schema novo, IDs 1..433.
 - **Pendências registradas na auditoria:** `firebase_api_key` ainda em texto plano no `settings.json` embarcado; cofre DPAPI por máquina/usuário (operador recadastra 1x); `data/bot_learn.json` ausente por Expected; working tree de 20/10 ainda não commitado; `src/ui/Core/MonitorMAC.cs` e `capturamac/` gerados por ferramenta externa (apenas os 2 erros de compilação introduzidos foram corrigidos).
 
 ### [2026-10-20 18:27] - Captura de MAC Wi-Fi nativa no motor C (automática ao conectar o tablet)
-- **Pedido do usuário:** a captura de MAC que existia como **executável externo** (`capturamac.exe`) deveria ser **implementada dentro do Bot_RPA**, funcionando **automaticamente assim que o tablet conecta** (o sistema extrai e registra sozinho), "da mesma maneira que o sistema captura o número de série".
+- **Pedido do usuário:** a captura de MAC que existia como **executável externo** (`capturamac.exe`) deveria ser **implementada dentro do TACE**, funcionando **automaticamente assim que o tablet conecta** (o sistema extrai e registra sozinho), "da mesma maneira que o sistema captura o número de série".
 - **Diagnóstico do comportamento real (testado em hardware: 2 tablets T30764G2508009388 e T30764G2508016440):**
   - `cat /sys/class/net/wlan0/address` e `ip link show wlan0` retornam **VAZIO** neste aparelho (AllWinner / Android 14) — a interface `wlan0` só existe com o Wi-Fi ativo.
   - `dumpsys wifi | grep 'MAC: '` **funciona** e é a única fonte confiável.
@@ -1600,17 +1600,17 @@ O **InnoAI** é o motor de inteligência e automação visual da Plataforma Inno
 - **Validação em hardware real (2 tablets T30764G, Android 14):**
   - Refresh: MAC extraído nos 2 aparelhos (**668–769 ms**, 1 processo ADB por aparelho) e **Wi-Fi permaneceu DESLIGADO** (não é tocado pelo caminho rápido).
   - Ciclo completo (`Engine_CapturarMAC`): `ok=1` com MAC correto nos 2 aparelhos (~1,7–2,6 s) e **Wi-Fi restaurado em 0 (desligado)** ao final.
-  - **Teste end-to-end do app real:** `BotRPAui.exe` executado por 30 s sem nenhuma interação → o banco passou de `MAC=''` para `8c:92:53:c1:39:57` e `8c:92:53:c1:54:e3` automaticamente; **433 linhas mantidas, IDs contíguos 1..433, 0 MACs duplicados**, Wi-Fi dos 2 aparelhos continua desligado.
+  - **Teste end-to-end do app real:** `TACEui.exe` executado por 30 s sem nenhuma interação → o banco passou de `MAC=''` para `8c:92:53:c1:39:57` e `8c:92:53:c1:54:e3` automaticamente; **433 linhas mantidas, IDs contíguos 1..433, 0 MACs duplicados**, Wi-Fi dos 2 aparelhos continua desligado.
   - Builds `20.10.2026.1821` (falhou por ordem de declaração do cache — **corrigido**), `.1822`, `.1827` (TESTE) com **zero warnings / zero errors**.
 - **Nota:** o executável externo `capturamac/` permanece na raiz (não rastreado pelo Git, fora do escopo do build) — a lógica foi **absorvida pelo motor**, conforme pedido.
 
 ### [2026-10-20 18:33] - Build FINAL (Release PnP) com captura de MAC nativa
 - **Comando:** `controle/Build.ps1 -Modo Final -Sim` → `scripts/build_release.bat` → `scripts/build.bat` com `BUILD_MODE=RELEASE` (ícone Roxo Oficial).
-- **Resultado:** compilação `20.10.2026.1832` com **zero warnings / zero errors**. Auditoria `registros/2026-10-20/18-33_Plataforma_BotRPA_DESKTOP_BUILD` (com `build.log`).
+- **Resultado:** compilação `20.10.2026.1832` com **zero warnings / zero errors**. Auditoria `registros/2026-10-20/18-33_Plataforma_TACE_DESKTOP_BUILD` (com `build.log`).
 - **Artefatos e SHA-256:**
-  - `BotRPAui.exe` — 194.084.133 B (185,1 MB) · `8CFE5527C4D41909058A79BB3EED420C5BFA0A7DEBD90C0D9341FCCF0B508FF0`
+  - `TACEui.exe` — 194.084.133 B (185,1 MB) · `8CFE5527C4D41909058A79BB3EED420C5BFA0A7DEBD90C0D9341FCCF0B508FF0`
   - `BotEngine.dll` — 414.720 B (405 KB) · `51E5EDABBEDEF3C2F95C6B5CD1C279506E926CCDFC0D653CBF6170F74B71FF93`
-- **Pacote de distribuição:** `controle/BotRPA_Release_20.10.2026.1832.zip` (91.732.471 bytes).
+- **Pacote de distribuição:** `controle/TACE_Release_20.10.2026.1832.zip` (91.732.471 bytes).
 - **Conteúdo da release:** íntegro — ADB (14 arq.), Gnirehtet (6 arq.), `mac_address_finder.apk`, `config/`, `scripts/apply_ota_update.bat`, `data/bot_database.db` (433 aparelhos, schema novo, IDs 1..433), `Arquivos/`, `logs/`, `registros/`; **sem** `tools/mingw64`.
 - **Destaque da versão:** captura de MAC Wi-Fi **nativa e automática** ao conectar o tablet (motor C + `MacCaptureService`), validada em hardware real.
 
@@ -1635,11 +1635,11 @@ O **InnoAI** é o motor de inteligência e automação visual da Plataforma Inno
 
 ### [2026-10-20 18:43] - Build FINAL com a nova lista de Aparelhos Conectados
 - **Comando:** `controle/Build.ps1 -Modo Final -Sim` → `scripts/build_release.bat` → `scripts/build.bat` com `BUILD_MODE=RELEASE` (ícone Roxo Oficial).
-- **Resultado:** compilação `20.10.2026.1843` com **zero warnings / zero errors**. Auditoria `registros/2026-10-20/18-43_Plataforma_BotRPA_DESKTOP_BUILD` (com `build.log`).
+- **Resultado:** compilação `20.10.2026.1843` com **zero warnings / zero errors**. Auditoria `registros/2026-10-20/18-43_Plataforma_TACE_DESKTOP_BUILD` (com `build.log`).
 - **Artefatos e SHA-256:**
-  - `BotRPAui.exe` — 194.084.133 B (185,1 MB) · `9BF9662C533B2A22DAA21D6697FB40ADAAB3286F2F8FE20CFDDDA35E00BC8AAA`
+  - `TACEui.exe` — 194.084.133 B (185,1 MB) · `9BF9662C533B2A22DAA21D6697FB40ADAAB3286F2F8FE20CFDDDA35E00BC8AAA`
   - `BotEngine.dll` — 414.720 B (405 KB) · `B2AEBB0FA0E42D31A0C90234F7D2C2378CECB76646181C0462AA779B3636B3BD`
-- **Pacote de distribuição:** `controle/BotRPA_Release_20.10.2026.1843.zip` (91.732.618 bytes).
+- **Pacote de distribuição:** `controle/TACE_Release_20.10.2026.1843.zip` (91.732.618 bytes).
 
 ### [2026-10-20] - Ferramenta CapturaMAC: automação de MAC Wi-Fi de tablets via ADB
 - **Pedido (usuário):** criar pasta `capturamac/` com ferramenta simples em C + CMD para capturar o endereço MAC Wi-Fi de tablets conectados via ADB.
@@ -1650,7 +1650,7 @@ O **InnoAI** é o motor de inteligência e automação visual da Plataforma Inno
 - **Compilação:** `gcc -O2 -Wall` — **zero warnings / zero errors**.
 - **Isolamento:** ferramenta autônoma em `capturamac/`, nenhum arquivo de dispositivo existente modificado. Ouro #1 preservado.
 
-### [2026-10-20] - Integração: Captura Automática de MAC Wi-Fi no Bot_RPA (Motor C + UI C#)
+### [2026-10-20] - Integração: Captura Automática de MAC Wi-Fi no TACE (Motor C + UI C#)
 - **Pedido (usuário):** ao conectar o cabo USB no tablet, o sistema deve buscar automaticamente a extração do MAC Wi-Fi e armazenar no banco de dados local (tabela Dispositivos, coluna MAC), sem duplicidade (UPSERT: atualiza se o serial já existe, insere se não).
 - **Arquivos modificados:**
   - `src/api.c`: nova função exportada `Engine_CapturarMAC(const char* serial, char* out_mac, int max_len)` que tenta extrair o MAC via `dumpsys wifi` (fallback: `/sys/class/net/wlan0/address`, depois `ip link show wlan0`). Retorna 1 se obteve MAC válido, 0 caso contrário.
@@ -1665,16 +1665,16 @@ O **InnoAI** é o motor de inteligência e automação visual da Plataforma Inno
   3. Chama `Engine_CapturarMAC()` (motor C) que executa ADB e extrai o MAC.
   4. Se MAC válido, grava/atualiza na tabela `Dispositivos` (coluna `MAC`) via `RegistrarOuAtualizarMAC()`.
   5. Reconectar o mesmo serial não duplica o registro (UPSERT por `Serial UNIQUE`).
-- **Compilação:** `scripts/build.bat` executado com sucesso — **zero warnings / zero errors** (`BotEngine.dll` + `BotRPAui.exe` em `data/output/`). Auditoria `registros/2026-10-20/17-58_Plataforma_BotRPA_DESKTOP_BUILD`.
+- **Compilação:** `scripts/build.bat` executado com sucesso — **zero warnings / zero errors** (`BotEngine.dll` + `TACEui.exe` em `data/output/`). Auditoria `registros/2026-10-20/17-58_Plataforma_TACE_DESKTOP_BUILD`.
 - **Isolamento:** apenas `src/api.c` modificado no motor C; nenhum arquivo de função de dispositivo específico tocado. Ouro #1 preservado.
 
-### [2026-10-20] - Revisao e organizacao de todos os arquivos .gitignore (Bot_RPA + todos os projetos em C:\Projetos)
-- **Escopo:** 15 repositorios git mapeados em C:\Projetos (Bot_RPA, CASA, casamento, curriculo, InnovCore_TI, InnovStock, lagoinha_carisma, lagoinha_saomiguldoscampos, maps, minimalpdfcompress, portfolio, rec-fac-app/face-api.js, rec-fac-app/face-recognition.js, rufus, VideoCompressor) mais arquivos .gitignore orfaos em pastas nao-versionadas (Port, Analise_Midias_Removiveis, face-api-jordan-version, face-recognition.js-00 e C:\Projetos).
-- **Bot_RPA (.gitignore reestruturado por secoes):**
+### [2026-10-20] - Revisao e organizacao de todos os arquivos .gitignore (TACE + todos os projetos em C:\Projetos)
+- **Escopo:** 15 repositorios git mapeados em C:\Projetos (TACE, CASA, casamento, curriculo, InnovCore_TI, InnovStock, lagoinha_carisma, lagoinha_saomiguldoscampos, maps, minimalpdfcompress, portfolio, rec-fac-app/face-api.js, rec-fac-app/face-recognition.js, rufus, VideoCompressor) mais arquivos .gitignore orfaos em pastas nao-versionadas (Port, Analise_Midias_Removiveis, face-api-jordan-version, face-recognition.js-00 e C:\Projetos).
+- **TACE (.gitignore reestruturado por secoes):**
   - Fonte de `capturamac/` mantida rastreada; saidas (`.exe`, `.csv`, `.log`, `.txt`) agora ignoradas.
-  - `registros/` refinado: so logs de execucao de dispositivo (`*_execucao.log`, `*.log`) sao ignorados; logs de auditoria de build (`registros/YYYY-MM-DD/HH-MM_Plataforma_BotRPA_DESKTOP_BUILD.txt`) permanecem rastreaveis, conforme exigido pela Regra de Ouro #2 do AGENTS.md.
+  - `registros/` refinado: so logs de execucao de dispositivo (`*_execucao.log`, `*.log`) sao ignorados; logs de auditoria de build (`registros/YYYY-MM-DD/HH-MM_Plataforma_TACE_DESKTOP_BUILD.txt`) permanecem rastreaveis, conforme exigido pela Regra de Ouro #2 do AGENTS.md.
   - Adicionadas regras para `.vs/`, `.idea/`, `*.user`, `*.suo`, `*.tmp`, `__pycache__/`, `*.pyc`, `Thumbs.db`, `Desktop.ini`, `.DS_Store`, `*.bak`, `*.old`, `*.orig`, `*.rej`, `*.pem`, `*.pfx`, `*.p12`, `*.jks`, `!login_live.xml`/`!login_app.xml`, `controle/ota_manifest_*.json`, `src/ui/Resources/temp/`, `logs/` e pastas de agente (`.opencode/`, `scratch/`).
-  - Mantidas: `/data/`, `/municipios.csv`, `/version.txt` (raiz, sem afetar fontes C em `src/core/data/`), `*.xml` com excecoes, `firebase.json`/`.firebaserc` (não usados como hosting), `*.zip`/`.rar`/`.7z`, `data/output/`, `BotRPA_Release/`, `tools/mingw64/`, `tools/platform-tools/`, `tools/*.apk`, `tools/reverse_tethering/*.exe`|`.apk`, `*.o`/`.obj`/`.exe`/`.dll`/`.apk`/`.pdb`, `config/settings.json`, `.cache/`.
+  - Mantidas: `/data/`, `/municipios.csv`, `/version.txt` (raiz, sem afetar fontes C em `src/core/data/`), `*.xml` com excecoes, `firebase.json`/`.firebaserc` (não usados como hosting), `*.zip`/`.rar`/`.7z`, `data/output/`, `TACE_Release/`, `tools/mingw64/`, `tools/platform-tools/`, `tools/*.apk`, `tools/reverse_tethering/*.exe`|`.apk`, `*.o`/`.obj`/`.exe`/`.dll`/`.apk`/`.pdb`, `config/settings.json`, `.cache/`.
 - **Projetos sem .gitignore criados:** `minimalpdfcompress` (Python + PyInstaller + engines/ + src/bin/ + settings.json locais), `rec-fac-app/face-recognition.js` (restaurado do HEAD e expandido: node_modules x3, build, bin, dist, logs, edit-jordan/, project/, *.tgz, *.log, *.bak).
 - **Outros .gitignore reorganizados em secoes padronizadas:** dependencias, build/saida, cache/temporarios, Firebase, .NET, Python, logs, dados/backups/PII, ambiente/credenciais, IDE/agente, SO.
 - **Seguranca (P0):** `tools/migration-report-2026-08-20.csv` (senha temporaria em texto claro `Innov@2026!`) removido do rastreamento (`git rm --cached`) no InnovStock. Nota: o segredo permanece no historico do Git — necessita de `git filter-repo`/BFG para purga completa do historico.
@@ -1682,11 +1682,11 @@ O **InnoAI** é o motor de inteligência e automação visual da Plataforma Inno
 - **Consistencia CASA:** `.opencode/skills/` e `.opencode/plans/` re-incluidos (negacao) pois `opencode.json` (rastreado) aponta para elas; `.opencode/node_modules/` mantido ignorado.
 
 ### [2026-10-21] - Organizacao de Artefatos de Entrega e Memoria de Desenvolvimento
-- **Build FINAL `21.10.2026.0909`** (executado via `controle/Build.ps1 -Modo Final`): `BotRPA_Release` recriada, zero warnings/errors.
-  - `BotRPAui.exe` 194.084.133 B · SHA-256 `0CB473DF6D8ABDE5D6ED69BF9766AF405B4D7F54457FDA13E4C96F880BD343D4`
+- **Build FINAL `21.10.2026.0909`** (executado via `controle/Build.ps1 -Modo Final`): `TACE_Release` recriada, zero warnings/errors.
+  - `TACEui.exe` 194.084.133 B · SHA-256 `0CB473DF6D8ABDE5D6ED69BF9766AF405B4D7F54457FDA13E4C96F880BD343D4`
   - `BotEngine.dll` 418.471 B · SHA-256 `96B16BFA642A75C1C14AA0644144AA224F0A2FFC9D3A440214EE38539FE36800`
 - **Criacao da pasta `FERRAMENTA_AQUI` (raiz):**
-  - `bot rpa instalavel/` — copia exata da release `21.10.2026.0909` (BotRPAui.exe, BotEngine.dll, config/, tools/, data/, scripts/, Arquivos/, logs/, registros/, municipios.csv).
+  - `bot rpa instalavel/` — copia exata da release `21.10.2026.0909` (TACEui.exe, BotEngine.dll, config/, tools/, data/, scripts/, Arquivos/, logs/, registros/, municipios.csv).
   - `bot rpa movel/` — copia exata da mesma release.
   - Verificacao por SHA-256 e checklist de conteudo (ADB, Gnirehtet, APK, config, banco, OTA) em ambas.
 - **Criacao da pasta `memmoria de desenvolvimento` (raiz):**
@@ -1695,7 +1695,7 @@ O **InnoAI** é o motor de inteligência e automação visual da Plataforma Inno
 - **Regra de Ouro #1 preservada:** nenhum `.c` de funcao de dispositivo foi tocado; apenas organizacao de artefatos e documentacao.
 
 ### [2026-10-21] - Remocao total de Firebase, OTA e sync InnovStock
-- **Objetivo:** deixar o Bot_RPA 100% local/offline, sem conexao Firebase, sem atualizacao OTA e sem sincronizacao com o InnovStock.
+- **Objetivo:** deixar o TACE 100% local/offline, sem conexao Firebase, sem atualizacao OTA e sem sincronizacao com o InnovStock.
 - **Arquivos removidos:** `src/ui/Core/FirebaseAuthService.cs`, `OtaUpdateManager.cs`, `CloudAutoSyncService.cs`, `src/ui/Views/OtaMandatoryUpdateWindow.xaml(.cs)`, `scripts/apply_ota_update.bat`, `controle/Atualizacao.bat`, `controle/Atualizacao.ps1`.
 - **Novo `src/ui/Core/AppInfo.cs`:** expoe `CurrentVersion` lendo `config/version.txt` (fallback para versao do assembly); `MainWindow` e `AboutView` deixam de depender do OTA.
 - **UI limpa:** `ConfigView` sem painel OTA, conta InnovStock, sync automatico e telemetria (menu renumerado 1-5); `MonitorProView` sem botao "Puxar Nuvem"; `RelatoriosView` sem "Sync/Baixar InnovStock" e sem pull automatico ao abrir o banco; `AboutView` sem mencao a OTA.
@@ -1703,7 +1703,7 @@ O **InnoAI** é o motor de inteligência e automação visual da Plataforma Inno
 - **Config/scripts:** `config/settings.json` sem chaves `firebase_*`, `cloud_*` e `telemetry_enabled`; `Terminal.ps1` sem comando/ajuda OTA; `build_release.bat` sem copia do `apply_ota_update.bat`.
 - **Documentacao:** `.agents/AGENTS.md` e `demmoria do projeto.md` atualizados (sem OTA/Firebase/InnovStock; caminho da memoria em `memoria de desenvolvimento/`).
 - **Build FINAL `21.10.2026.0929`** (`controle/Build.ps1 -Modo Final -Sim`): zero errors, release recriada.
-  - `BotRPAui.exe` 194.006.309 B · SHA-256 `806E26AA890D707B87EFB64BAB399E0F07ACFF474DA36D3D0C9ED8535CE5DD75`
+  - `TACEui.exe` 194.006.309 B · SHA-256 `806E26AA890D707B87EFB64BAB399E0F07ACFF474DA36D3D0C9ED8535CE5DD75`
   - `BotEngine.dll` 418.471 B · SHA-256 `08BAE70788E3304A50081D496915BBFD0B0E2102B7DE0B9A82665EEF361EECD4`
   - `config/settings.json` da release confirmado sem chaves de nuvem/telemetria; nenhum script OTA embarcado.
 - **Pendente:** `FERRAMENTA_AQUI/bot rpa instalavel` e `bot rpa movel` ainda contem a release anterior `21.10.2026.0909`; sincronizar com a atual quando autorizado.
@@ -1713,7 +1713,7 @@ O **InnoAI** é o motor de inteligência e automação visual da Plataforma Inno
 - **Causa:** padding do `DataGridCell` (10,0) somado ao `Margin="8,0"` do `TextBlock` deixava apenas ~19 px uteis na coluna `#` de 55 px.
 - **Correcao:** coluna `#` ampliada para 60 px e removido o `Margin` extra do elemento de texto (`RelatoriosView.xaml`).
 - **Build FINAL `21.10.2026.0932`** (zero errors):
-  - `BotRPAui.exe` 194.006.309 B · SHA-256 `948ABEE49D13FDE74FDA687893CA226C85C3C8CEE4FFFB645D3D0E1D773FA166`
+  - `TACEui.exe` 194.006.309 B · SHA-256 `948ABEE49D13FDE74FDA687893CA226C85C3C8CEE4FFFB645D3D0E1D773FA166`
   - `BotEngine.dll` 418.471 B · SHA-256 `A2D67AC7307B0824CCD72CC5010782AADDE35B7E2A7BE24DEC9F0DF554432F58`
 
 ### [2026-10-21] - Patrimonio padronizado (INVxxxx) e busca ampliada no Banco de Dados
@@ -1733,37 +1733,37 @@ O **InnoAI** é o motor de inteligência e automação visual da Plataforma Inno
 
 ### [2026-10-21 09:52] - Instalador OFICIAL (Inno Setup) e Build Release 21.10.2026.0950
 - **Correcoes para o FUCACIONAMENTO do gerador do instalador** (`scripts/build_installer.bat`):
-  - Bug: substituicao regex destrava o `#define AppVersion` no .iss de temp (`%%VER_LINHA%%` gravava texto invalido) - erro "Undeclared identifier: AppVersion". Corrigido: versao lida de `config/version.txt` e gravada via `$env:BOTRPA_VER` direto em `controle/BotRPA.iss`, compilacao roda na raiz.
+  - Bug: substituicao regex destrava o `#define AppVersion` no .iss de temp (`%%VER_LINHA%%` gravava texto invalido) - erro "Undeclared identifier: AppVersion". Corrigido: versao lida de `config/version.txt` e gravada via `$env:TACE_VER` direto em `controle/TACE.iss`, compilacao roda na raiz.
   - `Arquivos` vazia na release: `skipifsourcedoesntexist` na linha [Files] correspondente.
   - [Code] `CurStepChanged` sem declaracao `var ResultCode: Integer` - "Unknown identifier. Corrigido.
-- **Causa raiz do erro na instalacao (RegCreateKeyEx code 87 em HKLM\Environment)**: o .iss gravava `BOT_RPA_DATA_DIR` em chave NAO padrao `HKLM\Environment` (real seria Session Manager\Environment) e falhava nesta VM. Entrada REMOVIDA - desnecessaria: `paths.c`/`PathHelper.cs` resolvem `%ProgramData%\Bot_RPA` sozinhos, e o atualizador define `BOT_RPA_DATA_DIR` no processo.
+- **Causa raiz do erro na instalacao (RegCreateKeyEx code 87 em HKLM\Environment)**: o .iss gravava `TACE_DATA_DIR` em chave NAO padrao `HKLM\Environment` (real seria Session Manager\Environment) e falhava nesta VM. Entrada REMOVIDA - desnecessaria: `paths.c`/`PathHelper.cs` resolvem `%ProgramData%\TACE` sozinhos, e o atualizador define `TACE_DATA_DIR` no processo.
 - **Correcao estrutural em `scripts/build.bat`**: pasta de auditoria era criada VAZIA (bug que gerou 5 pastas vazias em 21/10). Agora `%AUDIT_DIR%\build.log` captura cabecalho (Versao/Modo), saida completa do gcc E do dotnet publish, checagem de erro do motor C (GCC_ERR) e `Resultado: SUCESSO`. Pastas vazias 08-28/09-10/09-30/09-33/09-46 removidas; apenas 21/10/09-50 resta.
 - **Build FINAL `21.10.2026.0950`** (`controle/Build.ps1 -Modo Final -Sim`) - autorizado por ordem explicita do usuario:
-  - `BotRPAui.exe` 194.006.309 B A~ SHA-256 `D7E49BE8136275C6F2F737FA265CE1BE00B652E592DB2D5F8B8492E1AD3F990B`
+  - `TACEui.exe` 194.006.309 B A~ SHA-256 `D7E49BE8136275C6F2F737FA265CE1BE00B652E592DB2D5F8B8492E1AD3F990B`
   - `BotEngine.dll` 418.471 B A~ SHA-256 `B1DC499BEC4223BDAD1F24578445028E30666B377D32723C7DDAC62ABAE0B8A2`
   - Zero warnings/errors no `registros/2026-10-21/09-50.../build.log`.
-- **Instalador gerado**: `controle/InstaladorBot_RPA_21.10.2026.0950.exe` 61.432.241 B A~ SHA-256 `87FFEEA20A5EA25D72FA430716449AECCA16AD01D2D5F1F8C4D17F1C21F04DC4` - embute build 0950.
+- **Instalador gerado**: `controle/InstaladorTACE_21.10.2026.0950.exe` 61.432.241 B A~ SHA-256 `87FFEEA20A5EA25D72FA430716449AECCA16AD01D2D5F1F8C4D17F1C21F04DC4` - embute build 0950.
 - **Entregas**: `FERRAMENTA_AQUI/bot rpa instalavel` com instalador 0950 (verificado por hash); `FERRAMENTA_AQUI/bot rpa movel` ESPEJO integral da release 0950 (EXE hash conferido). Arquivo 0929 na entrega segue travado por processo externo (apagar manualmente apos fechar janela aberta).
 
 
 ### [2026-10-21 09:58] - Personalizacao do Instalador (Inno Setup)
 - **Idioma do assistente corrigido**: [Languages] usava `compiler:Default.isl` (ingles) com o nome "brazilian" - assistente inteiro em ingles. Agora usa `compiler:Languages\BrazilianPortuguese.isl` (PT-BR nativo do Inno 6.
-- **Splash oficial roxa**: gerados `controle/InstallerAssets/WizardLarge.png` (164x314) e `WizardSmall.png` (55x58) via System.Drawing a partir de `src/ui/Assets/Icons/BotRPAui_Release_Purple.png`; wired em [Setup] (WizardImageFile/WizardSmallImageFile).
+- **Splash oficial roxa**: gerados `controle/InstallerAssets/WizardLarge.png` (164x314) e `WizardSmall.png` (55x58) via System.Drawing a partir de `src/ui/Assets/Icons/TACEui_Release_Purple.png`; wired em [Setup] (WizardImageFile/WizardSmallImageFile).
 - **Metadados do produto** (Propriedades do .exe): VersionInfoProductName=Bot RPA, VersionInfoProductVersion/TextVersion={#AppVersion}, Description="Instalador da Plataforma Bot RPA", Company/Copyright=InnovTech.
-- **Build**: `controle/InstaladorBot_RPA_21.10.2026.0950.exe` 61.504.990 B A~ SHA-256 `4618CDFDE88524534067866130AB2ECA69B2A4E53AA5F1D585005AEF731C97A1`; entrega atualizada em `FERRAMENTA_AQUI/bot rpa instalavel` (hash conferido).
+- **Build**: `controle/InstaladorTACE_21.10.2026.0950.exe` 61.504.990 B A~ SHA-256 `4618CDFDE88524534067866130AB2ECA69B2A4E53AA5F1D585005AEF731C97A1`; entrega atualizada em `FERRAMENTA_AQUI/bot rpa instalavel` (hash conferido).
 
 
 ### [2026-10-21 10:04] - Parecer: Instalador como FERRAMENTA DE ATUALIZACAO (dados preservados)
 - Auditoria do fluxo de atualizacao (pedido explicito do usuario: o mesmo .exe serve de atualizador mantendo dados):
-  - [Files] linha "BotRPA_Release\*" -> {app} com `ignoreversion recursesubdirs createallsubdirs`: PROGRAMAS sobrescritos a cada instalacao/atualizacao.
+  - [Files] linha "TACE_Release\*" -> {app} com `ignoreversion recursesubdirs createallsubdirs`: PROGRAMAS sobrescritos a cada instalacao/atualizacao.
   - Seeds de dados (settings.json, first_run.json, municipios.csv, bot_database.db, data\input\*, Arquivos\*) com `onlyifdoesntexist`: NUNCA sobrescrevem dados do usuario.
-  - Mesmo AppId ({7C1B9E42...}): reexecucao do instalador = upgrade no local em {app} ({autopf}\Bot_RPA); dados em {commonappdata}\Bot_RPA intocados. OTA (OtaUpdateManager) removido do projeto - via de atualizacao e o proprio instalador.
+  - Mesmo AppId ({7C1B9E42...}): reexecucao do instalador = upgrade no local em {app} ({autopf}\TACE); dados em {commonappdata}\TACE intocados. OTA (OtaUpdateManager) removido do projeto - via de atualizacao e o proprio instalador.
   - [Code] hardening: blk `WizardSilent()` no ssPostInstall - execucao /SILENT /VERYSILENT (scripts futuros) nao trava em MsgBox; modo interativo intacto (pergunta iniciar app / desinstalacao pergunta apagar dados).
-- **Build**: `controle/InstaladorBot_RPA_21.10.2026.0950.exe` 61.505.036 B A~ SHA-256 `38D27AF5BAFDB8653A33D81A411783AC3672B36E2E71DB3F2B899836D0A310EF` - entrega atualizada (hash conferido). Arquivo 0929 antigo segue travado na entrega (apagar manualmente).
+- **Build**: `controle/InstaladorTACE_21.10.2026.0950.exe` 61.505.036 B A~ SHA-256 `38D27AF5BAFDB8653A33D81A411783AC3672B36E2E71DB3F2B899836D0A310EF` - entrega atualizada (hash conferido). Arquivo 0929 antigo segue travado na entrega (apagar manualmente).
 
 
 ### [2026-10-21] - Encerramento do servidor ADB ao fechar o aplicativo
-- **Sintoma:** o servidor ADB permanecia ativo depois de fechar o Bot_RPA, acumulando processos e causando inconsistencias nos computadores.
+- **Sintoma:** o servidor ADB permanecia ativo depois de fechar o TACE, acumulando processos e causando inconsistencias nos computadores.
 - **Causa raiz:** `App.KillAdbServer()` montava o caminho a partir de `PathHelper.GetRootDirectory()` (pasta de DADOS). Em instalacoes em Program Files o ADB fica em `PathHelper.GetInstallDirectory()` (`{app}\tools\platform-tools`), entao o `kill-server` nunca era executado.
 - **Correcao:** novo `src/ui/Core/AdbServerManager.cs`:
   - procura `adb.exe` na pasta de instalacao, na pasta de dados (legado), no diretorio do executavel e subindo ate 4 niveis (modo dev), com fallback para `adb.exe` do PATH;
@@ -1774,22 +1774,22 @@ O **InnoAI** é o motor de inteligência e automação visual da Plataforma Inno
 
 ### [2026-10-21 10:10] - Instalador encerra processos ADB/gnirehtet na atualizacao
 - Relato do usuario: atualizacao travava por causa de `adb.exe`/`gnirehtet.exe` pendurados (bloqueavam substituicao de DLL no {app}).
-- Correcao em `controle/BotRPA.iss` ([Code] InitializeSetup): taskkill /F /T agora encerra `BotRPAui.exe`, `adb.exe` e `gnirehtet.exe` (processos confirmados em `tools/platform-tools` e `reverse_tethering` da release).
-- **Build**: `controle/InstaladorBot_RPA_21.10.2026.0950.exe` 61.505.074 B A~ SHA-256 novo entregue em `FERRAMENTA_AQUI/bot rpa instalavel` (hash conferido).
+- Correcao em `controle/TACE.iss` ([Code] InitializeSetup): taskkill /F /T agora encerra `TACEui.exe`, `adb.exe` e `gnirehtet.exe` (processos confirmados em `tools/platform-tools` e `reverse_tethering` da release).
+- **Build**: `controle/InstaladorTACE_21.10.2026.0950.exe` 61.505.074 B A~ SHA-256 novo entregue em `FERRAMENTA_AQUI/bot rpa instalavel` (hash conferido).
 
 
 ### [2026-10-21 10:22] - Nome do instalador + Terminal de Controle na mao
-- **Nome do arquivo padronizado**: `OutputBaseFilename` -> `BotRPA_Instalador_{#AppVersion}` (antes `InstaladorBot_RPA_...` colado). `scripts/build_installer.bat` conferencia atualizada para o novo padrao. Old installers (0932/0950 nome antigo) removidos de `controle/`.
+- **Nome do arquivo padronizado**: `OutputBaseFilename` -> `TACE_Instalador_{#AppVersion}` (antes `InstaladorTACE_...` colado). `scripts/build_installer.bat` conferencia atualizada para o novo padrao. Old installers (0932/0950 nome antigo) removidos de `controle/`.
 - **Terminal de Controle (`controle/Terminal.ps1`)**: adicionados:
   - `build instalavel` (alias `instalador`) -> roda `scripts/build_installer.bat` via Invoke-BatchFile.
   - `build release` como apelido do `build final` (o console mostra o uso atualizado). Ajuda atualizada; uso invalido guarda "Uso: build teste | build final | build instalavel". Validado via `-Comando ajuda`/`-Comando build` (sem executar build).
-- **Entrega**: `FERRAMENTA_AQUI/bot rpa instalavel` agora contem APENAS `BotRPA_Instalador_21.10.2026.0950.exe` (o 0929 travado finalmente pode ter sido removido na entrega - conferir manualmente).
+- **Entrega**: `FERRAMENTA_AQUI/bot rpa instalavel` agora contem APENAS `TACE_Instalador_21.10.2026.0950.exe` (o 0929 travado finalmente pode ter sido removido na entrega - conferir manualmente).
 
 
 ### [2026-10-21 15:35] - Painel Central de Build (controle/Build.ps1) ganha opcao [3] INSTALAVEL
 - Painel/CLI com apenas [1] teste e [2] final; instalador so existia no Terminal de Controle.
-- Adicionado: menu [3] Build INSTALAVEL, -Modo Instalavel (ValidateSet) e Invoke-BuildInstalador (confere scripts/build_installer.bat + BotRPA_Release\BotRPAui.exe, Stop-UiAberta, verifica controle\BotRPA_Instalador_<versao>.exe). Build.bat: comentario de uso atualizado.
-- Validacao: -Modo Instalavel sem -Sim, resposta N -> fluxo de cancelamento e exit 1 corretos. Builds reais NAO executados nesta etapa (sem ordem explicita); instalador vigente permanece BotRPA_Instalador_21.10.2026.0950.exe.
+- Adicionado: menu [3] Build INSTALAVEL, -Modo Instalavel (ValidateSet) e Invoke-BuildInstalador (confere scripts/build_installer.bat + TACE_Release\TACEui.exe, Stop-UiAberta, verifica controle\TACE_Instalador_<versao>.exe). Build.bat: comentario de uso atualizado.
+- Validacao: -Modo Instalavel sem -Sim, resposta N -> fluxo de cancelamento e exit 1 corretos. Builds reais NAO executados nesta etapa (sem ordem explicita); instalador vigente permanece TACE_Instalador_21.10.2026.0950.exe.
 
 
 ### [2026-10-21] - F4: subfuncao Adicionar Conta Google (Vision 7)
@@ -1811,29 +1811,29 @@ O **InnoAI** é o motor de inteligência e automação visual da Plataforma Inno
 - **Opcoes do produto (tela de tarefas)**: 3 tarefas - `desktopicon` (Area de Trabalho), `startmenu` (Menu Iniciar, agora condiciona os icones do {group}) e `autorun` (default DESMARCADO) -> icon em `{commonstartup}` (constante `{autostart}` nao existe).
 - **Textos personalizados em TODAS as telas** (override `[Messages]` ididoma "brazilian"): SetupAppTitle/SetupWindowTitle com assinatura; Welcome/Licenca/Destino/Tarefas/Pronto/Concluido com nome "Jordan R. Caraujo"; mensagem final "Obrigado pela preferencia!"; Properties de .exe com VersionInfoCopyright do criador.
 - **Fluxo final de telas**: Idioma -> CAPA -> TERMOS (unlock c/ aceito) -> Destino -> Opeces do produto -> Confirmacao -> Extracao -> Concluido (agradecimento). Post-install MsgBox mantido (start app) - msg informativa atualizada em [Code] p/ incluir criador.
-- **Build/entrega**: release refeita em paralelo as 16:07 (hash A6BF3E8F... version.txt=21.10.2026.1606); instalador `controle/BotRPA_Instalador_21.10.2026.1606.exe` 61.486.619 B SHA-256 `449B2486...` entregue em `FERRAMENTA_AQUI/bot rpa instalavel` (arquivo 0950 substituido).
+- **Build/entrega**: release refeita em paralelo as 16:07 (hash A6BF3E8F... version.txt=21.10.2026.1606); instalador `controle/TACE_Instalador_21.10.2026.1606.exe` 61.486.619 B SHA-256 `449B2486...` entregue em `FERRAMENTA_AQUI/bot rpa instalavel` (arquivo 0950 substituido).
 
 
 ### [2026-10-21 16:55] - CAPA como PRIMEIRA tela (antes dos termos) no instalador
 - Relato: abrindo o instalador, aparecia direto a tela de contrato/licenca. Causa: bem-vindo nativo salta com o pre-dialogo (idioma + modo adm) e LicenseFile em sequencia.
-- Correcao (controle/BotRPA.iss):
+- Correcao (controle/TACE.iss):
   - `DisableWelcomePage=yes` - tela nativa de bem-vindo desativada.
   - Nova CAPA customizada em [Code] (InitializeWizard/CreateCustomPage ancorada em wpWelcome): TBitmapImage charge `InstallerAssets/WizardLarge.png` carregado de {tmp} (novo entry [Files] deleteafterinstall) a esquerda; a direita titulo "Bot RPA" 20 bold, subtitulo "Plataforma InnovTech" cinza, corpo (paths Programa/Dados), bloco CRIACAO ORIGINAL Jordan R. Caraujo bold + "Obrigado pela preferencia!" italico + hint de aceitar termos. Back desabilitado automaticamente na primeira pagina.
   - Removidos os overrides WelcomeLabel1/2 (inutilizaveis).
   - Fix: TNewStaticText nao tem .Transparent (BusinessScript) - propriedade removida (o corpo ja e fundo da pagina).
-- **Build**: `controle/BotRPA_Instalador_21.10.2026.1606.exe` 61.565.251 B - entrega recolocada em `FERRAMENTA_AQUI/bot rpa instalavel` (hash conferido). Fluxo agora: Idioma/modo -> CAPA -> Termos (unlock p/ avancar) -> Destino -> Produtos -> Confirmacao -> Extracao -> Concluido.
+- **Build**: `controle/TACE_Instalador_21.10.2026.1606.exe` 61.565.251 B - entrega recolocada em `FERRAMENTA_AQUI/bot rpa instalavel` (hash conferido). Fluxo agora: Idioma/modo -> CAPA -> Termos (unlock p/ avancar) -> Destino -> Produtos -> Confirmacao -> Extracao -> Concluido.
 
 
 ### [2026-10-21 17:30] - REMOCAO INNOVTECH + tela final melhorada do instalador
 - **Purga de vinculos INNOVTECH** a pedido do usuario: AppPublisher -> "Jordan R. Caraujo"; VersionInfoCompany/Description ajustados; FinishedLabel/NoIcons sem "Plataforma InnovTech"; script .iss e TERMO_DE_USO.txt sem a marca (header renomeado); capa CoverFull.bmp regenerada com subtitulo "AUTOMACAO DE APARELHOS ANDROID VIA ADB"; WizardLarge.png regenerado como robo roxo limpo (sem faixas de texto).
-- **Tela final melhorada**: duplicacao com a chave isl `ClickFinish` ("Clique em Concluir pra sair do Instalador.") removida ao retirar o tail "Clique em Concluir para sair." do override; novo texto: "Obrigado pela preferencia!" + "Autoria e propriedade EXCLUSIVA de Jordan R. Caraujo." + "A ferramenta esta pronta para uso." (heading mantido + checkbox "Iniciar o Bot_RPA" [Run]).
-- **Build**: `controle/BotRPA_Instalador_21.10.2026.1606.exe` 61.571.940 B - entrega atualizada via hash em `FERRAMENTA_AQUI/bot rpa instalavel`.
+- **Tela final melhorada**: duplicacao com a chave isl `ClickFinish` ("Clique em Concluir pra sair do Instalador.") removida ao retirar o tail "Clique em Concluir para sair." do override; novo texto: "Obrigado pela preferencia!" + "Autoria e propriedade EXCLUSIVA de Jordan R. Caraujo." + "A ferramenta esta pronta para uso." (heading mantido + checkbox "Iniciar o TACE" [Run]).
+- **Build**: `controle/TACE_Instalador_21.10.2026.1606.exe` 61.571.940 B - entrega atualizada via hash em `FERRAMENTA_AQUI/bot rpa instalavel`.
 
 
 ### [2026-10-21 17:55] - CAPA da primeira tela REFEITA (fundo unico, sem sobreposicao)
 - Relato: primeira tela (capa) com caixa cinza (imagem nao carregava - TBitmapImage so pinta com padding BMP em carga via codigo) e textos sobrepostos (rotulos com posicoes fixas colidindo) + typo "fimanizacao".
 - Correcao: bloco de capa em [Code] reescrito - UMA TBitmapImage inteira (CoverFull.bmp 834x544 24bpp, Stretch) ocupando toda a Surface (Left/Top 0, Width/Height = Surface); TODOS os rotulos removidos (titulo "BOT RPA", "AUTOMACAO DE APARELHOS ANDROID VIA ADB", "CRIACAO ORIGINAL/Jordan R. Caraujo", "Obrigado pela preferencia!" e hint de termos estao impressos NA ARTE). [Files] tmp troca WizardLarge.png -> CoverFull.bmp. WizardLarge.png (limpo) segue no WizardImageFile p/ tela final.
-- **Build**: `controle/BotRPA_Instalador_21.10.2026.1606.exe` 61.727.484 B - entrega atualizada (`FERRAMENTA_AQUI/bot rpa instalavel`, hash conferido).
+- **Build**: `controle/TACE_Instalador_21.10.2026.1606.exe` 61.727.484 B - entrega atualizada (`FERRAMENTA_AQUI/bot rpa instalavel`, hash conferido).
 
 
 ### [2026-10-21 18:00] - CAPA via VIA NATIVA (TBitmapImage por codigo abandonado)
@@ -1843,20 +1843,20 @@ O **InnoAI** é o motor de inteligência e automação visual da Plataforma Inno
   - [Files]: entrada tmp {CoverFull.bmp} removida; arquivo CoverFull.bmp DELETADO.
   - WizardLarge.png REGENERADO como CAPA IMPRIMIDA (164x314, faixas escuras topo/rodape): "BOT RPA" bold, "AUTOMACAO DE APARELHOS ANDROID VIA ADB", "CRIACAO ORIGINAL"/"Jordan R. Caraujo" bold, "Obrigado pela preferencia!" italic + notes ("Avancar para aceitar os Termos de Uso" / "Dados ficam no seu computador"). Sem INNOVTECH.
   - [Messages]: WelcomeLabel1=Bot RPA; WelcomeLabel2=Assistente de instalacao e atualizacao da ferramenta.%n%nCRIACAO ORIGINAL: Jordan R. Caraujo.
-- **Build**: version.txt avancou p/ `21.10.2026.1649` (acao parallel do usuario ~16:49); instalador `BotRPA_Instalador_21.10.2026.1649.exe` 61.501.913 B entregue.
+- **Build**: version.txt avancou p/ `21.10.2026.1649` (acao parallel do usuario ~16:49); instalador `TACE_Instalador_21.10.2026.1649.exe` 61.501.913 B entregue.
 
 
 ### [2026-10-21 18:10] - Primeira tela MINIMA: titulo + subtitulo + desenvolvedor
 - Pedido explicito: primeira tela SÓ com titulo, subtitulo e nome do desenvolvedor.
 - WizardLarge.png regenerado LIMPO (splash roxa sem faixas/textos) - pointer nativo do bem-vindo.
 - [Messages]: WelcomeLabel1="Bot RPA" (titulo bold); WelcomeLabel2="AUTOMACAO DE APARELHOS ANDROID VIA ADB" + "Jordan R. Caraujo" (subtitulo + dev). Removidos textos extra (assistente/conteudo/obrigado/hints).
-- **Build**: BotRPA_Instalador_21.10.2026.1649.exe (61.506.858 B) entregue em FERRAMENTA_AQUI (hash conferido).
+- **Build**: TACE_Instalador_21.10.2026.1649.exe (61.506.858 B) entregue em FERRAMENTA_AQUI (hash conferido).
 
 
 ### [2026-10-21 17:10] - Rebuild com nome UNICO p/ eliminar confusao de arquivo velho
 - Usuario reportou "sem arte nenhuma / primeira tela nao abre / voce buildou de novo?".
 - Diagnostico: .iss CONFIRMADO limpo (sem DisableWelcomePage/ShouldSkipPage/CoverPage/TBitmapImage; git modificado local apenas), WizardLarge.png valido (164x314 32bpp), build 1649 das 16:58 embedding ok. Suspeita: usuario executou arquivo ANTIGO (1606 ou copia 1649 de 16:49) de outro lugar (Desktop/Downloads).
-- Acao: bump version.txt -> `21.10.2026.1703`; rebuild instalador `BotRPA_Instalador_21.10.2026.1703.exe` (61.506.895 B) entregue em FERRAMENTA_AQUI (pasta limpa antes da copia; hash conferido).
+- Acao: bump version.txt -> `21.10.2026.1703`; rebuild instalador `TACE_Instalador_21.10.2026.1703.exe` (61.506.895 B) entregue em FERRAMENTA_AQUI (pasta limpa antes da copia; hash conferido).
 
 
 ### [2026-10-21 17:50] - Ferramenta capturamac CORRIGIDA e VALIDADA (aab server sobe sozinho)
@@ -1864,7 +1864,7 @@ O **InnoAI** é o motor de inteligência e automação visual da Plataforma Inno
 - ROOT CAUSES (4): (1) _popen via cmd.exe tratava "2>/dev/null" como redirect do Windows -> nenhum adb shell roda; (2) parser de "devices -l" esperava TAB, saida usa espacos -> 0 devices; (3) paths (adb/CSV) relativos ao cwd -> vazio; (4) poll agressivo (40 cmds/10s) derrubava adbd dos T307G ("error: closed").
 - FIXES: CreateProcessA reto (stdout+stderr pipe, sem cmd); parser sep tab OU espacos; caminhos ancorados no EXE (GetModuleFileName); Sleep(2500) pos svc wifi enable + poll sysfs 700ms x10; MAC so no CSV se formato valido; Wi-Fi desligado de volta SOMENTE se nos ligamos (preserva estado); start-server no arranque; CLI --once/--test; log.txt na pasta do exe. 0 erro/warning.
 - TESTE REAL 3/3 tablets T307G: 2507008316 (8c:92:53:bf:a2:17), 2601007603 (8c:92:53:c4:d4:4e), 2601007822 (8c:92:53:c4:d5:29) ~4s cada; CSV gravado; Wi-Fi restaurado.
-- Auditoria: registros/2026-10-21/17-48_Plataforma_BotRPA_CAPTURAMAC (NOTA_TECNICA.txt + fonte + run.bat + CSV + log).
+- Auditoria: registros/2026-10-21/17-48_Plataforma_TACE_CAPTURAMAC (NOTA_TECNICA.txt + fonte + run.bat + CSV + log).
 - NAO dasim uma RELEASE e NAO alterou o motor nativo (Engine_CapturarMAC segue regular); altera somente a ferramenta standalone em tools.
 
 
@@ -1884,10 +1884,10 @@ O **InnoAI** é o motor de inteligência e automação visual da Plataforma Inno
 
 ### [2026-10-22 14:19] - REVERSAO DA REFATORACAO VISUAL (UI ANTIGA RESTAURADA)
 - **Pedido:** usuario rejeitou o refinamento visual e solicitou voltar a interface anterior, rebuildando e executando.
-- **Acao:** BotRPAui encerrado; restaurados do backup `docs/backups/Bot_RPA_pre_ui_refactor_2026-10-22_1223.zip` os arquivos `src/ui/App.xaml`, `src/ui/Views/MainWindow.xaml`, `src/ui/Views/MainWindow.xaml.cs`, `src/ui/Views/MonitorView.xaml` e `src/ui/Views/MonitorView.xaml.cs`; removidos `src/ui/Theme/Tokens.xaml` e a pasta `src/ui/Theme`.
+- **Acao:** TACEui encerrado; restaurados do backup `docs/backups/TACE_pre_ui_refactor_2026-10-22_1223.zip` os arquivos `src/ui/App.xaml`, `src/ui/Views/MainWindow.xaml`, `src/ui/Views/MainWindow.xaml.cs`, `src/ui/Views/MonitorView.xaml` e `src/ui/Views/MonitorView.xaml.cs`; removidos `src/ui/Theme/Tokens.xaml` e a pasta `src/ui/Theme`.
 - **Conferencia:** SHA-256 dos 5 arquivos restaurados identico ao backup.
-- **Build TESTE:** `scripts/build.bat` concluido com sucesso; versao `22.10.2026.1419`; auditoria em `registros/2026-10-22/14-19_Plataforma_BotRPA_DESKTOP_BUILD`.
-- **Execucao:** `data/output/BotRPAui.exe` aberto (PID 6916), titulo `Bot_RPA - v22.10.2026.1419`, respondendo.
+- **Build TESTE:** `scripts/build.bat` concluido com sucesso; versao `22.10.2026.1419`; auditoria em `registros/2026-10-22/14-19_Plataforma_TACE_DESKTOP_BUILD`.
+- **Execucao:** `data/output/TACEui.exe` aberto (PID 6916), titulo `TACE - v22.10.2026.1419`, respondendo.
 
 ### [2026-10-23 08:56] - LIMPEZA VISUAL, ID x PATRIMONIO E CENTRAL DE EXPORTACAO REDESENHADA
 - **Pedido:** retirar emojis/icones genericos e badges, corrigir strings orfas, arredondar botoes, renomear "Banco de Dados SQLite" para "Banco de Dados", alinhar o ID ao numero do patrimonio na edicao, listar o ID no Banco de Dados e redesenhar layout/funcionalidade da Exportacao (PDF/Excel/QR). Usuario pediu para avisar ao final e disse "nao precisa buildar".
@@ -1904,8 +1904,8 @@ O **InnoAI** é o motor de inteligência e automação visual da Plataforma Inno
 - **Auditoria:** confirmado que nao restam emojis/simbolos Unicode nos XAML/C# da UI, nem badges/termos antigos (ADB LIVE, LOGS EM TEMPO REAL, COGNITIVE PLATFORM, SIMULACAO AO VIVO, Banco de Dados SQLite); logo "BR" presente; estilos arredondados aplicados; colunas ID/Patrimonio e escopos de exportacao presentes; handlers e chaves XAML validos.
 - **Correcoes da auditoria:** removidos 4 `Border` vazios e colunas orfas em `AboutView.xaml` (strings `'BotLearn IA'`, `'Gerenciar'` e `'F11'` corrigidas); removidos 5 `Border` vazios em `ConfigView.xaml` e ajustados `Grid.Column="2"` -> `"1"` dos toggles de dispositivo; removido `Border` 38x38 vazio em `MonitorView.xaml` e corrigidos "GESTAO DO APPARELHO"/"PERSONIZACAO E REDE"; removidas colunas `Auto`/`Grid.Column="1"` orfas dos 5 KPIs de `MonitorProView.xaml`; tooltip de patrimonio acentuado em `RelatoriosView.xaml`; badge cognitivo sem espaco inicial quando `cog.Symbol` esta vazio em `BrainVisualizerWindow.xaml.cs`; comentario obsoleto de IDs contiguos corrigido em `SQLiteDatabaseManager.cs`.
 - **Revisao logica:** `AtualizarPatrimonio`, `AtualizarDispositivo`, `ResolverIdDestino`, `SincronizarSequenciaId` e `RecriarTabelaDispositivos` revisados; sem falhas. Caso residual documentado: ocupante realocado para `max(ID)+1` mantem o patrimonio antigo e fica com ID diferente do patrimonio ate nova edicao.
-- **Build inicial:** `scripts/build.bat` e `scripts/build_release.bat` estao ausentes (o `controle/Build.ps1` ainda os referencia), portanto o primeiro build foi executado diretamente via `dotnet build src/ui/BotRpaUI.csproj -c Debug`: **0 Erros / 0 Avisos**, saida apenas em `src/ui/bin/Debug/...`.
-- **Correcao apos reclamacao do usuario:** o usuario abriu o binario antigo de `data/output` (22.10.2026.1419) e relatou "tudo igual". BotRPAui encerrado, versao atualizada para `23.10.2026.0948` e publicado build novo em `data/output` via `dotnet publish src/ui/BotRpaUI.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o data/output` (**0 Erros / 0 Avisos**). `BotRPAui.exe` = 194.063.653 B (23/10 09:48); `BotEngine.dll` preservado (22/10 15:24). Executavel reaberto e validado: PID 13184, titulo `Bot_RPA - v23.10.2026.0948`.
+- **Build inicial:** `scripts/build.bat` e `scripts/build_release.bat` estao ausentes (o `controle/Build.ps1` ainda os referencia), portanto o primeiro build foi executado diretamente via `dotnet build src/ui/TACEUI.csproj -c Debug`: **0 Erros / 0 Avisos**, saida apenas em `src/ui/bin/Debug/...`.
+- **Correcao apos reclamacao do usuario:** o usuario abriu o binario antigo de `data/output` (22.10.2026.1419) e relatou "tudo igual". TACEui encerrado, versao atualizada para `23.10.2026.0948` e publicado build novo em `data/output` via `dotnet publish src/ui/TACEUI.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o data/output` (**0 Erros / 0 Avisos**). `TACEui.exe` = 194.063.653 B (23/10 09:48); `BotEngine.dll` preservado (22/10 15:24). Executavel reaberto e validado: PID 13184, titulo `TACE - v23.10.2026.0948`.
 - **Pendente:** teste em runtime do alinhamento ID x patrimonio e da geracao de etiquetas QR; restaurar ou substituir os scripts de build ausentes antes do proximo build TESTE/FINAL.
 
 ### [2026-10-23 09:56] - CAPTURAMAC MOVIDO PARA TOOLS E PORTATIL PLUG-AND-PLAY
@@ -1923,8 +1923,8 @@ O **InnoAI** é o motor de inteligência e automação visual da Plataforma Inno
 - **Desligamento seguro:** export `Engine_ShutdownDeviceClean` em `src/api.c` -> `V7_Etapa7_PowerOff` em `f1_vision_tab7.c`; MonitorView/RelatoriosView chamam a rotina; toggle `ToggleDesligarAoRegistrar` (padrao ligado) controla o desligamento.
 - **Porta USB:** coluna `PORTA USB` (`TxtRegistroPortaUsb`) na barra superior do registro em serie, entre Serial e MAC; helpers `AtualizarReferenciaPortaUsb`/`LimparReferenciaPortaUsb` em `RelatoriosView.xaml.cs`; atualiza ao selecionar o aparelho e ao renomear portas; botao Registrar movido para `Grid.Column="8"`.
 - **MAC rapido:** `src/core/drivers/adb.c` agora usa `adb_read_mac_fast` (estado + sysfs + ip link em um unico ADB) e `adb_read_mac_dumpsys` (grep -m1 no aparelho); `adb_get_mac` tenta leitura rapida, dumpsys direto, polling de 300 ms (ate 10x) e so liga o Wi-Fi se necessario, restaurando desligado; `adb_list_devices` nao executa mais `dumpsys wifi` nem IMEI no refresh periodico (MAC vem do cache).
-- **Build/instalador:** Build TESTE `26.10.2026.1031` OK; release `26.10.2026.1036` OK; instalador `scripts/scripts de controle/BotRPA_Instalador_26.10.2026.1036.exe` (61.535.240 B; SHA256 DC0B0C93084285BF8BDE7469FCBDD22E8E0466892E96F2C1358F047B3732E257), sem assinatura.
-- **Correcao no ControleGeral.bat:** `build_installer` agora compara `BotRPA_Release/config/version.txt` com `config/version.txt` e recompila o release se estiver desatualizado, evitando instalador com binarios antigos (o primeiro 1031 foi descartado por esse motivo).
+- **Build/instalador:** Build TESTE `26.10.2026.1031` OK; release `26.10.2026.1036` OK; instalador `scripts/scripts de controle/TACE_Instalador_26.10.2026.1036.exe` (61.535.240 B; SHA256 DC0B0C93084285BF8BDE7469FCBDD22E8E0466892E96F2C1358F047B3732E257), sem assinatura.
+- **Correcao no ControleGeral.bat:** `build_installer` agora compara `TACE_Release/config/version.txt` com `config/version.txt` e recompila o release se estiver desatualizado, evitando instalador com binarios antigos (o primeiro 1031 foi descartado por esse motivo).
 - **Pendente:** sem tablet conectado para medir o tempo real da captura; validar em runtime o MAC e o desligamento seguro.
 
 
@@ -1936,9 +1936,9 @@ O **InnoAI** é o motor de inteligência e automação visual da Plataforma Inno
 - **PDF executivo:** `RelatorioPdfGenerator.cs` gera A4 retrato com PdfSharpCore, capa, ficha tecnica, sumario, KPIs/graficos, resumo por fabricante/modelo, dados por dispositivo e anexo; `SaveFileDialog` integrado em Exportacao. Teste real normalizado: 463 dispositivos, 30 paginas, A4 595x842, 133.354 bytes; paginas 1-6, 18 e 30 inspecionadas.
 - **Dados normalizados:** banco bruto tem 463 dispositivos, 400 patrimonios, 406 MACs, 1.136 eventos de auditoria, 391 completos/72 pendencias e 3 modelos brutos; `SQLiteDatabaseManager.LerTodos()` normaliza Vision7 e a UI/PDF usam 400 completos (86,4%), 63 pendencias, 2 modelos, 0 sem modelo. Existe 1 patrimonio duplicado (`INV0284`, IDs 284/499).
 - **About:** `AboutView.xaml` reescrito e `AboutView.xaml.cs` preenche dados reais ao carregar e ao navegar via MainWindow: versao, ambiente, empresa/setor, 463 dispositivos, 400 patrimonios, 406 MACs, 1.136 eventos, 86,4% de cobertura, 2 modelos, 63 pendencias, 272+ arquivos de registro, caminhos, runtime e ultimo evento.
-- **Icone:** ICO multi-size transparente (16,24,32,48,64,128,256) criado a partir da arte do robo roxo; original preservado; `BotRPAui.png` 256x256 usado nos controles WPF para evitar borrado em 30px. O `ApplicationIcon` continua sendo o ICO.
-- **Build final:** `ControleGeral.bat 1` gerou versao `26.10.2026.2120`, `BotEngine.dll` e `data/output/BotRPAui.exe`; auditoria em `docs/registros/2026-10-26/21-20_Plataforma_BotRPA_DESKTOP_BUILD`.
-- **Validacao final por UIAutomation/PrintWindow:** app abre com titulo `Bot_RPA - v26.10.2026.2120`; Gestao > Registros exibe 317/24/72/245; Sobre exibe versao 2120, 463 dispositivos e 86,4%; screenshots sem regressao visual.
+- **Icone:** ICO multi-size transparente (16,24,32,48,64,128,256) criado a partir da arte do robo roxo; original preservado; `TACEui.png` 256x256 usado nos controles WPF para evitar borrado em 30px. O `ApplicationIcon` continua sendo o ICO.
+- **Build final:** `ControleGeral.bat 1` gerou versao `26.10.2026.2120`, `BotEngine.dll` e `data/output/TACEui.exe`; auditoria em `docs/registros/2026-10-26/21-20_Plataforma_TACE_DESKTOP_BUILD`.
+- **Validacao final por UIAutomation/PrintWindow:** app abre com titulo `TACE - v26.10.2026.2120`; Gestao > Registros exibe 317/24/72/245; Sobre exibe versao 2120, 463 dispositivos e 86,4%; screenshots sem regressao visual.
 - **Warnings preexistentes (build .NET):** `AuditLogManager.cs(71,30)` CS8600, `SettingsManager.cs(253/264)` CS8600, `SQLiteDatabaseManager.cs(736,80)` CS8604; zero erros.
 - **Pendente:** validar em tablet real os fluxos que dependem de hardware (captura MAC, desligamento seguro, execucao F1-F8). Nenhum bloqueio de build/UI.
 
@@ -1948,7 +1948,7 @@ O **InnoAI** é o motor de inteligência e automação visual da Plataforma Inno
 - **BotLearnView:** layout operacional escuro; 5 KPIs reais (seletores, alvos, execucoes, precisao, score medio); diagnostico do melhor seletor sem confianca artificial; ranking agrupado por etapa com filtros/busca, acertos, falhas, precisao, historico e status; backups com estado vazio; reset com confirmacao dupla apenas no modo adaptativo.
 - **Mapa 3D:** titulo/HUD renomeados; precisao "—" sem execucoes; score total real; nucleo BotLearn; 12 componentes conceituais reais; conexoes visuais ilustrativas; cabecalho dividido em duas linhas para nao cortar filtros em 1366px; legenda "Neutro (score 0)"; busca com debounce e filtros de tags agora re-renderizam; inspetores exibem dados reais ou "—".
 - **Correcao funcional:** assinatura do timer usa totais do motor (nao do filtro), evitando re-render continuo; busca por texto e checkboxes de tags passaram a atualizar o mapa.
-- **Build/validacao:** `ControleGeral.bat 1` gerou versao `26.10.2026.2356`, `data/output/BotEngine.dll` e `data/output/BotRPAui.exe`; auditoria em `docs/registros/2026-10-26/23-56_Plataforma_BotRPA_DESKTOP_BUILD`. UIAutomation confirmou abertura do app, navegacao para BotLearn e abertura do mapa 3D; screenshots em 1366x768 sem corte no cabecalho. Warnings .NET preexistentes (8), zero erros.
+- **Build/validacao:** `ControleGeral.bat 1` gerou versao `26.10.2026.2356`, `data/output/BotEngine.dll` e `data/output/TACEui.exe`; auditoria em `docs/registros/2026-10-26/23-56_Plataforma_TACE_DESKTOP_BUILD`. UIAutomation confirmou abertura do app, navegacao para BotLearn e abertura do mapa 3D; screenshots em 1366x768 sem corte no cabecalho. Warnings .NET preexistentes (8), zero erros.
 - **Escopo:** nenhuma alteracao no motor C; pendencias de hardware (tablet real) permanecem.
 
 ### [2026-10-27 00:49] - MUNICIPIOS MODERNIZADOS, CONFIGURACOES REVISADAS E BACKUP CONFIAVEL
@@ -1960,17 +1960,17 @@ O **InnoAI** é o motor de inteligência e automação visual da Plataforma Inno
 - **Backup - causa raiz do erro:** `CreateEntryFromFile` mantinha `data/bot_database.db` aberto em modo incompativel com o SQLite em execucao (`The process cannot access the file ... because it is being used by another process`).
 - **Backup - correcao:** `SQLiteDatabaseManager.CriarSnapshotBackup` usa `SqliteConnection.BackupDatabase` para gerar copia consistente; arquivos sao adicionados ao ZIP por `FileStream` com `FileShare.ReadWrite | FileShare.Delete`. Incluidos `config`, `municipios.csv`, banco, registros, `data/output/arquivos` e `bot_learn.json`; importacao mantem protecao Zip Slip com contagem de entradas ignoradas.
 - **Teste real do backup:** `backup_final.zip` com 289 entradas; `data/bot_database.db` snapshot de 471.040 B; extracao e consulta SQLite confirmaram 463 dispositivos.
-- **Validacao de UI (UIAutomation):** titulo `Bot_RPA - v27.10.2026.0049`; lista de Municipios exibiu `Boca da Mata`/`aplicador`; busca `zzz` retornou estado vazio; Configuracoes mostrou selos, versao e card de licenca; exportacao de backup concluida sem dialogo de erro.
-- **Build final:** `dotnet build` com **0 erros e 0 avisos** (corrigidos os 4 avisos CS8600/CS8604 preexistentes). `ControleGeral.bat 1` gerou `27.10.2026.0049`, `data/output/BotRPAui.exe` e `data/output/BotEngine.dll`; auditoria em `docs/registros/2026-10-27/00-49_Plataforma_BotRPA_DESKTOP_BUILD`.
+- **Validacao de UI (UIAutomation):** titulo `TACE - v27.10.2026.0049`; lista de Municipios exibiu `Boca da Mata`/`aplicador`; busca `zzz` retornou estado vazio; Configuracoes mostrou selos, versao e card de licenca; exportacao de backup concluida sem dialogo de erro.
+- **Build final:** `dotnet build` com **0 erros e 0 avisos** (corrigidos os 4 avisos CS8600/CS8604 preexistentes). `ControleGeral.bat 1` gerou `27.10.2026.0049`, `data/output/TACEui.exe` e `data/output/BotEngine.dll`; auditoria em `docs/registros/2026-10-27/00-49_Plataforma_TACE_DESKTOP_BUILD`.
 - **Escopo:** nenhuma alteracao no motor C; sem tablet fisico para validar ADB/F1-F8. Card 3D do BotLearn continua pendente.
 
 ### [2026-10-27 09:38] - SINCRONIZAÇÃO GIT, CORREÇÃO DE DIVERGÊNCIA E PUSH PARA ORIGIN
-- **Contexto:** Resolução de erro 'non-fast-forward' no Git ao realizar push para https://github.com/RONALDJORDAN/Bot_RPA.git.
+- **Contexto:** Resolução de erro 'non-fast-forward' no Git ao realizar push para https://github.com/RONALDJORDAN/TACE.git.
 - **Diagnóstico:** Divergência histórica entre origin/main e a árvore local decorrente de SHAs distintos originados pelo arquivo de semente config/municipios.csv. O repositório continha todas as novas funcionalidades no commit local de backup, mas não conseguia avançar em fast-forward sobre o remoto.
 - **Resolução:**
   - Criação de salvaguarda local (backup_local_before_fix).
   - Alinhamento da esteira sobre a base canônica de origin/main (b96857c).
   - Preservação integral de 100% dos novos arquivos e módulos desenvolvidos (relatório executivo PDF via RelatorioPdfGenerator.cs, auditorias em AuditLogManager.cs e RegistroStorage.cs, modernização das views WPF, workflow do GitHub Actions em .github/workflows/build.yml e scripts de controle).
   - Preservação do seed canônico config/municipios.csv.
-- **Build de Auditoria:** Executado ControleGeral.bat 1 gerando a versão 27.10.2026.0938, com BotEngine.dll e BotRPAui.exe compilados com sucesso e log registrado em docs/registros/2026-10-27/09-38_Plataforma_BotRPA_DESKTOP_BUILD.
+- **Build de Auditoria:** Executado ControleGeral.bat 1 gerando a versão 27.10.2026.0938, com BotEngine.dll e TACEui.exe compilados com sucesso e log registrado em docs/registros/2026-10-27/09-38_Plataforma_TACE_DESKTOP_BUILD.
 - **Sincronização:** Branch main atualizada e enviada para o remoto origin/main via Conventional Commits.

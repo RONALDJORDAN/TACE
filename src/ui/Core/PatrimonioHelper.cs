@@ -1,7 +1,7 @@
 using System;
 using System.Linq;
 
-namespace BotRpaUI.Core
+namespace TACEUI.Core
 {
     public static class PatrimonioHelper
     {

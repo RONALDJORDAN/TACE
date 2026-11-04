@@ -458,7 +458,7 @@ public sealed class MainViewModel : ObservableObject
             Log("10:38:20", "OK", "Cofre DPAPI carregado · credenciais do município liberadas", "Sistema"),
             Log("10:37:55", "INFO", "Sessão 024 aberta · São Paulo · 20 tablets", "Sistema"),
             Log("10:37:41", "OK", "Servidor ADB iniciado · platform-tools 35.0.2", "Sistema"),
-            Log("10:37:38", "INFO", "Bot_RPA v21.10.2026.1728 · bancada 03", "Sistema")
+            Log("10:37:38", "INFO", "TACE v21.10.2026.1728 · bancada 03", "Sistema")
         };
     }
 
