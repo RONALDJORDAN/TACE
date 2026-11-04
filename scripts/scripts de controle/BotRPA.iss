@@ -98,7 +98,7 @@ Source: "..\..\config\version.txt"; DestDir: "{app}\config"; Flags: ignoreversio
 
 ; --- DADOS DO USUARIO (nunca sobrescritos) ---
 ; O seed do settings.json vai para a pasta de dados apenas na primeira instalacao.
-Source: "..\..\TACE_Release\config\settings.json"; DestDir: "{commonappdata}\{#DataDirName}\config"; Flags: onlyifdoesntexist
+Source: "..\..\TACE_Release\config\settings.json"; DestDir: "{commonappdata}\{#DataDirName}\config"; Flags: onlyifdoesntexist skipifsourcedoesntexist
 Source: "..\..\TACE_Release\config\first_run.json"; DestDir: "{commonappdata}\{#DataDirName}\config"; Flags: onlyifdoesntexist
 Source: "..\..\TACE_Release\config\municipios.csv"; DestDir: "{commonappdata}\{#DataDirName}\config"; Flags: onlyifdoesntexist
 ; Banco de dispositivos com o numero de patrimonio
